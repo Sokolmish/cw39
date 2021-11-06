@@ -1,0 +1,599 @@
+#ifndef __AST_H__
+#define __AST_H__
+
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <variant>
+
+#include "common.h"
+
+#define CW39_ZOND_PRNT(msg) printf("###[%s:%d:%s] ###" msg, __FILE__, __LINE__, __func__)
+#define CW39_ZOND_PRNTF(msg, ...) printf("###[%s:%d:%s] ###" msg, __FILE__, __LINE__, __func__, __VA_ARGS__)
+
+#define DISABLE_COPY(cl) cl(const cl&) = delete; cl& operator=(const cl&) = delete;
+
+typedef int ast_enum_t;
+
+enum : ast_enum_t {
+    AST_PRIMARY, AST_POSTFIX, AST_ARGUMENTS_LIST, AST_UNARY_OP, AST_CAST, AST_BINOP,
+    AST_TERNARY, AST_ASSIGNMENT, AST_COMMA_EXPR,
+    AST_TYPE_QUALIFIERS, AST_TYPE_SPECIFIER, AST_DECL_SPECIFIERS,
+    AST_STRUCT_OR_UNION_SPEC, AST_STRUCT_DECL_LIST, AST_STRUCT_DECL,
+    AST_SPEC_QUAL_LST, AST_STRUCT_DECLARATOR, AST_STRUCT_DECLARATOR_LST,
+    AST_ENUM_SPEC, AST_ENUMER, AST_ENUMER_LST,
+    AST_DECLARATION, AST_INIT_DECL_LST, AST_INIT_DECL, AST_DECLARATOR,
+    AST_DIR_DECLARATOR, AST_POINTER, AST_PARAM_DECL, AST_PARAM_TYPE_LST, AST_PARAM_LST,
+    AST_TYPE_NAME, AST_DIR_ABSTRACT_DECL, AST_ABSTRACT_DECL,
+    AST_DESIGNATOR, AST_INITIALIZER_LST, AST_INITIALIZER,
+    AST_STATEMENT, AST_BLOCK_ITEM_LST, AST_FUNC_DEF, AST_TRANS_UNIT,
+
+    AST_STRING,
+};
+
+struct AST_Node {
+    DISABLE_COPY(AST_Node)
+
+    int node_type; // From y.tab.h
+
+    explicit AST_Node(int type) : node_type(type) {}
+
+    virtual ~AST_Node() = default;
+};
+
+struct AST_StructOrUsionSpec;
+struct AST_EnumSpecifier;
+struct AST_Declarator;
+struct AST_AbstractDeclarator;
+struct AST_TypeName;
+struct AST_Initializer;
+struct AST_ParameterTypeList;
+struct AST_Statement;
+
+
+// =================================================
+//                 Primary elements
+// =================================================
+
+struct AST_String : public AST_Node {
+    std::string str;
+
+    AST_String(const std::string &str);
+    AST_String(const char *str);
+};
+
+
+// =================================================
+//                    Expressions
+// =================================================
+
+struct AST_Expr : public AST_Node {
+    explicit AST_Expr(int type) : AST_Node(type) {}
+};
+
+struct AST_Primary : public AST_Expr {
+    enum PrimType : ast_enum_t { IDENT = 0, EXPR = 1, STR = 2, CONST = 3 } type;
+
+    std::variant<
+        ident_id_t,
+        AST_Expr*,
+        AST_String*,
+        uint64_t
+    > v;
+
+    static AST_Primary* get_ident(ident_id_t id);
+    static AST_Primary* get_expr(AST_Expr *expr);
+    static AST_Primary* get_str(AST_String *str);
+    static AST_Primary* get_const(uint64_t val);
+    ~AST_Primary();
+
+private:
+    explicit AST_Primary(PrimType type);
+};
+
+struct AST_ArgumentsList : public AST_Node {
+    std::vector<AST_Expr*> children;
+
+    AST_ArgumentsList();
+    AST_ArgumentsList* append(AST_Expr *arg);
+    virtual ~AST_ArgumentsList();
+};
+
+struct AST_Postfix : public AST_Expr {
+    enum OpType : ast_enum_t {
+        INDEXATION, CALL, DIR_ACCESS, PTR_ACCESS, POST_INC, POST_DEC
+    } op;
+    AST_Expr *base;
+
+    enum : ast_enum_t { ARR_SIZE = 0, CALL_ARGS = 1, MEMBER_ID = 2 };
+    std::variant<AST_Expr*, AST_ArgumentsList*, ident_id_t> arg;
+
+    static AST_Postfix* get_arr(AST_Expr *base, AST_Expr *size);
+    static AST_Postfix* get_call(AST_Expr *base, AST_ArgumentsList *args);
+    static AST_Postfix* get_accesor(AST_Expr *base, ident_id_t member, bool is_ptr);
+    static AST_Postfix* get_incdec(AST_Expr *base, bool is_dec);
+
+    virtual ~AST_Postfix();
+
+private:
+    explicit AST_Postfix(OpType type);
+};
+
+struct AST_Unop : public AST_Expr {
+    enum OpType : ast_enum_t {
+        PRE_INC, PRE_DEC,
+        ADDR_OF, DEREF, UN_PLUS, UN_MINUS, UN_NEG, UN_NOT,
+        SIZEOF_OP,
+    } op;
+
+    enum : ast_enum_t { CHILD_EXPR = 0, TYPE_NAME = 1 };
+    std::variant<AST_Expr*, AST_TypeName*> child;
+
+    AST_Unop(OpType op, AST_Expr *child);
+    AST_Unop(OpType op, AST_TypeName *child);
+    ~AST_Unop();
+};
+
+struct AST_Cast : public AST_Expr {
+    AST_TypeName *type_name;
+    AST_Expr *child;
+
+    AST_Cast(AST_TypeName *type, AST_Expr *child);
+    ~AST_Cast();
+};
+
+struct AST_Binop : public AST_Expr {
+    enum OpType : ast_enum_t {
+        MUL, DIV, REM, ADD, SUB, SHL, SHR,
+        LT, GT, LE, GE, EQ, NE,
+        BIT_AND, BIT_XOR, BIT_OR, LOG_AND, LOG_OR
+    } op;
+    AST_Expr *lhs, *rhs;
+
+    AST_Binop(OpType op, AST_Expr *lhs, AST_Expr *rhs);
+    ~AST_Binop();
+};
+
+struct AST_Ternary : public AST_Expr {
+    AST_Expr *cond, *v_true, *v_false;
+
+    AST_Ternary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf);
+    ~AST_Ternary();
+};
+
+struct AST_Assignment : public AST_Expr {
+    enum OpType : ast_enum_t {
+        DIRECT, MUL, DIV, REM, ADD, SUB, SHL, SHR, AND, XOR, OR
+    } op;
+    AST_Expr *lhs, *rhs;
+
+    AST_Assignment(OpType op, AST_Expr *lhs, AST_Expr *rhs);
+    ~AST_Assignment();
+};
+
+struct AST_CommaExpression : public AST_Expr {
+    std::vector<AST_Expr*> children;
+
+    explicit AST_CommaExpression(AST_Expr *expr);
+    AST_CommaExpression* append(AST_Expr *expr);
+    ~AST_CommaExpression();
+};
+
+
+// =================================================
+//                   Specifiers
+// =================================================
+
+struct AST_TypeQualifiers : public AST_Node {
+    enum QualType : ast_enum_t { Q_CONST, Q_RESTRICT, Q_VOLATILE };
+    bool is_const, is_restrict, is_volatile;
+
+    AST_TypeQualifiers();
+    explicit AST_TypeQualifiers(QualType init_qual);
+    AST_TypeQualifiers* update(QualType new_qual);
+};
+
+struct AST_TypeSpecifier : public AST_Node {
+    enum TypeSpec : ast_enum_t {
+        T_VOID, T_CHAR, T_SHORT, T_INT, T_LONG, 
+        T_SIGNED, T_UNSIGNED, T_FLOAT, T_DOUBLE,
+        T_UNISTRUCT, T_ENUM, T_NAMED,
+    } spec_type;
+    
+    enum : ast_enum_t { UNISTRUCT_SPEC = 0, ENUM_SPEC = 1, NAMED_SPEC = 2 };
+    std::variant<AST_StructOrUsionSpec*, AST_EnumSpecifier*, AST_TypeName*> v;
+
+    explicit AST_TypeSpecifier(TypeSpec type);
+    explicit AST_TypeSpecifier(AST_StructOrUsionSpec *spec);
+    explicit AST_TypeSpecifier(AST_EnumSpecifier *spec);
+    explicit AST_TypeSpecifier(AST_TypeName *spec);
+    ~AST_TypeSpecifier();
+};
+
+struct AST_DeclSpecifiers : public AST_Node {
+    enum StorageSpec : ast_enum_t {
+        ST_NONE, ST_EXTERN, ST_STATIC, ST_AUTO, ST_REGISTER, ST_TYPEDEF
+    };
+    enum FuncQual : ast_enum_t { Q_INLINE };
+
+    StorageSpec storage_specifier = ST_NONE;
+    std::vector<AST_TypeSpecifier*> type_specifiers;
+    AST_TypeQualifiers *type_qualifiers;
+    bool is_inline = false;
+
+    AST_DeclSpecifiers();
+    AST_DeclSpecifiers* update_storage(ast_enum_t val);
+    AST_DeclSpecifiers* update_type_spec(AST_TypeSpecifier *val);
+    AST_DeclSpecifiers* update_type_qual(ast_enum_t val);
+    AST_DeclSpecifiers* update_func_qual(ast_enum_t val);
+    ~AST_DeclSpecifiers();
+};
+
+struct AST_SpecifierQualifierList : public AST_Node {
+    std::vector<AST_TypeSpecifier*> type_specifiers;
+    AST_TypeQualifiers *type_qualifiers = nullptr;
+
+    explicit AST_SpecifierQualifierList(AST_TypeQualifiers::QualType qual);
+    explicit AST_SpecifierQualifierList(AST_TypeSpecifier* type);
+    AST_SpecifierQualifierList* append_qual(AST_TypeQualifiers::QualType qual);
+    AST_SpecifierQualifierList* append_spec(AST_TypeSpecifier* type);
+    ~AST_SpecifierQualifierList();
+};
+
+struct AST_StructDeclarator : public AST_Node {
+    AST_Declarator *declarator;
+    AST_Expr *bitwidth;
+
+    AST_StructDeclarator(AST_Declarator *decl, AST_Expr *width);
+    ~AST_StructDeclarator();
+};
+
+struct AST_StructDeclaratorList : public AST_Node {
+    std::vector<AST_StructDeclarator*> children;
+
+    explicit AST_StructDeclaratorList(AST_StructDeclarator *init);
+    AST_StructDeclaratorList* append(AST_StructDeclarator *decl);
+    ~AST_StructDeclaratorList();
+};
+
+struct AST_StructDeclaration : public AST_Node {
+    AST_SpecifierQualifierList *type;
+    AST_StructDeclaratorList *child;
+
+    AST_StructDeclaration(AST_SpecifierQualifierList *type, AST_StructDeclaratorList *child);
+    ~AST_StructDeclaration();
+};
+
+struct AST_StructDeclarationList : public AST_Node {
+    std::vector<AST_StructDeclaration*> children;
+
+    explicit AST_StructDeclarationList(AST_StructDeclaration *init);
+    AST_StructDeclarationList* append(AST_StructDeclaration *decl);
+    ~AST_StructDeclarationList();
+};
+
+struct AST_StructOrUsionSpec : public AST_Node {
+    bool is_union;
+    ident_id_t name;
+    AST_StructDeclarationList *body;
+
+    AST_StructOrUsionSpec(bool is_union, ident_id_t name, AST_StructDeclarationList *body);
+    ~AST_StructOrUsionSpec();
+};
+
+struct AST_Enumerator : public AST_Node {
+    ident_id_t name;
+    AST_Expr *val;
+
+    AST_Enumerator(ident_id_t name, AST_Expr *val);
+    ~AST_Enumerator();
+};
+
+struct AST_EnumeratorList : public AST_Node {
+    std::vector<AST_Enumerator*> v;
+
+    explicit AST_EnumeratorList(AST_Enumerator *init);
+    AST_EnumeratorList* append(AST_Enumerator *enumer);
+    ~AST_EnumeratorList();
+};
+
+struct AST_EnumSpecifier : public AST_Node {
+    ident_id_t name;
+    AST_EnumeratorList *body;
+
+    AST_EnumSpecifier(ident_id_t name, AST_EnumeratorList *body);
+    ~AST_EnumSpecifier();
+};
+
+
+// =================================================
+//                 Declarations
+// =================================================
+
+struct AST_InitDeclarator : public AST_Node {
+    AST_Declarator *declarator;
+    AST_Initializer *initializer;
+
+    AST_InitDeclarator(AST_Declarator *decl, AST_Initializer *init);
+    ~AST_InitDeclarator();
+};
+
+struct AST_InitDeclaratorList : public AST_Node {
+    std::vector<AST_InitDeclarator*> v;
+
+    explicit AST_InitDeclaratorList(AST_InitDeclarator *init);
+    AST_InitDeclaratorList* append(AST_InitDeclarator *decl);
+    ~AST_InitDeclaratorList();
+};
+
+struct AST_Declaration : public AST_Node {
+    AST_DeclSpecifiers *specifiers;
+    AST_InitDeclaratorList *child;
+
+    AST_Declaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
+    ~AST_Declaration();
+};
+
+struct AST_DirectDeclarator : public AST_Node {
+    enum DeclType : ast_enum_t { NAME, NESTED, ARRAY, FUNC } type;
+    
+    enum : ast_enum_t { IDENT = 0, COMM_BASE = 1, NEST_BASE = 2 };
+    std::variant<
+        ident_id_t,
+        AST_DirectDeclarator*,
+        AST_Declarator*
+    > base;
+
+    AST_TypeQualifiers *arr_type_qual = nullptr;
+    AST_Expr *arr_size = nullptr;
+    AST_ParameterTypeList *func_args = nullptr;
+
+    static AST_DirectDeclarator* get_ident(ident_id_t ident);
+    static AST_DirectDeclarator* get_nested(AST_Declarator *decl);
+    static AST_DirectDeclarator* get_arr(AST_DirectDeclarator *base, AST_TypeQualifiers *qual, AST_Expr *sz);
+    static AST_DirectDeclarator* get_func(AST_DirectDeclarator *base, AST_ParameterTypeList *args);
+    ~AST_DirectDeclarator();
+
+private:
+    explicit AST_DirectDeclarator(DeclType dtype);
+};
+
+struct AST_Pointer : public AST_Node {
+    AST_TypeQualifiers *qualifiers;
+    AST_Pointer *child;
+
+    AST_Pointer(AST_TypeQualifiers *qual, AST_Pointer *child);
+    ~AST_Pointer();
+};
+
+struct AST_Declarator : public AST_Node {
+    AST_DirectDeclarator *direct;
+    AST_Pointer *ptr;
+
+    AST_Declarator(AST_DirectDeclarator *decl, AST_Pointer *ptr);
+    ~AST_Declarator();
+};
+
+struct AST_ParameterDeclaration : public AST_Node {
+    AST_DeclSpecifiers *specifiers;
+    AST_Node *child; // Declarator, AbstractDeclarator
+    bool is_abstract;
+
+    AST_ParameterDeclaration(AST_DeclSpecifiers *spec, AST_Node *child, bool is_abstr);
+    ~AST_ParameterDeclaration();
+};
+
+struct AST_ParameterList : public AST_Node {
+    std::vector<AST_ParameterDeclaration*> v;
+
+    explicit AST_ParameterList(AST_ParameterDeclaration *init);
+    AST_ParameterList* append(AST_ParameterDeclaration *decl);
+    ~AST_ParameterList();
+};
+
+struct AST_ParameterTypeList : public AST_Node {
+    AST_ParameterList *v;
+    bool has_ellipsis;
+
+    AST_ParameterTypeList(AST_ParameterList *child, bool ellipsis);
+    ~AST_ParameterTypeList();
+};
+
+struct AST_TypeName : public AST_Node {
+    AST_SpecifierQualifierList *qual;
+    AST_AbstractDeclarator *declarator;
+
+    AST_TypeName(AST_SpecifierQualifierList *qual, AST_AbstractDeclarator *decl);
+    ~AST_TypeName();
+};
+
+struct AST_DirectAbstractDeclarator : public AST_Node {
+    enum DeclType : ast_enum_t { NESTED, ARRAY, FUNC } type;
+    AST_Node *base;
+
+    AST_Expr *arr_size = nullptr;
+    AST_ParameterTypeList *func_args = nullptr;
+
+    static AST_DirectAbstractDeclarator* get_nested(AST_Node *decl);
+    static AST_DirectAbstractDeclarator* get_arr(AST_Node *base, AST_Expr *sz);
+    static AST_DirectAbstractDeclarator* get_func(AST_Node *base, AST_ParameterTypeList *args);
+    ~AST_DirectAbstractDeclarator();
+
+private:
+    explicit AST_DirectAbstractDeclarator(DeclType dtype);
+};
+
+struct AST_AbstractDeclarator : public AST_Node {
+    AST_DirectAbstractDeclarator *direct;
+    AST_Pointer *ptr;
+
+    AST_AbstractDeclarator(AST_DirectAbstractDeclarator *decl, AST_Pointer *pointer);
+    ~AST_AbstractDeclarator();
+};
+
+
+// =================================================
+//                 Initializers
+// =================================================
+
+struct AST_Designator : public AST_Node {
+    enum { INDEX = 0, IDENT = 1 };
+    std::variant<AST_Expr*, ident_id_t> val;
+    bool is_index; // indexation or field name
+
+    explicit AST_Designator(AST_Expr *val);
+    explicit AST_Designator(ident_id_t field);
+    ~AST_Designator();
+};
+
+struct AST_InitializerList : public AST_Node {
+    struct AST_InitializerListElem {
+        AST_Initializer *val;
+        AST_Designator *designator;
+
+        AST_InitializerListElem(AST_Initializer *v, AST_Designator *desig);
+        ~AST_InitializerListElem();
+    };
+
+    std::vector<AST_InitializerListElem> v;
+
+    AST_InitializerList(AST_Initializer *init_v, AST_Designator *init_desig);
+    AST_InitializerList* append(AST_Initializer *v, AST_Designator *desig);
+    // ~AST_InitializerList();
+};
+
+struct AST_Initializer : public AST_Node {
+    bool is_compound;
+
+    enum { COMPOUND = 0, DIRECT = 1 };
+    std::variant<AST_InitializerList*, AST_Expr*> val;
+
+    explicit AST_Initializer(AST_InitializerList *nest);
+    explicit AST_Initializer(AST_Expr *val);
+    ~AST_Initializer();
+};
+
+
+// =================================================
+//                   Statements
+// =================================================
+
+struct AST_Statement : public AST_Node {
+    enum StmtType : ast_enum_t {
+        LABEL, COMPOUND, EXPR, SELECT, ITER, JUMP
+    } type;
+
+    explicit AST_Statement(StmtType stype);
+};
+
+struct AST_LabeledStmt : public AST_Statement {
+    enum : ast_enum_t { CASE_EXPR = 0, LABEL_NAME = 1 };
+    std::variant<AST_Node*, ident_id_t> label;
+
+    AST_Statement *child;
+    enum LabelType : ast_enum_t { SIMPL, SW_CASE, SW_DEFAULT } type;
+
+    AST_LabeledStmt(AST_Node *label, AST_Statement *stmt, LabelType type);
+    AST_LabeledStmt(ident_id_t label, AST_Statement *stmt, LabelType type);
+    ~AST_LabeledStmt();
+};
+
+struct AST_BlockItemList : public AST_Node {
+    std::vector<AST_Node*> v; // Declaration Statement
+
+    AST_BlockItemList();
+    AST_BlockItemList* append(AST_Node *child);
+    ~AST_BlockItemList();
+};
+
+struct AST_CompoundStmt : public AST_Statement {
+    AST_BlockItemList *body;
+
+    explicit AST_CompoundStmt(AST_BlockItemList *body);
+    ~AST_CompoundStmt();
+};
+
+struct AST_ExprStmt : public AST_Statement {
+    AST_Expr *child;
+
+    explicit AST_ExprStmt(AST_Expr *child);
+    ~AST_ExprStmt();
+};
+
+struct AST_SelectionStmt : public AST_Statement {
+    bool is_switch;
+    AST_Expr *condition;
+    AST_Statement *body;
+    AST_Statement *else_body;
+
+    static AST_SelectionStmt* get_if(AST_Expr *cond, AST_Statement *body, AST_Statement *else_body);
+    static AST_SelectionStmt* get_switch(AST_Expr *cond, AST_Statement *body);
+    ~AST_SelectionStmt();
+    
+private:
+    explicit AST_SelectionStmt(bool sw);
+};
+
+struct AST_IterationStmt : public AST_Statement {
+    struct AST_ForLoopControls {
+        AST_Node *decl;
+        AST_ExprStmt *cond;
+        AST_Expr *action;
+    };
+
+    enum LoopType : ast_enum_t { WHILE_LOOP, DO_LOOP, FOR_LOOP } type;
+    AST_Statement *body;
+
+    enum : ast_enum_t { WHILE_CTL = 0, FOR_CTL = 1 };
+    std::variant<AST_Expr*, AST_ForLoopControls*> control;
+
+    static AST_IterationStmt* get_while(AST_Statement *body, AST_Expr *ctl, bool is_do);
+    static AST_IterationStmt* get_for(AST_Statement *body, AST_Node *decl, AST_ExprStmt *cond, AST_Expr *act);
+    ~AST_IterationStmt();
+
+private:
+    AST_IterationStmt(LoopType ltype, AST_Statement *body);
+};
+
+struct AST_JumpStmt : public AST_Statement {
+    enum JumpType : ast_enum_t {
+        J_GOTO, J_CONTINUE, J_BREAK, J_RET
+    } type;
+
+    enum : ast_enum_t { RET_EXPR = 0, GOTO_NAME = 1 };
+    std::variant<AST_Expr*, ident_id_t> arg;
+
+    explicit AST_JumpStmt(JumpType jtype);
+    AST_JumpStmt(JumpType jtype, AST_Expr *arg);
+    AST_JumpStmt(JumpType jtype, ident_id_t arg);
+    ~AST_JumpStmt();
+};
+
+
+// =================================================
+//                Top-level elements
+// =================================================
+
+struct AST_FunctionDef : public AST_Node {
+    AST_DeclSpecifiers *specifiers;
+    AST_Declarator *decl;
+    AST_CompoundStmt *body;
+
+    AST_FunctionDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body);
+    ~AST_FunctionDef();
+};
+
+struct AST_TranslationUnit : public AST_Node {
+    std::vector<AST_Node*> children;
+
+    AST_TranslationUnit();
+    AST_TranslationUnit* append(AST_Node *node);
+    ~AST_TranslationUnit();
+};
+
+// Implemented in utils.cpp
+void check_typedef(AST_Declaration *decl);
+AST_TypeName* get_def_type(ident_id_t id);
+
+
+#endif /* __AST_H__ */
