@@ -268,8 +268,8 @@ union YYSTYPE
 	int boolean;
 	int enum_val;
 	uint64_t u64;
-	const char *str;
-	ident_id_t ident_id;
+	string_id_t str;
+	string_id_t ident_id;
 
 	struct AST_Expr *expr;
 
@@ -2089,7 +2089,7 @@ yyreduce:
 
   case 4:
 #line 177 "parser/parser.y"
-                                                                        { (yyval.expr) = AST_Primary::get_str(new AST_String((yyvsp[0].str))); }
+                                                                        { (yyval.expr) = AST_Primary::get_str((yyvsp[0].str)); }
 #line 2094 "parser/parser.cpp"
     break;
 
@@ -2149,7 +2149,7 @@ yyreduce:
 
   case 14:
 #line 193 "parser/parser.y"
-                                                                        { (yyval.args_list) = new AST_ArgumentsList(); }
+                                                                        { (yyval.args_list) = (new AST_ArgumentsList())->append((yyvsp[0].expr)); }
 #line 2154 "parser/parser.cpp"
     break;
 

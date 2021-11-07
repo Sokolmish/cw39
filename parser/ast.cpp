@@ -1,11 +1,6 @@
 #include "ast.hpp"
 
 
-AST_String::AST_String(const std::string &str) : AST_Node(AST_STRING), str(str) {}
-
-AST_String::AST_String(const char *str) : AST_Node(AST_STRING), str(str) {}
-
-
 // =================================================
 //                    Expressions
 // =================================================
@@ -15,7 +10,7 @@ AST_String::AST_String(const char *str) : AST_Node(AST_STRING), str(str) {}
 AST_Primary::AST_Primary(PrimType type)
     : AST_Expr(AST_PRIMARY), type(type) {}
 
-AST_Primary* AST_Primary::get_ident(ident_id_t id) {
+AST_Primary* AST_Primary::get_ident(string_id_t id) {
     auto res = new AST_Primary(AST_Primary::IDENT);
     res->v = id;
     return res;
@@ -27,7 +22,7 @@ AST_Primary* AST_Primary::get_expr(AST_Expr *expr) {
     return res;
 }
 
-AST_Primary* AST_Primary::get_str(AST_String *str) {
+AST_Primary* AST_Primary::get_str(string_id_t str) {
     auto res = new AST_Primary(AST_Primary::STR);
     res->v = str;
     return res;
@@ -41,9 +36,7 @@ AST_Primary* AST_Primary::get_const(uint64_t val) {
 
 AST_Primary::~AST_Primary() {
     if (this->type == AST_Primary::EXPR)
-        delete std::get<AST_Primary::EXPR>(this->v);
-    else if (this->type == AST_Primary::STR)
-        delete std::get<AST_Primary::STR>(this->v);
+        delete std::get<AST_Expr*>(this->v);
 }
 
 
@@ -69,7 +62,7 @@ AST_Postfix* AST_Postfix::get_call(AST_Expr *base, AST_ArgumentsList *args) {
     return res;
 }
 
-AST_Postfix* AST_Postfix::get_accesor(AST_Expr *base, ident_id_t member, bool is_ptr) {
+AST_Postfix* AST_Postfix::get_accesor(AST_Expr *base, string_id_t member, bool is_ptr) {
     auto res = new AST_Postfix(is_ptr ? AST_Postfix::PTR_ACCESS : AST_Postfix::DIR_ACCESS);
     res->base = base;
     res->arg = member;
@@ -213,7 +206,7 @@ AST_TypeQualifiers* AST_TypeQualifiers::update(QualType new_qual) {
 // AST_TypeSpecifier
 
 AST_TypeSpecifier::AST_TypeSpecifier(TypeSpec type)
-    : AST_Node(AST_TYPE_SPECIFIER), spec_type(type) {}
+    : AST_Node(AST_TYPE_SPECIFIER), spec_type(type), v(nullptr) {}
 
 AST_TypeSpecifier::AST_TypeSpecifier(AST_StructOrUsionSpec *spec)
     : AST_Node(AST_TYPE_SPECIFIER), spec_type(AST_TypeSpecifier::T_UNISTRUCT), v(spec) {}
@@ -226,10 +219,8 @@ AST_TypeSpecifier::AST_TypeSpecifier(AST_TypeName *spec)
 
 
 AST_TypeSpecifier::~AST_TypeSpecifier() {
-    if (this->spec_type == AST_TypeSpecifier::T_UNISTRUCT)
-        delete std::get<AST_TypeSpecifier::UNISTRUCT_SPEC>(this->v);
-    else if (this->spec_type == AST_TypeSpecifier::T_ENUM)
-        delete std::get<AST_TypeSpecifier::ENUM_SPEC>(this->v);
+    if (this->spec_type == T_UNISTRUCT || this->spec_type == T_ENUM)
+        delete this->v;
 }
 
 
@@ -355,7 +346,7 @@ AST_SpecifierQualifierList::~AST_SpecifierQualifierList() {
 
 // AST_StructOrUsionSpec
 
-AST_StructOrUsionSpec::AST_StructOrUsionSpec(bool is_uni, ident_id_t name, AST_StructDeclarationList *body)
+AST_StructOrUsionSpec::AST_StructOrUsionSpec(bool is_uni, string_id_t name, AST_StructDeclarationList *body)
     : AST_Node(AST_STRUCT_OR_UNION_SPEC), is_union(is_uni), name(name), body(body) {}
 
 AST_StructOrUsionSpec::~AST_StructOrUsionSpec() {
@@ -365,7 +356,7 @@ AST_StructOrUsionSpec::~AST_StructOrUsionSpec() {
 
 // AST_Enumerator
 
-AST_Enumerator::AST_Enumerator(ident_id_t name, AST_Expr *val)
+AST_Enumerator::AST_Enumerator(string_id_t name, AST_Expr *val)
     : AST_Node(AST_ENUMER), name(name), val(val) {}
 
 AST_Enumerator::~AST_Enumerator() {
@@ -391,7 +382,7 @@ AST_EnumeratorList::~AST_EnumeratorList() {
 
 // AST_EnumSpecifier
 
-AST_EnumSpecifier::AST_EnumSpecifier(ident_id_t name, AST_EnumeratorList *body)
+AST_EnumSpecifier::AST_EnumSpecifier(string_id_t name, AST_EnumeratorList *body)
     : AST_Node(AST_ENUM_SPEC), name(name), body(body) {}
 
 AST_EnumSpecifier::~AST_EnumSpecifier() {
@@ -446,7 +437,7 @@ AST_Declaration::~AST_Declaration() {
 AST_DirectDeclarator::AST_DirectDeclarator(DeclType dtype)
     : AST_Node(AST_DIR_DECLARATOR), type(dtype) {}
 
-AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::get_ident(ident_id_t ident) {
+AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::get_ident(string_id_t ident) {
     auto res = new AST_DirectDeclarator(AST_DirectDeclarator::NAME);
     res->base = ident;
     return res;
@@ -603,7 +594,7 @@ AST_AbstractDeclarator::~AST_AbstractDeclarator() {
 AST_Designator::AST_Designator(AST_Expr *val)
     : AST_Node(AST_DESIGNATOR), val(val), is_index(true) {}
 
-AST_Designator::AST_Designator(ident_id_t field)
+AST_Designator::AST_Designator(string_id_t field)
     : AST_Node(AST_DESIGNATOR), val(field), is_index(false) {}
 
 AST_Designator::~AST_Designator() {
@@ -668,7 +659,7 @@ AST_LabeledStmt::AST_LabeledStmt(AST_Node *label, AST_Statement *stmt, LabelType
         throw; // TODO: verbosity
 }
 
-AST_LabeledStmt::AST_LabeledStmt(ident_id_t label, AST_Statement *stmt, LabelType type)
+AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelType type)
     : AST_Statement(AST_Statement::LABEL), label(label), child(stmt), type(type) 
 {
     if (type != AST_LabeledStmt::SIMPL)
@@ -787,7 +778,7 @@ AST_JumpStmt::AST_JumpStmt(JumpType jtype)
 AST_JumpStmt::AST_JumpStmt(JumpType jtype, AST_Expr *arg)
     : AST_Statement(AST_Statement::JUMP), type(jtype), arg(arg) {}
 
-AST_JumpStmt::AST_JumpStmt(JumpType jtype, ident_id_t arg)
+AST_JumpStmt::AST_JumpStmt(JumpType jtype, string_id_t arg)
     : AST_Statement(AST_Statement::JUMP), type(jtype), arg(arg) {}
 
 AST_JumpStmt::~AST_JumpStmt() {

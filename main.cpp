@@ -1,15 +1,25 @@
 #include <iostream>
+#include <fstream>
 
 #include "parser/parser.hpp"
 
-int main(int argc, char **argv) {
-    (void)argc;
-    (void)argv;
+std::string readFile(std::string const &path) {
+    std::ifstream t(path.c_str());
+    t.seekg(0, std::ios::end);
+    size_t size = t.tellg();
+    std::string buffer(size, ' ');
+    t.seekg(0);
+    t.read(&buffer[0], size);
+    return buffer;
+}
 
-    auto test_prog =    
-        "extern volatile unsigned long ((* const *var[4][restrict 5])[const])(int*[], double(*)[20], ...);\n"
-		"static int x;";
-    auto ast = parse_program(test_prog);
+int main(int argc, char **argv) {
+    std::string path = "tests/tst_prog1.c";
+    if (argc > 1)
+        path = argv[1];
+
+    auto text = readFile(path);
+    auto ast = parse_program(text);
     printf("%lu\n", ast->children.size());
     delete ast;
 

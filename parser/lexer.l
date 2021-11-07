@@ -40,7 +40,7 @@ ISF         ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 "int"           { return INT;       }
 "long"          { return LONG;      }
 "register"      { return REGISTER;  }
-"restrict"      { return RESTRICT;  }
+(__)?"restrict" { return RESTRICT;  }
 "return"        { return RETURN;    }
 "short"         { return SHORT;     }
 "signed"        { return SIGNED;    }
@@ -66,7 +66,7 @@ ISF         ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
     /* {D}*"."{D}+{EXP}?{FSF}?            { return(CONSTANT); } */
     /* {D}+"."{D}*{EXP}?{FSF}?            { return(CONSTANT); } */
 
-\"(\\.|[^\\"\n])*\"             { yylval->str = yytext; return(STRING_LITERAL); }
+\"(\\.|[^\\"\n])*\"             { yylval->str = get_string_id(yytext); return(STRING_LITERAL); }
 
 "..."           { return ELLIPSIS;      }
 ">>="           { return RIGHT_ASSIGN;  }

@@ -52,18 +52,6 @@ struct AST_Statement;
 
 
 // =================================================
-//                 Primary elements
-// =================================================
-
-struct AST_String : public AST_Node {
-    std::string str;
-
-    AST_String(const std::string &str);
-    AST_String(const char *str);
-};
-
-
-// =================================================
 //                    Expressions
 // =================================================
 
@@ -72,18 +60,17 @@ struct AST_Expr : public AST_Node {
 };
 
 struct AST_Primary : public AST_Expr {
-    enum PrimType : ast_enum_t { IDENT = 0, EXPR = 1, STR = 2, CONST = 3 } type;
+    enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST } type;
 
     std::variant<
-        ident_id_t,
         AST_Expr*,
-        AST_String*,
+        string_id_t,
         uint64_t
     > v;
 
-    static AST_Primary* get_ident(ident_id_t id);
+    static AST_Primary* get_ident(string_id_t id);
     static AST_Primary* get_expr(AST_Expr *expr);
-    static AST_Primary* get_str(AST_String *str);
+    static AST_Primary* get_str(string_id_t str);
     static AST_Primary* get_const(uint64_t val);
     ~AST_Primary();
 
@@ -106,11 +93,11 @@ struct AST_Postfix : public AST_Expr {
     AST_Expr *base;
 
     enum : ast_enum_t { ARR_SIZE = 0, CALL_ARGS = 1, MEMBER_ID = 2 };
-    std::variant<AST_Expr*, AST_ArgumentsList*, ident_id_t> arg;
+    std::variant<AST_Expr*, AST_ArgumentsList*, string_id_t> arg;
 
     static AST_Postfix* get_arr(AST_Expr *base, AST_Expr *size);
     static AST_Postfix* get_call(AST_Expr *base, AST_ArgumentsList *args);
-    static AST_Postfix* get_accesor(AST_Expr *base, ident_id_t member, bool is_ptr);
+    static AST_Postfix* get_accesor(AST_Expr *base, string_id_t member, bool is_ptr);
     static AST_Postfix* get_incdec(AST_Expr *base, bool is_dec);
 
     virtual ~AST_Postfix();
@@ -200,8 +187,9 @@ struct AST_TypeSpecifier : public AST_Node {
         T_UNISTRUCT, T_ENUM, T_NAMED,
     } spec_type;
     
-    enum : ast_enum_t { UNISTRUCT_SPEC = 0, ENUM_SPEC = 1, NAMED_SPEC = 2 };
-    std::variant<AST_StructOrUsionSpec*, AST_EnumSpecifier*, AST_TypeName*> v;
+    // enum : ast_enum_t { UNISTRUCT_SPEC = 0, ENUM_SPEC = 1, NAMED_SPEC = 2 };
+    // std::variant<AST_StructOrUsionSpec*, AST_EnumSpecifier*, AST_TypeName*> v;
+    AST_Node *v;
 
     explicit AST_TypeSpecifier(TypeSpec type);
     explicit AST_TypeSpecifier(AST_StructOrUsionSpec *spec);
@@ -274,18 +262,18 @@ struct AST_StructDeclarationList : public AST_Node {
 
 struct AST_StructOrUsionSpec : public AST_Node {
     bool is_union;
-    ident_id_t name;
+    string_id_t name;
     AST_StructDeclarationList *body;
 
-    AST_StructOrUsionSpec(bool is_union, ident_id_t name, AST_StructDeclarationList *body);
+    AST_StructOrUsionSpec(bool is_union, string_id_t name, AST_StructDeclarationList *body);
     ~AST_StructOrUsionSpec();
 };
 
 struct AST_Enumerator : public AST_Node {
-    ident_id_t name;
+    string_id_t name;
     AST_Expr *val;
 
-    AST_Enumerator(ident_id_t name, AST_Expr *val);
+    AST_Enumerator(string_id_t name, AST_Expr *val);
     ~AST_Enumerator();
 };
 
@@ -298,10 +286,10 @@ struct AST_EnumeratorList : public AST_Node {
 };
 
 struct AST_EnumSpecifier : public AST_Node {
-    ident_id_t name;
+    string_id_t name;
     AST_EnumeratorList *body;
 
-    AST_EnumSpecifier(ident_id_t name, AST_EnumeratorList *body);
+    AST_EnumSpecifier(string_id_t name, AST_EnumeratorList *body);
     ~AST_EnumSpecifier();
 };
 
@@ -339,7 +327,7 @@ struct AST_DirectDeclarator : public AST_Node {
     
     enum : ast_enum_t { IDENT = 0, COMM_BASE = 1, NEST_BASE = 2 };
     std::variant<
-        ident_id_t,
+        string_id_t,
         AST_DirectDeclarator*,
         AST_Declarator*
     > base;
@@ -348,7 +336,7 @@ struct AST_DirectDeclarator : public AST_Node {
     AST_Expr *arr_size = nullptr;
     AST_ParameterTypeList *func_args = nullptr;
 
-    static AST_DirectDeclarator* get_ident(ident_id_t ident);
+    static AST_DirectDeclarator* get_ident(string_id_t ident);
     static AST_DirectDeclarator* get_nested(AST_Declarator *decl);
     static AST_DirectDeclarator* get_arr(AST_DirectDeclarator *base, AST_TypeQualifiers *qual, AST_Expr *sz);
     static AST_DirectDeclarator* get_func(AST_DirectDeclarator *base, AST_ParameterTypeList *args);
@@ -438,11 +426,11 @@ struct AST_AbstractDeclarator : public AST_Node {
 
 struct AST_Designator : public AST_Node {
     enum { INDEX = 0, IDENT = 1 };
-    std::variant<AST_Expr*, ident_id_t> val;
+    std::variant<AST_Expr*, string_id_t> val;
     bool is_index; // indexation or field name
 
     explicit AST_Designator(AST_Expr *val);
-    explicit AST_Designator(ident_id_t field);
+    explicit AST_Designator(string_id_t field);
     ~AST_Designator();
 };
 
@@ -488,13 +476,13 @@ struct AST_Statement : public AST_Node {
 
 struct AST_LabeledStmt : public AST_Statement {
     enum : ast_enum_t { CASE_EXPR = 0, LABEL_NAME = 1 };
-    std::variant<AST_Node*, ident_id_t> label;
+    std::variant<AST_Node*, string_id_t> label;
 
     AST_Statement *child;
     enum LabelType : ast_enum_t { SIMPL, SW_CASE, SW_DEFAULT } type;
 
     AST_LabeledStmt(AST_Node *label, AST_Statement *stmt, LabelType type);
-    AST_LabeledStmt(ident_id_t label, AST_Statement *stmt, LabelType type);
+    AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelType type);
     ~AST_LabeledStmt();
 };
 
@@ -561,11 +549,11 @@ struct AST_JumpStmt : public AST_Statement {
     } type;
 
     enum : ast_enum_t { RET_EXPR = 0, GOTO_NAME = 1 };
-    std::variant<AST_Expr*, ident_id_t> arg;
+    std::variant<AST_Expr*, string_id_t> arg;
 
     explicit AST_JumpStmt(JumpType jtype);
     AST_JumpStmt(JumpType jtype, AST_Expr *arg);
-    AST_JumpStmt(JumpType jtype, ident_id_t arg);
+    AST_JumpStmt(JumpType jtype, string_id_t arg);
     ~AST_JumpStmt();
 };
 
@@ -593,7 +581,7 @@ struct AST_TranslationUnit : public AST_Node {
 
 // Implemented in utils.cpp
 void check_typedef(AST_Declaration *decl);
-AST_TypeName* get_def_type(ident_id_t id);
+AST_TypeName* get_def_type(string_id_t id);
 
 
 #endif /* __AST_H__ */

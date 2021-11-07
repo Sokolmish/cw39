@@ -45,8 +45,8 @@
 	int boolean;
 	int enum_val;
 	uint64_t u64;
-	const char *str;
-	ident_id_t ident_id;
+	string_id_t str;
+	string_id_t ident_id;
 
 	struct AST_Expr *expr;
 
@@ -174,7 +174,7 @@
 primary_expr
 	: IDENTIFIER							{ $$ = AST_Primary::get_ident($1); }
 	| CONSTANT								{ $$ = AST_Primary::get_const($1); }
-	| STRING_LITERAL						{ $$ = AST_Primary::get_str(new AST_String($1)); }
+	| STRING_LITERAL						{ $$ = AST_Primary::get_str($1); }
 	| '(' expr ')'							{ $$ = AST_Primary::get_expr($2); }
 	;
 
@@ -190,7 +190,7 @@ postfix_expr
 	;
 
 arg_expr_lst
-	: assign_expr							{ $$ = new AST_ArgumentsList(); }
+	: assign_expr							{ $$ = (new AST_ArgumentsList())->append($1); }
 	| arg_expr_lst ',' assign_expr			{ $$ = $1->append($3); };
 	;
 

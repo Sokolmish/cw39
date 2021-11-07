@@ -1,6 +1,6 @@
 EXEC_NAME=cw39
 C_ARGS=-std=gnu11 -g -Wall -Wextra
-CXX_ARGS=-std=c++20 -g -Wall -Wextra
+CXX_ARGS=-std=gnu++20 -g -Wall -Wextra
 
 # General
 

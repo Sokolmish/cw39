@@ -184,8 +184,8 @@ union YYSTYPE
 	int boolean;
 	int enum_val;
 	uint64_t u64;
-	const char *str;
-	ident_id_t ident_id;
+	string_id_t str;
+	string_id_t ident_id;
 
 	struct AST_Expr *expr;
 

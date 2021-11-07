@@ -48,10 +48,11 @@ typedef struct lex_extra {
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra);
 void destroy_scanner(yyscan_t scanner);
 
-typedef int ident_id_t;
+typedef int string_id_t;
 #define NO_IDENT_ID 0
 
-ident_id_t get_ident_id(const char *ident, int *type);
+string_id_t get_ident_id(const char *ident, int *type);
+string_id_t get_string_id(const char *str);
 
 uint64_t get_integer(const char *str);
 

@@ -9,16 +9,17 @@
 #include "y.tab.h"
 
 std::map<std::string, IdentInfo, std::less<>> identifiers_map;
-static ident_id_t idents_counter = 1;
+std::map<std::string, StringInfo, std::less<>> strings_map;
 
-ident_id_t get_ident_id(const char *ident, int *type) {
+static string_id_t ident_cntr = 1;
+static string_id_t str_cntr = 1;
+
+string_id_t get_ident_id(const char *ident, int *type) {
     auto it = identifiers_map.lower_bound(ident);
     // If not exists
     if (it == identifiers_map.end() || !identifiers_map.key_comp()(ident, it->first)) {
-        auto ins = identifiers_map.emplace_hint(
-            it, std::string(ident), IdentInfo(idents_counter));
-        ins->second.sv = std::string_view(ins->first);
-        idents_counter++;
+        auto ins = identifiers_map.emplace_hint(it, ident, IdentInfo(ident_cntr));
+        ident_cntr++;
         *type = IDENTIFIER;
         return ins->second.id;
     }
@@ -28,11 +29,25 @@ ident_id_t get_ident_id(const char *ident, int *type) {
     }
 }
 
+string_id_t get_string_id(const char *str) {
+    auto it = strings_map.lower_bound(str);
+    if (it == strings_map.end() || !strings_map.key_comp()(str, it->first)) {
+        // If not exists
+        auto ins = strings_map.emplace_hint(it, str, StringInfo(str_cntr));
+        str_cntr++;
+        return ins->second.id;
+    }
+    else {
+        // If already exists
+        return it->second.id;
+    }
+}
+
 void check_typedef(AST_Declaration *decl) {
     (void)decl; // TODO
 }
 
-AST_TypeName* get_def_type(ident_id_t id) {
+AST_TypeName* get_def_type(string_id_t id) {
     (void)id;
     throw; // TODO
 }
