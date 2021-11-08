@@ -1,12 +1,13 @@
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 #include "parser/parser.hpp"
 
 std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
     t.seekg(0, std::ios::end);
-    size_t size = t.tellg();
+    auto size = t.tellg();
     std::string buffer(size, ' ');
     t.seekg(0);
     t.read(&buffer[0], size);
@@ -19,9 +20,9 @@ int main(int argc, char **argv) {
         path = argv[1];
 
     auto text = readFile(path);
-    auto ast = parse_program(text);
-    printf("%lu\n", ast->children.size());
-    delete ast;
+    auto ast = std::shared_ptr<AST_TranslationUnit>(parse_program(text));
+
+    std::cout << ast->getTreeNode()->printHor() << std::endl;
 
     return 0;
 }

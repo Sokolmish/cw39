@@ -3,22 +3,24 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include <ctype.h>
-#include <cassert>
+#include <cctype>
 
 #include "y.tab.h"
 
 std::map<std::string, IdentInfo, std::less<>> identifiers_map;
 std::map<std::string, StringInfo, std::less<>> strings_map;
 
+static std::map<string_id_t, std::string> inv_idents_map;
+static std::map<string_id_t, std::string> inv_strings_map;
+
 static string_id_t ident_cntr = 1;
 static string_id_t str_cntr = 1;
 
 string_id_t get_ident_id(const char *ident, int *type) {
     auto it = identifiers_map.lower_bound(ident);
-    // If not exists
-    if (it == identifiers_map.end() || !identifiers_map.key_comp()(ident, it->first)) {
+    if (it == identifiers_map.end() || it->first != ident) {
         auto ins = identifiers_map.emplace_hint(it, ident, IdentInfo(ident_cntr));
+        inv_idents_map.emplace_hint(inv_idents_map.end(), ident_cntr, ins->first);
         ident_cntr++;
         *type = IDENTIFIER;
         return ins->second.id;
@@ -31,16 +33,23 @@ string_id_t get_ident_id(const char *ident, int *type) {
 
 string_id_t get_string_id(const char *str) {
     auto it = strings_map.lower_bound(str);
-    if (it == strings_map.end() || !strings_map.key_comp()(str, it->first)) {
-        // If not exists
+    if (it == strings_map.end() || it->first != str) {
         auto ins = strings_map.emplace_hint(it, str, StringInfo(str_cntr));
+        inv_strings_map.emplace_hint(inv_strings_map.end(), ident_cntr, ins->first);
         str_cntr++;
         return ins->second.id;
     }
-    else {
-        // If already exists
+    else { // If already exists
         return it->second.id;
     }
+}
+
+std::string get_ident_by_id(string_id_t id) {
+    return std::string(inv_idents_map.find(id)->second);
+}
+
+std::string get_string_by_id(string_id_t id) {
+    return std::string(inv_strings_map.find(id)->second);
 }
 
 void check_typedef(AST_Declaration *decl) {
