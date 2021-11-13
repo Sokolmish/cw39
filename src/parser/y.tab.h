@@ -34,8 +34,8 @@
 /* Undocumented macros, especially those whose name start with YY_,
    are private implementation details.  Do not rely on them.  */
 
-#ifndef YY_YY_PARSER_Y_TAB_H_INCLUDED
-# define YY_YY_PARSER_Y_TAB_H_INCLUDED
+#ifndef YY_YY_Y_TAB_H_INCLUDED
+# define YY_YY_Y_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -179,7 +179,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 44 "parser/parser.y"
+#line 44 "parser.y"
 
 	int boolean;
 	int enum_val;
@@ -232,7 +232,7 @@ union YYSTYPE
 	struct AST_FunctionDef *func_def;
 	struct AST_TranslationUnit *trans_unit;
 
-#line 236 "parser/y.tab.h"
+#line 236 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -258,4 +258,4 @@ struct YYLTYPE
 
 int yyparse (yyscan_t scanner, struct AST_TranslationUnit **parser_result);
 
-#endif /* !YY_YY_PARSER_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
