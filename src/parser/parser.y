@@ -15,10 +15,7 @@
 	#endif
 
 	int yylex(void*, void*, yyscan_t);
-
-	void yyerror(void*, yyscan_t, AST_TranslationUnit**, const char *str) {
-		fprintf(stderr, "error: %s\n",str);
-	}
+	void yyerror(void*, yyscan_t, AST_TranslationUnit**, const char *str);
 
 	#ifdef __cplusplus
 	}
@@ -590,6 +587,15 @@ func_def
 
 
 %%
+
+void yyerror(void *loc, yyscan_t, AST_TranslationUnit **root, const char *str) {
+    // fprintf(stderr, "error: %s\n",str);
+    // printf("%s\n", (*root)->getTreeNode()->printHor().c_str());
+
+    (void)root;
+    YYLTYPE *mloc = reinterpret_cast<YYLTYPE*>(loc);
+    fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
+}
 
 AST_TranslationUnit* parse_program(std::string const &str) {
 	yyscan_t scanner;

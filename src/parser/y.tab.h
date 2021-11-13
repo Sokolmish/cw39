@@ -179,7 +179,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 44 "parser.y"
+#line 41 "parser.y"
 
 	int boolean;
 	int enum_val;
