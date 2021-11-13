@@ -468,7 +468,8 @@ TreeNodeRef AST_StructOrUsionSpec::getTreeNode() const {
     if (name != 0)
         str += "  "s + get_ident_by_id(name);
     auto node = TreeNode::create(str);
-    node->addChild(body->getTreeNode());
+    if (body)
+        node->addChild(body->getTreeNode());
     return node;
 }
 
@@ -619,8 +620,10 @@ TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
         auto node = TreeNode::create("array_of"s);
         node->addChild(std::get<uniq<AST_Node>>(base)->getTreeNode());
         auto arr_node = TreeNode::create("properties"s);
-        arr_node->addChild(arr_type_qual->getTreeNode());
-        arr_node->addChild(arr_size->getTreeNode());
+        if (arr_type_qual)
+            arr_node->addChild(arr_type_qual->getTreeNode());
+        if (arr_size)
+            arr_node->addChild(arr_size->getTreeNode());
         node->addChild(arr_node);
         return node;
     }
