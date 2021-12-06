@@ -21,8 +21,7 @@ enum : ast_enum_t {
     AST_ENUM_SPEC, AST_ENUMER, AST_ENUMER_LST,
     AST_DECLARATION, AST_INIT_DECL_LST, AST_INIT_DECL, AST_DECLARATOR,
     AST_DIR_DECLARATOR, AST_POINTER, AST_PARAM_DECL, AST_PARAM_TYPE_LST, AST_PARAM_LST,
-    AST_TYPE_NAME, AST_DIR_ABSTRACT_DECL, AST_ABSTRACT_DECL,
-    AST_DESIGNATOR, AST_INITIALIZER_LST, AST_INITIALIZER,
+    AST_TYPE_NAME, AST_DESIGNATOR, AST_INITIALIZER_LST, AST_INITIALIZER,
     AST_STATEMENT, AST_BLOCK_ITEM_LST, AST_FUNC_DEF, AST_TRANS_UNIT,
 };
 
@@ -48,7 +47,6 @@ protected:
 struct AST_StructOrUsionSpec;
 struct AST_EnumSpecifier;
 struct AST_Declarator;
-struct AST_AbstractDeclarator;
 struct AST_TypeName;
 struct AST_Initializer;
 struct AST_ParameterTypeList;
@@ -202,12 +200,12 @@ struct AST_TypeSpecifier : public AST_Node {
 
     explicit AST_TypeSpecifier(TypeSpec type);
     explicit AST_TypeSpecifier(AST_StructOrUsionSpec *spec);
-    explicit AST_TypeSpecifier(AST_EnumSpecifier *spec);
     explicit AST_TypeSpecifier(AST_TypeName *spec);
+    explicit AST_TypeSpecifier(AST_EnumSpecifier *spec);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
-struct AST_DeclSpecifiers : public AST_Node {
+struct  AST_DeclSpecifiers : public AST_Node {
     static constexpr const char * const storstr[] = {
             "<storage>", "extern", "static", "auto",
             "register", "typedef",
@@ -374,10 +372,9 @@ struct AST_Declarator : public AST_Node {
 
 struct AST_ParameterDeclaration : public AST_Node {
     uniq<AST_DeclSpecifiers> specifiers;
-    uniq<AST_Node> child; // Declarator, AbstractDeclarator
-    bool is_abstract;
+    uniq<AST_Declarator> child; // Declarator
 
-    AST_ParameterDeclaration(AST_DeclSpecifiers *spec, AST_Node *child, bool is_abstr);
+    AST_ParameterDeclaration(AST_DeclSpecifiers *spec, AST_Declarator *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
@@ -399,33 +396,9 @@ struct AST_ParameterTypeList : public AST_Node {
 
 struct AST_TypeName : public AST_Node {
     uniq<AST_SpecifierQualifierList> qual;
-    uniq<AST_AbstractDeclarator> declarator;
+    uniq<AST_Declarator> declarator;
 
-    AST_TypeName(AST_SpecifierQualifierList *qual, AST_AbstractDeclarator *decl);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
-};
-
-struct AST_DirectAbstractDeclarator : public AST_Node {
-    enum DeclType : ast_enum_t { NESTED, ARRAY, FUNC } type;
-    uniq<AST_Node> base = nullptr;
-
-    uniq<AST_Expr> arr_size = nullptr;
-    uniq<AST_ParameterTypeList> func_args = nullptr;
-
-    static AST_DirectAbstractDeclarator* get_nested(AST_Node *decl);
-    static AST_DirectAbstractDeclarator* get_arr(AST_Node *base, AST_Expr *sz);
-    static AST_DirectAbstractDeclarator* get_func(AST_Node *base, AST_ParameterTypeList *args);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
-    explicit AST_DirectAbstractDeclarator(DeclType dtype);
-};
-
-struct AST_AbstractDeclarator : public AST_Node {
-    uniq<AST_DirectAbstractDeclarator> direct;
-    uniq<AST_Pointer> ptr;
-
-    AST_AbstractDeclarator(AST_DirectAbstractDeclarator *decl, AST_Pointer *pointer);
+    AST_TypeName(AST_SpecifierQualifierList *qual, AST_Declarator *decl);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 

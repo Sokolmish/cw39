@@ -145,8 +145,6 @@
 %type <param_lst> param_lst
 %type <param_declaration> parameter_declaration
 %type <type_name> type_name
-%type <abstract_decl> abstr_declarator
-%type <dir_abstract_decl> dir_abstr_declarator
 
 %type <initializer> initializer
 %type <initializer_lst> init_lst
@@ -464,32 +462,13 @@ param_lst
 	;
 
 parameter_declaration
-	: decl_specs declarator							{ $$ = new AST_ParameterDeclaration($1, $2, false); }
-	| decl_specs abstr_declarator					{ $$ = new AST_ParameterDeclaration($1, $2, true); }
-	| decl_specs									{ $$ = new AST_ParameterDeclaration($1, nullptr, false); }
+	: decl_specs declarator							{ $$ = new AST_ParameterDeclaration($1, $2); }
+	| decl_specs									{ $$ = new AST_ParameterDeclaration($1, nullptr); }
 	;
 
 type_name
 	: spec_qual_lst									{ $$ = new AST_TypeName($1, nullptr); }
-	| spec_qual_lst abstr_declarator				{ $$ = new AST_TypeName($1, $2); }
-	;
-
-abstr_declarator
-	: pointer										{  $$ = new AST_AbstractDeclarator(nullptr, $1); }
-	| dir_abstr_declarator							{  $$ = new AST_AbstractDeclarator($1, nullptr); }
-	| pointer dir_abstr_declarator					{  $$ = new AST_AbstractDeclarator($2, $1); }
-	;
-
-dir_abstr_declarator
-	: '(' abstr_declarator ')'						{ $$ = AST_DirectAbstractDeclarator::get_nested($2); }
-	| '[' ']'										{ $$ = AST_DirectAbstractDeclarator::get_arr(nullptr, nullptr); }
-	| '[' assign_expr ']'							{ $$ = AST_DirectAbstractDeclarator::get_arr(nullptr, $2); }
-	| dir_abstr_declarator '[' ']'					{ $$ = AST_DirectAbstractDeclarator::get_arr($1, nullptr); }
-	| dir_abstr_declarator '[' assign_expr ']'		{ $$ = AST_DirectAbstractDeclarator::get_arr($1, $3); }
-	| '(' ')'										{ $$ = AST_DirectAbstractDeclarator::get_func(nullptr, nullptr); }
-	| '(' param_type_lst ')'						{ $$ = AST_DirectAbstractDeclarator::get_func(nullptr, $2); }
-	| dir_abstr_declarator '(' ')'					{ $$ = AST_DirectAbstractDeclarator::get_func($1, nullptr); }
-	| dir_abstr_declarator '(' param_type_lst ')'	{ $$ = AST_DirectAbstractDeclarator::get_func($1, $3); }
+	| spec_qual_lst declarator				        { $$ = new AST_TypeName($1, $2); }
 	;
 
 
