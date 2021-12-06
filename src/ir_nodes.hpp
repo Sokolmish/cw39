@@ -88,6 +88,8 @@ public:
     [[nodiscard]] bool isRegister() const;
     [[nodiscard]] union_type const& getVal() const;
 
+    [[nodiscard]] std::string to_string() const;
+
     template <class T>
     [[nodiscard]] T castValTo() const {
         return std::visit([](auto const &arg) -> T {
@@ -139,9 +141,13 @@ struct IR_Node {
 };
 
 struct IR_Terminator {
-    IRval cond;
-};
+    enum TermType { NONE, RET, BRANCH, JUMP } type;
+    std::optional<IRval> val;
 
+    IR_Terminator();
+    IR_Terminator(TermType type);
+    IR_Terminator(TermType type, IRval val);
+};
 
 // Blocks
 
@@ -151,11 +157,9 @@ struct IR_Block {
 
     std::vector<IR_Block*> prev;
     std::vector<IR_Block*> next;
-    std::optional<IR_Terminator> terminator;
+    IR_Terminator terminator;
 
     explicit IR_Block(int id);
-    void addNext(IR_Block &block); // TODO: rename to linkWithNext
-    void addPrev(IR_Block &block);
     void addNode(IR_Node node);
 };
 

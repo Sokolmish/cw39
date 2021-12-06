@@ -1,9 +1,12 @@
 #include "ir_nodes.hpp"
 #include "utils.hpp"
 
-// Types
+// IR_Type
 
 IR_Type::IR_Type(IR_Type::Type type) : type(type) {}
+
+
+// IR_TypeDirect
 
 IR_TypeDirect::IR_TypeDirect(DirType spec) : IR_Type(IR_Type::DIRECT), spec(spec) {}
 
@@ -49,6 +52,8 @@ bool IR_TypeDirect::equal(const IR_Type &rhs) const {
 }
 
 
+// IR_TypePtr
+
 IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :
         IR_Type(IR_Type::POINTER), child(child) {}
 
@@ -60,6 +65,8 @@ bool IR_TypePtr::equal(const IR_Type &rhs) const {
         is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
 }
 
+
+// IR_TypeFunc
 
 IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
         IR_Type(FUNCTION), ret(ret), args(), isVariadic(false) {}
@@ -80,6 +87,8 @@ bool IR_TypeFunc::equal(const IR_Type &rhs) const {
     return true;
 }
 
+
+// IR_TypeArray
 
 IR_TypeArray::IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size) :
         IR_Type(IR_Type::ARRAY), child(child), size(size) {}
@@ -134,16 +143,6 @@ std::string IR_ExprOper::opToString() const {
 
 IR_Block::IR_Block(int id) : id(id) {}
 
-void IR_Block::addNext(IR_Block &block) {
-    next.push_back(&block);
-    block.prev.push_back(this);
-}
-
-void IR_Block::addPrev(IR_Block &block) {
-    prev.push_back(&block);
-    block.next.push_back(this);
-}
-
 void IR_Block::addNode(IR_Node node) {
     body.push_back(std::move(node));
 }
@@ -180,7 +179,25 @@ bool IRval::isRegister() const {
     return isReg;
 }
 
+std::string IRval::to_string() const {
+    if (isReg)
+        return std::visit([](auto e) -> std::string { return "%" + std::to_string(e); }, val);
+    else
+        return std::visit([](auto e) -> std::string { return std::to_string(e); }, val);
+}
+
+
+// IR_Node
 
 IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std::move(body)) {}
 
 IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}
+
+
+// IR_Terminator
+
+IR_Terminator::IR_Terminator() : type(NONE), val() {}
+
+IR_Terminator::IR_Terminator(IR_Terminator::TermType type) : type(type), val() {}
+
+IR_Terminator::IR_Terminator(IR_Terminator::TermType type, IRval val) : type(type), val(std::move(val)) {}

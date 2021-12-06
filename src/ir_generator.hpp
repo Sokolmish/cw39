@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <map>
+#include <stack>
 #include <memory>
 #include <optional>
 #include <fmt/core.h>
@@ -32,17 +33,24 @@ struct IR_Function {
     AST_DeclSpecifiers::StorageSpec storage;
     bool isInline;
     std::shared_ptr<IR_Type> fullType;
+    IR_Block *entryBlock;
 };
 
 class IR_Generator {
 private:
-    std::vector<IR_Block> blocks;
+    std::vector<std::unique_ptr<IR_Block>> blocks;
     std::vector<IR_Function> funcs;
     VariablesStack<string_id_t, IRval> variables;
 
+    int blocksCounter;
+    IR_Block* getNewBlock();
     IR_Block *curBlock = nullptr;
-    static int blocksCounter;
-    void selectNewBlock();
+
+    struct LoopBlocks {
+        IR_Block *cond;
+        IR_Block *exit;
+    };
+    std::stack<LoopBlocks> activeLoops;
 
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
