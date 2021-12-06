@@ -10,14 +10,13 @@
 #include <memory>
 #include <optional>
 #include <fmt/core.h>
+#include <exception>
 
 [[noreturn]] inline void semanticError(const std::string &msg) {
-    fmt::print(stderr, "%s\n", msg);
-    throw;
+    throw std::runtime_error(fmt::format("{}\n", msg));
 }
 [[noreturn]] inline void notImplemented(int line, const std::string &msg = "") {
-    fmt::print(stderr, "Not implemented (%d): %s\n", line, msg);
-    throw;
+    throw std::runtime_error(fmt::format("Not implemented ({}): {}\n", line, msg));
 }
 #define NOT_IMPLEMENTED(msg) notImplemented(__LINE__, __FILE__ " " msg)
 

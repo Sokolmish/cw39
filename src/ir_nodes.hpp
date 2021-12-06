@@ -16,6 +16,7 @@ struct IR_Type {
 
     explicit IR_Type(Type type);
     virtual ~IR_Type() = default;
+    virtual bool equal(IR_Type const &rhs) const = 0;
 };
 
 struct IR_TypeDirect : public IR_Type {
@@ -24,6 +25,8 @@ struct IR_TypeDirect : public IR_Type {
     } spec;
 
     explicit IR_TypeDirect(DirType spec);
+    bool equal(IR_Type const &rhs) const override;
+
     [[nodiscard]] bool isInteger() const;
     [[nodiscard]] bool isFloat() const;
     [[nodiscard]] bool isSigned() const;
@@ -38,6 +41,7 @@ struct IR_TypePtr : public IR_Type {
     bool is_volatile = false;
 
     explicit IR_TypePtr(std::shared_ptr<IR_Type> child);
+    bool equal(IR_Type const &rhs) const override;
 };
 
 struct IR_TypeArray : public IR_Type {
@@ -45,6 +49,7 @@ struct IR_TypeArray : public IR_Type {
     uint64_t size;
 
     IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size);
+    bool equal(IR_Type const &rhs) const override;
 };
 
 struct IR_TypeFunc : public IR_Type {
@@ -54,6 +59,7 @@ struct IR_TypeFunc : public IR_Type {
 
     explicit IR_TypeFunc(std::shared_ptr<IR_Type> ret);
     IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic);
+    bool equal(IR_Type const &rhs) const override;
 };
 
 
@@ -96,8 +102,9 @@ public:
 enum IR_Ops {
     IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
     IR_XOR, IR_AND, IR_OR, IR_LAND, IR_LOR,
-    IR_NOT, IR_NEG,
-    IR_DEREF, IR_ALLOCA,
+    IR_EQ, IR_NE, IR_GT, IR_LT, IR_GE, IR_LE,
+    IR_DEREF,
+    IR_ALLOCA, IR_STORE,
 };
 
 struct IR_Expr {
@@ -126,6 +133,9 @@ struct IR_ExprCall : public IR_Expr {
 struct IR_Node {
     std::optional<IRval> res;
     std::unique_ptr<IR_Expr> body;
+
+    IR_Node(IRval res, std::unique_ptr<IR_Expr> body);
+    IR_Node(std::unique_ptr<IR_Expr> body);
 };
 
 struct IR_Terminator {

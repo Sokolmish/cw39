@@ -41,8 +41,25 @@ int IR_TypeDirect::getBytesSize() const {
     throw;
 }
 
+bool IR_TypeDirect::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::DIRECT)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(rhs);
+    return spec == rtype.spec;
+}
+
+
 IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :
         IR_Type(IR_Type::POINTER), child(child) {}
+
+bool IR_TypePtr::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::POINTER)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypePtr const &>(rhs);
+    return is_const == rtype.is_const && is_restrict == rtype.is_restrict &&
+        is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
+}
+
 
 IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
         IR_Type(FUNCTION), ret(ret), args(), isVariadic(false) {}
@@ -50,8 +67,29 @@ IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
 IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic) :
         IR_Type(IR_Type::FUNCTION), ret(ret), args(args), isVariadic(variadic) {}
 
+bool IR_TypeFunc::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::FUNCTION)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeFunc const &>(rhs);
+    if (isVariadic != rtype.isVariadic || !ret->equal(*rtype.ret) || args.size() != rtype.args.size())
+        return false;
+    for (size_t i = 0; i < args.size(); i++) {
+        if (!args[i]->equal(*rtype.args[i]))
+            return false;
+    }
+    return true;
+}
+
+
 IR_TypeArray::IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size) :
         IR_Type(IR_Type::ARRAY), child(child), size(size) {}
+
+bool IR_TypeArray::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::ARRAY)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeArray const &>(rhs);
+    return size == rtype.size && child->equal(*rtype.child);
+}
 
 
 // Expressions
@@ -66,22 +104,27 @@ IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) :
 
 std::string IR_ExprOper::opToString() const {
     switch (op) {
-        case IR_MUL:    return  "mul";
-        case IR_DIV:    return  "div";
-        case IR_REM:    return  "rem";
-        case IR_ADD:    return  "add";
-        case IR_SUB:    return  "sub";
-        case IR_SHR:    return  "shr";
-        case IR_SHL:    return  "shl";
-        case IR_XOR:    return  "xor";
-        case IR_AND:    return  "and";
-        case IR_OR:     return  "or";
-        case IR_LAND:   return  "land";
-        case IR_LOR:    return  "lor";
-        case IR_NOT:    return  "not";
-        case IR_NEG:    return  "neg";
-        case IR_DEREF:  return  "deref";
+        case IR_MUL:    return "mul";
+        case IR_DIV:    return "div";
+        case IR_REM:    return "rem";
+        case IR_ADD:    return "add";
+        case IR_SUB:    return "sub";
+        case IR_SHR:    return "shr";
+        case IR_SHL:    return "shl";
+        case IR_XOR:    return "xor";
+        case IR_AND:    return "and";
+        case IR_OR:     return "or";
+        case IR_LAND:   return "land";
+        case IR_LOR:    return "lor";
+        case IR_EQ:     return "eq";
+        case IR_NE:     return "ne";
+        case IR_GT:     return "gt";
+        case IR_LT:     return "lt";
+        case IR_GE:     return "ge";
+        case IR_LE:     return "le";
+        case IR_DEREF:  return "deref";
         case IR_ALLOCA: return "alloca";
+        case IR_STORE:  return "store";
     }
     throw;
 }
@@ -136,3 +179,8 @@ const IRval::union_type &IRval::getVal() const {
 bool IRval::isRegister() const {
     return isReg;
 }
+
+
+IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std::move(body)) {}
+
+IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}

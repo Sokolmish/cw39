@@ -27,7 +27,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     selectNewBlock();
     fillBlock(*def.body);
 
-    fmt::print("Generation end\n");
+    fmt::print("Generation end\n\n");
 }
 
 int IR_Generator::blocksCounter = 0;
