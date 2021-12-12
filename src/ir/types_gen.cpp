@@ -1,4 +1,4 @@
-#include "ir_generator.hpp"
+#include "generator.hpp"
 
 static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_TypeSpecifier>> const &spec) {
     using ast_ts = AST_TypeSpecifier;

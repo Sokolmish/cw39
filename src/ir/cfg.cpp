@@ -1,4 +1,4 @@
-#include "ir_cfg.hpp"
+#include "cfg.hpp"
 #include <fmt/core.h>
 #include <sstream>
 

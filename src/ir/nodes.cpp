@@ -1,4 +1,4 @@
-#include "ir_nodes.hpp"
+#include "nodes.hpp"
 #include "utils.hpp"
 
 // IR_StorageSpecifier

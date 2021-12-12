@@ -1,11 +1,11 @@
-#ifndef __IR_CFG_HPP__
-#define __IR_CFG_HPP__
+#ifndef __CFG_HPP__
+#define __CFG_HPP__
 
 #include <vector>
 #include <memory>
 #include <map>
 
-#include "ir_nodes.hpp"
+#include "nodes.hpp"
 
 
 class ControlFlowGraph {
@@ -47,4 +47,4 @@ public:
     void printBlocks() const;
 };
 
-#endif /* __IR_CFG_HPP__ */
+#endif /* __CFG_HPP__ */

@@ -1,4 +1,4 @@
-#include "ir_generator.hpp"
+#include "generator.hpp"
 #include <sstream>
 
 IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}

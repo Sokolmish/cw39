@@ -1,4 +1,4 @@
-#include "ir_generator.hpp"
+#include "generator.hpp"
 
 [[nodiscard]]
 static bool isGeneralNumOp(AST_Binop::OpType op) {

@@ -1,8 +1,8 @@
-#ifndef __IR_GENERATOR_HPP__
-#define __IR_GENERATOR_HPP__
+#ifndef __GENERATOR_HPP__
+#define __GENERATOR_HPP__
 
-#include "ir_nodes.hpp"
-#include "ir_cfg.hpp"
+#include "nodes.hpp"
+#include "cfg.hpp"
 #include "parser/ast.hpp"
 #include "utils.hpp"
 
@@ -57,4 +57,4 @@ public:
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> const& getCfg() const;
 };
 
-#endif /* __IR_GENERATOR_HPP__ */
+#endif /* __GENERATOR_HPP__ */

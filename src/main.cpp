@@ -5,21 +5,7 @@
 #include <fmt/core.h>
 
 #include "parser/parser.hpp"
-#include "ir_generator.hpp"
-
-//#include "llvm/IR/Verifier.h"
-//#include "llvm/ExecutionEngine/ExecutionEngine.h"
-//#include "llvm/IR/BasicBlock.h"
-//#include "llvm/IR/Constants.h"
-//#include "llvm/IR/DerivedTypes.h"
-//#include "llvm/IR/Function.h"
-//#include "llvm/IR/LLVMContext.h"
-//#include "llvm/IR/Module.h"
-//#include "llvm/IR/Type.h"
-//#include "llvm/Support/raw_ostream.h"
-//#include "llvm/IR/IRBuilder.h"
-
-//using namespace llvm;
+#include "ir/generator.hpp"
 
 std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
@@ -48,26 +34,6 @@ int main(int argc, char **argv) {
     auto cfg2 = *gen->getCfg();
     gen.reset(nullptr);
     cfg2.printBlocks();
-
-//    LLVMContext *context = new LLVMContext();
-//    Module *module = new Module("top", *context);
-//    IRBuilder<> builder(*context);
-//
-//    FunctionType *funcType = FunctionType::get(builder.getInt32Ty(), false);
-//    Function *mainFunc = Function::Create(funcType, Function::ExternalLinkage, "main", module);
-//    mainFunc->setCallingConv(CallingConv::C);
-//
-//    BasicBlock *entry = BasicBlock::Create(*context, "entrypoint", mainFunc);
-//    builder.SetInsertPoint(entry);
-//
-//    Value *const1 = ConstantInt::get(Type::getInt32Ty(*context), 353);
-//    Value *const2 = ConstantInt::get(Type::getInt32Ty(*context), 48);
-//    Value *retval = builder.CreateAdd(const1, const2, "ret");
-//    builder.CreateRet(retval);
-//
-//    module->print(outs(), nullptr);
-//    delete module;
-//    delete context;
 
     return 0;
 }
