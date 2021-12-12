@@ -62,9 +62,8 @@ bool IR_TypePtr::equal(const IR_Type &rhs) const {
         return false;
     auto const &rtype = dynamic_cast<IR_TypePtr const &>(rhs);
     return is_const == rtype.is_const && is_restrict == rtype.is_restrict &&
-        is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
+           is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
 }
-
 
 // IR_TypeFunc
 
@@ -106,8 +105,7 @@ bool IR_TypeArray::equal(const IR_Type &rhs) const {
 IR_Expr::IR_Expr(IR_Expr::Type type) : type(type) {}
 
 IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) :
-    IR_Expr(IR_Expr::OPERATION), op(op), args(args)
-{
+        IR_Expr(IR_Expr::OPERATION), op(op), args(args) {
     // TODO: check args count
 }
 
@@ -132,10 +130,22 @@ std::string IR_ExprOper::opToString() const {
         case IR_GE:     return "ge";
         case IR_LE:     return "le";
         case IR_DEREF:  return "deref";
-        case IR_ALLOCA: return "alloca";
         case IR_STORE:  return "store";
     }
     throw;
+}
+
+
+// IR_ExprAlloc
+
+IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size) :
+        IR_Expr(ALLOCATION), type(type), size(size) {}
+
+IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap) :
+        IR_Expr(ALLOCATION), type(type), size(size), isOnHeap(onHeap) {}
+
+std::string IR_ExprAlloc::opToString() const {
+    return isOnHeap ? "malloc" : "alloca";
 }
 
 

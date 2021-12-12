@@ -1,4 +1,5 @@
 #include "ir_generator.hpp"
+#include <sstream>
 
 IR_Generator::IR_Generator() : blocksCounter(0) {}
 
@@ -13,7 +14,7 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
             createFunction(dynamic_cast<AST_FunctionDef &>(*top_instr));
         }
         else if (top_instr->node_type == AST_DECLARATION) {
-            NOT_IMPLEMENTED("");
+            NOT_IMPLEMENTED("Top level declarations");
         }
         else {
             semanticError("Only functions definitions and declarations allowed as top-level instructions");
@@ -51,7 +52,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
             auto ident = getDeclaredIdent(*decl.child->v[0]->declarator);
 
             auto res = IRval::createReg(ptrType);
-            auto val = std::make_unique<IR_ExprOper>(IR_ALLOCA, std::vector<IRval>{});
+            auto val = std::make_unique<IR_ExprAlloc>(type, 1U);
             curBlock->addNode(IR_Node{ res, std::move(val) });
 
             variables.put(ident, res);
@@ -188,6 +189,50 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     }
 }
 
+static std::string printType(IR_Type const &type) {
+    if (type.type == IR_Type::POINTER) {
+        auto ptr = dynamic_cast<IR_TypePtr const &>(type);
+        return fmt::format("ptr< {} >", printType(*ptr.child));
+    }
+    else if (type.type == IR_Type::ARRAY) {
+        auto arr = dynamic_cast<IR_TypeArray const &>(type);
+        return fmt::format("array< {} * {} >", arr.size, printType(*arr.child));
+    }
+    else if (type.type == IR_Type::FUNCTION) {
+        std::stringstream ss;
+        auto fun = dynamic_cast<IR_TypeFunc const &>(type);
+        ss << "fun< " << printType(*fun.ret) << " : ";
+        for (auto const &arg : fun.args)
+            ss << printType(*arg) << " ";
+        if (fun.isVariadic)
+            ss << "... ";
+        ss << ">";
+        return ss.str();
+    }
+    else if (type.type == IR_Type::DIRECT) {
+        auto dir = dynamic_cast<IR_TypeDirect const &>(type);
+        switch (dir.spec) {
+            case IR_TypeDirect::U8:
+                return "u8";
+            case IR_TypeDirect::I8:
+                return "i8";
+            case IR_TypeDirect::U32:
+                return "u32";
+            case IR_TypeDirect::I32:
+                return "i32";
+            case IR_TypeDirect::U64:
+                return "u64";
+            case IR_TypeDirect::I64:
+                return "i64";
+            case IR_TypeDirect::F32:
+                return "f32";
+            case IR_TypeDirect::VOID:
+                return "void";
+        }
+    }
+    throw;
+}
+
 static void printBlock(IR_Block const &block) {
     fmt::print("Block {}:\n", block.id);
     for (auto const &node: block.body) {
@@ -199,6 +244,10 @@ static void printBlock(IR_Block const &block) {
             for (auto const &arg: expr.args)
                 fmt::print("{} ", arg.to_string());
             fmt::print("\n");
+        }
+        else if (node.body->type == IR_Expr::ALLOCATION) {
+            auto const &expr = dynamic_cast<IR_ExprAlloc const &>(*node.body);
+            fmt::print("{} {} x {}\n", expr.opToString(), printType(*expr.type), expr.size);
         }
     }
 

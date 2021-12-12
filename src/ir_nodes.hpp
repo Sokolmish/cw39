@@ -105,12 +105,11 @@ enum IR_Ops {
     IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
     IR_XOR, IR_AND, IR_OR, IR_LAND, IR_LOR,
     IR_EQ, IR_NE, IR_GT, IR_LT, IR_GE, IR_LE,
-    IR_DEREF,
-    IR_ALLOCA, IR_STORE,
+    IR_DEREF, IR_STORE,
 };
 
 struct IR_Expr {
-    enum Type { OPERATION, STACKOP, CALL } type;
+    enum Type { OPERATION, ALLOCATION, CALL } type;
 
     explicit IR_Expr(Type type);
     virtual ~IR_Expr() = default;
@@ -121,6 +120,17 @@ struct IR_ExprOper : public IR_Expr {
     std::vector<IRval> args;
 
     IR_ExprOper(IR_Ops op, std::vector<IRval> args);
+
+    std::string opToString() const;
+};
+
+struct IR_ExprAlloc : public IR_Expr {
+    std::shared_ptr<IR_Type> type;
+    size_t size;
+    bool isOnHeap = false;
+
+    IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size);
+    IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap);
 
     std::string opToString() const;
 };
@@ -155,8 +165,8 @@ struct IR_Block {
     int id;
     std::vector<IR_Node> body;
 
-    std::vector<IR_Block*> prev;
-    std::vector<IR_Block*> next;
+    std::vector<IR_Block *> prev;
+    std::vector<IR_Block *> next;
     IR_Terminator terminator;
 
     explicit IR_Block(int id);
