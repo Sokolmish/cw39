@@ -11,6 +11,11 @@ void IR_Generator::selectBlock(IR_Block &block) {
     selectedBlock = &block;
 }
 
+void IR_Generator::deselectBlock() {
+    selectedBlock = nullptr;
+}
+
+
 void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
     for (const auto &top_instr: ast->children) {
         if (top_instr->node_type == AST_FUNC_DEF) {
@@ -73,6 +78,10 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         else {
             semanticError("Only statements and declarations allowed in compound statement");
         }
+
+        // Unreachable code doesn't even validating
+        if (selectedBlock == nullptr || curBlock().terminator.exist())
+            break;
     }
 }
 
@@ -101,24 +110,43 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         }
 
         auto &prevBlock = curBlock();
-        auto &blockAfter = cfg->createBlock();
+        IR_Block *blockAfter = nullptr;
 
         selectBlock(blockTrue);
-        insertStatement(*stmt.body);
-        cfg->linkBlocks(curBlock(), blockAfter);
-        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        if (stmt.body->type == AST_Statement::COMPOUND)
+            fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
+        else
+            insertStatement(*stmt.body);
+
+        if (!curBlock().terminator.exist()) {
+            blockAfter = &cfg->createBlock();
+            cfg->linkBlocks(curBlock(), *blockAfter);
+            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        }
 
         if (stmt.else_body) {
             selectBlock(*blockFalse);
-            insertStatement(*stmt.else_body);
-            cfg->linkBlocks(curBlock(), blockAfter);
-            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            if (stmt.else_body->type == AST_Statement::COMPOUND)
+                fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.else_body));
+            else
+                insertStatement(*stmt.else_body);
+            if (!curBlock().terminator.exist()) {
+                if (!blockAfter)
+                    blockAfter = &cfg->createBlock();
+                cfg->linkBlocks(curBlock(), *blockAfter);
+                curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            }
         }
         else {
-            cfg->linkBlocks(prevBlock, blockAfter);
+            if (!blockAfter)
+                blockAfter = &cfg->createBlock();
+            cfg->linkBlocks(prevBlock, *blockAfter);
         }
 
-        selectBlock(blockAfter);
+        if (blockAfter)
+            selectBlock(*blockAfter);
+        else
+           deselectBlock();
     }
     else if (rawStmt.type == AST_Statement::ITER) {
         auto const &stmt = dynamic_cast<AST_IterationStmt const &>(rawStmt);
@@ -140,12 +168,16 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
 
         activeLoops.push({ blockCond.id, blockAfter.id });
         selectBlock(blockLoop);
-        insertStatement(*stmt.body);
+        if (stmt.body->type == AST_Statement::COMPOUND)
+            fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
+        else
+            insertStatement(*stmt.body);
         activeLoops.pop();
 
-        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
-        cfg->linkBlocks(curBlock(), blockCond);
-
+        if (selectedBlock != nullptr) {
+            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            cfg->linkBlocks(curBlock(), blockCond);
+        }
         selectBlock(blockAfter);
     }
     else if (rawStmt.type == AST_Statement::JUMP) {
@@ -165,7 +197,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().exit));
         }
         else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
-            curBlock().terminator = IR_Terminator(IR_Terminator::BRANCH);
+            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
             cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().cond));
         }
         else if (stmt.type == AST_JumpStmt::J_GOTO) {
@@ -186,11 +218,12 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         selectBlock(compoundBlock);
         fillBlock(stmt);
 
-        auto &blockAfter = cfg->createBlock();
-        cfg->linkBlocks(curBlock(), blockAfter);
-        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
-        selectBlock(blockAfter);
-
+        if (selectedBlock != nullptr) {
+            auto &blockAfter = cfg->createBlock();
+            cfg->linkBlocks(curBlock(), blockAfter);
+            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            selectBlock(blockAfter);
+        }
     }
     else if (rawStmt.type == AST_Statement::LABEL) {
         NOT_IMPLEMENTED("Labeled statements");

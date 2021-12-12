@@ -38,6 +38,7 @@ private:
     IR_Block *selectedBlock = nullptr;
     IR_Block& curBlock();
     void selectBlock(IR_Block &block);
+    void deselectBlock();
 
     struct LoopBlocks {
         int cond, exit;

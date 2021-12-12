@@ -274,6 +274,10 @@ IR_Terminator::IR_Terminator(IR_Terminator::TermType type) : type(type), arg() {
 
 IR_Terminator::IR_Terminator(IR_Terminator::TermType type, IRval val) : type(type), arg(std::move(val)) {}
 
+bool IR_Terminator::exist() const {
+    return type != IR_Terminator::NONE;
+}
+
 IR_Terminator IR_Terminator::copy() const {
     if (arg.has_value())
         return IR_Terminator(type, arg->copy());

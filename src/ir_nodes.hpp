@@ -170,6 +170,7 @@ struct IR_Terminator {
     IR_Terminator();
     IR_Terminator(TermType type);
     IR_Terminator(TermType type, IRval val);
+    bool exist() const;
     IR_Terminator copy() const;
 };
 
