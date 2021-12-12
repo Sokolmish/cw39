@@ -1,6 +1,13 @@
 #include "ir_nodes.hpp"
 #include "utils.hpp"
 
+// IR_StorageSpecifier
+
+IR_StorageSpecifier::IR_StorageSpecifier() : spec(AUTO) {}
+
+IR_StorageSpecifier::IR_StorageSpecifier(IR_StorageSpecifier::Specs spec) : spec(spec) {}
+
+
 // IR_Type
 
 IR_Type::IR_Type(IR_Type::Type type) : type(type) {}
@@ -51,6 +58,10 @@ bool IR_TypeDirect::equal(const IR_Type &rhs) const {
     return spec == rtype.spec;
 }
 
+std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
+    return std::make_shared<IR_TypeDirect>(spec);
+}
+
 
 // IR_TypePtr
 
@@ -63,6 +74,14 @@ bool IR_TypePtr::equal(const IR_Type &rhs) const {
     auto const &rtype = dynamic_cast<IR_TypePtr const &>(rhs);
     return is_const == rtype.is_const && is_restrict == rtype.is_restrict &&
            is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
+}
+
+std::shared_ptr<IR_Type> IR_TypePtr::copy() const {
+    auto res = std::make_shared<IR_TypePtr>(child->copy());
+    res->is_const = is_const;
+    res->is_volatile = is_volatile;
+    res->is_restrict = is_restrict;
+    return res;
 }
 
 // IR_TypeFunc
@@ -86,6 +105,14 @@ bool IR_TypeFunc::equal(const IR_Type &rhs) const {
     return true;
 }
 
+std::shared_ptr<IR_Type> IR_TypeFunc::copy() const {
+    auto retCopy = ret->copy();
+    std::vector<std::shared_ptr<IR_Type>> argsCopy;
+    for (auto &arg : args)
+        argsCopy.push_back(arg->copy());
+    return std::make_shared<IR_TypeFunc>(retCopy, argsCopy, isVariadic);
+}
+
 
 // IR_TypeArray
 
@@ -99,14 +126,26 @@ bool IR_TypeArray::equal(const IR_Type &rhs) const {
     return size == rtype.size && child->equal(*rtype.child);
 }
 
+std::shared_ptr<IR_Type> IR_TypeArray::copy() const {
+    return std::make_shared<IR_TypeArray>(child->copy(), size);
+}
+
 
 // Expressions
 
 IR_Expr::IR_Expr(IR_Expr::Type type) : type(type) {}
 
+
 IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) :
-        IR_Expr(IR_Expr::OPERATION), op(op), args(args) {
+        IR_Expr(IR_Expr::OPERATION), op(op), args(std::move(args)) {
     // TODO: check args count
+}
+
+std::unique_ptr<IR_Expr> IR_ExprOper::copy() const {
+    std::vector<IRval> newArgs;
+    for (auto const &arg : args)
+        newArgs.push_back(arg.copy());
+    return std::make_unique<IR_ExprOper>(op, newArgs);
 }
 
 std::string IR_ExprOper::opToString() const {
@@ -144,6 +183,10 @@ IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size) :
 IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap) :
         IR_Expr(ALLOCATION), type(type), size(size), isOnHeap(onHeap) {}
 
+std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
+    return std::make_unique<IR_ExprAlloc>(type->copy(), size, isOnHeap);
+}
+
 std::string IR_ExprAlloc::opToString() const {
     return isOnHeap ? "malloc" : "alloca";
 }
@@ -157,10 +200,18 @@ void IR_Block::addNode(IR_Node node) {
     body.push_back(std::move(node));
 }
 
+IR_Block IR_Block::copy() const {
+    IR_Block newBlock(id);
+    for (auto const &node : body)
+        newBlock.body.push_back(node.copy());
+    newBlock.prev = prev;
+    newBlock.next = next;
+    newBlock.terminator = terminator;
+    return newBlock;
+}
+
 
 // IRval
-
-uint64_t IRval::regs_counter = 1;
 
 IRval::IRval(std::shared_ptr<IR_Type> type, bool isReg, IRval::union_type v) :
         type(type), isReg(isReg), val(v) {}
@@ -173,8 +224,8 @@ IRval IRval::createVal(std::shared_ptr<IR_Type> type, IRval::union_type v) {
     return IRval(type, false, v);
 }
 
-IRval IRval::createReg(std::shared_ptr<IR_Type> type) {
-    return IRval(type, true, regs_counter++);
+IRval IRval::createReg(std::shared_ptr<IR_Type> type, uint64_t id) {
+    return IRval(type, true, id);
 }
 
 bool IRval::isConstant() const {
@@ -196,6 +247,10 @@ std::string IRval::to_string() const {
         return std::visit([](auto e) -> std::string { return std::to_string(e); }, val);
 }
 
+IRval IRval::copy() const {
+    return IRval(type->copy(), isReg, val);
+}
+
 
 // IR_Node
 
@@ -203,11 +258,25 @@ IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std:
 
 IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}
 
+IR_Node IR_Node::copy() const {
+    if (res.has_value())
+        return IR_Node(res->copy(), body->copy());
+    else
+        return IR_Node(body->copy());
+}
+
 
 // IR_Terminator
 
-IR_Terminator::IR_Terminator() : type(NONE), val() {}
+IR_Terminator::IR_Terminator() : type(NONE), arg() {}
 
-IR_Terminator::IR_Terminator(IR_Terminator::TermType type) : type(type), val() {}
+IR_Terminator::IR_Terminator(IR_Terminator::TermType type) : type(type), arg() {}
 
-IR_Terminator::IR_Terminator(IR_Terminator::TermType type, IRval val) : type(type), val(std::move(val)) {}
+IR_Terminator::IR_Terminator(IR_Terminator::TermType type, IRval val) : type(type), arg(std::move(val)) {}
+
+IR_Terminator IR_Terminator::copy() const {
+    if (arg.has_value())
+        return IR_Terminator(type, arg->copy());
+    else
+        return IR_Terminator(type);
+}

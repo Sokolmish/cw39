@@ -205,7 +205,7 @@ struct AST_TypeSpecifier : public AST_Node {
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
-struct  AST_DeclSpecifiers : public AST_Node {
+struct AST_DeclSpecifiers : public AST_Node {
     static constexpr const char * const storstr[] = {
             "<storage>", "extern", "static", "auto",
             "register", "typedef",

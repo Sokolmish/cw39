@@ -11,12 +11,23 @@
 
 // Types
 
+struct IR_StorageSpecifier {
+    enum Specs { EXTERN, STATIC, AUTO, REGISTER } spec;
+
+    IR_StorageSpecifier();
+    IR_StorageSpecifier(Specs spec);
+};
+
 struct IR_Type {
     enum Type { DIRECT, POINTER, ARRAY, FUNCTION } type;
+
+    IR_Type(IR_Type const &) = delete;
+    IR_Type& operator=(IR_Type const &) = delete;
 
     explicit IR_Type(Type type);
     virtual ~IR_Type() = default;
     virtual bool equal(IR_Type const &rhs) const = 0;
+    virtual std::shared_ptr<IR_Type> copy() const = 0;
 };
 
 struct IR_TypeDirect : public IR_Type {
@@ -26,6 +37,7 @@ struct IR_TypeDirect : public IR_Type {
 
     explicit IR_TypeDirect(DirType spec);
     bool equal(IR_Type const &rhs) const override;
+    std::shared_ptr<IR_Type> copy() const override;
 
     [[nodiscard]] bool isInteger() const;
     [[nodiscard]] bool isFloat() const;
@@ -42,6 +54,7 @@ struct IR_TypePtr : public IR_Type {
 
     explicit IR_TypePtr(std::shared_ptr<IR_Type> child);
     bool equal(IR_Type const &rhs) const override;
+    std::shared_ptr<IR_Type> copy() const override;
 };
 
 struct IR_TypeArray : public IR_Type {
@@ -50,6 +63,7 @@ struct IR_TypeArray : public IR_Type {
 
     IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size);
     bool equal(IR_Type const &rhs) const override;
+    std::shared_ptr<IR_Type> copy() const override;
 };
 
 struct IR_TypeFunc : public IR_Type {
@@ -60,6 +74,7 @@ struct IR_TypeFunc : public IR_Type {
     explicit IR_TypeFunc(std::shared_ptr<IR_Type> ret);
     IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic);
     bool equal(IR_Type const &rhs) const override;
+    std::shared_ptr<IR_Type> copy() const override;
 };
 
 
@@ -70,18 +85,16 @@ public:
     typedef std::variant<uint64_t, float> union_type;
 
 private:
-    static uint64_t regs_counter;
-
     std::shared_ptr<IR_Type> type;
     bool isReg;
-    bool isTemp = false; // TODO
     union_type val;
 
 public:
     IRval(std::shared_ptr<IR_Type> type, bool isReg, union_type v);
+    IRval copy() const;
 
     [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
-    [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type);
+    [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
 
     [[nodiscard]] std::shared_ptr<IR_Type> const& getType() const;
     [[nodiscard]] bool isConstant() const;
@@ -113,6 +126,7 @@ struct IR_Expr {
 
     explicit IR_Expr(Type type);
     virtual ~IR_Expr() = default;
+    virtual std::unique_ptr<IR_Expr> copy() const = 0;
 };
 
 struct IR_ExprOper : public IR_Expr {
@@ -120,7 +134,7 @@ struct IR_ExprOper : public IR_Expr {
     std::vector<IRval> args;
 
     IR_ExprOper(IR_Ops op, std::vector<IRval> args);
-
+    std::unique_ptr<IR_Expr> copy() const override;
     std::string opToString() const;
 };
 
@@ -131,13 +145,11 @@ struct IR_ExprAlloc : public IR_Expr {
 
     IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size);
     IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap);
-
+    std::unique_ptr<IR_Expr> copy() const override;
     std::string opToString() const;
 };
 
-struct IR_ExprCall : public IR_Expr {
-
-};
+//struct IR_ExprCall : public IR_Expr {};
 
 
 // Nodes
@@ -147,30 +159,34 @@ struct IR_Node {
     std::unique_ptr<IR_Expr> body;
 
     IR_Node(IRval res, std::unique_ptr<IR_Expr> body);
-    IR_Node(std::unique_ptr<IR_Expr> body);
+    explicit IR_Node(std::unique_ptr<IR_Expr> body);
+    IR_Node copy() const;
 };
 
 struct IR_Terminator {
     enum TermType { NONE, RET, BRANCH, JUMP } type;
-    std::optional<IRval> val;
+    std::optional<IRval> arg;
 
     IR_Terminator();
     IR_Terminator(TermType type);
     IR_Terminator(TermType type, IRval val);
+    IR_Terminator copy() const;
 };
 
 // Blocks
 
-struct IR_Block {
+class IR_Block {
+public:
     int id;
     std::vector<IR_Node> body;
 
-    std::vector<IR_Block *> prev;
-    std::vector<IR_Block *> next;
+    std::vector<int> prev;
+    std::vector<int> next;
     IR_Terminator terminator;
 
     explicit IR_Block(int id);
     void addNode(IR_Node node);
+    IR_Block copy() const;
 };
 
 #endif /* __IR_ELEM_HPP__ */

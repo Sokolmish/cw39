@@ -30,8 +30,8 @@ static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval c
     if (lhs.getType()->type != IR_Type::DIRECT || rhs.getType()->type != IR_Type::DIRECT)
         semanticError("Pointers arithmetics is not constant");
 
-    auto ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
-    auto rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
+    auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
+    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
 
     if (isIntegerNumOp(op)) {
         if (ltype.isFloat() || rtype.isFloat())
@@ -85,7 +85,7 @@ static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval c
     }
     else if (isGeneralNumOp(op)) {
         // TODO: check type in variant and stored type are equal
-        auto resVal = std::visit([&rhs, op](auto const &l) -> IRval::union_type {
+        auto const &resVal = std::visit([&rhs, op](auto const &l) -> IRval::union_type {
             return std::visit([l, op](auto const &r) -> IRval::union_type {
                 switch (op) {
                     case bop::ADD:
@@ -190,7 +190,7 @@ std::optional<IRval> evalConstantExpr(AST_Expr const &node) {
             if (destType->type != IR_Type::DIRECT)
                 NOT_IMPLEMENTED("");
 
-            auto dirType = dynamic_cast<IR_TypeDirect const &>(*destType);
+            auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*destType);
             IRval::union_type newVal;
             if (dirType.spec == IR_TypeDirect::F32)
                 newVal = arg->castValTo<float>();
@@ -214,7 +214,7 @@ std::optional<IRval> evalConstantExpr(AST_Expr const &node) {
             if (isInList(expr.op, { uop::PRE_INC, uop::PRE_DEC, uop::DEREF, uop::ADDR_OF }))
                 semanticError("Operation is not constant");
 
-            auto dirType = dynamic_cast<IR_TypeDirect const &>(*arg->getType());
+            auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*arg->getType());
 
             if (expr.op == uop::UN_PLUS) {
                 return arg;
@@ -283,7 +283,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             auto rhsVal = evalExpr(*expr.rhs);
             auto val = std::make_unique<IR_ExprOper>(
                     IR_STORE, std::vector<IRval>{ *destVar, rhsVal });
-            curBlock->addNode(IR_Node(std::move(val)));
+            curBlock().addNode(IR_Node(std::move(val)));
             return rhsVal;
         }
 
@@ -322,8 +322,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 else
                     semanticError("Wrong general arithmetic operation");
 
-                auto res = IRval::createReg(lhs.getType());
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(lhs.getType());
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else if (isIntegerNumOp(expr.op)) {
@@ -351,8 +351,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 else
                     semanticError("Wrong general arithmetic operation");
 
-                auto res = IRval::createReg(lhs.getType());
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(lhs.getType());
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else if (isComparsionOp(expr.op)) {
@@ -373,8 +373,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 else
                     semanticError("Wrong comparsion operation");
 
-                auto res = IRval::createReg(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32));
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32));
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else {
@@ -402,8 +402,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                         IRval::createVal(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32), 0U);
                 auto val =
                         std::make_unique<IR_ExprOper>(IR_SUB, std::vector<IRval>{ zero, arg });
-                auto res = IRval::createReg(arg.getType());
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(arg.getType());
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else if (expr.op == uop::UN_NEG) {
@@ -412,8 +412,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                         IRval::createVal(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32), (-1U));
                 auto val =
                         std::make_unique<IR_ExprOper>(IR_XOR, std::vector<IRval>{ maxv, arg });
-                auto res = IRval::createReg(arg.getType());
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(arg.getType());
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else if (expr.op == uop::UN_NOT) {
@@ -422,8 +422,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                         IRval::createVal(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32), (-1U));
                 auto val =
                         std::make_unique<IR_ExprOper>(IR_XOR, std::vector<IRval>{ maxv, arg });
-                auto res = IRval::createReg(arg.getType());
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(arg.getType());
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else {
@@ -451,8 +451,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 auto val = std::make_unique<IR_ExprOper>(
                         IR_DEREF, std::vector<IRval>{ *var });
                 auto const &ptrType = dynamic_cast<IR_TypePtr const &>(*var->getType());
-                auto res = IRval::createReg(ptrType.child);
-                curBlock->addNode(IR_Node(res, std::move(val)));
+                auto res = cfg->createReg(ptrType.child);
+                curBlock().addNode(IR_Node(res, std::move(val)));
                 return res;
             }
             else if (expr.type == AST_Primary::EXPR) {

@@ -2,6 +2,7 @@
 #define __IR_GENERATOR_HPP__
 
 #include "ir_nodes.hpp"
+#include "ir_cfg.hpp"
 #include "parser/ast.hpp"
 #include "utils.hpp"
 
@@ -28,27 +29,18 @@
 
 std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 
-
-struct IR_Function {
-    AST_DeclSpecifiers::StorageSpec storage;
-    bool isInline;
-    std::shared_ptr<IR_Type> fullType;
-    IR_Block *entryBlock;
-};
-
 class IR_Generator {
 private:
-    std::vector<std::unique_ptr<IR_Block>> blocks;
-    std::vector<IR_Function> funcs;
     VariablesStack<string_id_t, IRval> variables;
 
-    int blocksCounter;
-    IR_Block* getNewBlock();
-    IR_Block *curBlock = nullptr;
+    std::shared_ptr<ControlFlowGraph> cfg;
+
+    IR_Block *selectedBlock = nullptr;
+    IR_Block& curBlock();
+    void selectBlock(IR_Block &block);
 
     struct LoopBlocks {
-        IR_Block *cond;
-        IR_Block *exit;
+        int cond, exit;
     };
     std::stack<LoopBlocks> activeLoops;
 
@@ -61,8 +53,7 @@ public:
     IR_Generator();
 
     void parseAST(std::shared_ptr<AST_TranslationUnit> const &ast);
-
-    void printBlocks() const;
+    [[nodiscard]] std::shared_ptr<ControlFlowGraph> const& getCfg() const;
 };
 
 #endif /* __IR_GENERATOR_HPP__ */

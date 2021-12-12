@@ -31,7 +31,8 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/ir_nodes.cpp
         ${PROJECT_SOURCE_DIR}/src/ir_generator.cpp
         ${PROJECT_SOURCE_DIR}/src/ir_types_gen.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir_expr_gen.cpp)
+        ${PROJECT_SOURCE_DIR}/src/ir_expr_gen.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir_cfg.cpp)
 
 add_executable(cw39 ${PROJ_SRCS})
 

@@ -1,11 +1,14 @@
 #include "ir_generator.hpp"
 #include <sstream>
 
-IR_Generator::IR_Generator() : blocksCounter(0) {}
+IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}
 
-IR_Block* IR_Generator::getNewBlock() {
-    blocks.push_back(std::make_unique<IR_Block>(blocksCounter++));
-    return blocks.back().get();
+IR_Block &IR_Generator::curBlock() {
+    return *selectedBlock;
+}
+
+void IR_Generator::selectBlock(IR_Block &block) {
+    selectedBlock = &block;
 }
 
 void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
@@ -22,25 +25,32 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
     }
 }
 
+static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec const &spec) {
+    switch (spec) {
+        case AST_DeclSpecifiers::ST_AUTO:
+            return IR_StorageSpecifier::AUTO;
+        case AST_DeclSpecifiers::ST_EXTERN:
+            return IR_StorageSpecifier::EXTERN;
+        case AST_DeclSpecifiers::ST_STATIC:
+            return IR_StorageSpecifier::STATIC;
+        case AST_DeclSpecifiers::ST_REGISTER:
+            return IR_StorageSpecifier::REGISTER;
+        default:
+            semanticError("Wrong storage specifier");
+    }
+}
+
 void IR_Generator::createFunction(AST_FunctionDef const &def) {
-    IR_Function fun;
-    fun.storage = def.specifiers->storage_specifier;
-    if (fun.storage == AST_DeclSpecifiers::ST_NONE)
-        fun.storage = AST_DeclSpecifiers::ST_EXTERN;
+    ControlFlowGraph::Function fun;
+    if (def.specifiers->storage_specifier == AST_DeclSpecifiers::ST_NONE)
+        fun.storage = IR_StorageSpecifier::EXTERN;
+    else
+        fun.storage = storageSpecFromAst(def.specifiers->storage_specifier);
     fun.isInline = def.specifiers->is_inline;
     fun.fullType = getType(*def.specifiers, *def.decl);
 
-    fun.entryBlock = getNewBlock();
-    curBlock = fun.entryBlock;
+    selectBlock(cfg->createFunction(fun));
     fillBlock(*def.body);
-
-    funcs.push_back(fun);
-}
-
-// TODO: move this into terminator
-static void linkBlocks(IR_Block *prev, IR_Block *next) {
-    prev->next.push_back(next);
-    next->prev.push_back(prev);
 }
 
 void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
@@ -51,9 +61,9 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
             auto ptrType = std::make_shared<IR_TypePtr>(type);
             auto ident = getDeclaredIdent(*decl.child->v[0]->declarator);
 
-            auto res = IRval::createReg(ptrType);
+            auto res = cfg->createReg(ptrType);
             auto val = std::make_unique<IR_ExprAlloc>(type, 1U);
-            curBlock->addNode(IR_Node{ res, std::move(val) });
+            curBlock().addNode(IR_Node{ res, std::move(val) });
 
             variables.put(ident, res);
         }
@@ -79,64 +89,64 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             NOT_IMPLEMENTED("switch");
 
         auto cond = evalExpr(*stmt.condition);
-        curBlock->terminator = IR_Terminator(IR_Terminator::BRANCH, cond);
+        curBlock().terminator = IR_Terminator(IR_Terminator::BRANCH, cond);
 
-        auto blockTrue = getNewBlock();
-        linkBlocks(curBlock, blockTrue);
+        auto &blockTrue = cfg->createBlock();
+        cfg->linkBlocks(curBlock(), blockTrue);
 
         IR_Block *blockFalse;
         if (stmt.else_body) {
-            blockFalse = getNewBlock();
-            linkBlocks(curBlock, blockFalse);
+            blockFalse = &cfg->createBlock();
+            cfg->linkBlocks(curBlock(), *blockFalse);
         }
 
-        auto prevBlock = curBlock;
-        auto blockAfter = getNewBlock();
+        auto &prevBlock = curBlock();
+        auto &blockAfter = cfg->createBlock();
 
-        curBlock = blockTrue;
+        selectBlock(blockTrue);
         insertStatement(*stmt.body);
-        linkBlocks(curBlock, blockAfter);
-        curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
+        cfg->linkBlocks(curBlock(), blockAfter);
+        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
 
         if (stmt.else_body) {
-            curBlock = blockFalse;
+            selectBlock(*blockFalse);
             insertStatement(*stmt.else_body);
-            linkBlocks(curBlock, blockAfter);
-            curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
+            cfg->linkBlocks(curBlock(), blockAfter);
+            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
         }
         else {
-            linkBlocks(prevBlock, blockAfter);
+            cfg->linkBlocks(prevBlock, blockAfter);
         }
 
-        curBlock = blockAfter;
+        selectBlock(blockAfter);
     }
     else if (rawStmt.type == AST_Statement::ITER) {
         auto const &stmt = dynamic_cast<AST_IterationStmt const &>(rawStmt);
         if (stmt.type != AST_IterationStmt::WHILE_LOOP)
             NOT_IMPLEMENTED("Only while loops implemented");
 
-        auto blockCond =  getNewBlock();
-        auto blockLoop =  getNewBlock();
-        auto blockAfter = getNewBlock();
+        auto &blockCond = cfg->createBlock();
+        auto &blockLoop = cfg->createBlock();
+        auto &blockAfter = cfg->createBlock();
 
-        curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
-        linkBlocks(curBlock, blockCond);
-        curBlock = blockCond;
+        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        cfg->linkBlocks(curBlock(), blockCond);
+        selectBlock(blockCond);
 
         auto cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
-        curBlock->terminator = IR_Terminator(IR_Terminator::BRANCH, cond);
-        linkBlocks(curBlock, blockLoop);
-        linkBlocks(curBlock, blockAfter);
+        curBlock().terminator = IR_Terminator(IR_Terminator::BRANCH, cond);
+        cfg->linkBlocks(curBlock(), blockLoop);
+        cfg->linkBlocks(curBlock(), blockAfter);
 
-        activeLoops.push({ blockCond, blockAfter });
-        curBlock = blockLoop;
+        activeLoops.push({ blockCond.id, blockAfter.id });
+        selectBlock(blockLoop);
         insertStatement(*stmt.body);
         activeLoops.pop();
 
-        curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
-        linkBlocks(curBlock, blockCond);
+        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        cfg->linkBlocks(curBlock(), blockCond);
 
-        curBlock = blockAfter;
+        selectBlock(blockAfter);
     }
     else if (rawStmt.type == AST_Statement::JUMP) {
         auto const &stmt = dynamic_cast<AST_JumpStmt const &>(rawStmt);
@@ -144,19 +154,19 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             auto const &arg = std::get<std::unique_ptr<AST_Expr>>(stmt.arg);
             if (arg) {
                 auto retVal = evalExpr(*arg);
-                curBlock->terminator = IR_Terminator(IR_Terminator::RET, retVal);
+                curBlock().terminator = IR_Terminator(IR_Terminator::RET, retVal);
             }
             else {
-                curBlock->terminator = IR_Terminator(IR_Terminator::RET);
+                curBlock().terminator = IR_Terminator(IR_Terminator::RET);
             }
         }
         else if (stmt.type == AST_JumpStmt::J_BREAK) {
-            curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
-            linkBlocks(curBlock, activeLoops.top().exit);
+            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().exit));
         }
         else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
-            curBlock->terminator = IR_Terminator(IR_Terminator::BRANCH);
-            linkBlocks(curBlock, activeLoops.top().cond);
+            curBlock().terminator = IR_Terminator(IR_Terminator::BRANCH);
+            cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().cond));
         }
         else if (stmt.type == AST_JumpStmt::J_GOTO) {
             NOT_IMPLEMENTED("goto");
@@ -170,16 +180,17 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         if (stmt.body->v.empty())
             return;
 
-        auto compoundBlock = getNewBlock();
-        linkBlocks(curBlock, compoundBlock);
-        curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
-        curBlock = compoundBlock;
+        auto &compoundBlock = cfg->createBlock();
+        cfg->linkBlocks(curBlock(), compoundBlock);
+        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        selectBlock(compoundBlock);
         fillBlock(stmt);
 
-        auto blockAfter = getNewBlock();
-        linkBlocks(curBlock, blockAfter);
-        curBlock->terminator = IR_Terminator(IR_Terminator::JUMP);
-        curBlock = blockAfter;
+        auto &blockAfter = cfg->createBlock();
+        cfg->linkBlocks(curBlock(), blockAfter);
+        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        selectBlock(blockAfter);
+
     }
     else if (rawStmt.type == AST_Statement::LABEL) {
         NOT_IMPLEMENTED("Labeled statements");
@@ -189,93 +200,6 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     }
 }
 
-static std::string printType(IR_Type const &type) {
-    if (type.type == IR_Type::POINTER) {
-        auto ptr = dynamic_cast<IR_TypePtr const &>(type);
-        return fmt::format("ptr< {} >", printType(*ptr.child));
-    }
-    else if (type.type == IR_Type::ARRAY) {
-        auto arr = dynamic_cast<IR_TypeArray const &>(type);
-        return fmt::format("array< {} * {} >", arr.size, printType(*arr.child));
-    }
-    else if (type.type == IR_Type::FUNCTION) {
-        std::stringstream ss;
-        auto fun = dynamic_cast<IR_TypeFunc const &>(type);
-        ss << "fun< " << printType(*fun.ret) << " : ";
-        for (auto const &arg : fun.args)
-            ss << printType(*arg) << " ";
-        if (fun.isVariadic)
-            ss << "... ";
-        ss << ">";
-        return ss.str();
-    }
-    else if (type.type == IR_Type::DIRECT) {
-        auto dir = dynamic_cast<IR_TypeDirect const &>(type);
-        switch (dir.spec) {
-            case IR_TypeDirect::U8:
-                return "u8";
-            case IR_TypeDirect::I8:
-                return "i8";
-            case IR_TypeDirect::U32:
-                return "u32";
-            case IR_TypeDirect::I32:
-                return "i32";
-            case IR_TypeDirect::U64:
-                return "u64";
-            case IR_TypeDirect::I64:
-                return "i64";
-            case IR_TypeDirect::F32:
-                return "f32";
-            case IR_TypeDirect::VOID:
-                return "void";
-        }
-    }
-    throw;
-}
-
-static void printBlock(IR_Block const &block) {
-    fmt::print("Block {}:\n", block.id);
-    for (auto const &node: block.body) {
-        if (node.res.has_value())
-            fmt::print("{} <- ", node.res->to_string());
-        if (node.body->type == IR_Expr::OPERATION) {
-            auto const &expr = dynamic_cast<IR_ExprOper const &>(*node.body);
-            fmt::print("{} ", expr.opToString());
-            for (auto const &arg: expr.args)
-                fmt::print("{} ", arg.to_string());
-            fmt::print("\n");
-        }
-        else if (node.body->type == IR_Expr::ALLOCATION) {
-            auto const &expr = dynamic_cast<IR_ExprAlloc const &>(*node.body);
-            fmt::print("{} {} x {}\n", expr.opToString(), printType(*expr.type), expr.size);
-        }
-    }
-
-    if (block.terminator.type == IR_Terminator::NONE) {
-        fmt::print("; No terminator\n");
-    }
-    else if (block.terminator.type == IR_Terminator::RET) {
-        if (!block.terminator.val.has_value())
-            fmt::print("ret\n");
-        else
-            fmt::print("ret {}\n", block.terminator.val->to_string());
-    }
-    else if (block.terminator.type == IR_Terminator::JUMP) {
-        fmt::print("jump ->{}\n", block.next[0]->id);
-    }
-    else if (block.terminator.type == IR_Terminator::BRANCH) {
-        fmt::print("branch {} ->{} ->{}\n", block.terminator.val->to_string(),
-                   block.next[0]->id, block.next[1]->id);
-    }
-    else {
-        fmt::print("; Unknown terminator\n");
-    }
-
-    fmt::print("\n");
-}
-
-void IR_Generator::printBlocks() const {
-    for (auto const &block : blocks) {
-        printBlock(*block);
-    }
+std::shared_ptr<ControlFlowGraph> const &IR_Generator::getCfg() const {
+    return cfg;
 }

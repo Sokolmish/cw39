@@ -41,9 +41,13 @@ int main(int argc, char **argv) {
 
 //    fmt::print("{}\n", ast->getTreeNode()->printHor());
 
-    auto gen = IR_Generator();
-    gen.parseAST(ast);
-    gen.printBlocks();
+    auto gen = std::make_unique<IR_Generator>();
+    gen->parseAST(ast);
+//    gen->getCfg()->printBlocks();
+
+    auto cfg2 = *gen->getCfg();
+    gen.reset(nullptr);
+    cfg2.printBlocks();
 
 //    LLVMContext *context = new LLVMContext();
 //    Module *module = new Module("top", *context);
