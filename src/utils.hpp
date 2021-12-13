@@ -5,6 +5,18 @@
 #include <list>
 #include <map>
 #include <optional>
+#include <fmt/core.h>
+#include <exception>
+
+
+[[noreturn]] inline void semanticError(const std::string &msg) {
+    throw std::runtime_error(fmt::format("{}\n", msg));
+}
+[[noreturn]] inline void notImplemented(int line, const std::string &msg = "") {
+    throw std::runtime_error(fmt::format("Not implemented ({}): {}\n", line, msg));
+}
+#define NOT_IMPLEMENTED(msg) notImplemented(__LINE__, __FILE__ " " msg)
+
 
 template <typename T>
 inline bool isInList(T const &val, std::initializer_list<T> const &lst) {

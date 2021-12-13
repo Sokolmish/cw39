@@ -721,7 +721,7 @@ TreeNodeRef AST_ParameterTypeList::getTreeNode() const {
 
 // AST_TypeName
 
-AST_TypeName::AST_TypeName(AST_SpecifierQualifierList *qual, AST_Declarator *decl)
+AST_TypeName::AST_TypeName(AST_SpecifierQualifierList *qual, AST_AbstractDeclarator *decl)
     : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl) {}
 
 TreeNodeRef AST_TypeName::getTreeNode() const {
@@ -729,6 +729,73 @@ TreeNodeRef AST_TypeName::getTreeNode() const {
     node->addChild(qual->getTreeNode());
     if (declarator)
         node->addChild(declarator->getTreeNode());
+    return node;
+}
+
+
+// AST_DirectAbstractDeclarator
+
+AST_DirectAbstractDeclarator::AST_DirectAbstractDeclarator(DeclType dtype)
+        : AST_Node(AST_DIR_ABSTRACT_DECL), type(dtype) {}
+
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::get_nested(
+        AST_Node *decl) {
+    auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::NESTED);
+    res->base = uniqify(decl);
+    return res;
+}
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::get_arr(
+        AST_Node *base, AST_Expr *sz) {
+    auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::ARRAY);
+    res->base = uniqify(base);
+    res->arr_size = uniqify(sz);
+    return res;
+}
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::get_func(
+        AST_Node *base, AST_ParameterTypeList *args) {
+    auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::FUNC);
+    res->base = uniqify(base);
+    res->func_args = uniqify(args);
+    return res;
+}
+
+TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
+    if (type == AST_DirectAbstractDeclarator::NESTED) {
+        return base->getTreeNode();
+    }
+    else if (type == AST_DirectAbstractDeclarator::ARRAY) {
+        auto node = TreeNode::create("abstr_array_of"s);
+        if (base)
+            node->addChild(base->getTreeNode());
+        if (arr_size)
+            node->addChild(arr_size->getTreeNode());
+        return node;
+    }
+    else if (type == AST_DirectAbstractDeclarator::FUNC) {
+        auto node = TreeNode::create("abstr_func"s);
+        if (base)
+            node->addChild(base->getTreeNode());
+        if (func_args)
+            node->addChild(func_args->getTreeNode());
+        return node;
+    }
+    else {
+        throw; // TODO: verbosity
+    }
+}
+
+
+// AST_AbstractDeclarator
+
+AST_AbstractDeclarator::AST_AbstractDeclarator(
+        AST_DirectAbstractDeclarator *decl,AST_Pointer *pointer)
+        : AST_Node(AST_ABSTRACT_DECL), direct(decl), ptr(pointer) {}
+
+TreeNodeRef AST_AbstractDeclarator::getTreeNode() const {
+    auto node = TreeNode::create("abstr_decl"s);
+    if (ptr)
+        node->addChild(ptr->getTreeNode());
+    node->addChild(direct->getTreeNode());
     return node;
 }
 

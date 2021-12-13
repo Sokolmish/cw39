@@ -389,7 +389,17 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_CAST: {
-            NOT_IMPLEMENTED("cast");
+            auto const &expr = dynamic_cast<AST_Cast const &>(node);
+
+            auto arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
+            auto dest = getType(*expr.type_name);
+            if (arg.getType()->equal(*dest))
+                return arg;
+
+            auto val = std::make_unique<IR_ExprCast>(arg, dest);
+            auto res = cfg->createReg(dest);
+            curBlock().addNode(IR_Node(res, std::move(val)));
+            return res;
         }
 
         case AST_UNARY_OP: {

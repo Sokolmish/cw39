@@ -6,6 +6,7 @@ int main(int argc, char **argv) {
     long y;
     x = 5;
     y + 72L;
+    (long)x + y;
     while (x) {
         x = x - 1;
         if (x) {

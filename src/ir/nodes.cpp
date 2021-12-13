@@ -84,6 +84,10 @@ std::shared_ptr<IR_Type> IR_TypePtr::copy() const {
     return res;
 }
 
+int IR_TypePtr::getBytesSize() const {
+    return 8;
+}
+
 // IR_TypeFunc
 
 IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
@@ -113,6 +117,10 @@ std::shared_ptr<IR_Type> IR_TypeFunc::copy() const {
     return std::make_shared<IR_TypeFunc>(retCopy, argsCopy, isVariadic);
 }
 
+int IR_TypeFunc::getBytesSize() const {
+    throw std::runtime_error("Cannot get size of function type");
+}
+
 
 // IR_TypeArray
 
@@ -128,6 +136,10 @@ bool IR_TypeArray::equal(const IR_Type &rhs) const {
 
 std::shared_ptr<IR_Type> IR_TypeArray::copy() const {
     return std::make_shared<IR_TypeArray>(child->copy(), size);
+}
+
+int IR_TypeArray::getBytesSize() const {
+    return size * child->getBytesSize();
 }
 
 
@@ -189,6 +201,83 @@ std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
 
 std::string IR_ExprAlloc::opToString() const {
     return isOnHeap ? "malloc" : "alloca";
+}
+
+
+// IR_ExprCast
+
+IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
+        : IR_Expr(CAST), arg(sourceVal), dest(dest) {
+    auto source = sourceVal.getType();
+    if (source->equal(*dest))
+        semanticError("Casting equal types");
+
+    if (source->type == IR_Type::FUNCTION || dest->type == IR_Type::FUNCTION) {
+        semanticError("Function type cannot be cast");
+    }
+    else if (source->type == IR_Type::ARRAY || dest->type == IR_Type::ARRAY) {
+        semanticError("Array type cannot be cast");
+    }
+    else if (source->type == IR_Type::POINTER && dest->type == IR_Type::POINTER) {
+
+    }
+    else if (source->type == IR_Type::POINTER && dest->type == IR_Type::DIRECT) {
+
+    }
+    else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::POINTER) {
+
+    }
+    else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::DIRECT) {
+        auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
+        auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
+
+        if (srcDir.isInteger() && dstDir.isInteger()) {
+            if (srcDir.getBytesSize() == dstDir.getBytesSize())
+                castOp = BITCAST;
+            else if (srcDir.getBytesSize() > dstDir.getBytesSize())
+                castOp = TRUNC;
+            else if (srcDir.isSigned() && dstDir.isSigned())
+                castOp = SEXT;
+            else
+                castOp = ZEXT; // TODO: maybe wrong conversion here
+        }
+        else if (srcDir.isFloat() && dstDir.isFloat()) {
+            NOT_IMPLEMENTED("Float-float conversion");
+        }
+        else if (srcDir.isInteger() && dstDir.isFloat()) {
+            if (srcDir.isSigned())
+                castOp = SITOFP;
+            else
+                castOp = UITOFP;
+        }
+        else if (srcDir.isFloat() && dstDir.isInteger()) {
+            if (dstDir.isSigned())
+                castOp = FPTOSI;
+            else
+                castOp = FPTOUI;
+        }
+    }
+}
+
+std::unique_ptr<IR_Expr> IR_ExprCast::copy() const {
+    return std::make_unique<IR_ExprCast>(arg.copy(), dest->copy());
+}
+
+
+std::string IR_ExprCast::opToString() const {
+    switch (castOp) {
+        case BITCAST:   return "bitcast";
+        case SEXT:      return "sext";
+        case ZEXT:      return "zext";
+        case TRUNC:     return "trunc";
+        case FPTOUI:    return "fp_to_ui";
+        case FPTOSI:    return "fp_to_si";
+        case UITOFP:    return "ui_to_fp";
+        case SITOFP:    return "si_to_fp";
+        case PTRTOI:    return "ptrtoi";
+        case ITOPTR:    return "itoptr";
+    }
+    throw;
 }
 
 

@@ -59,6 +59,8 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
         }
     }
 
+    // TODO: refactor this function
+
     auto resType = IR_TypeDirect::VOID;
     if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) { // TODO: void?
         if (sign == ast_ts::T_UNSIGNED) {
@@ -93,7 +95,42 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
     return std::make_unique<IR_TypeDirect>(resType);
 }
 
-static std::unique_ptr<IR_Type> getIndirectType(AST_Declarator const &decl, std::unique_ptr<IR_Type> base);
+static std::unique_ptr<IR_Type> getDirectType(
+        AST_DirectDeclarator const &decl, std::unique_ptr<IR_Type> base);
+static std::unique_ptr<IR_Type> getDirectAbstractType(
+        AST_DirectAbstractDeclarator const &decl, std::unique_ptr<IR_Type> base);
+
+template <typename DeclaratorType>
+static std::unique_ptr<IR_Type> getIndirectType(
+        DeclaratorType const *decl, std::unique_ptr<IR_Type> base) {
+
+    if (!decl) {
+        return base;
+    }
+
+    std::unique_ptr<IR_Type> lastPtr = std::move(base);
+    for (auto curAstPtr = decl->ptr.get(); curAstPtr; curAstPtr = curAstPtr->child.get()) {
+        auto newPtr = std::make_unique<IR_TypePtr>(std::move(lastPtr));
+        if (decl->ptr->qualifiers) {
+            newPtr->is_const = decl->ptr->qualifiers->is_const;
+            newPtr->is_restrict = decl->ptr->qualifiers->is_restrict;
+            newPtr->is_volatile = decl->ptr->qualifiers->is_volatile;
+        }
+        lastPtr = std::move(newPtr);
+    }
+
+    if constexpr (std::is_same<DeclaratorType, AST_Declarator>()) {
+        return getDirectType(*decl->direct.get(), std::move(lastPtr));
+    }
+    else if constexpr (std::is_same<DeclaratorType, AST_AbstractDeclarator>()) {
+        return getDirectAbstractType(*decl->direct.get(), std::move(lastPtr));
+    }
+    else {
+        static_assert(! std::is_same<DeclaratorType, DeclaratorType>(),
+                      "Something went wrong with codegeneration");
+        throw; // Just in case
+    }
+}
 
 static std::unique_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl, std::unique_ptr<IR_Type> base) {
     if (decl.type == AST_DirectDeclarator::NAME) {
@@ -101,7 +138,8 @@ static std::unique_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl, 
     }
     else if (decl.type == AST_DirectDeclarator::NESTED) {
         return getIndirectType(
-                *dynamic_cast<AST_Declarator*>(std::get<std::unique_ptr<AST_Node>>(decl.base).get()),
+                dynamic_cast<AST_Declarator const *>(
+                        std::get<std::unique_ptr<AST_Node>>(decl.base).get()),
                 std::move(base));
     }
     else if (decl.type == AST_DirectDeclarator::ARRAY) {
@@ -132,28 +170,47 @@ static std::unique_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl, 
     }
 }
 
-static std::unique_ptr<IR_Type> getIndirectType(AST_Declarator const &decl, std::unique_ptr<IR_Type> base) {
-    std::unique_ptr<IR_Type> lastPtr = std::move(base);
+static std::unique_ptr<IR_Type> getDirectAbstractType(
+        AST_DirectAbstractDeclarator const &decl, std::unique_ptr<IR_Type> base) {
 
-    for (auto curAstPtr = decl.ptr.get(); curAstPtr; curAstPtr = curAstPtr->child.get()) {
-        auto newPtr = std::make_unique<IR_TypePtr>(std::move(lastPtr));
-        if (decl.ptr->qualifiers) {
-            newPtr->is_const = decl.ptr->qualifiers->is_const;
-            newPtr->is_restrict = decl.ptr->qualifiers->is_restrict;
-            newPtr->is_volatile = decl.ptr->qualifiers->is_volatile;
-        }
-        lastPtr = std::move(newPtr);
+    if (decl.type == AST_DirectAbstractDeclarator::NESTED) {
+        return getIndirectType(
+                dynamic_cast<AST_AbstractDeclarator const *>(decl.base.get()),
+                std::move(base));
     }
-
-    return getDirectType(dynamic_cast<AST_DirectDeclarator const &>(*decl.direct.get()), std::move(lastPtr));
+    else if (decl.type == AST_DirectAbstractDeclarator::ARRAY) {
+        auto sizeExpr = evalConstantExpr(*decl.arr_size);
+        if (!sizeExpr.has_value())
+            semanticError("Non constant array size");
+        if (sizeExpr->getType()->type != IR_Type::DIRECT)
+            semanticError("Non constant array size (not direct value)");
+        if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
+            semanticError("Non integer array size");
+        auto size = sizeExpr->castValTo<uint64_t>();
+        return std::make_unique<IR_TypeArray>(std::move(base), size);
+    }
+    else if (decl.type == AST_DirectAbstractDeclarator::FUNC) {
+        if (decl.func_args) {
+            std::vector<std::shared_ptr<IR_Type>> params;
+            for (const auto &param: decl.func_args->v->v)
+                params.push_back(getType(*param->specifiers, *param->child));
+            bool isVararg = decl.func_args->has_ellipsis;
+            return std::make_unique<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
+        }
+        else {
+            return std::make_unique<IR_TypeFunc>(std::move(base));
+        }
+    }
+    semanticError("Unknown direct abstract declarator type");
 }
 
 std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl) {
-    return getIndirectType(decl, getPrimaryType(spec.type_specifiers));
+    return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
 }
 
 std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName) {
-    return getIndirectType(*typeName.declarator, getPrimaryType(typeName.qual->type_specifiers));
+    auto base = getPrimaryType(typeName.qual->type_specifiers);
+    return getIndirectType(typeName.declarator.get(), std::move(base));
 }
 
 static string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {

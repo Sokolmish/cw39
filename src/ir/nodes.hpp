@@ -28,6 +28,7 @@ struct IR_Type {
     virtual ~IR_Type() = default;
     virtual bool equal(IR_Type const &rhs) const = 0;
     virtual std::shared_ptr<IR_Type> copy() const = 0;
+    virtual int getBytesSize() const = 0;
 };
 
 struct IR_TypeDirect : public IR_Type {
@@ -43,7 +44,7 @@ struct IR_TypeDirect : public IR_Type {
     [[nodiscard]] bool isFloat() const;
     [[nodiscard]] bool isSigned() const;
     [[nodiscard]] bool isUnsigned() const;
-    [[nodiscard]] int getBytesSize() const;
+    [[nodiscard]] int getBytesSize() const override;
 };
 
 struct IR_TypePtr : public IR_Type {
@@ -55,6 +56,7 @@ struct IR_TypePtr : public IR_Type {
     explicit IR_TypePtr(std::shared_ptr<IR_Type> child);
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
+    int getBytesSize() const override;
 };
 
 struct IR_TypeArray : public IR_Type {
@@ -64,6 +66,7 @@ struct IR_TypeArray : public IR_Type {
     IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size);
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
+    int getBytesSize() const override;
 };
 
 struct IR_TypeFunc : public IR_Type {
@@ -75,6 +78,7 @@ struct IR_TypeFunc : public IR_Type {
     IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic);
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
+    int getBytesSize() const override;
 };
 
 
@@ -123,7 +127,7 @@ enum IR_Ops {
 };
 
 struct IR_Expr {
-    enum Type { OPERATION, ALLOCATION, CALL } type;
+    enum Type { OPERATION, ALLOCATION, CAST, CALL } type;
 
     explicit IR_Expr(Type type);
     virtual ~IR_Expr() = default;
@@ -146,6 +150,21 @@ struct IR_ExprAlloc : public IR_Expr {
 
     IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size);
     IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap);
+    std::unique_ptr<IR_Expr> copy() const override;
+    std::string opToString() const;
+};
+
+struct IR_ExprCast : public IR_Expr {
+    IRval arg;
+    std::shared_ptr<IR_Type> dest;
+
+    enum CastType {
+        BITCAST, SEXT, ZEXT, TRUNC,
+        FPTOUI, FPTOSI, UITOFP, SITOFP,
+        PTRTOI, ITOPTR
+    } castOp;
+
+    IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest);
     std::unique_ptr<IR_Expr> copy() const override;
     std::string opToString() const;
 };

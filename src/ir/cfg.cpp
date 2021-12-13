@@ -102,6 +102,11 @@ static void printBlock(IR_Block const &block) {
             auto const &expr = dynamic_cast<IR_ExprAlloc const &>(*node.body);
             fmt::print("{} {} x {}\n", expr.opToString(), printType(*expr.type), expr.size);
         }
+        else if (node.body->type == IR_Expr::CAST) {
+            auto const &expr = dynamic_cast<IR_ExprCast const &>(*node.body);
+            fmt::print("{} {} : {} -> {}\n", expr.opToString(), expr.arg.to_string(),
+                       printType(*expr.arg.getType()), printType(*expr.dest));
+        }
     }
 
     if (block.terminator.type == IR_Terminator::NONE) {
