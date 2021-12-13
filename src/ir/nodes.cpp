@@ -219,13 +219,19 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
         semanticError("Array type cannot be cast");
     }
     else if (source->type == IR_Type::POINTER && dest->type == IR_Type::POINTER) {
-
+        castOp = BITCAST;
     }
     else if (source->type == IR_Type::POINTER && dest->type == IR_Type::DIRECT) {
-
+        auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
+        if (!srcDir.isInteger() || srcDir.spec != IR_TypeDirect::U64)
+            semanticError("Pointer can be created only from u64 number");
+        castOp = ITOPTR;
     }
     else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::POINTER) {
-
+        auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
+        if (!dstDir.isInteger() || dstDir.spec != IR_TypeDirect::U64)
+            semanticError("Pointer can be cast only to u64 number");
+        castOp = PTRTOI;
     }
     else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::DIRECT) {
         auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
