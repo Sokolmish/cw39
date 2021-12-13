@@ -33,7 +33,7 @@ AST_Primary* AST_Primary::get_str(string_id_t str) {
     return res;
 }
 
-AST_Primary* AST_Primary::get_const(uint64_t val) {
+AST_Primary* AST_Primary::get_const(AST_Literal val) {
     auto res = new AST_Primary(AST_Primary::CONST);
     res->v = val;
     return res;
@@ -45,7 +45,8 @@ TreeNodeRef AST_Primary::getTreeNode() const {
         if (type == AST_Primary::IDENT)
             str = get_ident_by_id(std::get<string_id_t>(v));
         else if (type == AST_Primary::CONST)
-            str = "val="s + std::to_string(std::get<uint64_t>(v));
+//            str = "val="s + std::to_string(std::get<uint64_t>(v));
+            str = "LITERAL"; // TODO
         else if (type == AST_Primary::STR)
             str = "str["s + std::to_string(std::get<string_id_t>(v)) + "]"s;
         return TreeNode::create(str);

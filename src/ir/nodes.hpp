@@ -82,7 +82,9 @@ struct IR_TypeFunc : public IR_Type {
 
 class IRval {
 public:
-    typedef std::variant<uint64_t, float> union_type;
+    typedef std::variant<
+            uint8_t, int8_t, uint32_t, int32_t, uint64_t, int64_t,
+            float, double> union_type;
 
 private:
     std::shared_ptr<IR_Type> type;
@@ -100,7 +102,6 @@ public:
     [[nodiscard]] bool isConstant() const;
     [[nodiscard]] bool isRegister() const;
     [[nodiscard]] union_type const& getVal() const;
-
     [[nodiscard]] std::string to_string() const;
 
     template <class T>

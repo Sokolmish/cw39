@@ -60,7 +60,7 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
     }
 
     auto resType = IR_TypeDirect::VOID;
-    if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) {
+    if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) { // TODO: void?
         if (sign == ast_ts::T_UNSIGNED) {
             if (longCnt != 0)
                 resType = IR_TypeDirect::U64;
@@ -175,4 +175,35 @@ static string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
 
 string_id_t getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
+}
+
+std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit) {
+    if (lit.type == INTEGER_LITERAL) {
+        if (lit.isUnsigned) {
+            if (lit.longCnt)
+                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::U64);
+            else
+                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::U32);
+        }
+        else { // Signed
+            if (lit.longCnt)
+                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I64);
+            else
+                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32);
+        }
+    }
+    else if (lit.type == FLOAT_LITERAL) {
+        if (lit.isFloat)
+            return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F32);
+        else {
+//            return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F64);
+            NOT_IMPLEMENTED("double");
+        }
+    }
+    else if (lit.type == CHAR_LITERAL) {
+        return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I8);
+    }
+    else {
+        semanticError("Unknown literal type");
+    }
 }

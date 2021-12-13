@@ -33,6 +33,9 @@ static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval c
     auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
     auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
 
+    if (!lhs.getType()->equal(*rhs.getType()))
+        semanticError("Cannot do binary operation on different types");
+
     if (isIntegerNumOp(op)) {
         if (ltype.isFloat() || rtype.isFloat())
             semanticError("Invalid operation on floats");
@@ -128,17 +131,17 @@ static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval c
             return std::visit([l, op](auto const &r) -> uint64_t {
                 switch (op) {
                     case bop::LT:
-                        return l < r;
+                        return l < static_cast<decltype(l)>(r);
                     case bop::GT:
-                        return l > r;
+                        return l > static_cast<decltype(l)>(r);
                     case bop::LE:
-                        return l <= r;
+                        return l <= static_cast<decltype(l)>(r);
                     case bop::GE:
-                        return l >= r;
+                        return l >= static_cast<decltype(l)>(r);
                     case bop::EQ:
-                        return l == r;
+                        return l == static_cast<decltype(l)>(r);
                     case bop::NE:
-                        return l != r;
+                        return l != static_cast<decltype(l)>(r);
                     default:
                         semanticError("WTF");
                 }
@@ -246,8 +249,11 @@ std::optional<IRval> evalConstantExpr(AST_Expr const &node) {
             if (expr.type != AST_Primary::CONST)
                 semanticError("Non constant expression");
 
-            uint64_t val = std::get<uint64_t>(expr.v);
-            return IRval::createVal(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32), val);
+            AST_Literal val = std::get<AST_Literal>(expr.v);
+            if (val.type != INTEGER_LITERAL || val.longCnt != 0 || val.isUnsigned) {
+                NOT_IMPLEMENTED("Non i32 literal");
+            }
+            return IRval::createVal(getLiteralType(val), static_cast<uint64_t>(val.val.vi32));
         }
 
         default: {
@@ -440,8 +446,35 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             auto const &expr = dynamic_cast<AST_Primary const &>(node);
 
             if (expr.type == AST_Primary::CONST) {
-                uint64_t val = std::get<uint64_t>(expr.v);
-                return IRval::createVal(std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32), val);
+                AST_Literal val = std::get<AST_Literal>(expr.v);
+                auto valType = getLiteralType(val);
+                if (val.type == INTEGER_LITERAL) {
+                    if (val.isUnsigned) {
+                        if (val.longCnt)
+                            return IRval::createVal(valType, val.val.vu64);
+                        else
+                            return IRval::createVal(valType, val.val.vu32);
+                    }
+                    else { // Signed
+                        if (val.longCnt)
+                            return IRval::createVal(valType, val.val.vi64);
+                        else
+                            return IRval::createVal(valType, val.val.vi32);
+                    }
+                }
+                else if (val.type == FLOAT_LITERAL) {
+                    if (val.isFloat)
+                        return IRval::createVal(valType, val.val.vf32);
+                    else {
+                        NOT_IMPLEMENTED("double");
+                    }
+                }
+                else if (val.type == CHAR_LITERAL) {
+                    return IRval::createVal(valType, static_cast<int8_t>(val.val.v_char));
+                }
+                else {
+                    semanticError("Unknown literal type");
+                }
             }
             else if (expr.type == AST_Primary::IDENT) {
                 auto var = variables.get(std::get<string_id_t>(expr.v));

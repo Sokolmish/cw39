@@ -262,9 +262,9 @@ union YYSTYPE
 {
 #line 41 "parser.y"
 
-	int boolean;
+    int boolean;
 	int enum_val;
-	uint64_t u64;
+	struct AST_Literal num_literal;
 	string_id_t str;
 	string_id_t ident_id;
 
@@ -2025,7 +2025,7 @@ yyreduce:
 
   case 3:
 #line 171 "parser.y"
-                                                                                { (yyval.expr) = AST_Primary::get_const((yyvsp[0].u64)); }
+                                                                                { (yyval.expr) = AST_Primary::get_const((yyvsp[0].num_literal)); }
 #line 2030 "y.tab.cpp"
     break;
 

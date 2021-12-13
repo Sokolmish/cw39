@@ -39,9 +39,9 @@
 %start translation_unit
 
 %union {
-	int boolean;
+    int boolean;
 	int enum_val;
-	uint64_t u64;
+	struct AST_Literal num_literal;
 	string_id_t str;
 	string_id_t ident_id;
 
@@ -93,7 +93,7 @@
 
 %token <ident_id> IDENTIFIER
 %token <ident_id> TYPE_NAME
-%token <u64> CONSTANT
+%token <num_literal> CONSTANT
 %token <str> STRING_LITERAL
 
 %type <expr> primary_expr

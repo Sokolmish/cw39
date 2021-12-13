@@ -84,30 +84,85 @@ static enum isuff get_int_suff(const char **str) {
     }
 }
 
-uint64_t get_integer(const char *str) {
+AST_Literal_t get_integer(const char *str) {
     const char *endptr, *suff;
     uint64_t val = strtoull(str, (char**)(&endptr), 0);
 
-    // TODO: overflow
-
-    bool is_unsigned = false; // TODO: what to do with these flags?
-    bool is_long = false;
-    bool is_longlong = false;
+    AST_Literal res;
+    res.type = INTEGER_LITERAL;
+    res.isUnsigned = 0;
+    res.longCnt = 0;
+    res.isFloat = 0;
     
     suff = endptr;
     while (*endptr) {
         enum isuff sf = get_int_suff(&endptr);
-        if (sf == ISUFF_U && !is_unsigned)
-            is_unsigned = true;
-        else if (sf == ISUFF_L && !is_long && !is_longlong)
-            is_long = true;
-        else if (sf == ISUFF_LL && !is_long && !is_longlong)
-            is_longlong = true;
+        if (sf == ISUFF_U && !res.isUnsigned)
+            res.isUnsigned = 1;
+        else if (sf == ISUFF_L && !res.longCnt)
+            res.longCnt = 1;
+        else if (sf == ISUFF_LL && !res.longCnt)
+            res.longCnt = 2;
         else {
             fprintf(stderr, "Bad integer suffix: %s\n", suff);
             exit(EXIT_FAILURE); // TODO: error
         }
     }
 
-    return val;
+    // TODO: overflow
+
+    if (res.isUnsigned) {
+        if (res.longCnt)
+            res.val.vu64 = static_cast<uint64_t>(val);
+        else
+            res.val.vu32 = static_cast<uint32_t>(val);
+    }
+    else {
+        if (res.longCnt)
+            res.val.vi64 = static_cast<int64_t>(val);
+        else
+            res.val.vi32 = static_cast<int32_t>(val);
+    }
+    return res;
+}
+
+AST_Literal_t get_float(const char *str) {
+    AST_Literal res;
+    res.type = FLOAT_LITERAL;
+    res.isUnsigned = 0;
+    res.longCnt = 0;
+    res.isFloat = 0;
+
+    size_t len = strlen(str);
+    char *tmpStr = strdup(str);
+
+    if (tolower(tmpStr[len - 1]) == 'f') {
+        res.isFloat = 1;
+        tmpStr[len - 1] = '\0';
+    }
+    else if (tolower(tmpStr[len - 1]) == 'l') {
+        free(tmpStr);
+        fprintf(stderr, "Long double is not implemented\n");
+        exit(EXIT_FAILURE); // TODO: error
+    }
+
+    char *endptr;
+    if (res.isFloat)
+        res.val.vf32 = strtof(tmpStr, &endptr);
+    else
+        res.val.vf64 = strtod(tmpStr, &endptr);
+    if (*endptr != '\0') {
+        free(tmpStr);
+        fprintf(stderr, "Wrong floating-point literal\n");
+        exit(EXIT_FAILURE); // TODO: error
+    }
+
+    free(tmpStr);
+    return res;
+}
+
+AST_Literal_t get_charval(const char *str) {
+    (void)str;
+    fprintf(stderr, "Character literals is not implemented\n");
+    exit(EXIT_FAILURE); // TODO: error
 }

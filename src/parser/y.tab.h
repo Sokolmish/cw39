@@ -181,9 +181,9 @@ union YYSTYPE
 {
 #line 41 "parser.y"
 
-	int boolean;
+    int boolean;
 	int enum_val;
-	uint64_t u64;
+	struct AST_Literal num_literal;
 	string_id_t str;
 	string_id_t ident_id;
 

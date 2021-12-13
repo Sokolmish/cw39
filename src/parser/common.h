@@ -48,13 +48,35 @@ typedef struct lex_extra {
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra);
 void destroy_scanner(yyscan_t scanner);
 
+enum AST_LiteralType {
+    INTEGER_LITERAL, FLOAT_LITERAL, CHAR_LITERAL
+};
+
+typedef struct AST_Literal {
+    enum AST_LiteralType type;
+    int longCnt;
+    int isUnsigned;
+    int isFloat;
+    union {
+        char v_char;
+        uint32_t vu32;
+        uint64_t vu64;
+        int32_t vi32;
+        int64_t vi64;
+        float vf32;
+        double vf64;
+    } val;
+} AST_Literal_t;
+
 typedef int string_id_t;
 #define NO_IDENT_ID 0
 
 string_id_t get_ident_id(const char *ident, int *type);
 string_id_t get_string_id(const char *str);
 
-uint64_t get_integer(const char *str);
+AST_Literal_t get_integer(const char *str);
+AST_Literal_t get_float(const char *str);
+AST_Literal_t get_charval(const char *str);
 
 #ifdef __cplusplus
 }

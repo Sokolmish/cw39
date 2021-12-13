@@ -3,7 +3,9 @@
 
 int main(int argc, char **argv) {
     int x;
+    long y;
     x = 5;
+    y + 72L;
     while (x) {
         x = x - 1;
         if (x) {

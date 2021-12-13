@@ -63,12 +63,12 @@ struct AST_Expr : public AST_Node {
 
 struct AST_Primary : public AST_Expr {
     enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST } type;
-    std::variant<uniq<AST_Expr>, string_id_t, uint64_t> v;
+    std::variant<uniq<AST_Expr>, string_id_t, AST_Literal> v;
 
     static AST_Primary* get_ident(string_id_t id);
     static AST_Primary* get_expr(AST_Expr *expr);
     static AST_Primary* get_str(string_id_t str);
-    static AST_Primary* get_const(uint64_t val);
+    static AST_Primary* get_const(AST_Literal val);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 
 private:
