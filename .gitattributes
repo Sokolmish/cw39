@@ -1,2 +1,2 @@
-parser/lexer.c linguist-vendored
-parser/parser.hpp linguist-vendored
+src/parser/lexer.c linguist-vendored
+src/parser/parser.hpp linguist-vendored
