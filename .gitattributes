@@ -1,2 +1,3 @@
-src/parser/lexer.c linguist-vendored
-src/parser/parser.hpp linguist-vendored
+src/parser/lex.yy.c linguist-vendored
+src/parser/y.tab.cpp linguist-vendored
+src/parser/y.tab.h linguist-vendored
