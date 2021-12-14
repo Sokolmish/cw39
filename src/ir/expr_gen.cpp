@@ -283,6 +283,9 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
             // TODO: check types
 
+            if (expr.op != AST_Assignment::DIRECT)
+                NOT_IMPLEMENTED("compound assignment");
+
             auto destVar = variables.get(std::get<string_id_t>(var.v));
             if (!destVar.has_value())
                 semanticError("Unknown variable");

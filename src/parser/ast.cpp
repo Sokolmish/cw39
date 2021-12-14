@@ -15,25 +15,25 @@ using namespace std::string_literals;
 AST_Primary::AST_Primary(PrimType type)
     : AST_Expr(AST_PRIMARY), type(type) {}
 
-AST_Primary* AST_Primary::get_ident(string_id_t id) {
+AST_Primary* AST_Primary::makeIdent(string_id_t id) {
     auto res = new AST_Primary(AST_Primary::IDENT);
     res->v = id;
     return res;
 }
 
-AST_Primary* AST_Primary::get_expr(AST_Expr *expr) {
+AST_Primary* AST_Primary::makeExpr(AST_Expr *expr) {
     auto res = new AST_Primary(AST_Primary::EXPR);
     res->v = uniqify(expr);
     return res;
 }
 
-AST_Primary* AST_Primary::get_str(string_id_t str) {
+AST_Primary* AST_Primary::makeStr(string_id_t str) {
     auto res = new AST_Primary(AST_Primary::STR);
     res->v = str;
     return res;
 }
 
-AST_Primary* AST_Primary::get_const(AST_Literal val) {
+AST_Primary* AST_Primary::makeConst(AST_Literal val) {
     auto res = new AST_Primary(AST_Primary::CONST);
     res->v = val;
     return res;
@@ -788,14 +788,15 @@ TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
 // AST_AbstractDeclarator
 
 AST_AbstractDeclarator::AST_AbstractDeclarator(
-        AST_DirectAbstractDeclarator *decl,AST_Pointer *pointer)
+        AST_DirectAbstractDeclarator *decl, AST_Pointer *pointer)
         : AST_Node(AST_ABSTRACT_DECL), direct(decl), ptr(pointer) {}
 
 TreeNodeRef AST_AbstractDeclarator::getTreeNode() const {
     auto node = TreeNode::create("abstr_decl"s);
     if (ptr)
         node->addChild(ptr->getTreeNode());
-    node->addChild(direct->getTreeNode());
+    if (direct)
+        node->addChild(direct->getTreeNode());
     return node;
 }
 

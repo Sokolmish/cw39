@@ -169,10 +169,10 @@
 	/* Expressions */
 
 primary_expr
-	: IDENTIFIER							{ $$ = AST_Primary::get_ident($1); }
-	| CONSTANT								{ $$ = AST_Primary::get_const($1); }
-	| STRING_LITERAL						{ $$ = AST_Primary::get_str($1); }
-	| '(' expr ')'							{ $$ = AST_Primary::get_expr($2); }
+	: IDENTIFIER							{ $$ = AST_Primary::makeIdent($1); }
+	| CONSTANT								{ $$ = AST_Primary::makeConst($1); }
+	| STRING_LITERAL						{ $$ = AST_Primary::makeStr($1); }
+	| '(' expr ')'							{ $$ = AST_Primary::makeExpr($2); }
 	;
 
 postfix_expr
@@ -476,6 +476,7 @@ type_name
 abstr_declarator
 	: dir_abstr_declarator							{  $$ = new AST_AbstractDeclarator($1, nullptr); }
 	| pointer dir_abstr_declarator					{  $$ = new AST_AbstractDeclarator($2, $1); }
+	| pointer					                    {  $$ = new AST_AbstractDeclarator(nullptr, $1); }
 	;
 	/* 	pointer   {  $$ = new AST_AbstractDeclarator(nullptr, $1); } */
 

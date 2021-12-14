@@ -11,8 +11,7 @@ int main(int argc, char **argv) {
     unsigned long ss = sizeof(int);
     x = xx++;
     add(xx, 2);
-//    y + 72L;
-//    (long)x + y;
+    (int*)(unsigned long)y;
     while (x) {
         x = x - 1;
         if (x) {

@@ -98,7 +98,7 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
 static std::unique_ptr<IR_Type> getDirectType(
         AST_DirectDeclarator const &decl, std::unique_ptr<IR_Type> base);
 static std::unique_ptr<IR_Type> getDirectAbstractType(
-        AST_DirectAbstractDeclarator const &decl, std::unique_ptr<IR_Type> base);
+        AST_DirectAbstractDeclarator const *decl, std::unique_ptr<IR_Type> base);
 
 template <typename DeclaratorType>
 static std::unique_ptr<IR_Type> getIndirectType(
@@ -123,7 +123,7 @@ static std::unique_ptr<IR_Type> getIndirectType(
         return getDirectType(*decl->direct.get(), std::move(lastPtr));
     }
     else if constexpr (std::is_same<DeclaratorType, AST_AbstractDeclarator>()) {
-        return getDirectAbstractType(*decl->direct.get(), std::move(lastPtr));
+        return getDirectAbstractType(decl->direct.get(), std::move(lastPtr));
     }
     else {
         static_assert(! std::is_same<DeclaratorType, DeclaratorType>(),
@@ -171,15 +171,18 @@ static std::unique_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl, 
 }
 
 static std::unique_ptr<IR_Type> getDirectAbstractType(
-        AST_DirectAbstractDeclarator const &decl, std::unique_ptr<IR_Type> base) {
+        AST_DirectAbstractDeclarator const *decl, std::unique_ptr<IR_Type> base) {
 
-    if (decl.type == AST_DirectAbstractDeclarator::NESTED) {
+    if (!decl) {
+        return base;
+    }
+    else if (decl->type == AST_DirectAbstractDeclarator::NESTED) {
         return getIndirectType(
-                dynamic_cast<AST_AbstractDeclarator const *>(decl.base.get()),
+                dynamic_cast<AST_AbstractDeclarator const *>(decl->base.get()),
                 std::move(base));
     }
-    else if (decl.type == AST_DirectAbstractDeclarator::ARRAY) {
-        auto sizeExpr = evalConstantExpr(*decl.arr_size);
+    else if (decl->type == AST_DirectAbstractDeclarator::ARRAY) {
+        auto sizeExpr = evalConstantExpr(*decl->arr_size);
         if (!sizeExpr.has_value())
             semanticError("Non constant array size");
         if (sizeExpr->getType()->type != IR_Type::DIRECT)
@@ -189,12 +192,12 @@ static std::unique_ptr<IR_Type> getDirectAbstractType(
         auto size = sizeExpr->castValTo<uint64_t>();
         return std::make_unique<IR_TypeArray>(std::move(base), size);
     }
-    else if (decl.type == AST_DirectAbstractDeclarator::FUNC) {
-        if (decl.func_args) {
+    else if (decl->type == AST_DirectAbstractDeclarator::FUNC) {
+        if (decl->func_args) {
             std::vector<std::shared_ptr<IR_Type>> params;
-            for (const auto &param: decl.func_args->v->v)
+            for (const auto &param: decl->func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
-            bool isVararg = decl.func_args->has_ellipsis;
+            bool isVararg = decl->func_args->has_ellipsis;
             return std::make_unique<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
         }
         else {
