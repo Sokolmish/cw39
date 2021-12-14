@@ -6,8 +6,10 @@ int add(int a, int b) {
 }
 
 int main(int argc, char **argv) {
-    int x = 5, xx;
+    int x = 5, xx = 12;
     long y = -1L;
+    unsigned long ss = sizeof(int);
+    x = xx++;
     add(xx, 2);
 //    y + 72L;
 //    (long)x + y;
