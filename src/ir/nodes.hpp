@@ -169,7 +169,13 @@ struct IR_ExprCast : public IR_Expr {
     std::string opToString() const;
 };
 
-//struct IR_ExprCall : public IR_Expr {};
+struct IR_ExprCall : public IR_Expr {
+    int funcId;
+    std::vector<IRval> args;
+
+    IR_ExprCall(int callee, std::vector<IRval> args);
+    std::unique_ptr<IR_Expr> copy() const override;
+};
 
 
 // Nodes

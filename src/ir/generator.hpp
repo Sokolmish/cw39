@@ -24,6 +24,7 @@ std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 class IR_Generator {
 private:
     VariablesStack<string_id_t, IRval> variables;
+    std::map<string_id_t, int> functions; // ident -> func_id
 
     std::shared_ptr<ControlFlowGraph> cfg;
 

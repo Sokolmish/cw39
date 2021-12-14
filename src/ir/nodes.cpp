@@ -157,7 +157,7 @@ std::unique_ptr<IR_Expr> IR_ExprOper::copy() const {
     std::vector<IRval> newArgs;
     for (auto const &arg : args)
         newArgs.push_back(arg.copy());
-    return std::make_unique<IR_ExprOper>(op, newArgs);
+    return std::make_unique<IR_ExprOper>(op, std::move(newArgs));
 }
 
 std::string IR_ExprOper::opToString() const {
@@ -284,6 +284,19 @@ std::string IR_ExprCast::opToString() const {
         case ITOPTR:    return "itoptr";
     }
     throw;
+}
+
+
+// IR_ExprCall
+
+IR_ExprCall::IR_ExprCall(int callee, std::vector<IRval> args)
+        : IR_Expr(CALL), funcId(callee), args(std::move(args)) {}
+
+std::unique_ptr<IR_Expr> IR_ExprCall::copy() const {
+    std::vector<IRval> newArgs;
+    for (auto const &arg : args)
+        newArgs.push_back(arg.copy());
+    return std::make_unique<IR_ExprCall>(funcId, std::move(newArgs));
 }
 
 

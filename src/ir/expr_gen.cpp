@@ -448,8 +448,32 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_POSTFIX: {
-//            auto const &expr = dynamic_cast<AST_Postfix const &>(node);
-            NOT_IMPLEMENTED("");
+            auto const &expr = dynamic_cast<AST_Postfix const &>(node);
+
+            if (expr.op == AST_Postfix::CALL) {
+                if (expr.base->node_type != AST_PRIMARY)
+                    NOT_IMPLEMENTED("Pointers call");
+                auto const &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
+                if (funcBase.type != AST_Primary::IDENT)
+                    semanticError("Only identifier can be called");
+                auto funIt = functions.find(std::get<string_id_t>(funcBase.v));
+                if (funIt == functions.end())
+                    semanticError("Call of undeclared function");
+
+                auto const &fun = cfg->getFunction(funIt->second);
+                auto const &argsList = dynamic_cast<AST_ArgumentsList const &>(
+                        *std::get<std::unique_ptr<AST_Node>>(expr.arg));
+                std::vector<IRval> args;
+                for (auto const &arg : argsList.children)
+                    args.push_back(evalExpr(*arg));
+                auto val = std::make_unique<IR_ExprCall>(fun.getId(), args);
+                auto res = cfg->createReg(fun.getFuncType().ret);
+                curBlock().addNode(IR_Node(res, std::move(val)));
+                return res;
+            }
+            else {
+                NOT_IMPLEMENTED("Non-call postfix expression");
+            }
         }
 
         case AST_PRIMARY: {

@@ -4,6 +4,7 @@
 
 ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
     auto res = ControlFlowGraph::Function();
+    res.id = id;
     res.entryBlockId = entryBlockId;
     res.storage = storage;
     res.isInline = isInline;
@@ -11,15 +12,28 @@ ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
     return res;
 }
 
+int ControlFlowGraph::Function::getId() const {
+    return id;
+}
+
+int ControlFlowGraph::Function::getEntryBlockId() const {
+    return entryBlockId;
+}
+
+IR_TypeFunc const& ControlFlowGraph::Function::getFuncType() const {
+    return dynamic_cast<IR_TypeFunc const&>(*fullType);
+}
+
 
 ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     blocksCounter = oth.blocksCounter;
     regs_counter = oth.blocksCounter;
+    funcsCounter = oth.funcsCounter;
 
     for (const auto &[id, block] : oth.blocks)
         blocks.insert(blocks.end(), { id, block.copy() });
-    for (const auto &fun : oth.funcs)
-        funcs.push_back(fun.clone());
+    for (const auto &[id, block] : oth.funcs)
+        funcs.emplace_hint(funcs.end(), id, block);
 }
 
 IR_Block &ControlFlowGraph::createBlock() {
@@ -35,6 +49,28 @@ void ControlFlowGraph::linkBlocks(IR_Block &prev, IR_Block &next) {
 
 IR_Block &ControlFlowGraph::block(int id) {
     return blocks.at(id);
+}
+
+ControlFlowGraph::Function &ControlFlowGraph::getFunction(int id) {
+    return funcs.at(id);
+}
+
+IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
+    return IRval::createReg(type, regs_counter++);
+}
+
+ControlFlowGraph::Function& ControlFlowGraph::createFunction(
+        IR_StorageSpecifier stor, bool isInline, std::shared_ptr<IR_Type> fullType) {
+
+    auto &newBlock = createBlock();
+    Function func;
+    func.id = funcsCounter++;
+    func.entryBlockId = newBlock.id;
+    func.storage = stor;
+    func.isInline = isInline;
+    func.fullType = fullType;
+    auto it = funcs.emplace_hint(funcs.end(), func.id, std::move(func));
+    return it->second;
 }
 
 
@@ -93,9 +129,9 @@ static void printBlock(IR_Block const &block) {
             fmt::print("{} <- ", node.res->to_string());
         if (node.body->type == IR_Expr::OPERATION) {
             auto const &expr = dynamic_cast<IR_ExprOper const &>(*node.body);
-            fmt::print("{} ", expr.opToString());
+            fmt::print("{}", expr.opToString());
             for (auto const &arg: expr.args)
-                fmt::print("{} ", arg.to_string());
+                fmt::print(" {}", arg.to_string());
             fmt::print("\n");
         }
         else if (node.body->type == IR_Expr::ALLOCATION) {
@@ -106,6 +142,13 @@ static void printBlock(IR_Block const &block) {
             auto const &expr = dynamic_cast<IR_ExprCast const &>(*node.body);
             fmt::print("{} {} : {} -> {}\n", expr.opToString(), expr.arg.to_string(),
                        printType(*expr.arg.getType()), printType(*expr.dest));
+        }
+        else if (node.body->type == IR_Expr::CALL) {
+            auto const &expr = dynamic_cast<IR_ExprCall const &>(*node.body);
+            fmt::print("call {} ( ", expr.funcId);
+            for (auto const &arg : expr.args)
+                fmt::print("{} ", arg.to_string());
+            fmt::print(")\n");
         }
     }
 
@@ -133,18 +176,10 @@ static void printBlock(IR_Block const &block) {
 }
 
 void ControlFlowGraph::printBlocks() const {
+    for (auto const &[id, func] : funcs)
+        fmt::print("func {} -> block {}\n", func.id, func.entryBlockId);
+    fmt::print("\n");
     for (auto const &[id, block] : blocks) {
         printBlock(block);
     }
-}
-
-IR_Block &ControlFlowGraph::createFunction(ControlFlowGraph::Function func) {
-    auto &newBlock = createBlock();
-    func.entryBlockId = newBlock.id;
-    funcs.push_back(std::move(func));
-    return newBlock;
-}
-
-IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
-    return IRval::createReg(type, regs_counter++);
 }

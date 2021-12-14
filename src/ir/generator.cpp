@@ -46,15 +46,20 @@ static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec co
 }
 
 void IR_Generator::createFunction(AST_FunctionDef const &def) {
-    ControlFlowGraph::Function fun;
-    if (def.specifiers->storage_specifier == AST_DeclSpecifiers::ST_NONE)
-        fun.storage = IR_StorageSpecifier::EXTERN;
-    else
-        fun.storage = storageSpecFromAst(def.specifiers->storage_specifier);
-    fun.isInline = def.specifiers->is_inline;
-    fun.fullType = getType(*def.specifiers, *def.decl);
+    IR_StorageSpecifier storage;
+    bool isInline;
+    std::shared_ptr<IR_Type> fullType;
 
-    selectBlock(cfg->createFunction(fun));
+    if (def.specifiers->storage_specifier == AST_DeclSpecifiers::ST_NONE)
+        storage = IR_StorageSpecifier::EXTERN;
+    else
+        storage = storageSpecFromAst(def.specifiers->storage_specifier);
+    isInline = def.specifiers->is_inline;
+    fullType = getType(*def.specifiers, *def.decl);
+
+    auto fun = cfg->createFunction(storage, isInline, fullType);
+    functions.emplace(getDeclaredIdent(*def.decl), fun.getId());
+    selectBlock(cfg->block(fun.getEntryBlockId()));
     fillBlock(*def.body);
 }
 
