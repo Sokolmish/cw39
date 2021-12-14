@@ -67,15 +67,35 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     for (auto const &elem: compStmt.body->v) {
         if (elem->node_type == AST_DECLARATION) {
             auto const &decl = dynamic_cast<AST_Declaration const &>(*elem);
-            auto type = getType(*decl.specifiers, *decl.child->v[0]->declarator);
-            auto ptrType = std::make_shared<IR_TypePtr>(type);
-            auto ident = getDeclaredIdent(*decl.child->v[0]->declarator);
+            for (const auto &singleDecl : decl.child->v) {
+                auto varType = getType(*decl.specifiers, *singleDecl->declarator);
+                auto ident = getDeclaredIdent(*singleDecl->declarator);
 
-            auto res = cfg->createReg(ptrType);
-            auto val = std::make_unique<IR_ExprAlloc>(type, 1U);
-            curBlock().addNode(IR_Node{ res, std::move(val) });
+                auto ptrType = std::make_shared<IR_TypePtr>(varType);
 
-            variables.put(ident, res);
+                auto res = cfg->createReg(ptrType);
+                auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);
+                curBlock().addNode(IR_Node{ res, std::move(val) });
+
+                variables.put(ident, res);
+
+                if (singleDecl->initializer) {
+                    if (!singleDecl->initializer->is_compound) {
+                        auto const &initExpr = dynamic_cast<AST_Expr const &>(
+                                *singleDecl->initializer->val);
+                        auto initVal = evalExpr(initExpr);
+                        if (!initVal.getType()->equal(*varType)) {
+                            semanticError("Cannot initialize variable with different type");
+                        }
+                        auto storeNode = std::make_unique<IR_ExprOper>(
+                                IR_STORE, std::vector<IRval>{ res, initVal });
+                        curBlock().addNode(IR_Node(std::move(storeNode)));
+                    }
+                    else {
+                        NOT_IMPLEMENTED("Compound initializers");
+                    }
+                }
+            }
         }
         else if (elem->node_type == AST_STATEMENT) {
             insertStatement(dynamic_cast<AST_Statement const &>(*elem));

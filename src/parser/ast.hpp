@@ -460,7 +460,7 @@ struct AST_InitializerList : public AST_Node {
 
 struct AST_Initializer : public AST_Node {
     bool is_compound;
-    uniq<AST_Node> val;
+    uniq<AST_Node> val; // AST_InitializerList AST_Expr
 
     explicit AST_Initializer(AST_InitializerList *nest);
     explicit AST_Initializer(AST_Expr *val);

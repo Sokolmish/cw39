@@ -6,10 +6,9 @@ int add(int a, int b) {
 }
 
 int main(int argc, char **argv) {
-    int x;
-    long y;
-    add(x, 2);
-//    x = 5;
+    int x = 5, xx;
+    long y = -1L;
+    add(xx, 2);
 //    y + 72L;
 //    (long)x + y;
     while (x) {
