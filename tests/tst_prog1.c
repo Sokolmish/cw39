@@ -2,7 +2,7 @@
 //extern int atoi(const char *str);
 
 int add(int a, int b) {
-    return 1 + 2;
+    return a + b;
 }
 
 int main(int argc, char **argv) {

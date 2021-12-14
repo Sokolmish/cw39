@@ -46,6 +46,8 @@ static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec co
 }
 
 void IR_Generator::createFunction(AST_FunctionDef const &def) {
+    variables.increaseLevel();
+
     IR_StorageSpecifier storage;
     bool isInline;
     std::shared_ptr<IR_Type> fullType;
@@ -60,10 +62,30 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     auto fun = cfg->createFunction(storage, isInline, fullType);
     functions.emplace(getDeclaredIdent(*def.decl), fun.getId());
     selectBlock(cfg->block(fun.getEntryBlockId()));
+
+    auto declArgs = getDeclaredFuncArguments(*def.decl);
+    int curArgNum = 0;
+    for (auto const &[argIdent, argType] : declArgs) {
+        auto argPtrType = std::make_shared<IR_TypePtr>(argType);
+        auto argPtr = cfg->createReg(argPtrType);
+        auto val = std::make_unique<IR_ExprAlloc>(argType, 1U);
+        curBlock().addNode(IR_Node{ argPtr, std::move(val) });
+
+        auto argVal = IRval::createFunArg(argType, curArgNum);
+        auto storeNode = std::make_unique<IR_ExprOper>(
+                IR_STORE, std::vector<IRval>{ argPtr, argVal });
+        curBlock().addNode(IR_Node(std::move(storeNode)));
+
+        variables.put(argIdent, argPtr);
+        curArgNum++;
+    }
+
     fillBlock(*def.body);
+    variables.decreaseLevel();
 }
 
 void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
+    variables.increaseLevel();
     for (auto const &elem: compStmt.body->v) {
         if (elem->node_type == AST_DECLARATION) {
             auto const &decl = dynamic_cast<AST_Declaration const &>(*elem);
@@ -77,6 +99,8 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
                 auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);
                 curBlock().addNode(IR_Node{ res, std::move(val) });
 
+                if (variables.hasOnTop(ident))
+                    semanticError("Variable already declared");
                 variables.put(ident, res);
 
                 if (singleDecl->initializer) {

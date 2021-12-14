@@ -62,7 +62,7 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
     // TODO: refactor this function
 
     auto resType = IR_TypeDirect::VOID;
-    if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) { // TODO: void?
+    if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) { // Void here because it is default value
         if (sign == ast_ts::T_UNSIGNED) {
             if (longCnt != 0)
                 resType = IR_TypeDirect::U64;
@@ -232,6 +232,21 @@ static string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
 
 string_id_t getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
+}
+
+std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl) {
+    if (decl.direct->type != AST_DirectDeclarator::FUNC)
+        semanticError("Non function type");
+    if (!decl.direct->func_args)
+        return std::vector<IR_FuncArgument>();
+
+    std::vector<IR_FuncArgument> res;
+    for (auto const &arg : decl.direct->func_args->v->v) {
+        auto ident = getDeclaredIdent(*arg->child);
+        auto type = getType(*arg->specifiers, *arg->child);
+        res.push_back({ ident, type });
+    }
+    return  res;
 }
 
 std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit) {

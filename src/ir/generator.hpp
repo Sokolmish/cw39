@@ -14,9 +14,15 @@
 #include <fmt/core.h>
 
 
+struct IR_FuncArgument {
+    string_id_t ident;
+    std::shared_ptr<IR_Type> type;
+};
+
 [[nodiscard]] std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl);
 [[nodiscard]] std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
 [[nodiscard]] string_id_t getDeclaredIdent(AST_Declarator const &decl);
+[[nodiscard]] std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
 [[nodiscard]] std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
 
 std::optional<IRval> evalConstantExpr(AST_Expr const &node);

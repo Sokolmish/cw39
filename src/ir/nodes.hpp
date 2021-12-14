@@ -92,15 +92,16 @@ public:
 
 private:
     std::shared_ptr<IR_Type> type;
-    bool isReg;
+    enum ValueClass { VAL, VREG, FUN_PARAM } valClass;
     union_type val;
 
 public:
-    IRval(std::shared_ptr<IR_Type> type, bool isReg, union_type v);
+    IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, union_type v);
     IRval copy() const;
 
     [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
+    [[nodiscard]] static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
 
     [[nodiscard]] std::shared_ptr<IR_Type> const& getType() const;
     [[nodiscard]] bool isConstant() const;

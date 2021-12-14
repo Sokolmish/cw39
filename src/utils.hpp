@@ -62,6 +62,10 @@ public:
         data.back().template emplace(key, val);
 //        data.back().insert({ key, val });
     }
+
+    bool hasOnTop(K const &key) {
+        return data.back().contains(key);
+    }
 };
 
 #endif /* __UTILS_HPP__ */

@@ -463,9 +463,28 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 auto const &fun = cfg->getFunction(funIt->second);
                 auto const &argsList = dynamic_cast<AST_ArgumentsList const &>(
                         *std::get<std::unique_ptr<AST_Node>>(expr.arg));
+
                 std::vector<IRval> args;
-                for (auto const &arg : argsList.children)
-                    args.push_back(evalExpr(*arg));
+                size_t argNum = 0;
+                for (auto const &arg : argsList.children) {
+                    auto const &argVal = evalExpr(*arg);
+
+                    if (argNum < fun.getFuncType().args.size()) {
+                        if (!argVal.getType()->equal(*fun.getFuncType().args[argNum])) {
+                            semanticError("Wrong argnument type");
+                        }
+                    }
+                    else if (!fun.getFuncType().isVariadic) {
+                        semanticError("Too manny arguments in function call");
+                    }
+
+                    args.push_back(argVal);
+                    argNum++;
+                }
+                if (argNum < fun.getFuncType().args.size()) {
+                    semanticError("Too few argument in function call");
+                }
+
                 auto val = std::make_unique<IR_ExprCall>(fun.getId(), args);
                 auto res = cfg->createReg(fun.getFuncType().ret);
                 curBlock().addNode(IR_Node(res, std::move(val)));

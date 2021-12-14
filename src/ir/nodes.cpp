@@ -321,23 +321,27 @@ IR_Block IR_Block::copy() const {
 
 // IRval
 
-IRval::IRval(std::shared_ptr<IR_Type> type, bool isReg, IRval::union_type v) :
-        type(type), isReg(isReg), val(v) {}
+IRval::IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, IRval::union_type v) :
+        type(type), valClass(vclass), val(v) {}
 
 std::shared_ptr<IR_Type> const& IRval::getType() const {
     return type;
 }
 
 IRval IRval::createVal(std::shared_ptr<IR_Type> type, IRval::union_type v) {
-    return IRval(type, false, v);
+    return IRval(type, IRval::VAL, v);
 }
 
 IRval IRval::createReg(std::shared_ptr<IR_Type> type, uint64_t id) {
-    return IRval(type, true, id);
+    return IRval(type, IRval::VREG, id);
+}
+
+IRval IRval::createFunArg(std::shared_ptr<IR_Type> type, uint64_t num) {
+    return IRval(type, IRval::FUN_PARAM, num);
 }
 
 bool IRval::isConstant() const {
-    return !isReg;
+    return valClass == IRval::VAL;
 }
 
 const IRval::union_type &IRval::getVal() const {
@@ -345,18 +349,22 @@ const IRval::union_type &IRval::getVal() const {
 }
 
 bool IRval::isRegister() const {
-    return isReg;
+    return valClass == IRval::VREG;
 }
 
 std::string IRval::to_string() const {
-    if (isReg)
+    if (valClass == IRval::VREG)
         return std::visit([](auto e) -> std::string { return "%" + std::to_string(e); }, val);
-    else
+    else if (valClass == IRval::VAL)
         return std::visit([](auto e) -> std::string { return std::to_string(e); }, val);
+    else if (valClass == IRval::FUN_PARAM)
+        return std::visit([](auto e) -> std::string { return "%%arg" + std::to_string(e); }, val);
+    else
+        throw;
 }
 
 IRval IRval::copy() const {
-    return IRval(type->copy(), isReg, val);
+    return IRval(type->copy(), valClass, val);
 }
 
 
