@@ -154,7 +154,7 @@ static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval c
     throw;
 }
 
-std::optional<IRval> evalConstantExpr(AST_Expr const &node) {
+std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
     switch (node.node_type) {
         case AST_COMMA_EXPR: {
             return evalConstantExpr(*dynamic_cast<AST_CommaExpression const &>(node).children.back());

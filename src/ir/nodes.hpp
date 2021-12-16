@@ -7,7 +7,7 @@
 #include <optional>
 #include <variant>
 #include <string>
-
+#include "parser/common.h"
 
 // Types
 
@@ -18,8 +18,11 @@ struct IR_StorageSpecifier {
     IR_StorageSpecifier(Specs spec);
 };
 
+/**
+ * Consider type as immutable value, that can be used by different CFGs simultaneously
+ */
 struct IR_Type {
-    enum Type { DIRECT, POINTER, ARRAY, FUNCTION } type;
+    enum Type { DIRECT, TSTRUCT, POINTER, ARRAY, FUNCTION } type;
 
     IR_Type(IR_Type const &) = delete;
     IR_Type& operator=(IR_Type const &) = delete;
@@ -45,6 +48,24 @@ struct IR_TypeDirect : public IR_Type {
     [[nodiscard]] bool isSigned() const;
     [[nodiscard]] bool isUnsigned() const;
     [[nodiscard]] int getBytesSize() const override;
+};
+
+struct IR_TypeStruct : IR_Type {
+    struct StructField {
+        string_id_t fieldName;
+        std::shared_ptr<IR_Type> irType;
+        int index;
+
+        StructField(string_id_t ident, std::shared_ptr<IR_Type> type, int index);
+    };
+
+    string_id_t structId;
+    std::vector<StructField> fields;
+
+    IR_TypeStruct(string_id_t ident, std::vector<StructField> fields);
+    bool equal(IR_Type const &rhs) const override;
+    std::shared_ptr<IR_Type> copy() const override;
+    int getBytesSize() const override;
 };
 
 struct IR_TypePtr : public IR_Type {

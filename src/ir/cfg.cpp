@@ -34,6 +34,8 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
         blocks.insert(blocks.end(), { id, block.copy() });
     for (const auto &[id, block] : oth.funcs)
         funcs.emplace_hint(funcs.end(), id, block);
+    for (const auto &[id, irStruct] : oth.structs)
+        structs.emplace_hint(structs.end(), id, irStruct);
 }
 
 IR_Block &ControlFlowGraph::createBlock() {
@@ -119,6 +121,10 @@ static std::string printType(IR_Type const &type) {
                 return "void";
         }
     }
+    else if (type.type == IR_Type::TSTRUCT) {
+        auto const &sspec = dynamic_cast<IR_TypeStruct const &>(type);
+        return fmt::format("struct({})", sspec.structId);
+    }
     throw;
 }
 
@@ -176,8 +182,16 @@ static void printBlock(IR_Block const &block) {
 }
 
 void ControlFlowGraph::printBlocks() const {
-    for (auto const &[id, func] : funcs)
+    for (auto const &[id, structDecl] : structs) {
+        fmt::print("struct({}) {{ ", structDecl->structId);
+        for (const auto &field : structDecl->fields)
+            fmt::print("{} ", printType(*field.irType));
+        fmt::print("}}\n");
+    }
+    fmt::print("\n");
+    for (auto const &[id, func] : funcs) {
         fmt::print("func {} -> block {}\n", func.id, func.entryBlockId);
+    }
     fmt::print("\n");
     for (auto const &[id, block] : blocks) {
         printBlock(block);

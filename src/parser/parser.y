@@ -7,7 +7,7 @@
 %parse-param {struct AST_TranslationUnit **parser_result}
 
 %{
-	#include "common.h"
+	#include "lexer.h"
 	#include "ast.hpp"
 
 	#ifdef __cplusplus

@@ -1,8 +1,8 @@
 #include "common.h"
+#include "lexer.h"
 #include "parser.hpp"
 
 #include <cstdlib>
-#include <cstdint>
 #include <cctype>
 
 #include "y.tab.h"

@@ -638,7 +638,7 @@ static const flex_int16_t yy_chk[480] =
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "lexer.l"
 #line 5 "lexer.l"
-    #include "common.h"
+    #include "lexer.h"
     #include "y.tab.h"
 
     void comment(yyscan_t yyscanner);

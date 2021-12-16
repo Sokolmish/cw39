@@ -89,6 +89,13 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     for (auto const &elem: compStmt.body->v) {
         if (elem->node_type == AST_DECLARATION) {
             auto const &decl = dynamic_cast<AST_Declaration const &>(*elem);
+
+            // Save struct type if such is here
+            if (!decl.child) {
+                getPrimaryType(decl.specifiers->type_specifiers);
+                continue;
+            }
+
             for (const auto &singleDecl : decl.child->v) {
                 auto varType = getType(*decl.specifiers, *singleDecl->declarator);
                 auto ident = getDeclaredIdent(*singleDecl->declarator);

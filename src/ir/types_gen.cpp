@@ -1,6 +1,36 @@
 #include "generator.hpp"
 
-static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_TypeSpecifier>> const &spec) {
+std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_StructOrUsionSpec const &spec) {
+    // Lookup for existing struct type
+    auto itFound = cfg->structs.find(spec.name);
+    if (!spec.body) {
+        if (itFound == cfg->structs.end())
+            semanticError("Unknown struct name");
+        return itFound->second;
+    }
+    else if (itFound != cfg->structs.end()) {
+        semanticError("Struct with given name already has been defined");
+    }
+
+    // Create new struct type
+    std::vector<IR_TypeStruct::StructField> fields;
+    int curIndex = 0;
+    for (auto const &structDecl : spec.body->children) {
+        for (auto const &singleDecl : structDecl->child->children) {
+            if (singleDecl->bitwidth)
+                NOT_IMPLEMENTED("Bitwidth");
+            auto fieldType = getType(*structDecl->type, *singleDecl->declarator);
+            string_id_t fieldName = getDeclaredIdent(*singleDecl->declarator);
+            fields.emplace_back(fieldName, fieldType, curIndex);
+            curIndex++;
+        }
+    }
+    auto resType = std::make_shared<IR_TypeStruct>(spec.name, std::move(fields));
+    auto it = cfg->structs.emplace(spec.name, resType);
+    return resType;
+}
+
+std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec) {
     using ast_ts = AST_TypeSpecifier;
 
     if (spec.empty()) {
@@ -8,13 +38,20 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
     }
 
     if (spec[0]->spec_type == ast_ts::T_UNISTRUCT) {
-        NOT_IMPLEMENTED("");
+        if (spec.size() != 1)
+            semanticError("Struct specifier must be the only specifier");
+        auto const &structSpec = dynamic_cast<AST_StructOrUsionSpec const &>(*spec[0]->v);
+        if (structSpec.is_union)
+            NOT_IMPLEMENTED("Unions");
+        return getStructType(structSpec);
     }
     else if (spec[0]->spec_type == ast_ts::T_ENUM) {
-        NOT_IMPLEMENTED("");
+        if (spec.size() != 1)
+            semanticError("Enum specifier must be the only specifier");
+        NOT_IMPLEMENTED("Enums");
     }
     else if (spec[0]->spec_type == ast_ts::T_NAMED) {
-        NOT_IMPLEMENTED("");
+        NOT_IMPLEMENTED("Named types");
     }
 
     if (spec[0]->spec_type == ast_ts::T_VOID) {
@@ -95,20 +132,15 @@ static std::unique_ptr<IR_Type> getPrimaryType(std::vector<std::unique_ptr<AST_T
     return std::make_unique<IR_TypeDirect>(resType);
 }
 
-static std::unique_ptr<IR_Type> getDirectType(
-        AST_DirectDeclarator const &decl, std::unique_ptr<IR_Type> base);
-static std::unique_ptr<IR_Type> getDirectAbstractType(
-        AST_DirectAbstractDeclarator const *decl, std::unique_ptr<IR_Type> base);
-
 template <typename DeclaratorType>
-static std::unique_ptr<IR_Type> getIndirectType(
-        DeclaratorType const *decl, std::unique_ptr<IR_Type> base) {
+std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *decl,
+                                                       std::shared_ptr<IR_Type> base) {
 
     if (!decl) {
         return base;
     }
 
-    std::unique_ptr<IR_Type> lastPtr = std::move(base);
+    std::shared_ptr<IR_Type> lastPtr = std::move(base);
     for (auto curAstPtr = decl->ptr.get(); curAstPtr; curAstPtr = curAstPtr->child.get()) {
         auto newPtr = std::make_unique<IR_TypePtr>(std::move(lastPtr));
         if (decl->ptr->qualifiers) {
@@ -132,7 +164,8 @@ static std::unique_ptr<IR_Type> getIndirectType(
     }
 }
 
-static std::unique_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl, std::unique_ptr<IR_Type> base) {
+std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const &decl,
+                                                     std::shared_ptr<IR_Type> base) {
     if (decl.type == AST_DirectDeclarator::NAME) {
         return base; // Name is ignored there
     }
@@ -170,8 +203,8 @@ static std::unique_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl, 
     }
 }
 
-static std::unique_ptr<IR_Type> getDirectAbstractType(
-        AST_DirectAbstractDeclarator const *decl, std::unique_ptr<IR_Type> base) {
+std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractDeclarator const *decl,
+                                                             std::shared_ptr<IR_Type> base) {
 
     if (!decl) {
         return base;
@@ -207,16 +240,20 @@ static std::unique_ptr<IR_Type> getDirectAbstractType(
     semanticError("Unknown direct abstract declarator type");
 }
 
-std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl) {
+std::shared_ptr<IR_Type> IR_Generator::getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl) {
     return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
 }
 
-std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName) {
-    auto base = getPrimaryType(typeName.qual->type_specifiers);
-    return getIndirectType(typeName.declarator.get(), std::move(base));
+std::shared_ptr<IR_Type> IR_Generator::getType(AST_SpecifierQualifierList const &spec,
+                                               AST_Declarator const &decl) {
+    return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
 }
 
-static string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
+std::shared_ptr<IR_Type> IR_Generator::getType(AST_TypeName const &typeName) {
+    return getIndirectType(typeName.declarator.get(), getPrimaryType(typeName.qual->type_specifiers));
+}
+
+string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
     if (decl.type == AST_DirectDeclarator::NAME) {
         return std::get<string_id_t>(decl.base);
     }
@@ -233,11 +270,11 @@ static string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
     }
 }
 
-string_id_t getDeclaredIdent(AST_Declarator const &decl) {
+string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
 }
 
-std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl) {
+std::vector<IR_FuncArgument> IR_Generator::getDeclaredFuncArguments(AST_Declarator const &decl) {
     if (decl.direct->type != AST_DirectDeclarator::FUNC)
         semanticError("Non function type");
     if (!decl.direct->func_args)
@@ -252,7 +289,7 @@ std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl
     return  res;
 }
 
-std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit) {
+std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
     if (lit.type == INTEGER_LITERAL) {
         if (lit.isUnsigned) {
             if (lit.longCnt)

@@ -68,7 +68,7 @@
 /* First part of user prologue.  */
 #line 9 "parser.y"
 
-	#include "common.h"
+	#include "lexer.h"
 	#include "ast.hpp"
 
 	#ifdef __cplusplus

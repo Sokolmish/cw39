@@ -2,7 +2,7 @@
 %option extra-type="struct lex_extra*"
 
 %{
-    #include "common.h"
+    #include "lexer.h"
     #include "y.tab.h"
 
     void comment(yyscan_t yyscanner);

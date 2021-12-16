@@ -63,6 +63,30 @@ std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
 }
 
 
+// IR_TypeStruct
+
+IR_TypeStruct::IR_TypeStruct(string_id_t ident, std::vector<StructField> fields)
+        : IR_Type(TSTRUCT), structId(ident), fields(std::move(fields)) {}
+
+IR_TypeStruct::StructField::StructField(string_id_t ident, std::shared_ptr<IR_Type> type, int index)
+        : fieldName(ident), irType(type), index(index) {}
+
+bool IR_TypeStruct::equal(IR_Type const &rhs) const {
+    if (rhs.type != IR_Type::TSTRUCT)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeStruct const &>(rhs);
+    return structId == rtype.structId;
+}
+
+std::shared_ptr<IR_Type> IR_TypeStruct::copy() const {
+    return std::make_shared<IR_TypeStruct>(structId, fields);
+}
+
+int IR_TypeStruct::getBytesSize() const {
+    NOT_IMPLEMENTED("Structs size");
+}
+
+
 // IR_TypePtr
 
 IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :

@@ -6,6 +6,8 @@ int add(int a, int b) {
 }
 
 int main(int argc, char **argv) {
+    struct Alpha { int x; } gg;
+
     int x = 5, xx = 12;
     long y = -1L;
     unsigned long ss = sizeof(int);

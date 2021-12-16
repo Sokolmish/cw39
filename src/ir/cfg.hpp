@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include <map>
-
 #include "nodes.hpp"
 
 
@@ -35,6 +34,9 @@ private:
 
     std::map<int, IR_Block> blocks;
     std::map<int, Function> funcs;
+    std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
+
+    friend class IR_Generator;
 
 public:
     ControlFlowGraph() = default;

@@ -199,7 +199,7 @@ struct AST_TypeSpecifier : public AST_Node {
         T_SIGNED, T_UNSIGNED, T_FLOAT, T_DOUBLE,
         T_UNISTRUCT, T_ENUM, T_NAMED,
     } spec_type;
-    uniq<AST_Node> v;
+    uniq<AST_Node> v; // AST_StructOrUsionSpec AST_TypeName AST_EnumSpecifier
 
     explicit AST_TypeSpecifier(TypeSpec type);
     explicit AST_TypeSpecifier(AST_StructOrUsionSpec *spec);

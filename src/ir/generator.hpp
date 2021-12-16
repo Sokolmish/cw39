@@ -19,14 +19,6 @@ struct IR_FuncArgument {
     std::shared_ptr<IR_Type> type;
 };
 
-[[nodiscard]] std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl);
-[[nodiscard]] std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
-[[nodiscard]] string_id_t getDeclaredIdent(AST_Declarator const &decl);
-[[nodiscard]] std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
-[[nodiscard]] std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
-
-std::optional<IRval> evalConstantExpr(AST_Expr const &node);
-
 class IR_Generator {
 private:
     VariablesStack<string_id_t, IRval> variables;
@@ -47,7 +39,26 @@ private:
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertStatement(AST_Statement const &rawStmt);
+    std::optional<IRval> evalConstantExpr(AST_Expr const &node);
     IRval evalExpr(AST_Expr const &node);
+
+    std::shared_ptr<IR_Type> getStructType(AST_StructOrUsionSpec const &spec);
+    typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
+    std::shared_ptr<IR_Type> getPrimaryType(TypeSpecifiers const &spec);
+    template <typename DeclaratorType>
+    std::shared_ptr<IR_Type> getIndirectType(DeclaratorType const *decl,
+                                             std::shared_ptr<IR_Type> base);
+    std::shared_ptr<IR_Type> getDirectAbstractType(AST_DirectAbstractDeclarator const *decl,
+                                                   std::shared_ptr<IR_Type> base);
+    std::shared_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl,
+                                           std::shared_ptr<IR_Type> base);
+    std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl);
+    std::shared_ptr<IR_Type> getType(AST_SpecifierQualifierList const &spec, AST_Declarator const &decl);
+    std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
+    string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl);
+    string_id_t getDeclaredIdent(AST_Declarator const &decl);
+    std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
+    std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
 
 public:
     IR_Generator();
