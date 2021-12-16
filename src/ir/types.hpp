@@ -33,7 +33,7 @@ struct IR_TypeDirect : public IR_Type {
         VOID, I8, U8, I32, U32, I64, U64, F32
     } spec;
 
-    explicit IR_TypeDirect(DirType spec);
+    IR_TypeDirect(DirType spec);
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
 
@@ -42,6 +42,15 @@ struct IR_TypeDirect : public IR_Type {
     [[nodiscard]] bool isSigned() const;
     [[nodiscard]] bool isUnsigned() const;
     [[nodiscard]] int getBytesSize() const override;
+
+    static std::shared_ptr<IR_TypeDirect> type_void;
+    static std::shared_ptr<IR_TypeDirect> type_i8;
+    static std::shared_ptr<IR_TypeDirect> type_u8;
+    static std::shared_ptr<IR_TypeDirect> type_i32;
+    static std::shared_ptr<IR_TypeDirect> type_u32;
+    static std::shared_ptr<IR_TypeDirect> type_i64;
+    static std::shared_ptr<IR_TypeDirect> type_u64;
+    static std::shared_ptr<IR_TypeDirect> type_f32;
 };
 
 struct IR_TypeStruct : IR_Type {
@@ -60,7 +69,7 @@ struct IR_TypeStruct : IR_Type {
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
     int getBytesSize() const override;
-    int getFieldIndex(string_id_t id) const;
+    StructField const* getField(string_id_t id) const;
 };
 
 struct IR_TypePtr : public IR_Type {

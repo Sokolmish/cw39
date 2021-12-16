@@ -88,7 +88,7 @@ struct AST_ArgumentsList : public AST_Node {
 
 struct AST_Postfix : public AST_Expr {
     enum OpType : ast_enum_t {
-        INDEXATION, CALL, DIR_ACCESS, PTR_ACCESS, POST_INC, POST_DEC
+        CALL, POST_INC, POST_DEC, INDEXATION, DIR_ACCESS, PTR_ACCESS
     } op;
     uniq<AST_Expr> base = nullptr;
     std::variant<uniq<AST_Node>, string_id_t> arg; // Expr ArgumentsList

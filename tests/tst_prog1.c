@@ -6,25 +6,23 @@ int add(int a, int b) {
 }
 
 int main(int argc, char **argv) {
-    struct Alpha { int x; } gg;
+//    struct Alpha { int f, g; } sss;
+//    sss.g = sss.f + 12;
 
-    int x = 5, xx = 12;
-    long y = -1L;
-    unsigned long ss = sizeof(int);
-    x = xx++;
-    add(xx, 2);
-    (int*)(unsigned long)y;
+    int arr[10];
+    arr[2] = arr[3];
+
+    char *aa = *argv;
+    *aa = (char)111;
+
+    int x = 10;
     while (x) {
         x = x - 1;
         if (x) {
             break;
-            3;
         }
         else
             continue;
-//            x;
-        1 + 2;
     }
-    x = x + 10;
     return x;
 }

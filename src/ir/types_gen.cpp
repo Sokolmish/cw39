@@ -26,7 +26,7 @@ std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_StructOrUsionSpec const
         }
     }
     auto resType = std::make_shared<IR_TypeStruct>(spec.name, std::move(fields));
-    auto it = cfg->structs.emplace(spec.name, resType);
+    cfg->structs.emplace(spec.name, resType);
     return resType;
 }
 

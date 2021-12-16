@@ -51,7 +51,7 @@ enum IR_Ops {
     IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
     IR_XOR, IR_AND, IR_OR, IR_LAND, IR_LOR,
     IR_EQ, IR_NE, IR_GT, IR_LT, IR_GE, IR_LE,
-    IR_DEREF, IR_STORE,
+    IR_LOAD, IR_STORE, IR_EXTRACT, IR_INSERT
 };
 
 struct IR_Expr {

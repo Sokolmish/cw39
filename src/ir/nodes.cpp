@@ -62,6 +62,23 @@ std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
     return std::make_shared<IR_TypeDirect>(spec);
 }
 
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_void =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i8 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u8 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U8);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i32 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u32 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U32);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i64 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I64);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u64 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f32 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
+
 
 // IR_TypeStruct
 
@@ -84,6 +101,13 @@ std::shared_ptr<IR_Type> IR_TypeStruct::copy() const {
 
 int IR_TypeStruct::getBytesSize() const {
     NOT_IMPLEMENTED("Structs size");
+}
+
+IR_TypeStruct::StructField const* IR_TypeStruct::getField(string_id_t id) const {
+    for (auto const &field : fields)
+        if (field.fieldName == id)
+            return &field;
+    return nullptr;
 }
 
 
@@ -186,26 +210,28 @@ std::unique_ptr<IR_Expr> IR_ExprOper::copy() const {
 
 std::string IR_ExprOper::opToString() const {
     switch (op) {
-        case IR_MUL:    return "mul";
-        case IR_DIV:    return "div";
-        case IR_REM:    return "rem";
-        case IR_ADD:    return "add";
-        case IR_SUB:    return "sub";
-        case IR_SHR:    return "shr";
-        case IR_SHL:    return "shl";
-        case IR_XOR:    return "xor";
-        case IR_AND:    return "and";
-        case IR_OR:     return "or";
-        case IR_LAND:   return "land";
-        case IR_LOR:    return "lor";
-        case IR_EQ:     return "eq";
-        case IR_NE:     return "ne";
-        case IR_GT:     return "gt";
-        case IR_LT:     return "lt";
-        case IR_GE:     return "ge";
-        case IR_LE:     return "le";
-        case IR_DEREF:  return "deref";
-        case IR_STORE:  return "store";
+        case IR_MUL:        return "mul";
+        case IR_DIV:        return "div";
+        case IR_REM:        return "rem";
+        case IR_ADD:        return "add";
+        case IR_SUB:        return "sub";
+        case IR_SHR:        return "shr";
+        case IR_SHL:        return "shl";
+        case IR_XOR:        return "xor";
+        case IR_AND:        return "and";
+        case IR_OR:         return "or";
+        case IR_LAND:       return "land";
+        case IR_LOR:        return "lor";
+        case IR_EQ:         return "eq";
+        case IR_NE:         return "ne";
+        case IR_GT:         return "gt";
+        case IR_LT:         return "lt";
+        case IR_GE:         return "ge";
+        case IR_LE:         return "le";
+        case IR_LOAD:      return "deref";
+        case IR_STORE:      return "store";
+        case IR_EXTRACT:    return "extract";
+        case IR_INSERT:     return "insert";
     }
     throw;
 }
