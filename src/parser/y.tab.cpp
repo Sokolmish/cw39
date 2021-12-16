@@ -2085,43 +2085,43 @@ yyreduce:
 
   case 7:
 #line 180 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::get_arr((yyvsp[-3].expr), (yyvsp[-1].expr)); }
+                                                                { (yyval.expr) = AST_Postfix::makeArr((yyvsp[-3].expr), (yyvsp[-1].expr)); }
 #line 2090 "y.tab.cpp"
     break;
 
   case 8:
 #line 181 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::get_call((yyvsp[-2].expr), nullptr); }
+                                                                { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-2].expr), nullptr); }
 #line 2096 "y.tab.cpp"
     break;
 
   case 9:
 #line 182 "parser.y"
-                                                        { (yyval.expr) = AST_Postfix::get_call((yyvsp[-3].expr), (yyvsp[-1].args_list)); }
+                                                        { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-3].expr), (yyvsp[-1].args_list)); }
 #line 2102 "y.tab.cpp"
     break;
 
   case 10:
 #line 183 "parser.y"
-                                                        { (yyval.expr) = AST_Postfix::get_accesor((yyvsp[-2].expr), (yyvsp[0].ident_id), false); }
+                                                        { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), false); }
 #line 2108 "y.tab.cpp"
     break;
 
   case 11:
 #line 184 "parser.y"
-                                                        { (yyval.expr) = AST_Postfix::get_accesor((yyvsp[-2].expr), (yyvsp[0].ident_id), true); }
+                                                        { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), true); }
 #line 2114 "y.tab.cpp"
     break;
 
   case 12:
 #line 185 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::get_incdec((yyvsp[-1].expr), false); }
+                                                                { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), false); }
 #line 2120 "y.tab.cpp"
     break;
 
   case 13:
 #line 186 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::get_incdec((yyvsp[-1].expr), true); }
+                                                                { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), true); }
 #line 2126 "y.tab.cpp"
     break;
 
@@ -2901,49 +2901,49 @@ yyreduce:
 
   case 143:
 #line 441 "parser.y"
-                                                                                                        { (yyval.dir_declarator) = AST_DirectDeclarator::get_ident((yyvsp[0].ident_id)); }
+                                                                                                        { (yyval.dir_declarator) = AST_DirectDeclarator::makeIdent((yyvsp[0].ident_id)); }
 #line 2906 "y.tab.cpp"
     break;
 
   case 144:
 #line 442 "parser.y"
-                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::get_nested((yyvsp[-1].declarator)); }
+                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeNested((yyvsp[-1].declarator)); }
 #line 2912 "y.tab.cpp"
     break;
 
   case 145:
 #line 443 "parser.y"
-                                                                        { (yyval.dir_declarator) = AST_DirectDeclarator::get_arr((yyvsp[-4].dir_declarator), (yyvsp[-2].type_quals), (yyvsp[-1].expr)); }
+                                                                        { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-4].dir_declarator), (yyvsp[-2].type_quals), (yyvsp[-1].expr)); }
 #line 2918 "y.tab.cpp"
     break;
 
   case 146:
 #line 444 "parser.y"
-                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::get_arr((yyvsp[-3].dir_declarator), (yyvsp[-1].type_quals), nullptr); }
+                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-3].dir_declarator), (yyvsp[-1].type_quals), nullptr); }
 #line 2924 "y.tab.cpp"
     break;
 
   case 147:
 #line 445 "parser.y"
-                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::get_arr((yyvsp[-3].dir_declarator), nullptr, (yyvsp[-1].expr)); }
+                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-3].dir_declarator), nullptr, (yyvsp[-1].expr)); }
 #line 2930 "y.tab.cpp"
     break;
 
   case 148:
 #line 446 "parser.y"
-                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::get_arr((yyvsp[-2].dir_declarator), nullptr, nullptr); }
+                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-2].dir_declarator), nullptr, nullptr); }
 #line 2936 "y.tab.cpp"
     break;
 
   case 149:
 #line 447 "parser.y"
-                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::get_func((yyvsp[-3].dir_declarator), (yyvsp[-1].param_type_lst)); }
+                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeFunc((yyvsp[-3].dir_declarator), (yyvsp[-1].param_type_lst)); }
 #line 2942 "y.tab.cpp"
     break;
 
   case 150:
 #line 448 "parser.y"
-                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::get_func((yyvsp[-2].dir_declarator), nullptr); }
+                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeFunc((yyvsp[-2].dir_declarator), nullptr); }
 #line 2948 "y.tab.cpp"
     break;
 
@@ -3027,31 +3027,31 @@ yyreduce:
 
   case 164:
 #line 484 "parser.y"
-                                                                                { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::get_nested((yyvsp[-1].abstract_decl)); }
+                                                                                { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeNested((yyvsp[-1].abstract_decl)); }
 #line 3032 "y.tab.cpp"
     break;
 
   case 165:
 #line 485 "parser.y"
-                                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::get_arr((yyvsp[-2].dir_abstract_decl), nullptr); }
+                                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeArr((yyvsp[-2].dir_abstract_decl), nullptr); }
 #line 3038 "y.tab.cpp"
     break;
 
   case 166:
 #line 486 "parser.y"
-                                                                { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::get_arr((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].expr)); }
+                                                                { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeArr((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].expr)); }
 #line 3044 "y.tab.cpp"
     break;
 
   case 167:
 #line 487 "parser.y"
-                                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::get_func((yyvsp[-2].dir_abstract_decl), nullptr); }
+                                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeFunc((yyvsp[-2].dir_abstract_decl), nullptr); }
 #line 3050 "y.tab.cpp"
     break;
 
   case 168:
 #line 488 "parser.y"
-                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::get_func((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].param_type_lst)); }
+                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeFunc((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].param_type_lst)); }
 #line 3056 "y.tab.cpp"
     break;
 

@@ -239,7 +239,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     else if (rawStmt.type == AST_Statement::JUMP) {
         auto const &stmt = dynamic_cast<AST_JumpStmt const &>(rawStmt);
         if (stmt.type == AST_JumpStmt::J_RET) {
-            auto const &arg = std::get<std::unique_ptr<AST_Expr>>(stmt.arg);
+            auto const &arg = stmt.getExpr();
             if (arg) {
                 auto retVal = evalExpr(*arg);
                 curBlock().terminator = IR_Terminator(IR_Terminator::RET, retVal);

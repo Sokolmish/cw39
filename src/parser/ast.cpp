@@ -39,6 +39,22 @@ AST_Primary* AST_Primary::makeConst(AST_Literal val) {
     return res;
 }
 
+string_id_t AST_Primary::getIdent() const {
+    return std::get<string_id_t>(v);
+}
+
+string_id_t AST_Primary::getString() const {
+    return std::get<string_id_t>(v);
+}
+
+AST_Literal AST_Primary::getLiteral() const {
+    return std::get<AST_Literal>(v);
+}
+
+AST_Expr const& AST_Primary::getExpr() const {
+    return *std::get<std::unique_ptr<AST_Expr>>(v);
+}
+
 TreeNodeRef AST_Primary::getTreeNode() const {
     if (type != AST_Primary::EXPR) {
         std::string str;
@@ -62,14 +78,14 @@ TreeNodeRef AST_Primary::getTreeNode() const {
 AST_Postfix::AST_Postfix(OpType type)
     : AST_Expr(AST_POSTFIX), op(type) {}
 
-AST_Postfix* AST_Postfix::get_arr(AST_Expr *base, AST_Expr *size) {
+AST_Postfix* AST_Postfix::makeArr(AST_Expr *base, AST_Expr *size) {
     auto res = new AST_Postfix(AST_Postfix::INDEXATION);
     res->base = uniqify(base);
     res->arg = uniqify(size);
     return res;
 }
 
-AST_Postfix* AST_Postfix::get_call(AST_Expr *base, AST_ArgumentsList *args) {
+AST_Postfix* AST_Postfix::makeCall(AST_Expr *base, AST_ArgumentsList *args) {
     auto res = new AST_Postfix(AST_Postfix::CALL);
     res->base = uniqify(base);
     if (args != nullptr)
@@ -79,14 +95,14 @@ AST_Postfix* AST_Postfix::get_call(AST_Expr *base, AST_ArgumentsList *args) {
     return res;
 }
 
-AST_Postfix* AST_Postfix::get_accesor(AST_Expr *base, string_id_t member, bool is_ptr) {
+AST_Postfix* AST_Postfix::makeAccesor(AST_Expr *base, string_id_t member, bool is_ptr) {
     auto res = new AST_Postfix(is_ptr ? AST_Postfix::PTR_ACCESS : AST_Postfix::DIR_ACCESS);
     res->base = uniqify(base);
     res->arg = member;
     return res;
 }
 
-AST_Postfix* AST_Postfix::get_incdec(AST_Expr *base, bool is_dec) {
+AST_Postfix* AST_Postfix::makeIncdec(AST_Expr *base, bool is_dec) {
     auto res = new AST_Postfix(is_dec ? AST_Postfix::POST_DEC : AST_Postfix::POST_INC);
     res->base = uniqify(base);
     return res;
@@ -118,6 +134,20 @@ TreeNodeRef AST_Postfix::getTreeNode() const {
     auto node = TreeNode::create(str);
     node->addChild(base->getTreeNode());
     return node;
+}
+
+AST_Expr const& AST_Postfix::getExpr() const {
+    auto const &uptr = std::get<std::unique_ptr<AST_Node>>(arg);
+    return dynamic_cast<AST_Expr const &>(*uptr);
+}
+
+AST_ArgumentsList const &AST_Postfix::getArgsList() const {
+    auto const &uptr = std::get<std::unique_ptr<AST_Node>>(arg);
+    return dynamic_cast<AST_ArgumentsList const &>(*uptr);
+}
+
+string_id_t AST_Postfix::getIdent() const {
+    return std::get<string_id_t>(arg);
 }
 
 
@@ -580,19 +610,19 @@ TreeNodeRef AST_Declaration::getTreeNode() const {
 AST_DirectDeclarator::AST_DirectDeclarator(DeclType dtype)
     : AST_Node(AST_DIR_DECLARATOR), type(dtype) {}
 
-AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::get_ident(string_id_t ident) {
+AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::makeIdent(string_id_t ident) {
     auto res = new AST_DirectDeclarator(AST_DirectDeclarator::NAME);
     res->base = ident;
     return res;
 }
 
-AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::get_nested(AST_Declarator *decl) {
+AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::makeNested(AST_Declarator *decl) {
     auto res = new AST_DirectDeclarator(AST_DirectDeclarator::NESTED);
     res->base = uniqify(decl);
     return res;
 }
 
-AST_DirectDeclarator* AST_DirectDeclarator::get_arr(AST_DirectDeclarator *base,
+AST_DirectDeclarator* AST_DirectDeclarator::makeArr(AST_DirectDeclarator *base,
                                                     AST_TypeQualifiers *qual,
                                                     AST_Expr *sz) {
     auto res = new AST_DirectDeclarator(AST_DirectDeclarator::ARRAY);
@@ -602,7 +632,7 @@ AST_DirectDeclarator* AST_DirectDeclarator::get_arr(AST_DirectDeclarator *base,
     return res;
 }
 
-AST_DirectDeclarator* AST_DirectDeclarator::get_func(AST_DirectDeclarator *base,
+AST_DirectDeclarator* AST_DirectDeclarator::makeFunc(AST_DirectDeclarator *base,
                                                      AST_ParameterTypeList *args) {
     auto res = new AST_DirectDeclarator(AST_DirectDeclarator::FUNC);
     res->base = uniqify(base);
@@ -637,6 +667,20 @@ TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
     else {
         throw; // TODO: verbosity
     }
+}
+
+string_id_t AST_DirectDeclarator::getIdent() const {
+    return std::get<string_id_t>(base);
+}
+
+AST_DirectDeclarator const &AST_DirectDeclarator::getBaseDirectDecl() const {
+    auto const &uptr = std::get<std::unique_ptr<AST_Node>>(base);
+    return dynamic_cast<AST_DirectDeclarator const &>(*uptr);
+}
+
+AST_Declarator const &AST_DirectDeclarator::getBaseDecl() const {
+    auto const &uptr = std::get<std::unique_ptr<AST_Node>>(base);
+    return dynamic_cast<AST_Declarator const &>(*uptr);
 }
 
 
@@ -738,20 +782,20 @@ TreeNodeRef AST_TypeName::getTreeNode() const {
 AST_DirectAbstractDeclarator::AST_DirectAbstractDeclarator(DeclType dtype)
         : AST_Node(AST_DIR_ABSTRACT_DECL), type(dtype) {}
 
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::get_nested(
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeNested(
         AST_Node *decl) {
     auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::NESTED);
     res->base = uniqify(decl);
     return res;
 }
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::get_arr(
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeArr(
         AST_Node *base, AST_Expr *sz) {
     auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::ARRAY);
     res->base = uniqify(base);
     res->arr_size = uniqify(sz);
     return res;
 }
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::get_func(
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeFunc(
         AST_Node *base, AST_ParameterTypeList *args) {
     auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::FUNC);
     res->base = uniqify(base);
@@ -1075,6 +1119,14 @@ TreeNodeRef AST_JumpStmt::getTreeNode() const {
     if (std::get<uniq<AST_Expr>>(arg))
         node->addChild(std::get<uniq<AST_Expr>>(arg)->getTreeNode());
     return node;
+}
+
+std::unique_ptr<AST_Expr> const &AST_JumpStmt::getExpr() const {
+    return std::get<std::unique_ptr<AST_Expr>>(arg);
+}
+
+string_id_t AST_JumpStmt::getIdent() const {
+    return std::get<string_id_t>(arg);
 }
 
 

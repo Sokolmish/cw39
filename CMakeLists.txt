@@ -29,9 +29,11 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/nodes.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/generator.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir/types_gen.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir/expr_gen.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir/cfg.cpp)
+        ${PROJECT_SOURCE_DIR}/src/ir/types.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir/expr.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir/expr_const.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir/cfg.cpp
+        )
 
 add_executable(cw39 ${PROJ_SRCS})
 

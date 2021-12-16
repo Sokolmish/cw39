@@ -177,13 +177,13 @@ primary_expr
 
 postfix_expr
 	: primary_expr							{ $$ = $1; }
-	| postfix_expr '[' expr ']'				{ $$ = AST_Postfix::get_arr($1, $3); }
-	| postfix_expr '(' ')'					{ $$ = AST_Postfix::get_call($1, nullptr); }
-	| postfix_expr '(' arg_expr_lst ')'		{ $$ = AST_Postfix::get_call($1, $3); }
-	| postfix_expr '.' IDENTIFIER			{ $$ = AST_Postfix::get_accesor($1, $3, false); }
-	| postfix_expr PTR_OP IDENTIFIER		{ $$ = AST_Postfix::get_accesor($1, $3, true); }
-	| postfix_expr INC_OP					{ $$ = AST_Postfix::get_incdec($1, false); }
-	| postfix_expr DEC_OP					{ $$ = AST_Postfix::get_incdec($1, true); }
+	| postfix_expr '[' expr ']'				{ $$ = AST_Postfix::makeArr($1, $3); }
+	| postfix_expr '(' ')'					{ $$ = AST_Postfix::makeCall($1, nullptr); }
+	| postfix_expr '(' arg_expr_lst ')'		{ $$ = AST_Postfix::makeCall($1, $3); }
+	| postfix_expr '.' IDENTIFIER			{ $$ = AST_Postfix::makeAccesor($1, $3, false); }
+	| postfix_expr PTR_OP IDENTIFIER		{ $$ = AST_Postfix::makeAccesor($1, $3, true); }
+	| postfix_expr INC_OP					{ $$ = AST_Postfix::makeIncdec($1, false); }
+	| postfix_expr DEC_OP					{ $$ = AST_Postfix::makeIncdec($1, true); }
 	;
 
 arg_expr_lst
@@ -438,14 +438,14 @@ pointer
 	;
 
 dir_declarator
-	: IDENTIFIER											{ $$ = AST_DirectDeclarator::get_ident($1); }
-	| '(' declarator ')'									{ $$ = AST_DirectDeclarator::get_nested($2); }
-	| dir_declarator '[' type_qual_lst assign_expr ']'		{ $$ = AST_DirectDeclarator::get_arr($1, $3, $4); }
-	| dir_declarator '[' type_qual_lst ']'					{ $$ = AST_DirectDeclarator::get_arr($1, $3, nullptr); }
-	| dir_declarator '[' assign_expr ']'					{ $$ = AST_DirectDeclarator::get_arr($1, nullptr, $3); }
-	| dir_declarator '[' ']'								{ $$ = AST_DirectDeclarator::get_arr($1, nullptr, nullptr); }
-	| dir_declarator '(' param_type_lst ')'					{ $$ = AST_DirectDeclarator::get_func($1, $3); }
-	| dir_declarator '(' ')'								{ $$ = AST_DirectDeclarator::get_func($1, nullptr); }
+	: IDENTIFIER											{ $$ = AST_DirectDeclarator::makeIdent($1); }
+	| '(' declarator ')'									{ $$ = AST_DirectDeclarator::makeNested($2); }
+	| dir_declarator '[' type_qual_lst assign_expr ']'		{ $$ = AST_DirectDeclarator::makeArr($1, $3, $4); }
+	| dir_declarator '[' type_qual_lst ']'					{ $$ = AST_DirectDeclarator::makeArr($1, $3, nullptr); }
+	| dir_declarator '[' assign_expr ']'					{ $$ = AST_DirectDeclarator::makeArr($1, nullptr, $3); }
+	| dir_declarator '[' ']'								{ $$ = AST_DirectDeclarator::makeArr($1, nullptr, nullptr); }
+	| dir_declarator '(' param_type_lst ')'					{ $$ = AST_DirectDeclarator::makeFunc($1, $3); }
+	| dir_declarator '(' ')'								{ $$ = AST_DirectDeclarator::makeFunc($1, nullptr); }
 	;
 
 type_qual_lst
@@ -481,11 +481,11 @@ abstr_declarator
 	/* 	pointer   {  $$ = new AST_AbstractDeclarator(nullptr, $1); } */
 
 dir_abstr_declarator
-	: '(' abstr_declarator ')'						{ $$ = AST_DirectAbstractDeclarator::get_nested($2); }
-	| dir_abstr_declarator '[' ']'					{ $$ = AST_DirectAbstractDeclarator::get_arr($1, nullptr); }
-	| dir_abstr_declarator '[' assign_expr ']'		{ $$ = AST_DirectAbstractDeclarator::get_arr($1, $3); }
-	| dir_abstr_declarator '(' ')'					{ $$ = AST_DirectAbstractDeclarator::get_func($1, nullptr); }
-	| dir_abstr_declarator '(' param_type_lst ')'	{ $$ = AST_DirectAbstractDeclarator::get_func($1, $3); }
+	: '(' abstr_declarator ')'						{ $$ = AST_DirectAbstractDeclarator::makeNested($2); }
+	| dir_abstr_declarator '[' ']'					{ $$ = AST_DirectAbstractDeclarator::makeArr($1, nullptr); }
+	| dir_abstr_declarator '[' assign_expr ']'		{ $$ = AST_DirectAbstractDeclarator::makeArr($1, $3); }
+	| dir_abstr_declarator '(' ')'					{ $$ = AST_DirectAbstractDeclarator::makeFunc($1, nullptr); }
+	| dir_abstr_declarator '(' param_type_lst ')'	{ $$ = AST_DirectAbstractDeclarator::makeFunc($1, $3); }
 	;
 
 

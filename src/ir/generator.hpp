@@ -39,6 +39,11 @@ private:
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertStatement(AST_Statement const &rawStmt);
+
+    bool isGeneralNumOp(AST_Binop::OpType op);
+    bool isIntegerNumOp(AST_Binop::OpType op);
+    bool isComparsionOp(AST_Binop::OpType op);
+    IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
     IRval evalExpr(AST_Expr const &node);
 

@@ -1,267 +1,5 @@
 #include "generator.hpp"
 
-[[nodiscard]]
-static bool isGeneralNumOp(AST_Binop::OpType op) {
-    using bop = AST_Binop;
-    return isInList(op, { bop::ADD, bop::SUB, bop::DIV, bop::MUL });
-}
-
-[[nodiscard]]
-static bool isIntegerNumOp(AST_Binop::OpType op) {
-    using bop = AST_Binop;
-    return isInList(op, { bop::SHL, bop::SHR, bop::REM,
-                          bop::BIT_AND, bop::BIT_OR, bop::BIT_XOR,
-                          bop::LOG_AND, bop::LOG_OR });
-}
-
-[[nodiscard]]
-static bool isComparsionOp(AST_Binop::OpType op) {
-    using bop = AST_Binop;
-    return isInList(op, { bop::LT, bop::GT, bop::LE, bop::GE, bop::EQ, bop::NE });
-}
-
-
-[[nodiscard]]
-static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs) {
-    using bop = AST_Binop;
-
-    if (!lhs.isConstant() || !rhs.isConstant())
-        semanticError("Non constant sub expressions");
-    if (lhs.getType()->type != IR_Type::DIRECT || rhs.getType()->type != IR_Type::DIRECT)
-        semanticError("Pointers arithmetics is not constant");
-
-    auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
-    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
-
-    if (!lhs.getType()->equal(*rhs.getType()))
-        semanticError("Cannot do binary operation on different types");
-
-    if (isIntegerNumOp(op)) {
-        if (ltype.isFloat() || rtype.isFloat())
-            semanticError("Invalid operation on floats");
-
-        uint64_t val1 = lhs.castValTo<uint64_t>();
-        uint64_t val2 = rhs.castValTo<uint64_t>();
-        IRval::union_type resVal;
-        switch (op) {
-            case bop::SHL:
-                resVal = (val1 << val2);
-                break;
-            case bop::SHR:
-                resVal = (val1 >> val2);
-                break;
-            case bop::REM:
-                resVal = (val1 % val2);
-                break;
-            case bop::BIT_XOR:
-                resVal = (val1 ^ val2);
-                break;
-            case bop::BIT_AND:
-                resVal = (val1 & val2);
-                break;
-            case bop::BIT_OR:
-                resVal = (val1 | val2);
-                break;
-            case bop::LOG_OR:
-                resVal = static_cast<uint64_t>(val1 || val2);
-                break;
-            case bop::LOG_AND:
-                resVal = static_cast<uint64_t>(val1 && val2);
-                break;
-            default:
-                semanticError("WTF");
-        }
-
-        int maxSize = std::max(ltype.getBytesSize(), rtype.getBytesSize());
-        bool isUnsigned = ltype.isUnsigned() || rtype.isUnsigned();
-        IR_TypeDirect::DirType dirType;
-        // TODO: maybe truncate values
-        if (maxSize == 1)
-            dirType = isUnsigned ? IR_TypeDirect::U8 : IR_TypeDirect::I8;
-        else if (maxSize == 4)
-            dirType = isUnsigned ? IR_TypeDirect::U32 : IR_TypeDirect::I32;
-        else if (maxSize == 8)
-            dirType = isUnsigned ? IR_TypeDirect::U64 : IR_TypeDirect::I64;
-        else
-            semanticError("WTF");
-        return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType), resVal);
-    }
-    else if (isGeneralNumOp(op)) {
-        // TODO: check type in variant and stored type are equal
-        auto const &resVal = std::visit([&rhs, op](auto const &l) -> IRval::union_type {
-            return std::visit([l, op](auto const &r) -> IRval::union_type {
-                switch (op) {
-                    case bop::ADD:
-                        return l + r;
-                    case bop::SUB:
-                        return l - r;
-                    case bop::MUL:
-                        return l * r;
-                    case bop::DIV:
-                        return l / r;
-                    default:
-                        semanticError("WTF");
-                }
-            }, rhs.getVal());
-        }, lhs.getVal());
-
-        int maxSize = std::max(ltype.getBytesSize(), rtype.getBytesSize());
-        bool isUnsigned = ltype.isUnsigned() || rtype.isUnsigned();
-        IR_TypeDirect::DirType dirType;
-        // TODO: maybe truncate values
-        if (ltype.isFloat() || rtype.isFloat()) {
-            if (ltype.spec == IR_TypeDirect::U64 || rtype.spec == IR_TypeDirect::U64)
-                dirType = IR_TypeDirect::U64;
-            else
-                dirType = IR_TypeDirect::U32;
-        } else if (maxSize == 1) {
-            dirType = isUnsigned ? IR_TypeDirect::U8 : IR_TypeDirect::I8;
-        } else if (maxSize == 4) {
-            dirType = isUnsigned ? IR_TypeDirect::U32 : IR_TypeDirect::I32;
-        } else if (maxSize == 8) {
-            dirType = isUnsigned ? IR_TypeDirect::U64 : IR_TypeDirect::I64;
-        } else {
-            semanticError("WTF");
-        }
-
-        return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType), resVal);
-    }
-    else if (isComparsionOp(op)) {
-        auto resVal = std::visit([&rhs, op](auto const &l) -> uint64_t {
-            return std::visit([l, op](auto const &r) -> uint64_t {
-                switch (op) {
-                    case bop::LT:
-                        return l < static_cast<decltype(l)>(r);
-                    case bop::GT:
-                        return l > static_cast<decltype(l)>(r);
-                    case bop::LE:
-                        return l <= static_cast<decltype(l)>(r);
-                    case bop::GE:
-                        return l >= static_cast<decltype(l)>(r);
-                    case bop::EQ:
-                        return l == static_cast<decltype(l)>(r);
-                    case bop::NE:
-                        return l != static_cast<decltype(l)>(r);
-                    default:
-                        semanticError("WTF");
-                }
-            }, rhs.getVal());
-        }, lhs.getVal());
-
-        return IRval::createVal(IR_TypeDirect::type_i32, resVal);
-    }
-
-    throw;
-}
-
-std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
-    switch (node.node_type) {
-        case AST_COMMA_EXPR: {
-            return evalConstantExpr(*dynamic_cast<AST_CommaExpression const &>(node).children.back());
-        }
-
-        case AST_ASSIGNMENT: {
-            semanticError("Assignment is not constant expression");
-        }
-
-        case AST_TERNARY: {
-            auto const &expr = dynamic_cast<AST_Ternary const &>(node);
-            auto cond = evalConstantExpr(*expr.cond);
-            auto v_tr = evalConstantExpr(*expr.v_true);
-            auto v_fl = evalConstantExpr(*expr.v_false);
-            if (!(cond.has_value() && v_tr.has_value() && v_fl.has_value()))
-                semanticError("Expression is not constant");
-            return std::move(cond->castValTo<uint64_t>() ? v_tr : v_fl);
-        }
-
-        case AST_BINOP: {
-            auto const &expr = dynamic_cast<AST_Binop const &>(node);
-            auto lhs = evalConstantExpr(*expr.lhs);
-            auto rhs = evalConstantExpr(*expr.rhs);
-            if (!(lhs.has_value() && rhs.has_value()))
-                semanticError("Expression is not constant");
-            return doConstBinOperation(expr.op, *lhs, *rhs);
-        }
-
-        case AST_CAST: {
-            auto const &expr = dynamic_cast<AST_Cast const &>(node);
-            auto arg = evalConstantExpr(*expr.child);
-            if (!arg->isConstant())
-                semanticError("Expression is not constant");
-
-            auto destType = getType(*expr.type_name);
-            if (destType->type != IR_Type::DIRECT)
-                NOT_IMPLEMENTED("");
-
-            auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*destType);
-            IRval::union_type newVal;
-            if (dirType.spec == IR_TypeDirect::F32)
-                newVal = arg->castValTo<float>();
-            else
-                newVal = arg->castValTo<uint64_t>();
-
-            return IRval::createVal(std::move(destType), newVal);
-        }
-
-        case AST_UNARY_OP: {
-            using uop = AST_Unop;
-
-            auto const &expr = dynamic_cast<AST_Unop const &>(node);
-            auto arg = evalConstantExpr(dynamic_cast<AST_Expr const &>(*expr.child));
-            if (!arg.has_value())
-                semanticError("Expression is not constant");
-            if (arg->getType()->type != IR_Type::DIRECT)
-                semanticError("Not");
-            if (expr.op == uop::SIZEOF_OP)
-                NOT_IMPLEMENTED("sizeof");
-            if (isInList(expr.op, { uop::PRE_INC, uop::PRE_DEC, uop::DEREF, uop::ADDR_OF }))
-                semanticError("Operation is not constant");
-
-            auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*arg->getType());
-
-            if (expr.op == uop::UN_PLUS) {
-                return arg;
-            }
-            else if (expr.op == uop::UN_MINUS) {
-                auto resVal = std::visit([](const auto &e) -> IRval::union_type {
-                    return -e;
-                }, arg->getVal());
-                return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType.spec), resVal);
-            }
-            else if (expr.op == uop::UN_NEG || expr.op == uop::UN_NOT) {
-                if (dirType.isFloat())
-                    semanticError("Wrong operation for float");
-                IRval::union_type resVal = ~arg->castValTo<uint64_t>();
-                return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType.spec), resVal);
-            }
-            else {
-                semanticError("WTF");
-            }
-        }
-
-        case AST_POSTFIX: {
-            NOT_IMPLEMENTED("");
-        }
-
-        case AST_PRIMARY: {
-            auto const &expr = dynamic_cast<AST_Primary const &>(node);
-
-            if (expr.type != AST_Primary::CONST)
-                semanticError("Non constant expression");
-
-            AST_Literal val = std::get<AST_Literal>(expr.v);
-            if (val.type != INTEGER_LITERAL || val.longCnt != 0 || val.isUnsigned) {
-                NOT_IMPLEMENTED("Non i32 literal");
-            }
-            return IRval::createVal(getLiteralType(val), static_cast<uint64_t>(val.val.vi32));
-        }
-
-        default: {
-            semanticError("Unexpected node type in expression");
-        }
-    }
-}
-
 IRval IR_Generator::evalExpr(AST_Expr const &node) {
     switch (node.node_type) {
         case AST_COMMA_EXPR: {
@@ -286,12 +24,11 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
                 // TODO: check types
 
-                auto destVar = variables.get(std::get<string_id_t>(assignee.v));
+                auto destVar = variables.get(assignee.getIdent());
                 if (!destVar.has_value())
                     semanticError("Unknown variable");
-                auto opNode = std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ *destVar, rhsVal });
-                curBlock().addNode(IR_Node(std::move(opNode)));
+                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
+                        IR_STORE, std::vector<IRval>{ *destVar, rhsVal })));
             }
             else if (expr.lhs->node_type == AST_UNARY_OP) { // Dereference write
                 auto const &assignee = dynamic_cast<AST_Unop const &>(*expr.lhs);
@@ -316,26 +53,26 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     if (base.getType()->type != IR_Type::TSTRUCT)
                         semanticError("Element access cannot be performed on non-struct type");
                     auto const &structType = dynamic_cast<IR_TypeStruct const &>(*base.getType());
-                    auto field = structType.getField(std::get<string_id_t>(assignee.arg));
+                    auto field = structType.getField(assignee.getIdent());
                     if (field == nullptr)
                         semanticError("Structure has no such field");
 
                     IRval res = cfg->createReg(field->irType);
-                    IRval index = IRval::createVal(IR_TypeDirect::type_u64,
-                                                   static_cast<uint64_t>(field->index));
+                    IRval index = IRval::createVal(
+                            IR_TypeDirect::type_u64,
+                            static_cast<uint64_t>(field->index));
                     curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
                             IR_INSERT, std::vector<IRval>{ base, index, rhsVal })));
                 }
                 else if (assignee.op == AST_Postfix::INDEXATION) {
                     IRval base = evalExpr(*assignee.base);
-                    IRval index = evalExpr(dynamic_cast<AST_Expr const&>(
-                                                   *std::get<std::unique_ptr<AST_Node>>(assignee.arg)));
+                    IRval index = evalExpr(assignee.getExpr());
 
                     if (base.getType()->type != IR_Type::ARRAY)
                         semanticError("Indexation cannot be performed on non-array type");
-                    auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*base.getType());
+                    auto arrayType = std::dynamic_pointer_cast<IR_TypeArray>(base.getType());
 
-                    IRval res = cfg->createReg(arrayType.child);
+                    IRval res = cfg->createReg(arrayType->child);
                     curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
                             IR_INSERT, std::vector<IRval>{ base, index, rhsVal })));
                 }
@@ -453,9 +190,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             if (arg.getType()->equal(*dest))
                 return arg;
 
-            auto castOp = std::make_unique<IR_ExprCast>(arg, dest);
             IRval res = cfg->createReg(dest);
-            curBlock().addNode(IR_Node(res, std::move(castOp)));
+            curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprCast>(arg, dest)));
             return res;
         }
 
@@ -467,12 +203,11 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             if (expr.op == uop::SIZEOF_OP) {
                 auto typeName = dynamic_cast<AST_TypeName*>(expr.child.get());
                 if (typeName != nullptr) {
-                    auto irType = getType(static_cast<AST_TypeName const &>(*expr.child));
+                    auto irType = getType(*typeName);
                     uint64_t bytesSize = irType->getBytesSize();
                     return IRval::createVal(IR_TypeDirect::type_u64, bytesSize);
                 }
                 else {
-//                    auto const &expr = dynamic_cast<AST_Unop const &>(node);
                     NOT_IMPLEMENTED("Sizeof expression");
                 }
             }
@@ -483,28 +218,25 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             else if (expr.op == uop::UN_MINUS) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval zero = IRval::createVal(arg.getType(), 0U); // TODO: cast value
-                auto subOp = std::make_unique<IR_ExprOper>(
-                        IR_SUB, std::vector<IRval>{ zero, arg });
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::move(subOp)));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        IR_SUB, std::vector<IRval>{ zero, arg })));
                 return res;
             }
             else if (expr.op == uop::UN_NEG) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval maxv = IRval::createVal(arg.getType(), -1U); // TODO: cast value
-                auto xorOp = std::make_unique<IR_ExprOper>(
-                        IR_XOR, std::vector<IRval>{ maxv, arg });
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::move(xorOp)));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        IR_XOR, std::vector<IRval>{ maxv, arg })));
                 return res;
             }
             else if (expr.op == uop::UN_NOT) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval maxv = IRval::createVal(arg.getType(), -1U); // TODO: cast value
-                auto xorOp = std::make_unique<IR_ExprOper>(
-                        IR_XOR, std::vector<IRval>{ maxv, arg });
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::move(xorOp)));
+                curBlock().addNode(IR_Node(res,  std::make_unique<IR_ExprOper>(
+                        IR_XOR, std::vector<IRval>{ maxv, arg })));
                 return res;
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {
@@ -516,13 +248,12 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
                 IRval arg = evalExpr(dynamic_cast<AST_Expr &>(*expr.child));
                 IRval one = IRval::createVal(arg.getType(), 1U); // TODO: cast value
-                auto incDecOp = std::make_unique<IR_ExprOper>(
-                        expr.op == uop::PRE_INC ? IR_ADD : IR_SUB,
-                        std::vector<IRval>{ arg, one });
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::move(incDecOp)));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        expr.op == uop::PRE_INC ? IR_ADD : IR_SUB,
+                        std::vector<IRval>{ arg, one })));
 
-                auto var = variables.get(std::get<string_id_t>(prim.v));
+                auto var = variables.get(prim.getIdent());
                 if (!var.has_value())
                     semanticError("Unknown variable");
                 curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
@@ -560,18 +291,17 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 auto const &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
                 if (funcBase.type != AST_Primary::IDENT)
                     semanticError("Only identifier can be called");
-                auto funIt = functions.find(std::get<string_id_t>(funcBase.v));
+                auto funIt = functions.find(funcBase.getIdent());
                 if (funIt == functions.end())
                     semanticError("Call of undeclared function");
 
                 auto const &fun = cfg->getFunction(funIt->second);
-                auto const &argsList = dynamic_cast<AST_ArgumentsList const &>(
-                        *std::get<std::unique_ptr<AST_Node>>(expr.arg));
+                auto const &argsList = expr.getArgsList();
 
                 std::vector<IRval> args;
                 size_t argNum = 0;
                 for (auto const &arg : argsList.children) {
-                    auto const &argVal = evalExpr(*arg);
+                    IRval argVal = evalExpr(*arg);
 
                     if (argNum < fun.getFuncType().args.size()) {
                         if (!argVal.getType()->equal(*fun.getFuncType().args[argNum])) {
@@ -589,9 +319,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     semanticError("Too few argument in function call");
                 }
 
-                auto callOp = std::make_unique<IR_ExprCall>(fun.getId(), args);
                 IRval res = cfg->createReg(fun.getFuncType().ret);
-                curBlock().addNode(IR_Node(res, std::move(callOp)));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprCall>(fun.getId(), args)));
                 return res;
             }
             else if (expr.op == AST_Postfix::POST_INC || expr.op == AST_Postfix::POST_DEC) {
@@ -603,51 +332,46 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.base));
                 IRval one = IRval::createVal(arg.getType(), 1U); // TODO: cast value
-                auto incDecOp = std::make_unique<IR_ExprOper>(
-                        expr.op == AST_Postfix::POST_INC ? IR_ADD : IR_SUB,
-                        std::vector<IRval>{ arg, one });
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::move(incDecOp)));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        expr.op == AST_Postfix::POST_INC ? IR_ADD : IR_SUB,
+                        std::vector<IRval>{ arg, one })));
 
-                auto var = variables.get(std::get<string_id_t>(prim.v));
+                auto var = variables.get(prim.getIdent());
                 if (!var.has_value())
                     semanticError("Unknown variable");
-                auto storeOp = std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ *var, res });
-                curBlock().addNode(IR_Node(std::move(storeOp)));
-
+                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
+                        IR_STORE, std::vector<IRval>{ *var, res })));
                 return arg;
             }
             else if (expr.op == AST_Postfix::INDEXATION) {
                 IRval base = evalExpr(*expr.base);
-                IRval index = evalExpr(dynamic_cast<AST_Expr const&>(
-                        *std::get<std::unique_ptr<AST_Node>>(expr.arg)));
+                IRval index = evalExpr(expr.getExpr());
 
                 if (base.getType()->type != IR_Type::ARRAY)
                     semanticError("Indexation cannot be performed on non-array type");
                 auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*base.getType());
 
                 IRval res = cfg->createReg(arrayType.child);
-                auto extractOp = std::make_unique<IR_ExprOper>(
-                        IR_EXTRACT, std::vector<IRval>{ base, index });
-                curBlock().addNode(IR_Node(res, std::move(extractOp)));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        IR_EXTRACT, std::vector<IRval>{ base, index })));
                 return res;
             }
             else if (expr.op == AST_Postfix::DIR_ACCESS) {
                 IRval base = evalExpr(*expr.base);
                 if (base.getType()->type != IR_Type::TSTRUCT)
                     semanticError("Element access cannot be performed on non-struct type");
-                auto const &structType = dynamic_cast<IR_TypeStruct const &>(*base.getType());
-                auto field = structType.getField(std::get<string_id_t>(expr.arg));
+                auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(base.getType());
+                auto field = structType->getField(expr.getIdent());
                 if (field == nullptr)
                     semanticError("Structure has no such field");
 
                 IRval res = cfg->createReg(field->irType);
-                IRval index = IRval::createVal(IR_TypeDirect::type_u64,
-                                               static_cast<uint64_t>(field->index));
-                auto extractOp = std::make_unique<IR_ExprOper>(
-                        IR_EXTRACT, std::vector<IRval>{ base, index });
-                curBlock().addNode(IR_Node(res, std::move(extractOp)));
+                IRval index = IRval::createVal(
+                        IR_TypeDirect::type_u64,
+                        static_cast<uint64_t>(field->index));
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        IR_EXTRACT, std::vector<IRval>{ base, index })));
                 return res;
             }
             else if (expr.op == AST_Postfix::PTR_ACCESS) {
@@ -662,7 +386,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             auto const &expr = dynamic_cast<AST_Primary const &>(node);
 
             if (expr.type == AST_Primary::CONST) {
-                AST_Literal val = std::get<AST_Literal>(expr.v);
+                AST_Literal val = expr.getLiteral();
                 auto valType = getLiteralType(val);
                 if (val.type == INTEGER_LITERAL) {
                     if (val.isUnsigned) {
@@ -693,20 +417,19 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 }
             }
             else if (expr.type == AST_Primary::IDENT) {
-                auto var = variables.get(std::get<string_id_t>(expr.v));
+                auto var = variables.get(expr.getIdent());
                 if (!var.has_value()) {
                     semanticError("Unknown variable");
                 }
 
-                auto derefOp = std::make_unique<IR_ExprOper>(
-                        IR_LOAD, std::vector<IRval>{ *var });
-                auto const &ptrType = dynamic_cast<IR_TypePtr const &>(*var->getType());
-                IRval res = cfg->createReg(ptrType.child);
-                curBlock().addNode(IR_Node(res, std::move(derefOp)));
+                auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
+                IRval res = cfg->createReg(ptrType->child);
+                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                        IR_LOAD, std::vector<IRval>{ *var })));
                 return res;
             }
             else if (expr.type == AST_Primary::EXPR) {
-                return evalExpr(*std::get<std::unique_ptr<AST_Expr>>(expr.v));
+                return evalExpr(expr.getExpr());
             }
 
             NOT_IMPLEMENTED("");

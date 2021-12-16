@@ -30,14 +30,14 @@ public:
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
     [[nodiscard]] static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
 
-    [[nodiscard]] std::shared_ptr<IR_Type> const& getType() const;
-    [[nodiscard]] bool isConstant() const;
-    [[nodiscard]] bool isRegister() const;
-    [[nodiscard]] union_type const& getVal() const;
-    [[nodiscard]] std::string to_string() const;
+    std::shared_ptr<IR_Type> const& getType() const;
+    bool isConstant() const;
+    bool isRegister() const;
+    union_type const& getVal() const;
+    std::string to_string() const;
 
     template <class T>
-    [[nodiscard]] T castValTo() const {
+    T castValTo() const {
         return std::visit([](auto const &arg) -> T {
             return static_cast<T>(arg);
         }, val);
@@ -51,11 +51,11 @@ enum IR_Ops {
     IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
     IR_XOR, IR_AND, IR_OR, IR_LAND, IR_LOR,
     IR_EQ, IR_NE, IR_GT, IR_LT, IR_GE, IR_LE,
-    IR_LOAD, IR_STORE, IR_EXTRACT, IR_INSERT
+    IR_LOAD, IR_STORE, IR_EXTRACT, IR_INSERT,
 };
 
 struct IR_Expr {
-    enum Type { OPERATION, ALLOCATION, CAST, CALL } type;
+    enum Type { OPERATION, ALLOCATION, CAST, CALL, PHI } type;
 
     explicit IR_Expr(Type type);
     virtual ~IR_Expr() = default;
@@ -127,6 +127,7 @@ struct IR_Terminator {
     bool exist() const;
     IR_Terminator copy() const;
 };
+
 
 // Blocks
 

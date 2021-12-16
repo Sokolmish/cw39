@@ -67,6 +67,11 @@ struct AST_Primary : public AST_Expr {
     enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST } type;
     std::variant<uniq<AST_Expr>, string_id_t, AST_Literal> v;
 
+    string_id_t getIdent() const;
+    string_id_t getString() const;
+    AST_Literal getLiteral() const;
+    AST_Expr const& getExpr() const;
+
     static AST_Primary* makeIdent(string_id_t id);
     static AST_Primary* makeExpr(AST_Expr *expr);
     static AST_Primary* makeStr(string_id_t str);
@@ -93,10 +98,15 @@ struct AST_Postfix : public AST_Expr {
     uniq<AST_Expr> base = nullptr;
     std::variant<uniq<AST_Node>, string_id_t> arg; // Expr ArgumentsList
 
-    static AST_Postfix* get_arr(AST_Expr *base, AST_Expr *size);
-    static AST_Postfix* get_call(AST_Expr *base, AST_ArgumentsList *args);
-    static AST_Postfix* get_accesor(AST_Expr *base, string_id_t member, bool is_ptr);
-    static AST_Postfix* get_incdec(AST_Expr *base, bool is_dec);
+    AST_Expr const& getExpr() const;
+    AST_ArgumentsList const& getArgsList() const;
+    string_id_t getIdent() const;
+
+    static AST_Postfix* makeArr(AST_Expr *base, AST_Expr *size);
+    static AST_Postfix* makeCall(AST_Expr *base, AST_ArgumentsList *args);
+    static AST_Postfix* makeAccesor(AST_Expr *base, string_id_t member, bool is_ptr);
+    static AST_Postfix* makeIncdec(AST_Expr *base, bool is_dec);
+
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 
 private:
@@ -345,12 +355,17 @@ struct AST_DirectDeclarator : public AST_Node {
     uniq<AST_Expr> arr_size = nullptr;
     uniq<AST_ParameterTypeList> func_args = nullptr;
 
-    static AST_DirectDeclarator* get_ident(string_id_t ident);
-    static AST_DirectDeclarator* get_nested(AST_Declarator *decl);
-    static AST_DirectDeclarator* get_arr(AST_DirectDeclarator *base,
+    string_id_t getIdent() const;
+    AST_DirectDeclarator const& getBaseDirectDecl() const;
+    AST_Declarator const& getBaseDecl() const;
+
+    static AST_DirectDeclarator* makeIdent(string_id_t ident);
+    static AST_DirectDeclarator* makeNested(AST_Declarator *decl);
+    static AST_DirectDeclarator* makeArr(AST_DirectDeclarator *base,
                                          AST_TypeQualifiers *qual, AST_Expr *sz);
-    static AST_DirectDeclarator* get_func(AST_DirectDeclarator *base,
+    static AST_DirectDeclarator* makeFunc(AST_DirectDeclarator *base,
                                           AST_ParameterTypeList *args);
+
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 
 private:
@@ -412,9 +427,9 @@ struct AST_DirectAbstractDeclarator : public AST_Node {
     uniq<AST_Expr> arr_size = nullptr;
     uniq<AST_ParameterTypeList> func_args = nullptr;
 
-    static AST_DirectAbstractDeclarator* get_nested(AST_Node *decl);
-    static AST_DirectAbstractDeclarator* get_arr(AST_Node *base, AST_Expr *sz);
-    static AST_DirectAbstractDeclarator* get_func(AST_Node *base, AST_ParameterTypeList *args);
+    static AST_DirectAbstractDeclarator* makeNested(AST_Node *decl);
+    static AST_DirectAbstractDeclarator* makeArr(AST_Node *base, AST_Expr *sz);
+    static AST_DirectAbstractDeclarator* makeFunc(AST_Node *base, AST_ParameterTypeList *args);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 
 private:
@@ -557,6 +572,10 @@ struct AST_JumpStmt : public AST_Statement {
     explicit AST_JumpStmt(JumpType jtype);
     AST_JumpStmt(JumpType jtype, AST_Expr *arg);
     AST_JumpStmt(JumpType jtype, string_id_t arg);
+
+    std::unique_ptr<AST_Expr> const& getExpr() const;
+    string_id_t getIdent() const;
+
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 

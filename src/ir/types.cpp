@@ -170,10 +170,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
         return base; // Name is ignored there
     }
     else if (decl.type == AST_DirectDeclarator::NESTED) {
-        return getIndirectType(
-                dynamic_cast<AST_Declarator const *>(
-                        std::get<std::unique_ptr<AST_Node>>(decl.base).get()),
-                std::move(base));
+        return getIndirectType(&decl.getBaseDecl(), std::move(base));
     }
     else if (decl.type == AST_DirectDeclarator::ARRAY) {
         auto sizeExpr = evalConstantExpr(*decl.arr_size);
@@ -255,15 +252,13 @@ std::shared_ptr<IR_Type> IR_Generator::getType(AST_TypeName const &typeName) {
 
 string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
     if (decl.type == AST_DirectDeclarator::NAME) {
-        return std::get<string_id_t>(decl.base);
+        return decl.getIdent();
     }
     else if (decl.type == AST_DirectDeclarator::NESTED) {
-        auto const &node = std::get<std::unique_ptr<AST_Node>>(decl.base);
-        return getDeclaredIdent(dynamic_cast<AST_Declarator const &>(*node));
+        return getDeclaredIdent(decl.getBaseDecl());
     }
     else if (decl.type == AST_DirectDeclarator::ARRAY || decl.type == AST_DirectDeclarator::FUNC) {
-        auto const &node = std::get<std::unique_ptr<AST_Node>>(decl.base);
-        return getDeclaredIdentDirect(dynamic_cast<AST_DirectDeclarator const &>(*node));
+        return getDeclaredIdentDirect(decl.getBaseDirectDecl());
     }
     else {
         semanticError("Wrong direct declarator type");
