@@ -208,6 +208,13 @@ std::unique_ptr<IR_Expr> IR_ExprOper::copy() const {
     return std::make_unique<IR_ExprOper>(op, std::move(newArgs));
 }
 
+std::vector<IRval*> IR_ExprOper::getArgs() {
+    std::vector<IRval*> resArgs;
+    for (auto &arg : args)
+        resArgs.push_back(&arg);
+    return resArgs;
+}
+
 std::string IR_ExprOper::opToString() const {
     switch (op) {
         case IR_MUL:        return "mul";
@@ -228,10 +235,11 @@ std::string IR_ExprOper::opToString() const {
         case IR_LT:         return "lt";
         case IR_GE:         return "ge";
         case IR_LE:         return "le";
-        case IR_LOAD:       return "deref";
+        case IR_LOAD:       return "load";
         case IR_STORE:      return "store";
         case IR_EXTRACT:    return "extract";
         case IR_INSERT:     return "insert";
+        case IR_MOV:        return "mov";
 //        case IR_GEP:        return "gep";
     }
     throw;
@@ -252,6 +260,10 @@ std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
 
 std::string IR_ExprAlloc::opToString() const {
     return isOnHeap ? "malloc" : "alloca";
+}
+
+std::vector<IRval*> IR_ExprAlloc::getArgs() {
+    return {};
 }
 
 
@@ -320,6 +332,9 @@ std::unique_ptr<IR_Expr> IR_ExprCast::copy() const {
     return std::make_unique<IR_ExprCast>(arg.copy(), dest->copy());
 }
 
+std::vector<IRval*> IR_ExprCast::getArgs() {
+    return std::vector<IRval*>{ &arg };
+}
 
 std::string IR_ExprCast::opToString() const {
     switch (castOp) {
@@ -348,6 +363,13 @@ std::unique_ptr<IR_Expr> IR_ExprCall::copy() const {
     for (auto const &arg : args)
         newArgs.push_back(arg.copy());
     return std::make_unique<IR_ExprCall>(funcId, std::move(newArgs));
+}
+
+std::vector<IRval*> IR_ExprCall::getArgs() {
+    std::vector<IRval*> resArgs;
+    for (auto &arg : args)
+        resArgs.push_back(&arg);
+    return resArgs;
 }
 
 
@@ -395,12 +417,16 @@ bool IRval::isConstant() const {
     return valClass == IRval::VAL;
 }
 
-const IRval::union_type &IRval::getVal() const {
-    return val;
-}
-
 bool IRval::isRegister() const {
     return valClass == IRval::VREG;
+}
+
+bool IRval::isGlobal() const {
+    return valClass == IRval::GLOBAL;
+}
+
+const IRval::union_type &IRval::getVal() const {
+    return val;
 }
 
 std::string IRval::to_string() const {
@@ -416,6 +442,23 @@ std::string IRval::to_string() const {
 
 IRval IRval::copy() const {
     return IRval(type->copy(), valClass, val);
+}
+
+bool IRval::operator==(const IRval &oth) const {
+    return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
+}
+
+bool IRval::less(const IRval &a, const IRval &b) {
+    if (a.valClass < b.valClass)
+        return true;
+    else if (a.valClass > b.valClass)
+        return false;
+    else
+        return a.val < b.val;
+}
+
+bool IRval::Comparator::operator()(const IRval &a, const IRval &b) const {
+    return IRval::less(a, b);
 }
 
 

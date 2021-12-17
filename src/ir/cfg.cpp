@@ -27,7 +27,7 @@ IR_TypeFunc const& ControlFlowGraph::Function::getFuncType() const {
 
 ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     blocksCounter = oth.blocksCounter;
-    regs_counter = oth.blocksCounter;
+    regs_counter = oth.regs_counter;
     funcsCounter = oth.funcsCounter;
 
     for (const auto &[id, block] : oth.blocks)
@@ -131,6 +131,11 @@ static std::string printType(IR_Type const &type) {
 static void printBlock(IR_Block const &block) {
     fmt::print("Block {}:\n", block.id);
     for (auto const &node: block.body) {
+        if (!node.body) {
+            fmt::print("nop\n");
+            continue;
+        }
+
         if (node.res.has_value())
             fmt::print("{} <- ", node.res->to_string());
         if (node.body->type == IR_Expr::OPERATION) {

@@ -20,20 +20,22 @@ include_directories(
 )
 
 set(PROJ_SRCS
+        ${PROJECT_SOURCE_DIR}/src/main.cpp
+        ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
+
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/utils.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/y.tab.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/lex.yy.c
 
-        ${PROJECT_SOURCE_DIR}/src/main.cpp
-        ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/nodes.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/generator.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/types.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/expr.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/expr_const.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/cfg.cpp
-        )
+
+        ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp)
 
 add_executable(cw39 ${PROJ_SRCS})
 

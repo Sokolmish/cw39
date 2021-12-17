@@ -69,7 +69,7 @@ public:
     IR_Generator();
 
     void parseAST(std::shared_ptr<AST_TranslationUnit> const &ast);
-    [[nodiscard]] std::shared_ptr<ControlFlowGraph> const& getCfg() const;
+    std::shared_ptr<ControlFlowGraph> getCfg() const;
 };
 
 #endif /* __GENERATOR_HPP__ */

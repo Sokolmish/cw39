@@ -289,6 +289,6 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     }
 }
 
-std::shared_ptr<ControlFlowGraph> const &IR_Generator::getCfg() const {
+std::shared_ptr<ControlFlowGraph> IR_Generator::getCfg() const {
     return cfg;
 }

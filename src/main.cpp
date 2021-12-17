@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
-
 #include <fmt/core.h>
 
 #include "parser/parser.hpp"
 #include "ir/generator.hpp"
+
+#include <transformations/vars_virtualizer.hpp>
 
 std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
@@ -29,11 +30,12 @@ int main(int argc, char **argv) {
 
     auto gen = std::make_unique<IR_Generator>();
     gen->parseAST(ast);
-//    gen->getCfg()->printBlocks();
+    gen->getCfg()->printBlocks();
 
-    auto cfg2 = *gen->getCfg();
-    gen.reset(nullptr);
-    cfg2.printBlocks();
+    fmt::print("\n================\n");
+
+    auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
+    cfg2->printBlocks();
 
     return 0;
 }

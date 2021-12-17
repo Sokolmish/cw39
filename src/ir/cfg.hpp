@@ -37,6 +37,7 @@ private:
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
 
     friend class IR_Generator;
+    friend class VarsVirtualizer;
 
 public:
     ControlFlowGraph() = default;

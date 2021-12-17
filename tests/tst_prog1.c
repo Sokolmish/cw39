@@ -6,16 +6,13 @@ int add(int a, int b) {
 }
 
 int main(int argc, char **argv) {
-//    struct Alpha { int f, g; } sss;
-//    sss.g = sss.f + 12;
-
     int *var;
     var = &argc;
 
     char *aa = *argv;
     *aa = (char)111;
 
-    int x = 10;
+    int x = *var;
     while (x) {
         x = x - 1;
         if (x) {
