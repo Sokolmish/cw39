@@ -413,6 +413,13 @@ IRval IRval::createFunArg(std::shared_ptr<IR_Type> type, uint64_t num) {
     return IRval(type, IRval::FUN_PARAM, num);
 }
 
+IRval IRval::createString(uint64_t num) {
+    auto strType = std::make_shared<IR_TypePtr>(IR_TypeDirect::type_i8);
+//    strType->is_const = true;
+    return IRval(strType, IRval::STRING, num);
+}
+
+
 bool IRval::isConstant() const {
     return valClass == IRval::VAL;
 }
@@ -436,6 +443,10 @@ std::string IRval::to_string() const {
         return std::visit([](auto e) -> std::string { return std::to_string(e); }, val);
     else if (valClass == IRval::FUN_PARAM)
         return std::visit([](auto e) -> std::string { return "%%arg" + std::to_string(e); }, val);
+    else if (valClass == IRval::GLOBAL)
+        return std::visit([](auto e) -> std::string { return "@" + std::to_string(e); }, val);
+    else if (valClass == IRval::STRING)
+        return std::visit([](auto e) -> std::string { return "@str_" + std::to_string(e); }, val);
     else
         throw;
 }

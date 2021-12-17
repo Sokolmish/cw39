@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common.hpp"
 #include "lexer.h"
 #include "parser.hpp"
 
@@ -34,9 +35,12 @@ string_id_t get_ident_id(const char *ident, int *type) {
 string_id_t get_string_id(const char *str) {
     auto it = strings_map.lower_bound(str);
     if (it == strings_map.end() || it->first != str) {
-        auto ins = strings_map.emplace_hint(it, str, StringInfo(str_cntr));
-        inv_strings_map.emplace_hint(inv_strings_map.end(), ident_cntr, ins->first);
+        char *trimStr = strdup(str + 1);
+        trimStr[strlen(trimStr) - 1] = '\0';
+        auto ins = strings_map.emplace_hint(it, trimStr, StringInfo(str_cntr));
+        inv_strings_map.emplace_hint(inv_strings_map.end(), str_cntr, ins->first);
         str_cntr++;
+        free(trimStr);
         return ins->second.id;
     }
     else { // If already exists

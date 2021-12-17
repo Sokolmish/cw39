@@ -7,7 +7,7 @@
 #include <variant>
 #include <string>
 #include "types.hpp"
-#include "parser/common.h"
+#include "parser/common.hpp"
 
 // Values
 
@@ -19,7 +19,7 @@ public:
 
 private:
     std::shared_ptr<IR_Type> type;
-    enum ValueClass { VAL, VREG, FUN_PARAM, GLOBAL } valClass;
+    enum ValueClass { VAL, VREG, GLOBAL, STRING, FUN_PARAM } valClass;
     union_type val;
 
 public:
@@ -36,6 +36,7 @@ public:
     [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
     [[nodiscard]] static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
+    [[nodiscard]] static IRval createString(uint64_t num);
 
     std::shared_ptr<IR_Type> const& getType() const;
     bool isConstant() const;

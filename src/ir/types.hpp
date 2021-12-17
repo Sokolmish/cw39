@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include "parser/common.h"
+#include "parser/common.hpp"
 
 struct IR_StorageSpecifier {
     enum Specs { EXTERN, STATIC, AUTO, REGISTER } spec;

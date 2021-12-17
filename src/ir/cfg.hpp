@@ -31,17 +31,18 @@ private:
     int blocksCounter = 0;
     uint64_t regs_counter = 0;
     int funcsCounter = 0;
+    uint64_t stringsCounter = 0;
 
     std::map<int, IR_Block> blocks;
     std::map<int, Function> funcs;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
+    std::map <uint64_t, std::string> strings;
 
     friend class IR_Generator;
     friend class VarsVirtualizer;
 
 public:
     ControlFlowGraph() = default;
-
     ControlFlowGraph(ControlFlowGraph const &oth);
 
     IR_Block& createBlock();
@@ -52,6 +53,8 @@ public:
     /** get block by id */
     IR_Block& block(int id);
     Function& getFunction(int id);
+
+    uint64_t putString(std::string str);
 
     void printBlocks() const;
 };

@@ -2,6 +2,7 @@
 #define __PARSER_HPP__
 
 #include "ast.hpp"
+#include "common.hpp"
 #include <map>
 #include <string>
 #include <string_view>
@@ -20,9 +21,6 @@ struct StringInfo {
 extern std::map<std::string, IdentInfo, std::less<>> identifiers_map;
 extern std::map<std::string, StringInfo, std::less<>> strings_map;
 // extern std::map<std::string, IdentInfo, std::less<>> types_map;
-
-std::string get_ident_by_id(string_id_t id);
-std::string get_string_by_id(string_id_t id);
 
 AST_TranslationUnit* parse_program(std::string const &str);
 

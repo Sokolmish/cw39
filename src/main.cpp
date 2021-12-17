@@ -6,7 +6,7 @@
 #include "parser/parser.hpp"
 #include "ir/generator.hpp"
 
-#include <transformations/vars_virtualizer.hpp>
+#include "transformations/vars_virtualizer.hpp"
 
 std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());

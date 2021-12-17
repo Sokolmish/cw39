@@ -488,8 +488,15 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             else if (expr.type == AST_Primary::EXPR) {
                 return evalExpr(expr.getExpr());
             }
-
-            NOT_IMPLEMENTED("");
+            else if (expr.type == AST_Primary::STR) {
+                string_id_t parserStrId = expr.getString();
+                IRval str = IRval::createString(cfg->putString(get_string_by_id(parserStrId)));
+                strings.insert({ parserStrId, str });
+                return str;
+            }
+            else {
+                semanticError("Unexpected primary type");
+            }
         }
 
         default: {

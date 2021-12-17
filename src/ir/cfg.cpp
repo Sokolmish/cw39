@@ -29,6 +29,7 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     blocksCounter = oth.blocksCounter;
     regs_counter = oth.regs_counter;
     funcsCounter = oth.funcsCounter;
+    stringsCounter = oth.stringsCounter;
 
     for (const auto &[id, block] : oth.blocks)
         blocks.insert(blocks.end(), { id, block.copy() });
@@ -36,6 +37,7 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
         funcs.emplace_hint(funcs.end(), id, block);
     for (const auto &[id, irStruct] : oth.structs)
         structs.emplace_hint(structs.end(), id, irStruct);
+    strings = oth.strings;
 }
 
 IR_Block &ControlFlowGraph::createBlock() {
@@ -74,6 +76,13 @@ ControlFlowGraph::Function& ControlFlowGraph::createFunction(
     auto it = funcs.emplace_hint(funcs.end(), func.id, std::move(func));
     return it->second;
 }
+
+uint64_t ControlFlowGraph::putString(std::string str) {
+    uint64_t newStringId = stringsCounter++;
+    strings.insert(strings.end(), { newStringId, std::move(str) });
+    return newStringId;
+}
+
 
 
 /*
@@ -192,6 +201,10 @@ void ControlFlowGraph::printBlocks() const {
         for (const auto &field : structDecl->fields)
             fmt::print("{} ", printType(*field.irType));
         fmt::print("}}\n");
+    }
+    fmt::print("\n");
+    for (auto const &[id, str] : strings) {
+        fmt::print("string_{} = \"{}\"\n", id, str);
     }
     fmt::print("\n");
     for (auto const &[id, func] : funcs) {
