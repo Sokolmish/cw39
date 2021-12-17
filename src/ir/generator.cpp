@@ -62,6 +62,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     auto fun = cfg->createFunction(storage, isInline, fullType);
     functions.emplace(getDeclaredIdent(*def.decl), fun.getId());
     selectBlock(cfg->block(fun.getEntryBlockId()));
+    curFunctionType = std::dynamic_pointer_cast<IR_TypeFunc>(fun.fullType);
 
     auto declArgs = getDeclaredFuncArguments(*def.decl);
     int curArgNum = 0;
@@ -81,6 +82,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     }
 
     fillBlock(*def.body);
+    curFunctionType = nullptr;
     variables.decreaseLevel();
 }
 
@@ -242,9 +244,13 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             auto const &arg = stmt.getExpr();
             if (arg) {
                 auto retVal = evalExpr(*arg);
+                if (!curFunctionType->ret->equal(*retVal.getType()))
+                    semanticError("Wrong return value type");
                 curBlock().terminator = IR_Terminator(IR_Terminator::RET, retVal);
             }
             else {
+                if (!curFunctionType->ret->equal(*IR_TypeDirect::type_void))
+                    semanticError("Cannot return value in void function");
                 curBlock().terminator = IR_Terminator(IR_Terminator::RET);
             }
         }
