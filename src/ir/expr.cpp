@@ -275,7 +275,64 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return res;
             }
             else if (expr.op == uop::ADDR_OF) {
-                NOT_IMPLEMENTED("Address-of operator");
+                if (expr.child->node_type == AST_PRIMARY) { // variable
+                    auto const &subject = dynamic_cast<AST_Primary const &>(*expr.child);
+                    if (subject.type != AST_Primary::IDENT)
+                        semanticError("Address cannot be taken from literal");
+                    auto var = variables.get(subject.getIdent());
+                    if (!var.has_value())
+                        semanticError("Unknown variable");
+                    return *var;
+                }
+                else if (expr.child->node_type == AST_POSTFIX) { // Index, access
+                    NOT_IMPLEMENTED("Address of aggregate's element");
+//                    auto const &subject = dynamic_cast<AST_Postfix const &>(*expr.child);
+//                    if (subject.op == AST_Postfix::INDEXATION) {
+//                        IRval array = evalExpr(*subject.base);
+//                        IRval index = evalExpr(subject.getExpr());
+//
+//                        if (array.getType()->type != IR_Type::ARRAY)
+//                            semanticError("Indexation cannot be performed on non-array type");
+//                        auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
+//
+//                        IRval res = cfg->createReg(std::make_shared<IR_TypePtr>(arrayType.child));
+//                        curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+//                                IR_GEP, std::vector<IRval>{ array, index })));
+//                        return res;
+//                    }
+//                    else if (subject.op == AST_Postfix::DIR_ACCESS) {
+//                        IRval object = evalExpr(*subject.base);
+//                        if (object.getType()->type != IR_Type::TSTRUCT)
+//                            semanticError("Element access cannot be performed on non-struct type");
+//                        auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(object.getType());
+//                        auto field = structType->getField(subject.getIdent());
+//                        if (field == nullptr)
+//                            semanticError("Structure has no such field");
+//
+//                        IRval res = cfg->createReg(std::make_shared<IR_TypePtr>(field->irType));
+//                        IRval index = IRval::createVal(
+//                                IR_TypeDirect::type_u64,
+//                                static_cast<uint64_t>(field->index));
+//                        curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+//                                IR_GEP, std::vector<IRval>{ object, index })));
+//                        return res;
+//                    }
+//                    else if (subject.op == AST_Postfix::DIR_ACCESS) {
+//                        NOT_IMPLEMENTED("pointer access (->)");
+//                    }
+//                    else {
+//                        semanticError("Cannot take address");
+//                    }
+                }
+                else if (expr.child->node_type == AST_UNARY_OP) { // Deref
+                    NOT_IMPLEMENTED("Address of dereference result");
+                }
+                else if (expr.child->node_type == AST_CAST) { // Cast
+                    NOT_IMPLEMENTED("Address of cast result");
+                }
+                else {
+                    semanticError("Cannot take address");
+                }
             }
             else {
                 semanticError("Unknown unary operator");
@@ -345,23 +402,23 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return arg;
             }
             else if (expr.op == AST_Postfix::INDEXATION) {
-                IRval base = evalExpr(*expr.base);
+                IRval array = evalExpr(*expr.base);
                 IRval index = evalExpr(expr.getExpr());
 
-                if (base.getType()->type != IR_Type::ARRAY)
+                if (array.getType()->type != IR_Type::ARRAY)
                     semanticError("Indexation cannot be performed on non-array type");
-                auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*base.getType());
+                auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
 
                 IRval res = cfg->createReg(arrayType.child);
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_EXTRACT, std::vector<IRval>{ base, index })));
+                        IR_EXTRACT, std::vector<IRval>{ array, index })));
                 return res;
             }
             else if (expr.op == AST_Postfix::DIR_ACCESS) {
-                IRval base = evalExpr(*expr.base);
-                if (base.getType()->type != IR_Type::TSTRUCT)
+                IRval object = evalExpr(*expr.base);
+                if (object.getType()->type != IR_Type::TSTRUCT)
                     semanticError("Element access cannot be performed on non-struct type");
-                auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(base.getType());
+                auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(object.getType());
                 auto field = structType->getField(expr.getIdent());
                 if (field == nullptr)
                     semanticError("Structure has no such field");
@@ -371,7 +428,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                         IR_TypeDirect::type_u64,
                         static_cast<uint64_t>(field->index));
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_EXTRACT, std::vector<IRval>{ base, index })));
+                        IR_EXTRACT, std::vector<IRval>{ object, index })));
                 return res;
             }
             else if (expr.op == AST_Postfix::PTR_ACCESS) {

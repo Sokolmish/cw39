@@ -9,8 +9,8 @@ int main(int argc, char **argv) {
 //    struct Alpha { int f, g; } sss;
 //    sss.g = sss.f + 12;
 
-    int arr[10];
-    arr[2] = arr[3];
+    int *var;
+    var = &argc;
 
     char *aa = *argv;
     *aa = (char)111;

@@ -228,10 +228,11 @@ std::string IR_ExprOper::opToString() const {
         case IR_LT:         return "lt";
         case IR_GE:         return "ge";
         case IR_LE:         return "le";
-        case IR_LOAD:      return "deref";
+        case IR_LOAD:       return "deref";
         case IR_STORE:      return "store";
         case IR_EXTRACT:    return "extract";
         case IR_INSERT:     return "insert";
+//        case IR_GEP:        return "gep";
     }
     throw;
 }
