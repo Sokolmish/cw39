@@ -159,8 +159,11 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     }
 
     // Terminator
-    if (curBlock.terminator.arg && *curBlock.terminator.arg == var) {
-        curBlock.terminator.arg->version = versions.back();
+    if (curBlock.termNode.has_value()) {
+        auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
+        if (terminator.arg.has_value() && *terminator.arg == var) {
+            terminator.arg->version = versions.back();
+        }
     }
 
     for (int nextId : curBlock.next) {
@@ -188,8 +191,11 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
         traverseForVar(domChild, var);
 
     // Rollback versions in stack
-    if (curBlock.terminator.arg && *curBlock.terminator.arg == var)
-        versions.pop_back();
+    if (curBlock.termNode.has_value()) {
+        auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
+        if (terminator.arg && *terminator.arg == var)
+            versions.pop_back();
+    }
     for (auto &node : curBlock.body)
         if (node.res && *node.res == var)
             versions.pop_back();

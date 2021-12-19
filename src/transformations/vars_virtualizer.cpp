@@ -12,7 +12,6 @@ VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg)
 
     CfgCleaner cleaner(cfg);
     cleaner.removeNops();
-//    cleaner.removeNops();
     cfg = cleaner.getCfg();
 }
 
@@ -128,9 +127,13 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         }
     }
 
-    if (block.terminator.arg.has_value()) {
-        auto it = toRedudeList.find(*block.terminator.arg);
-        if (it != toRedudeList.end())
-            block.terminator.arg = *it->second;
+    // TODO: use getAllNodes
+    if (block.termNode.has_value()) {
+        auto &terminator = dynamic_cast<IR_ExprTerminator &>(*block.termNode->body);
+        if (terminator.arg.has_value()) {
+            auto it = toRedudeList.find(*terminator.arg);
+            if (it != toRedudeList.end())
+                terminator.arg = *it->second;
+        }
     }
 }

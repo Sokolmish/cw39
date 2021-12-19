@@ -138,7 +138,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         }
 
         // Unreachable code doesn't even validating
-        if (selectedBlock == nullptr || curBlock().terminator.exist())
+        if (selectedBlock == nullptr || curBlock().termNode.has_value())
             break;
     }
 }
@@ -156,7 +156,8 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             NOT_IMPLEMENTED("switch");
 
         auto cond = evalExpr(*stmt.condition);
-        curBlock().terminator = IR_Terminator(IR_Terminator::BRANCH, cond);
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::BRANCH, cond));
 
         auto &blockTrue = cfg->createBlock();
         cfg->linkBlocks(curBlock(), blockTrue);
@@ -176,10 +177,11 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         else
             insertStatement(*stmt.body);
 
-        if (!curBlock().terminator.exist()) {
+        if (!curBlock().termNode.has_value()) {
             blockAfter = &cfg->createBlock();
             cfg->linkBlocks(curBlock(), *blockAfter);
-            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::JUMP));
         }
 
         if (stmt.else_body) {
@@ -188,11 +190,12 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
                 fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.else_body));
             else
                 insertStatement(*stmt.else_body);
-            if (!curBlock().terminator.exist()) {
+            if (!curBlock().termNode.has_value()) {
                 if (!blockAfter)
                     blockAfter = &cfg->createBlock();
                 cfg->linkBlocks(curBlock(), *blockAfter);
-                curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                        IR_ExprTerminator::JUMP));
             }
         }
         else {
@@ -215,12 +218,14 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         auto &blockLoop = cfg->createBlock();
         auto &blockAfter = cfg->createBlock();
 
-        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::JUMP));
         cfg->linkBlocks(curBlock(), blockCond);
         selectBlock(blockCond);
 
         auto cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
-        curBlock().terminator = IR_Terminator(IR_Terminator::BRANCH, cond);
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::BRANCH, cond));
         cfg->linkBlocks(curBlock(), blockLoop);
         cfg->linkBlocks(curBlock(), blockAfter);
 
@@ -233,7 +238,8 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         activeLoops.pop();
 
         if (selectedBlock != nullptr) {
-            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::JUMP));
             cfg->linkBlocks(curBlock(), blockCond);
         }
         selectBlock(blockAfter);
@@ -246,20 +252,24 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
                 auto retVal = evalExpr(*arg);
                 if (!curFunctionType->ret->equal(*retVal.getType()))
                     semanticError("Wrong return value type");
-                curBlock().terminator = IR_Terminator(IR_Terminator::RET, retVal);
+                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                        IR_ExprTerminator::RET, retVal));
             }
             else {
                 if (!curFunctionType->ret->equal(*IR_TypeDirect::type_void))
                     semanticError("Cannot return value in void function");
-                curBlock().terminator = IR_Terminator(IR_Terminator::RET);
+                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                        IR_ExprTerminator::RET));
             }
         }
         else if (stmt.type == AST_JumpStmt::J_BREAK) {
-            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::JUMP));
             cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().exit));
         }
         else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
-            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::JUMP));
             cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().cond));
         }
         else if (stmt.type == AST_JumpStmt::J_GOTO) {
@@ -276,14 +286,16 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
 
         auto &compoundBlock = cfg->createBlock();
         cfg->linkBlocks(curBlock(), compoundBlock);
-        curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::JUMP));
         selectBlock(compoundBlock);
         fillBlock(stmt);
 
         if (selectedBlock != nullptr) {
             auto &blockAfter = cfg->createBlock();
             cfg->linkBlocks(curBlock(), blockAfter);
-            curBlock().terminator = IR_Terminator(IR_Terminator::JUMP);
+            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::JUMP));
             selectBlock(blockAfter);
         }
     }

@@ -12,7 +12,7 @@ int main() {
         y = 3;
     }
     else {
-        x = 5;
+        x = add(x, 5);
     }
-    return add(x, y);
+    return x;
 }

@@ -200,21 +200,22 @@ static void printBlock(IR_Block const &block) {
         }
     }
 
+    // TODO: move this to terminator and use getAllNodes
     // Terminator
-    if (block.terminator.type == IR_Terminator::NONE) {
+    if (!block.termNode) {
         fmt::print("; No terminator\n");
     }
-    else if (block.terminator.type == IR_Terminator::RET) {
-        if (!block.terminator.arg.has_value())
+    else if (block.getTerminator()->termType == IR_ExprTerminator::RET) {
+        if (!block.getTerminator()->arg.has_value())
             fmt::print("ret\n");
         else
-            fmt::print("ret {}\n", block.terminator.arg->to_string());
+            fmt::print("ret {}\n", block.getTerminator()->arg->to_string());
     }
-    else if (block.terminator.type == IR_Terminator::JUMP) {
+    else if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
         fmt::print("jump ->{}\n", block.next[0]);
     }
-    else if (block.terminator.type == IR_Terminator::BRANCH) {
-        fmt::print("branch {} ->{} ->{}\n", block.terminator.arg->to_string(),
+    else if (block.getTerminator()->termType == IR_ExprTerminator::BRANCH) {
+        fmt::print("branch {} ->{} ->{}\n", block.getTerminator()->arg->to_string(),
                    block.next[0], block.next[1]);
     }
     else {

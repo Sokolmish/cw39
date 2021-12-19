@@ -73,7 +73,7 @@ enum IR_Ops {
 };
 
 struct IR_Expr {
-    enum Type { OPERATION, ALLOCATION, CAST, CALL, PHI } type;
+    enum Type { OPERATION, ALLOCATION, CAST, CALL, TERM, PHI } type;
 
     explicit IR_Expr(Type type);
     virtual ~IR_Expr() = default;
@@ -131,6 +131,16 @@ struct IR_ExprCall : public IR_Expr {
     std::vector<IRval*> getArgs() override;
 };
 
+struct IR_ExprTerminator : public IR_Expr {
+    enum TermType { RET, BRANCH, JUMP } termType;
+    std::optional<IRval> arg;
+
+    IR_ExprTerminator(TermType type);
+    IR_ExprTerminator(TermType type, IRval val);
+    std::unique_ptr<IR_Expr> copy() const override;
+    std::vector<IRval*> getArgs() override;
+};
+
 struct IR_ExprPhi : public IR_Expr {
     /** Key is position of argument */
     std::map<int, IRval> args;
@@ -152,17 +162,6 @@ struct IR_Node {
     IR_Node copy() const;
 };
 
-struct IR_Terminator {
-    enum TermType { NONE, RET, BRANCH, JUMP } type;
-    std::optional<IRval> arg;
-
-    IR_Terminator();
-    IR_Terminator(TermType type);
-    IR_Terminator(TermType type, IRval val);
-    bool exist() const;
-    IR_Terminator copy() const;
-};
-
 
 // Blocks
 
@@ -172,7 +171,8 @@ public:
 
     std::vector<IR_Node> phis;
     std::vector<IR_Node> body;
-    IR_Terminator terminator;
+    std::optional<IR_Node> termNode;
+//    IR_ExprTerminator terminator;
 
     std::vector<int> prev;
     std::vector<int> next;
@@ -183,6 +183,11 @@ public:
 
     std::vector<IRval> getDefinitions() const;
     std::vector<IRval> getReferences() const;
+
+    IR_ExprTerminator const* getTerminator() const;
+
+    // TODO: return node
+    std::vector<IR_Node*> getAllNodes();
 };
 
 #endif /* __IR_ELEM_HPP__ */

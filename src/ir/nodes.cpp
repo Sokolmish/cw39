@@ -408,7 +408,10 @@ IR_Block IR_Block::copy() const {
         newBlock.body.push_back(node.copy());
     newBlock.prev = prev;
     newBlock.next = next;
-    newBlock.terminator = terminator.copy();
+    if (termNode)
+        newBlock.termNode = termNode->copy();
+    else
+        newBlock.termNode = {};
     return newBlock;
 }
 
@@ -427,6 +430,21 @@ std::vector<IRval> IR_Block::getReferences() const {
             for (IRval *arg : node.body->getArgs())
                 refs.push_back(*arg);
     return refs;
+}
+
+std::vector<IR_Node*> IR_Block::getAllNodes() {
+    std::vector<IR_Node*> res;
+    for (auto &phiNode : phis)
+        res.push_back(&phiNode);
+    for (auto &node : body)
+        res.push_back(&node);
+    return res;
+}
+
+IR_ExprTerminator const* IR_Block::getTerminator() const {
+    if (!termNode)
+        return nullptr;
+    return dynamic_cast<IR_ExprTerminator *>(termNode->body.get());
 }
 
 
@@ -600,21 +618,24 @@ IR_Node IR_Node::copy() const {
 }
 
 
-// IR_Terminator
+// IR_ExprTerminator
 
-IR_Terminator::IR_Terminator() : type(NONE), arg() {}
+IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type)
+        : IR_Expr(TERM), termType(type), arg() {}
 
-IR_Terminator::IR_Terminator(IR_Terminator::TermType type) : type(type), arg() {}
+IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type, IRval val)
+        : IR_Expr(TERM), termType(type), arg(std::move(val)) {}
 
-IR_Terminator::IR_Terminator(IR_Terminator::TermType type, IRval val) : type(type), arg(std::move(val)) {}
-
-bool IR_Terminator::exist() const {
-    return type != IR_Terminator::NONE;
+std::unique_ptr<IR_Expr> IR_ExprTerminator::copy() const {
+    if (arg.has_value())
+        return std::make_unique<IR_ExprTerminator>(termType, arg->copy());
+    else
+        return std::make_unique<IR_ExprTerminator>(termType);
 }
 
-IR_Terminator IR_Terminator::copy() const {
+std::vector<IRval *> IR_ExprTerminator::getArgs() {
     if (arg.has_value())
-        return IR_Terminator(type, arg->copy());
+        return std::vector<IRval *>{ &(*arg) };
     else
-        return IR_Terminator(type);
+        return std::vector<IRval *>();
 }

@@ -92,10 +92,13 @@ void CfgCleaner::fixVersions() {
                 }
             }
 
-            if (curBlock.terminator.arg) {
-                auto it = versionedRegs.find(*curBlock.terminator.arg);
-                if (it != versionedRegs.end() && !it->second.first)
-                    curBlock.terminator.arg->version = {};
+            if (curBlock.termNode) {
+                auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
+                if (terminator.arg) {
+                    auto it = versionedRegs.find(*terminator.arg);
+                    if (it != versionedRegs.end() && !it->second.first)
+                        terminator.arg->version = {};
+                }
             }
         });
     }
