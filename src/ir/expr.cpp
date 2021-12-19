@@ -22,11 +22,13 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 if (assignee.type != AST_Primary::IDENT)
                     semanticError("Only variables can be assigned");
 
-                // TODO: check types
-
                 auto destVar = variables.get(assignee.getIdent());
                 if (!destVar.has_value())
                     semanticError("Unknown variable");
+                auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
+                if (!destVarPtrType->child->equal(*rhsVal.getType()))
+                    semanticError("Cannot assign values of different types");
+
                 curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
                         IR_STORE, std::vector<IRval>{ *destVar, rhsVal })));
             }
@@ -41,6 +43,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
                 if (ptrType->child->type == IR_Type::FUNCTION)
                     semanticError("Pointer to function cannot be dereferenced");
+                if (!ptrType->child->equal(*rhsVal.getType()))
+                    semanticError("Cannot assign values of different types");
 
                 IRval res = cfg->createReg(ptrType->child);
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
@@ -56,6 +60,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     auto field = structType.getField(assignee.getIdent());
                     if (field == nullptr)
                         semanticError("Structure has no such field");
+                    if (!field->irType->equal(*rhsVal.getType()))
+                        semanticError("Cannot assign values of different types");
 
                     IRval res = cfg->createReg(field->irType);
                     IRval index = IRval::createVal(
@@ -71,6 +77,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     if (base.getType()->type != IR_Type::ARRAY)
                         semanticError("Indexation cannot be performed on non-array type");
                     auto arrayType = std::dynamic_pointer_cast<IR_TypeArray>(base.getType());
+                    if (!arrayType->child->equal(*rhsVal.getType()))
+                        semanticError("Cannot assign values of different types");
 
                     IRval res = cfg->createReg(arrayType->child);
                     curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
