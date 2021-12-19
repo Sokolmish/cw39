@@ -215,3 +215,11 @@ void ControlFlowGraph::printBlocks() const {
         printBlock(block);
     }
 }
+
+const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
+    return funcs;
+}
+
+std::map<int, IR_Block> const &ControlFlowGraph::getBlocks() const {
+    return blocks;
+}

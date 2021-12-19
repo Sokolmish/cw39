@@ -35,7 +35,9 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/ir/expr_const.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/cfg.cpp
 
-        ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp)
+        ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp
+        ${PROJECT_SOURCE_DIR}/src/transformations/dominators.cpp
+        )
 
 add_executable(cw39 ${PROJ_SRCS})
 

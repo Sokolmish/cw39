@@ -6,6 +6,7 @@
 #include "parser/parser.hpp"
 #include "ir/generator.hpp"
 
+#include "transformations/dominators.hpp"
 #include "transformations/vars_virtualizer.hpp"
 
 std::string readFile(std::string const &path) {
@@ -30,12 +31,15 @@ int main(int argc, char **argv) {
 
     auto gen = std::make_unique<IR_Generator>();
     gen->parseAST(ast);
-    gen->getCfg()->printBlocks();
+//    gen->getCfg()->printBlocks();
 
     fmt::print("\n================\n");
 
     auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
     cfg2->printBlocks();
+
+    Dominators dom(cfg2);
+    std::cout << dom.drawGraph() << std::endl;
 
     return 0;
 }

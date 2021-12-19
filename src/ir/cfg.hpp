@@ -39,7 +39,6 @@ private:
     std::map <uint64_t, std::string> strings;
 
     friend class IR_Generator;
-    friend class VarsVirtualizer;
 
 public:
     ControlFlowGraph() = default;
@@ -55,6 +54,9 @@ public:
     Function& getFunction(int id);
 
     uint64_t putString(std::string str);
+
+    std::map<int, Function> const& getFuncs() const;
+    std::map<int, IR_Block> const& getBlocks() const;
 
     void printBlocks() const;
 };

@@ -4,7 +4,7 @@
 
 VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(std::move(rawCfg))) {
-    for (auto const &[id, func] : cfg->funcs) {
+    for (auto const &[id, func] : cfg->getFuncs()) {
         toRedudeList.clear();
         passFunction(func);
     }
