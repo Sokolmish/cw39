@@ -15,5 +15,5 @@ int main() {
         x = add(x, 5);
     }
     y = add(x, y);
-    return x;
+    return x + 0; // * 0
 }

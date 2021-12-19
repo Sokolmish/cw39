@@ -24,11 +24,12 @@ void CfgCleaner::removeNops() {
 }
 
 void CfgCleaner::fixVersions() {
+    std::set<int> visited;
     std::map<IRval, std::pair<bool, int>, IRval::Comparator> versionedRegs;
 
-    visitedBlocks.clear();
+    visited.clear();
     for (auto const &[fId, func]: cfg->getFuncs()) {
-        traverseBlocks(func.getEntryBlockId(), [this, &versionedRegs](int blockId) {
+        cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
             auto &curBlock = cfg->block(blockId);
 
             for (auto const &phiNode: curBlock.phis) {
@@ -61,9 +62,9 @@ void CfgCleaner::fixVersions() {
         });
     }
 
-    visitedBlocks.clear();
+    visited.clear();
     for (auto const &[fId, func]: cfg->getFuncs()) {
-        traverseBlocks(func.getEntryBlockId(), [this, &versionedRegs](int blockId) {
+        cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
             auto &curBlock = cfg->block(blockId);
 
             for (auto &phiNode: curBlock.phis) {
@@ -105,6 +106,7 @@ void CfgCleaner::fixVersions() {
 }
 
 void CfgCleaner::removeUselessNodes() {
+    std::set<int> visited;
     std::set<IRval, IRval::ComparatorVersions> usedRegs;
     bool changed = true;
 
@@ -112,18 +114,18 @@ void CfgCleaner::removeUselessNodes() {
         changed = false;
         usedRegs.clear();
 
-        visitedBlocks.clear();
+        visited.clear();
         for (auto const &[fId, func]: cfg->getFuncs()) {
-            traverseBlocks(func.getEntryBlockId(), [this, &usedRegs](int blockId) {
+            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs](int blockId) {
                 auto &curBlock = cfg->block(blockId);
                 auto refs = curBlock.getReferences();
                 usedRegs.insert(refs.begin(), refs.end());
             });
         }
 
-        visitedBlocks.clear();
+        visited.clear();
         for (auto const &[fId, func]: cfg->getFuncs()) {
-            traverseBlocks(func.getEntryBlockId(), [this, &usedRegs, &changed](int blockId) {
+            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs, &changed](int blockId) {
                 auto &curBlock = cfg->block(blockId);
                 for (auto *node: curBlock.getAllNodes()) {
                     if (node->res.has_value() && !usedRegs.contains(*node->res)) {
@@ -136,11 +138,4 @@ void CfgCleaner::removeUselessNodes() {
             });
         }
     }
-}
-
-void CfgCleaner::traverseBlocks(int blockId, std::function<void(int)> action) {
-    action(blockId);
-    for (int nextId : cfg->block(blockId).next)
-        if (!visitedBlocks.contains(nextId))
-            traverseBlocks(nextId, action);
 }

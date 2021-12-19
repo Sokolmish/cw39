@@ -10,9 +10,6 @@ class CfgCleaner {
 private:
     std::shared_ptr<ControlFlowGraph> cfg;
 
-    std::set<int> visitedBlocks;
-    void traverseBlocks(int blockId, std::function<void(int blockId)> action);
-
 public:
     CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg);
 

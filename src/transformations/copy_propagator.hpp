@@ -14,9 +14,6 @@ private:
     std::map<IRval, IRval, IRval::ComparatorVersions> remlacementMap;
     bool changed;
 
-    std::set<int> visitedBlocks;
-    void traverseBlocks(int blockId, std::function<void(int)> action);
-
 public:
     CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg);
     std::shared_ptr<ControlFlowGraph> getCfg();

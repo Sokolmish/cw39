@@ -91,6 +91,15 @@ std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
     return blocks;
 }
 
+void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action) {
+    if (visited.contains(blockId))
+        return;
+    visited.insert(blockId);
+    action(blockId);
+    for (int nextId : this->block(blockId).next)
+        if (!visited.contains(nextId))
+            traverseBlocks(nextId, visited, action);
+}
 
 
 /*

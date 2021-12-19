@@ -8,6 +8,7 @@
 
 #include "transformations/vars_virtualizer.hpp"
 #include "transformations/ssa_generator.hpp"
+#include "transformations/algebraic_transformer.hpp"
 #include "transformations/copy_propagator.hpp"
 
 std::string readFile(std::string const &path) {
@@ -33,10 +34,10 @@ int main(int argc, char **argv) {
 
     auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
     auto cfg3 = SSA_Generator(cfg2).getCfg();
-    cfg3->printBlocks();
+    auto cfg4 = AlgebraicTransformer(cfg3).getCfg();
     fmt::print("\n================\n");
-    auto cfg4 = CopyPropagator(cfg3).getCfg();
-    cfg4->printBlocks();
+    auto cfg5 = CopyPropagator(cfg4).getCfg();
+    cfg5->printBlocks();
 
     return 0;
 }

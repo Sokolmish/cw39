@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <set>
+#include <functional>
 #include "nodes.hpp"
 
 
@@ -57,6 +59,8 @@ public:
 
     std::map<int, Function> const& getFuncs() const;
     std::map<int, IR_Block> const& getBlocks() const;
+
+    void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 
     void printBlocks() const;
 };

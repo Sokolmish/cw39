@@ -6,14 +6,15 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
     // TODO: check for SSA form
 
+    std::set<int> visited;
+
     changed = true;
     while (changed) {
         changed = false;
-//        remlacementMap.clear();
-        visitedBlocks.clear();
+        visited.clear();
 
         for (auto const &[fId, func] : cfg->getFuncs()) {
-            traverseBlocks(func.getEntryBlockId(), [this](int blockId) {
+            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
                 auto &curBlock = cfg->block(blockId);
 
                 for (auto *node : curBlock.getAllNodes()) {
@@ -51,13 +52,4 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
 
 std::shared_ptr<ControlFlowGraph> CopyPropagator::getCfg() {
     return cfg;
-}
-
-void CopyPropagator::traverseBlocks(int blockId, std::function<void(int)> action) {
-    if (visitedBlocks.contains(blockId))
-        return;
-    action(blockId);
-    for (int nextId : cfg->block(blockId).next)
-        if (!visitedBlocks.contains(nextId))
-            traverseBlocks(nextId, action);
 }
