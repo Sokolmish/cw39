@@ -5,6 +5,7 @@
 ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
     auto res = ControlFlowGraph::Function();
     res.id = id;
+    res.name = name;
     res.entryBlockId = entryBlockId;
     res.storage = storage;
     res.isInline = isInline;
@@ -14,6 +15,10 @@ ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
 
 int ControlFlowGraph::Function::getId() const {
     return id;
+}
+
+std::string ControlFlowGraph::Function::getName() const {
+    return name;
 }
 
 int ControlFlowGraph::Function::getEntryBlockId() const {
@@ -71,12 +76,13 @@ IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
     return IRval::createReg(type, regs_counter++);
 }
 
-ControlFlowGraph::Function& ControlFlowGraph::createFunction(
+ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
         IR_StorageSpecifier stor, bool isInline, std::shared_ptr<IR_Type> fullType) {
 
     auto &newBlock = createBlock();
     Function func;
     func.id = funcsCounter++;
+    func.name = std::move(name);
     func.entryBlockId = newBlock.id;
     func.storage = stor;
     func.isInline = isInline;
@@ -173,7 +179,7 @@ static std::string printType(IR_Type const &type) {
     throw;
 }
 
-static void printBlock(IR_Block const &block) {
+void ControlFlowGraph::printBlock(IR_Block const &block) const {
     // Block header and previous blocks
     fmt::print("Block {}:", block.id);
     if (!block.prev.empty()) {
@@ -226,7 +232,7 @@ static void printBlock(IR_Block const &block) {
         }
         else if (node.body->type == IR_Expr::CALL) {
             auto const &expr = dynamic_cast<IR_ExprCall const &>(*node.body);
-            fmt::print("call {} ( ", expr.funcId);
+            fmt::print("call {} ( ", funcs.at(expr.funcId).name);
             for (auto const &arg : expr.args)
                 fmt::print("{} ", arg.to_string());
             fmt::print(")\n");
@@ -279,7 +285,7 @@ void ControlFlowGraph::printCFG() const {
     fmt::print("\n");
 
     for (auto const &[id, func] : funcs) {
-        fmt::print("func {} -> block {}\n", func.id, func.entryBlockId);
+        fmt::print("func {} -> block {}\n", func.name, func.entryBlockId);
     }
     fmt::print("\n");
 

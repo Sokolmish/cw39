@@ -14,6 +14,7 @@ public:
     class Function {
     private:
         int id;
+        std::string name;
         int entryBlockId;
         friend class ControlFlowGraph;
 
@@ -24,6 +25,7 @@ public:
 
         Function clone() const;
         int getId() const;
+        std::string getName() const;
         int getEntryBlockId() const;
         IR_TypeFunc const& getFuncType() const;
     };
@@ -55,7 +57,8 @@ public:
 
     IR_Block& createBlock();
     void linkBlocks(IR_Block &prev, IR_Block &next);
-    Function& createFunction(IR_StorageSpecifier stor, bool isInline, std::shared_ptr<IR_Type> fullType);
+    Function& createFunction(std::string name, IR_StorageSpecifier stor, bool isInline,
+                             std::shared_ptr<IR_Type> fullType);
     IRval createReg(std::shared_ptr<IR_Type> type);
 
     /** get block by id */
@@ -72,6 +75,7 @@ public:
 
     void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 
+    void printBlock(IR_Block const &block) const;
     void printCFG() const;
 };
 

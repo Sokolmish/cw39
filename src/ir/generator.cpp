@@ -86,8 +86,9 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     isInline = def.specifiers->is_inline;
     fullType = getType(*def.specifiers, *def.decl);
 
-    auto fun = cfg->createFunction(storage, isInline, fullType);
-    functions.emplace(getDeclaredIdent(*def.decl), fun.getId());
+    auto funcIdent = getDeclaredIdent(*def.decl);
+    auto fun = cfg->createFunction(get_ident_by_id(funcIdent), storage, isInline, fullType);
+    functions.emplace(funcIdent, fun.getId());
     selectBlock(cfg->block(fun.getEntryBlockId()));
     curFunctionType = std::dynamic_pointer_cast<IR_TypeFunc>(fun.fullType);
 
