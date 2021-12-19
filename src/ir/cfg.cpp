@@ -146,6 +146,7 @@ static std::string printType(IR_Type const &type) {
 }
 
 static void printBlock(IR_Block const &block) {
+    // Block header and previous blocks
     fmt::print("Block {}:", block.id);
     if (!block.prev.empty()) {
         fmt::print(" ; prevs:", block.id);
@@ -154,13 +155,18 @@ static void printBlock(IR_Block const &block) {
     }
     fmt::print("\n");
 
-    for (auto const &[phiRes, args] : block.phis) {
-        fmt::print("{} <- phi( ", phiRes.to_string());
-        for (auto const &[index, val] : args)
+    // PHI nodes
+    for (auto const &[phiRes, phiFunc] : block.phis) {
+        if (phiRes)
+            fmt::print("{} <- ", phiRes->to_string());
+        fmt::print("phi( ");
+        auto const &phiExpr = dynamic_cast<IR_ExprPhi const &>(*phiFunc);
+        for (auto const &[index, val] : phiExpr.args)
             fmt::print("{}[{}] ", val.to_string(), index);
         fmt::print(")\n");
     }
 
+    // Instructions
     for (auto const &node: block.body) {
         if (!node.body) {
             fmt::print("nop\n");
@@ -194,6 +200,7 @@ static void printBlock(IR_Block const &block) {
         }
     }
 
+    // Terminator
     if (block.terminator.type == IR_Terminator::NONE) {
         fmt::print("; No terminator\n");
     }

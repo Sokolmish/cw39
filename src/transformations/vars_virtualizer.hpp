@@ -18,7 +18,6 @@ private:
     void passFunction(ControlFlowGraph::Function const &func);
     void analyzeBlock(IR_Block const &block);
     void optimizeBlock(IR_Block &block);
-    void removeNops();
 
 public:
     explicit VarsVirtualizer(ControlFlowGraph rawCfg);

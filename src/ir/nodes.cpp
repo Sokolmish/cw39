@@ -373,6 +373,25 @@ std::vector<IRval*> IR_ExprCall::getArgs() {
 }
 
 
+// IR_ExprPhi
+
+IR_ExprPhi::IR_ExprPhi() : IR_Expr(PHI) {}
+
+std::unique_ptr<IR_Expr> IR_ExprPhi::copy() const {
+    auto res = std::make_unique<IR_ExprPhi>();
+    for (auto const &[pos, arg] : args)
+        res->args.emplace(pos, arg.copy());
+    return res;
+}
+
+std::vector<IRval *> IR_ExprPhi::getArgs() {
+    std::vector<IRval*> resArgs;
+    for (auto &[pos, arg] : args)
+        resArgs.push_back(&arg);
+    return resArgs;
+}
+
+
 // Blocks
 
 IR_Block::IR_Block(int id) : id(id) {}
@@ -383,11 +402,13 @@ void IR_Block::addNode(IR_Node node) {
 
 IR_Block IR_Block::copy() const {
     IR_Block newBlock(id);
+    for (auto const &phiNode : phis)
+        newBlock.phis.push_back(phiNode.copy());
     for (auto const &node : body)
         newBlock.body.push_back(node.copy());
     newBlock.prev = prev;
     newBlock.next = next;
-    newBlock.terminator = terminator;
+    newBlock.terminator = terminator.copy();
     return newBlock;
 }
 
@@ -436,6 +457,32 @@ IRval IRval::createString(uint64_t num) {
     return IRval(strType, IRval::STRING, num);
 }
 
+IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
+    if (type->type != IR_Type::DIRECT)
+        semanticError("Cannot create default value for not direct type");
+    auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(type);
+
+    switch (dirType->spec) {
+        case IR_TypeDirect::I8:
+            return IRval(type, IRval::VAL, static_cast<int8_t>(0));
+        case IR_TypeDirect::U8:
+            return IRval(type, IRval::VAL, static_cast<uint8_t>(0));
+        case IR_TypeDirect::I32:
+            return IRval(type, IRval::VAL, static_cast<int32_t>(0));
+        case IR_TypeDirect::U32:
+            return IRval(type, IRval::VAL, static_cast<uint32_t>(0));
+        case IR_TypeDirect::I64:
+            return IRval(type, IRval::VAL, static_cast<int64_t>(0));
+        case IR_TypeDirect::U64:
+            return IRval(type, IRval::VAL, static_cast<uint64_t>(0));
+        case IR_TypeDirect::F32:
+            return IRval(type, IRval::VAL, static_cast<float>(0));
+        case IR_TypeDirect::VOID:
+            semanticError("Cannot create value of type VOID");
+    }
+    throw;
+}
+
 
 bool IRval::isConstant() const {
     return valClass == IRval::VAL;
@@ -454,34 +501,42 @@ const IRval::union_type &IRval::getVal() const {
 }
 
 std::string IRval::to_string() const {
-    if (valClass == IRval::VREG)
-        return std::visit([this](auto e) -> std::string {
-            if (version)
-                return fmt::format("%{}.{}", e, *version);
-            else
-                return fmt::format("%{}", e);
-        }, val);
-    else if (valClass == IRval::VAL)
-        return std::visit([](auto e) -> std::string {
-            return fmt::format("{}", e);
-        }, val);
-    else if (valClass == IRval::FUN_PARAM)
-        return std::visit([](auto e) -> std::string {
-            return fmt::format("%%arg{}", e);
-        }, val);
-    else if (valClass == IRval::GLOBAL)
-        return std::visit([](auto e) -> std::string {
-            return fmt::format("@{}", e);
-        }, val);
-    else if (valClass == IRval::STRING)
-        return std::visit([](auto e) -> std::string {
-            return fmt::format("@str_{}", e);
-        }, val);
+    switch (valClass) {
+        case IRval::VREG:
+            return std::visit([this](auto e) -> std::string {
+                if (version)
+                    return fmt::format("%{}.{}", e, *version);
+                else
+                    return fmt::format("%{}", e);
+            }, val);
+
+        case IRval::VAL:
+            return std::visit([](auto e) -> std::string {
+                return fmt::format("{}", e);
+            }, val);
+
+        case IRval::FUN_PARAM:
+            return std::visit([](auto e) -> std::string {
+                return fmt::format("%%arg{}", e);
+            }, val);
+
+        case IRval::GLOBAL:
+            return std::visit([](auto e) -> std::string {
+                return fmt::format("@{}", e);
+            }, val);
+
+        case IRval::STRING:
+            return std::visit([](auto e) -> std::string {
+                return fmt::format("@str_{}", e);
+            }, val);
+    }
     throw;
 }
 
 IRval IRval::copy() const {
-    return IRval(type->copy(), valClass, val);
+    auto res = IRval(type->copy(), valClass, val);
+    res.version = version;
+    return res;
 }
 
 bool IRval::operator==(const IRval &oth) const {
@@ -497,9 +552,30 @@ bool IRval::less(const IRval &a, const IRval &b) {
         return a.val < b.val;
 }
 
+//bool IRval::lessVersions(const IRval &a, const IRval &b) {
+//    if (a.valClass < b.valClass)
+//        return true;
+//    else if (a.valClass > b.valClass)
+//        return false;
+//    else {
+//        if (a.val < b.val)
+//            return true;
+//        else if (a.val > b.val)
+//            return false;
+//        else if (a.version.has_value() && b.version.has_value())
+//            return a.version < b.version;
+//        else
+//            return a.version < b.version;
+//    }
+//}
+
 bool IRval::Comparator::operator()(const IRval &a, const IRval &b) const {
     return IRval::less(a, b);
 }
+
+//bool IRval::ComparatorVersions::operator()(const IRval &a, const IRval &b) const {
+//    return IRval::lessVersions(a, b);
+//}
 
 
 // IR_Node

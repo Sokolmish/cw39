@@ -38,7 +38,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/dominators.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/ssa_generator.cpp
-        )
+        ${PROJECT_SOURCE_DIR}/src/transformations/cfg_cleaner.cpp)
 
 add_executable(cw39 ${PROJ_SRCS})
 

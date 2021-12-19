@@ -1,4 +1,5 @@
 #include "ssa_generator.hpp"
+#include "cfg_cleaner.hpp"
 
 SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
         : origCfg(in_cfg) {
@@ -7,6 +8,10 @@ SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
 
     placePhis();
     versionize();
+
+    CfgCleaner cleaner(cfg);
+    cleaner.fixVersions();
+    cfg = cleaner.getCfg();
 
     origCfg.reset();
 }
@@ -35,7 +40,9 @@ void SSA_Generator::placePhis() {
     for (auto const &[var, varDefs] : varsDefSet) {
         std::set<int> JP = getSetDFP(varDefs); // JP == DFP (theorem)
         for (int blockId : JP) {
-            cfg->block(blockId).phis.insert({ var, {} });
+//            cfg->block(blockId).phis.insert({ var, {} });
+            auto phiNode = IR_Node(var, std::make_unique<IR_ExprPhi>());
+            cfg->block(blockId).phis.push_back(std::move(phiNode));
         }
     }
 }
@@ -130,13 +137,12 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     auto &curBlock = cfg->block(blockId);
 
     // Phis
-    auto itPhi = curBlock.phis.find(var);
-    if (itPhi != curBlock.phis.end()) {
-        auto nodeHandler = curBlock.phis.extract(itPhi);
-        nodeHandler.key().version = versionsCnt;
-        curBlock.phis.insert(std::move(nodeHandler)); // TODO: hint
-
-        versions.push_back(versionsCnt++);
+    for (auto &phiNode : curBlock.phis) {
+        if (phiNode.res && *phiNode.res == var) {
+            phiNode.res->version = versionsCnt;
+            versions.push_back(versionsCnt++);
+            break;
+        }
     }
 
     // General nodes
@@ -166,12 +172,15 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
                 break;
             }
         }
-        auto phiIt = nextBlock.phis.find(var);
-        if (phiIt != nextBlock.phis.end()) {
-            IRval phiArg = var;
-            phiArg.version = versions.back();
-//            phiIt->second[j] = phiArg;
-            phiIt->second.emplace(j, phiArg);
+
+        for (auto &phiNode : nextBlock.phis) {
+            if (phiNode.res && *phiNode.res == var) {
+                IRval phiArg = var;
+                phiArg.version = versions.back();
+                auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
+                phiExpr.args.emplace(j, phiArg);
+                break;
+            }
         }
     }
 
@@ -184,6 +193,10 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     for (auto &node : curBlock.body)
         if (node.res && *node.res == var)
             versions.pop_back();
-    if (curBlock.phis.contains(var))
-        versions.pop_back();
+    for (auto &phiNode : curBlock.phis) {
+        if (phiNode.res && *phiNode.res == var) {
+            versions.pop_back();
+            break;
+        }
+    }
 }

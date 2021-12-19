@@ -36,10 +36,16 @@ public:
         bool operator()(const IRval& a, const IRval& b) const;
     };
 
+//    static bool lessVersions(const IRval &a, const IRval &b);
+//    struct ComparatorVersions {
+//        bool operator()(const IRval& a, const IRval& b) const;
+//    };
+
     [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
     [[nodiscard]] static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
     [[nodiscard]] static IRval createString(uint64_t num);
+    [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
 
     std::shared_ptr<IR_Type> const& getType() const;
     bool isConstant() const;
@@ -125,6 +131,15 @@ struct IR_ExprCall : public IR_Expr {
     std::vector<IRval*> getArgs() override;
 };
 
+struct IR_ExprPhi : public IR_Expr {
+    /** Key is position of argument */
+    std::map<int, IRval> args;
+
+    IR_ExprPhi();
+    std::unique_ptr<IR_Expr> copy() const override;
+    std::vector<IRval*> getArgs() override;
+};
+
 
 // Nodes
 
@@ -132,8 +147,8 @@ struct IR_Node {
     std::optional<IRval> res;
     std::unique_ptr<IR_Expr> body;
 
-    IR_Node(IRval res, std::unique_ptr<IR_Expr> body);
     explicit IR_Node(std::unique_ptr<IR_Expr> body);
+    IR_Node(IRval res, std::unique_ptr<IR_Expr> body);
     IR_Node copy() const;
 };
 
@@ -154,15 +169,13 @@ struct IR_Terminator {
 class IR_Block {
 public:
     int id;
+
+    std::vector<IR_Node> phis;
     std::vector<IR_Node> body;
+    IR_Terminator terminator;
 
     std::vector<int> prev;
     std::vector<int> next;
-    IR_Terminator terminator;
-
-    // First key (IRval) is phi result
-    // Second key (int) is position of the phi's argument
-    std::map<IRval, std::map<int, IRval>, IRval::Comparator> phis;
 
     explicit IR_Block(int id);
     void addNode(IR_Node node);

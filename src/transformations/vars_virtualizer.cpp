@@ -1,4 +1,5 @@
 #include "vars_virtualizer.hpp"
+#include "cfg_cleaner.hpp"
 #include <deque>
 #include <set>
 
@@ -8,7 +9,11 @@ VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg)
         toRedudeList.clear();
         passFunction(func);
     }
-    removeNops();
+
+    CfgCleaner cleaner(cfg);
+    cleaner.removeNops();
+//    cleaner.removeNops();
+    cfg = cleaner.getCfg();
 }
 
 std::shared_ptr<ControlFlowGraph> VarsVirtualizer::getCfg() {
@@ -127,17 +132,5 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         auto it = toRedudeList.find(*block.terminator.arg);
         if (it != toRedudeList.end())
             block.terminator.arg = *it->second;
-    }
-}
-
-void VarsVirtualizer::removeNops() {
-    for (auto const &[bId, block] : cfg->getBlocks()) {
-        std::vector<IR_Node> newBody;
-        for (IR_Node &node : cfg->block(bId).body) {
-            if (node.body) {
-                newBody.push_back(std::move(node));
-            }
-        }
-        cfg->block(bId).body = std::move(newBody);
     }
 }
