@@ -391,6 +391,23 @@ IR_Block IR_Block::copy() const {
     return newBlock;
 }
 
+std::vector<IRval> IR_Block::getDefinitions() const {
+    std::vector<IRval> defs;
+    for (auto const &node : body)
+        if (node.res)
+            defs.push_back(*node.res);
+    return defs;
+}
+
+std::vector<IRval> IR_Block::getReferences() const {
+    std::vector<IRval> refs;
+    for (auto const &node : body)
+        if (node.body)
+            for (IRval *arg : node.body->getArgs())
+                refs.push_back(*arg);
+    return refs;
+}
+
 
 // IRval
 
@@ -438,17 +455,29 @@ const IRval::union_type &IRval::getVal() const {
 
 std::string IRval::to_string() const {
     if (valClass == IRval::VREG)
-        return std::visit([](auto e) -> std::string { return "%" + std::to_string(e); }, val);
+        return std::visit([this](auto e) -> std::string {
+            if (version)
+                return fmt::format("%{}.{}", e, *version);
+            else
+                return fmt::format("%{}", e);
+        }, val);
     else if (valClass == IRval::VAL)
-        return std::visit([](auto e) -> std::string { return std::to_string(e); }, val);
+        return std::visit([](auto e) -> std::string {
+            return fmt::format("{}", e);
+        }, val);
     else if (valClass == IRval::FUN_PARAM)
-        return std::visit([](auto e) -> std::string { return "%%arg" + std::to_string(e); }, val);
+        return std::visit([](auto e) -> std::string {
+            return fmt::format("%%arg{}", e);
+        }, val);
     else if (valClass == IRval::GLOBAL)
-        return std::visit([](auto e) -> std::string { return "@" + std::to_string(e); }, val);
+        return std::visit([](auto e) -> std::string {
+            return fmt::format("@{}", e);
+        }, val);
     else if (valClass == IRval::STRING)
-        return std::visit([](auto e) -> std::string { return "@str_" + std::to_string(e); }, val);
-    else
-        throw;
+        return std::visit([](auto e) -> std::string {
+            return fmt::format("@str_{}", e);
+        }, val);
+    throw;
 }
 
 IRval IRval::copy() const {
@@ -480,10 +509,18 @@ IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std:
 IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}
 
 IR_Node IR_Node::copy() const {
-    if (res.has_value())
-        return IR_Node(res->copy(), body->copy());
-    else
-        return IR_Node(body->copy());
+    if (res.has_value()) {
+        if (body)
+            return IR_Node(res->copy(), body->copy());
+        else
+            return IR_Node(res->copy(), nullptr);
+    }
+    else {
+        if (body)
+            return IR_Node(body->copy());
+        else
+            return IR_Node(nullptr);
+    }
 }
 
 

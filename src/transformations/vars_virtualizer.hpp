@@ -7,6 +7,8 @@
 #include <functional>
 #include "ir/cfg.hpp"
 
+// TODO: check for phi functions
+
 class VarsVirtualizer {
 private:
     std::shared_ptr<ControlFlowGraph> cfg;
@@ -16,6 +18,7 @@ private:
     void passFunction(ControlFlowGraph::Function const &func);
     void analyzeBlock(IR_Block const &block);
     void optimizeBlock(IR_Block &block);
+    void removeNops();
 
 public:
     explicit VarsVirtualizer(ControlFlowGraph rawCfg);

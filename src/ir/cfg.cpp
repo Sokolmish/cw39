@@ -83,6 +83,14 @@ uint64_t ControlFlowGraph::putString(std::string str) {
     return newStringId;
 }
 
+const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
+    return funcs;
+}
+
+std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
+    return blocks;
+}
+
 
 
 /*
@@ -138,7 +146,21 @@ static std::string printType(IR_Type const &type) {
 }
 
 static void printBlock(IR_Block const &block) {
-    fmt::print("Block {}:\n", block.id);
+    fmt::print("Block {}:", block.id);
+    if (!block.prev.empty()) {
+        fmt::print(" ; prevs:", block.id);
+        for (int prevId : block.prev)
+            fmt::print(" {}", prevId);
+    }
+    fmt::print("\n");
+
+    for (auto const &[phiRes, args] : block.phis) {
+        fmt::print("{} <- phi( ", phiRes.to_string());
+        for (auto const &[index, val] : args)
+            fmt::print("{}[{}] ", val.to_string(), index);
+        fmt::print(")\n");
+    }
+
     for (auto const &node: block.body) {
         if (!node.body) {
             fmt::print("nop\n");
@@ -214,12 +236,4 @@ void ControlFlowGraph::printBlocks() const {
     for (auto const &[id, block] : blocks) {
         printBlock(block);
     }
-}
-
-const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
-    return funcs;
-}
-
-std::map<int, IR_Block> const &ControlFlowGraph::getBlocks() const {
-    return blocks;
 }

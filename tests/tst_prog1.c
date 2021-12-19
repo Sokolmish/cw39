@@ -1,19 +1,18 @@
 int add(int a, int b) {
-    if (a == b)
-        return a + a;
+    if (a == b) {
+        b = a;
+    }
     return a + b;
 }
 
 int main() {
     int x = 2;
     int y = 6;
-    while (x < y) {
-        x++;
-        y--;
-        if (x == y)
-            continue;
-        else
-            break;
+    if (x == 7) {
+        y = 3;
     }
-    return 0;
+    else {
+        x = 5;
+    }
+    return add(x, y);
 }

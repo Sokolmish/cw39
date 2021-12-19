@@ -2,6 +2,7 @@
 #define __IR_ELEM_HPP__
 
 #include <vector>
+#include <map>
 #include <memory>
 #include <optional>
 #include <variant>
@@ -23,6 +24,8 @@ private:
     union_type val;
 
 public:
+    std::optional<int> version = {};
+
     IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, union_type v);
     IRval copy() const;
 
@@ -157,9 +160,16 @@ public:
     std::vector<int> next;
     IR_Terminator terminator;
 
+    // First key (IRval) is phi result
+    // Second key (int) is position of the phi's argument
+    std::map<IRval, std::map<int, IRval>, IRval::Comparator> phis;
+
     explicit IR_Block(int id);
     void addNode(IR_Node node);
     IR_Block copy() const;
+
+    std::vector<IRval> getDefinitions() const;
+    std::vector<IRval> getReferences() const;
 };
 
 #endif /* __IR_ELEM_HPP__ */

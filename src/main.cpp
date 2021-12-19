@@ -6,8 +6,8 @@
 #include "parser/parser.hpp"
 #include "ir/generator.hpp"
 
-#include "transformations/dominators.hpp"
 #include "transformations/vars_virtualizer.hpp"
+#include "transformations/ssa_generator.hpp"
 
 std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
@@ -33,13 +33,16 @@ int main(int argc, char **argv) {
     gen->parseAST(ast);
 //    gen->getCfg()->printBlocks();
 
-    fmt::print("\n================\n");
-
     auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
     cfg2->printBlocks();
 
-    Dominators dom(cfg2);
-    std::cout << dom.drawGraph() << std::endl;
+    //    Dominators dom(cfg2);
+    //    std::cout << dom.drawGraph() << std::endl;
+
+    fmt::print("\n================\n");
+
+    auto cfg3 = SSA_Generator(cfg2).getCfg();
+    cfg3->printBlocks();
 
     return 0;
 }
