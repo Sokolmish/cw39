@@ -18,6 +18,7 @@ public:
 
     void removeNops();
     void fixVersions();
+    void removeUselessNodes();
 
     std::shared_ptr<ControlFlowGraph> getCfg();
 };

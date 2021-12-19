@@ -14,5 +14,6 @@ int main() {
     else {
         x = add(x, 5);
     }
+    y = add(x, y);
     return x;
 }

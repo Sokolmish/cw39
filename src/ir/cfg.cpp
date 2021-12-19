@@ -157,6 +157,11 @@ static void printBlock(IR_Block const &block) {
 
     // PHI nodes
     for (auto const &[phiRes, phiFunc] : block.phis) {
+        if (!phiFunc) {
+            fmt::print("nop\n");
+            continue;
+        }
+
         if (phiRes)
             fmt::print("{} <- ", phiRes->to_string());
         fmt::print("phi( ");

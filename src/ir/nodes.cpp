@@ -417,6 +417,9 @@ IR_Block IR_Block::copy() const {
 
 std::vector<IRval> IR_Block::getDefinitions() const {
     std::vector<IRval> defs;
+    for (auto const &phiNode : phis)
+        if (phiNode.res)
+            defs.push_back(*phiNode.res);
     for (auto const &node : body)
         if (node.res)
             defs.push_back(*node.res);
@@ -425,10 +428,17 @@ std::vector<IRval> IR_Block::getDefinitions() const {
 
 std::vector<IRval> IR_Block::getReferences() const {
     std::vector<IRval> refs;
+    for (auto const &phiNode : phis)
+        if (phiNode.body)
+            for (IRval *arg : phiNode.body->getArgs())
+                refs.push_back(*arg);
     for (auto const &node : body)
         if (node.body)
             for (IRval *arg : node.body->getArgs())
                 refs.push_back(*arg);
+    if (termNode)
+        for (IRval *arg : termNode->body->getArgs())
+            refs.push_back(*arg);
     return refs;
 }
 
@@ -570,30 +580,30 @@ bool IRval::less(const IRval &a, const IRval &b) {
         return a.val < b.val;
 }
 
-//bool IRval::lessVersions(const IRval &a, const IRval &b) {
-//    if (a.valClass < b.valClass)
-//        return true;
-//    else if (a.valClass > b.valClass)
-//        return false;
-//    else {
-//        if (a.val < b.val)
-//            return true;
-//        else if (a.val > b.val)
-//            return false;
-//        else if (a.version.has_value() && b.version.has_value())
-//            return a.version < b.version;
-//        else
-//            return a.version < b.version;
-//    }
-//}
+bool IRval::lessVersions(const IRval &a, const IRval &b) {
+    if (a.valClass < b.valClass)
+        return true;
+    else if (a.valClass > b.valClass)
+        return false;
+    else {
+        if (a.val < b.val)
+            return true;
+        else if (a.val > b.val)
+            return false;
+        else if (a.version.has_value() && b.version.has_value())
+            return a.version < b.version;
+        else
+            return a.version < b.version;
+    }
+}
 
 bool IRval::Comparator::operator()(const IRval &a, const IRval &b) const {
     return IRval::less(a, b);
 }
 
-//bool IRval::ComparatorVersions::operator()(const IRval &a, const IRval &b) const {
-//    return IRval::lessVersions(a, b);
-//}
+bool IRval::ComparatorVersions::operator()(const IRval &a, const IRval &b) const {
+    return IRval::lessVersions(a, b);
+}
 
 
 // IR_Node

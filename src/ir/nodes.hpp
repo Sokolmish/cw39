@@ -36,10 +36,10 @@ public:
         bool operator()(const IRval& a, const IRval& b) const;
     };
 
-//    static bool lessVersions(const IRval &a, const IRval &b);
-//    struct ComparatorVersions {
-//        bool operator()(const IRval& a, const IRval& b) const;
-//    };
+    static bool lessVersions(const IRval &a, const IRval &b);
+    struct ComparatorVersions {
+        bool operator()(const IRval& a, const IRval& b) const;
+    };
 
     [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);

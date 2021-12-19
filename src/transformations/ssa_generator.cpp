@@ -11,6 +11,8 @@ SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
 
     CfgCleaner cleaner(cfg);
     cleaner.fixVersions();
+    cleaner.removeUselessNodes();
+    cleaner.removeNops();
     cfg = cleaner.getCfg();
 
     origCfg.reset();
