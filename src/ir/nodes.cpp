@@ -448,6 +448,8 @@ std::vector<IR_Node*> IR_Block::getAllNodes() {
         res.push_back(&phiNode);
     for (auto &node : body)
         res.push_back(&node);
+    if (termNode.has_value())
+        res.push_back(&*termNode);
     return res;
 }
 
