@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     auto cfg4 = AlgebraicTransformer(cfg3).getCfg();
     fmt::print("\n================\n");
     auto cfg5 = CopyPropagator(cfg4).getCfg();
-    cfg5->printBlocks();
+    cfg5->printCFG();
 
     return 0;
 }

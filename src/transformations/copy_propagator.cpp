@@ -13,12 +13,12 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
         changed = false;
         visited.clear();
 
-        for (auto const &[fId, func] : cfg->getFuncs()) {
+        for (auto const &[fId, func]: cfg->getFuncs()) {
             cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
                 auto &curBlock = cfg->block(blockId);
 
-                for (auto *node : curBlock.getAllNodes()) {
-                    if (node->res && node->body && node->body->type == IR_Expr::OPERATION) {
+                for (auto *node: curBlock.getAllNodes()) {
+                    if (node->res && node->res->isVReg() && node->body && node->body->type == IR_Expr::OPERATION) {
                         auto oper = dynamic_cast<IR_ExprOper &>(*node->body);
                         if (oper.op == IR_MOV) {
                             changed = true;

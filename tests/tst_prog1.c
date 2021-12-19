@@ -1,3 +1,5 @@
+int gg = 142;
+
 int add(int a, int b) {
     if (a == b) {
         b = a;
@@ -6,10 +8,11 @@ int add(int a, int b) {
 }
 
 int main() {
-    int x = 2;
+    int x = gg;
     int y = 6;
     if (x == 7) {
         y = 3;
+        gg = 25;
     }
     else {
         x = add(x, 5);

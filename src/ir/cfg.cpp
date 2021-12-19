@@ -30,6 +30,7 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     regs_counter = oth.regs_counter;
     funcsCounter = oth.funcsCounter;
     stringsCounter = oth.stringsCounter;
+    globalsCounter = oth.globalsCounter;
 
     for (const auto &[id, block] : oth.blocks)
         blocks.insert(blocks.end(), { id, block.copy() });
@@ -38,6 +39,9 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     for (const auto &[id, irStruct] : oth.structs)
         structs.emplace_hint(structs.end(), id, irStruct);
     strings = oth.strings;
+    for (const auto &[id, global] : oth.globals)
+        globals.emplace_hint(globals.end(), id,
+                             GlobalVar{ global.self.copy(), global.val.copy() });
 }
 
 IR_Block &ControlFlowGraph::createBlock() {
@@ -57,6 +61,10 @@ IR_Block &ControlFlowGraph::block(int id) {
 
 ControlFlowGraph::Function &ControlFlowGraph::getFunction(int id) {
     return funcs.at(id);
+}
+
+IRval ControlFlowGraph::getGlobalSelf(uint64_t id) {
+    return globals.at(id).self;
 }
 
 IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
@@ -83,12 +91,23 @@ uint64_t ControlFlowGraph::putString(std::string str) {
     return newStringId;
 }
 
+uint64_t ControlFlowGraph::putGlobal(IRval val) {
+    uint64_t newGlobalId = globalsCounter++;
+    IRval globalSelf = IRval::createGlobal(val.getType(), newGlobalId);
+    globals.insert(globals.end(), { newGlobalId, GlobalVar{ globalSelf, std::move(val) }});
+    return newGlobalId;
+}
+
 const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
     return funcs;
 }
 
 std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
     return blocks;
+}
+
+const std::map<uint64_t, ControlFlowGraph::GlobalVar>& ControlFlowGraph::getGlobals() const {
+    return globals;
 }
 
 void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action) {
@@ -239,7 +258,7 @@ static void printBlock(IR_Block const &block) {
     fmt::print("\n");
 }
 
-void ControlFlowGraph::printBlocks() const {
+void ControlFlowGraph::printCFG() const {
     for (auto const &[id, structDecl] : structs) {
         fmt::print("struct({}) {{ ", structDecl->structId);
         for (const auto &field : structDecl->fields)
@@ -247,14 +266,23 @@ void ControlFlowGraph::printBlocks() const {
         fmt::print("}}\n");
     }
     fmt::print("\n");
+
     for (auto const &[id, str] : strings) {
         fmt::print("string_{} = \"{}\"\n", id, str);
     }
     fmt::print("\n");
+
+    for (auto const &[id, global] : globals) {
+        fmt::print("{} {} = {}\n", printType(*global.self.getType()),
+                   global.self.to_string(), global.val.to_string());
+    }
+    fmt::print("\n");
+
     for (auto const &[id, func] : funcs) {
         fmt::print("func {} -> block {}\n", func.id, func.entryBlockId);
     }
     fmt::print("\n");
+
     for (auto const &[id, block] : blocks) {
         printBlock(block);
     }

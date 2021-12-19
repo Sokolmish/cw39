@@ -22,7 +22,34 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
             createFunction(dynamic_cast<AST_FunctionDef &>(*top_instr));
         }
         else if (top_instr->node_type == AST_DECLARATION) {
-            NOT_IMPLEMENTED("Top level declarations");
+            auto &decl = dynamic_cast<AST_Declaration &>(*top_instr);
+
+            // Save struct type if such is there
+            if (!decl.child) {
+                getPrimaryType(decl.specifiers->type_specifiers);
+                continue;
+            }
+
+            for (const auto &singleDecl : decl.child->v) {
+                if (!singleDecl->initializer)
+                    NOT_IMPLEMENTED("Uninitialized global variables");
+                if (singleDecl->initializer->is_compound)
+                    NOT_IMPLEMENTED("Compound initializers");
+
+                auto varType = getType(*decl.specifiers, *singleDecl->declarator);
+                auto ident = getDeclaredIdent(*singleDecl->declarator);
+                auto const &initExpr = dynamic_cast<AST_Expr const &>(
+                        *singleDecl->initializer->val);
+                auto initVal = evalExpr(initExpr);
+                if (!initVal.getType()->equal(*varType)) {
+                    semanticError("Cannot initialize variable with different type");
+                }
+
+                auto newGlobalId = cfg->putGlobal(initVal);
+                if (globals.contains(ident))
+                    semanticError("Variable already declared");
+                globals.emplace(ident, newGlobalId);
+            }
         }
         else {
             semanticError("Only functions definitions and declarations allowed as top-level instructions");
@@ -92,7 +119,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         if (elem->node_type == AST_DECLARATION) {
             auto const &decl = dynamic_cast<AST_Declaration const &>(*elem);
 
-            // Save struct type if such is here
+            // Save struct type if such is there
             if (!decl.child) {
                 getPrimaryType(decl.specifiers->type_specifiers);
                 continue;

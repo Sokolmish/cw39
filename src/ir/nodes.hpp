@@ -45,11 +45,12 @@ public:
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
     [[nodiscard]] static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
     [[nodiscard]] static IRval createString(uint64_t num);
+    [[nodiscard]] static IRval createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num);
     [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
 
     std::shared_ptr<IR_Type> const& getType() const;
     bool isConstant() const;
-    bool isRegister() const;
+    bool isVReg() const;
     bool isGlobal() const;
     union_type const& getVal() const;
     std::string to_string() const;
@@ -186,7 +187,6 @@ public:
 
     IR_ExprTerminator const* getTerminator() const;
 
-    // TODO: return node
     std::vector<IR_Node*> getAllNodes();
 };
 

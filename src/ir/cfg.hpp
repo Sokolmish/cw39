@@ -11,7 +11,7 @@
 
 class ControlFlowGraph {
 public:
-    struct Function {
+    class Function {
     private:
         int id;
         int entryBlockId;
@@ -28,17 +28,24 @@ public:
         IR_TypeFunc const& getFuncType() const;
     };
 
+    struct GlobalVar {
+        IRval self;
+        IRval val;
+    };
+
 
 private:
     int blocksCounter = 0;
     uint64_t regs_counter = 0;
     int funcsCounter = 0;
     uint64_t stringsCounter = 0;
+    uint64_t globalsCounter = 0;
 
     std::map<int, IR_Block> blocks;
     std::map<int, Function> funcs;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
     std::map <uint64_t, std::string> strings;
+    std::map <uint64_t, GlobalVar> globals;
 
     friend class IR_Generator;
 
@@ -54,15 +61,18 @@ public:
     /** get block by id */
     IR_Block& block(int id);
     Function& getFunction(int id);
+    IRval getGlobalSelf(uint64_t id);
 
     uint64_t putString(std::string str);
+    uint64_t putGlobal(IRval val);
 
     std::map<int, Function> const& getFuncs() const;
     std::map<int, IR_Block> const& getBlocks() const;
+    std::map <uint64_t, GlobalVar> const& getGlobals() const;
 
     void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 
-    void printBlocks() const;
+    void printCFG() const;
 };
 
 #endif /* __CFG_HPP__ */

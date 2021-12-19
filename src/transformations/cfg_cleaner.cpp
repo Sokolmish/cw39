@@ -31,31 +31,16 @@ void CfgCleaner::fixVersions() {
     for (auto const &[fId, func]: cfg->getFuncs()) {
         cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
             auto &curBlock = cfg->block(blockId);
-
-            for (auto const &phiNode: curBlock.phis) {
-                if (phiNode.res) {
-                    int curVers = *phiNode.res->version;
-                    auto it = versionedRegs.lower_bound(*phiNode.res);
-                    if (it != versionedRegs.end() && it->first == *phiNode.res) {
+            for (auto const &node : curBlock.getAllNodes()) {
+                if (node->res) {
+                    int curVers = *node->res->version;
+                    auto it = versionedRegs.lower_bound(*node->res);
+                    if (it != versionedRegs.end() && it->first == *node->res) {
                         if (it->second.second != curVers)
                             it->second = std::make_pair(true, 0);
                     }
                     else {
-                        versionedRegs.emplace_hint(it, *phiNode.res, std::make_pair(false, curVers));
-                    }
-                }
-            }
-
-            for (auto const &node : curBlock.body) {
-                if (node.res) {
-                    int curVers = *node.res->version;
-                    auto it = versionedRegs.lower_bound(*node.res);
-                    if (it != versionedRegs.end() && it->first == *node.res) {
-                        if (it->second.second != curVers)
-                            it->second = std::make_pair(true, 0);
-                    }
-                    else {
-                        versionedRegs.emplace_hint(it, *node.res, std::make_pair(false, curVers));
+                        versionedRegs.emplace_hint(it, *node->res, std::make_pair(false, curVers));
                     }
                 }
             }
@@ -67,38 +52,16 @@ void CfgCleaner::fixVersions() {
         cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
             auto &curBlock = cfg->block(blockId);
 
-            for (auto &phiNode: curBlock.phis) {
-                if (phiNode.res) {
-                    auto it = versionedRegs.find(*phiNode.res);
+            for (auto *node: curBlock.getAllNodes()) {
+                if (node->res) {
+                    auto it = versionedRegs.find(*node->res);
                     if (it != versionedRegs.end() && !it->second.first)
-                        phiNode.res->version = {};
+                        node->res->version = {};
                 }
-                for (auto *arg : phiNode.body->getArgs()) {
+                for (auto *arg : node->body->getArgs()) {
                     auto it = versionedRegs.find(*arg);
                     if (it != versionedRegs.end() && !it->second.first)
                         arg->version = {};
-                }
-            }
-
-            for (auto &node: curBlock.body) {
-                if (node.res) {
-                    auto it = versionedRegs.find(*node.res);
-                    if (it != versionedRegs.end() && !it->second.first)
-                        node.res->version = {};
-                }
-                for (auto *arg : node.body->getArgs()) {
-                    auto it = versionedRegs.find(*arg);
-                    if (it != versionedRegs.end() && !it->second.first)
-                        arg->version = {};
-                }
-            }
-
-            if (curBlock.termNode) {
-                auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
-                if (terminator.arg) {
-                    auto it = versionedRegs.find(*terminator.arg);
-                    if (it != versionedRegs.end() && !it->second.first)
-                        terminator.arg->version = {};
                 }
             }
         });
@@ -128,7 +91,7 @@ void CfgCleaner::removeUselessNodes() {
             cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs, &changed](int blockId) {
                 auto &curBlock = cfg->block(blockId);
                 for (auto *node: curBlock.getAllNodes()) {
-                    if (node->res.has_value() && !usedRegs.contains(*node->res)) {
+                    if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
                         changed = true;
                         node->res = {};
                         if (node->body->type != IR_Expr::CALL)

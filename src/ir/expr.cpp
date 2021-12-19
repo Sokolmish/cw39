@@ -23,14 +23,24 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     semanticError("Only variables can be assigned");
 
                 auto destVar = variables.get(assignee.getIdent());
-                if (!destVar.has_value())
+                auto destGlobal = globals.find(assignee.getIdent());
+                if (destVar.has_value()) {
+                    auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
+                    if (!destVarPtrType->child->equal(*rhsVal.getType()))
+                        semanticError("Cannot assign values of different types");
+                    curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
+                            IR_STORE, std::vector<IRval>{ *destVar, rhsVal })));
+                }
+                else if (destGlobal != globals.end()) {
+                    IRval globalSelf = cfg->getGlobalSelf(destGlobal->second);
+                    if (!globalSelf.getType()->equal(*rhsVal.getType()))
+                        semanticError("Cannot assign values of different types");
+                    curBlock().addNode(IR_Node(globalSelf, std::make_unique<IR_ExprOper>(
+                            IR_MOV, std::vector<IRval>{ rhsVal })));
+                }
+                else {
                     semanticError("Unknown variable");
-                auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
-                if (!destVarPtrType->child->equal(*rhsVal.getType()))
-                    semanticError("Cannot assign values of different types");
-
-                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ *destVar, rhsVal })));
+                }
             }
             else if (expr.lhs->node_type == AST_UNARY_OP) { // Dereference write
                 auto const &assignee = dynamic_cast<AST_Unop const &>(*expr.lhs);
@@ -289,7 +299,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                         semanticError("Address cannot be taken from literal");
                     auto var = variables.get(subject.getIdent());
                     if (!var.has_value())
-                        semanticError("Unknown variable");
+                        semanticError("Unknown variable"); // TODO: address of global
                     return *var;
                 }
                 else if (expr.child->node_type == AST_POSTFIX) { // Index, access
@@ -483,15 +493,20 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.type == AST_Primary::IDENT) {
                 auto var = variables.get(expr.getIdent());
-                if (!var.has_value()) {
+                auto globalIt = globals.find(expr.getIdent());
+                if (var.has_value()) {
+                    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
+                    IRval res = cfg->createReg(ptrType->child);
+                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                            IR_LOAD, std::vector<IRval>{ *var })));
+                    return res;
+                }
+                else if (globalIt != globals.end()) {
+                    return cfg->getGlobalSelf(globalIt->second);
+                }
+                else {
                     semanticError("Unknown variable");
                 }
-
-                auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
-                IRval res = cfg->createReg(ptrType->child);
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_LOAD, std::vector<IRval>{ *var })));
-                return res;
             }
             else if (expr.type == AST_Primary::EXPR) {
                 return evalExpr(expr.getExpr());

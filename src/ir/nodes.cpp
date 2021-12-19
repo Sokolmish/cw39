@@ -418,10 +418,10 @@ IR_Block IR_Block::copy() const {
 std::vector<IRval> IR_Block::getDefinitions() const {
     std::vector<IRval> defs;
     for (auto const &phiNode : phis)
-        if (phiNode.res)
+        if (phiNode.res && phiNode.res->isVReg())
             defs.push_back(*phiNode.res);
     for (auto const &node : body)
-        if (node.res)
+        if (node.res && node.res->isVReg())
             defs.push_back(*node.res);
     return defs;
 }
@@ -487,6 +487,11 @@ IRval IRval::createString(uint64_t num) {
     return IRval(strType, IRval::STRING, num);
 }
 
+IRval IRval::createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num) {
+    return IRval(globalType, IRval::GLOBAL, num);
+}
+
+
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
     if (type->type != IR_Type::DIRECT)
         semanticError("Cannot create default value for not direct type");
@@ -518,7 +523,7 @@ bool IRval::isConstant() const {
     return valClass == IRval::VAL;
 }
 
-bool IRval::isRegister() const {
+bool IRval::isVReg() const {
     return valClass == IRval::VREG;
 }
 
