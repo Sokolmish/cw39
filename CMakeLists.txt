@@ -22,6 +22,7 @@ include_directories(
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp
         ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/utils.cpp
@@ -49,5 +50,5 @@ find_package(fmt REQUIRED)
 include_directories(${FMT_INCLUDE_DIRS})
 target_link_libraries(cw39 fmt)
 
-llvm_map_components_to_libnames(llvm_libs core native engine interpreter)
-target_link_libraries(cw39 LLVM-10)
+llvm_map_components_to_libnames(llvm_libs support core irreader)
+target_link_libraries(cw39 LLVM-13)

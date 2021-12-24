@@ -11,6 +11,8 @@
 #include "transformations/algebraic_transformer.hpp"
 #include "transformations/copy_propagator.hpp"
 
+#include "ir_2_llvm.hpp"
+
 std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
     t.seekg(0, std::ios::end);
@@ -35,9 +37,13 @@ int main(int argc, char **argv) {
     auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
     auto cfg3 = SSA_Generator(cfg2).getCfg();
     auto cfg4 = AlgebraicTransformer(cfg3).getCfg();
-    fmt::print("\n================\n");
     auto cfg5 = CopyPropagator(cfg4).getCfg();
     cfg5->printCFG();
+
+    fmt::print("\n================\n");
+
+    IR2LLVM materializer(cfg5);
+    std::cout << materializer.getRes() << std::endl;
 
     return 0;
 }

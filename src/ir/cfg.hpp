@@ -52,6 +52,7 @@ private:
     std::map<int, GlobalVar> globals;
 
     friend class IR_Generator;
+    friend class IR2LLVM;
 
 public:
     ControlFlowGraph() = default;
