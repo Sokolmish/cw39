@@ -195,6 +195,30 @@ int IR_TypeArray::getBytesSize() const {
 
 IR_Expr::IR_Expr(IR_Expr::Type type) : type(type) {}
 
+IR_ExprOper const &IR_Expr::getOper() const {
+    return dynamic_cast<IR_ExprOper const&>(*this);
+}
+
+IR_ExprAlloc const &IR_Expr::getAlloc() const {
+    return dynamic_cast<IR_ExprAlloc const&>(*this);
+}
+
+IR_ExprCast const &IR_Expr::getCast() const {
+    return dynamic_cast<IR_ExprCast const&>(*this);
+}
+
+IR_ExprCall const &IR_Expr::getCall() const {
+    return dynamic_cast<IR_ExprCall const&>(*this);
+}
+
+IR_ExprTerminator const &IR_Expr::getTerm() const {
+    return dynamic_cast<IR_ExprTerminator const&>(*this);
+}
+
+IR_ExprPhi const& IR_Expr::getPhi() const {
+    return dynamic_cast<IR_ExprPhi const&>(*this);
+}
+
 
 IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) :
         IR_Expr(IR_Expr::OPERATION), op(op), args(std::move(args)) {
@@ -466,7 +490,7 @@ IR_ExprTerminator const* IR_Block::getTerminator() const {
 // IRval
 
 IRval::IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, IRval::union_type v) :
-        type(type), valClass(vclass), val(v) {}
+        valClass(vclass), type(type), val(v) {}
 
 std::shared_ptr<IR_Type> const& IRval::getType() const {
     return type;
@@ -486,6 +510,7 @@ IRval IRval::createFunArg(std::shared_ptr<IR_Type> type, uint64_t num) {
 
 IRval IRval::createString(uint64_t num) {
     auto strType = std::make_shared<IR_TypePtr>(IR_TypeDirect::type_i8);
+//    auto strPtrType = std::make_shared<IR_TypePtr>(strType);
 //    strType->is_const = true;
     return IRval(strType, IRval::STRING, num);
 }
@@ -569,6 +594,16 @@ std::string IRval::to_string() const {
             }, val);
     }
     throw;
+}
+
+std::string IRval::to_reg_name() const {
+    return std::visit([this](auto e) -> std::string {
+        auto prefix = isVReg() ? "vr" : "W";
+        if (version)
+            return fmt::format("{}{}.{}", prefix, e, *version);
+        else
+            return fmt::format("{}{}", prefix, e);
+    }, val);
 }
 
 IRval IRval::copy() const {

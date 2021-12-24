@@ -17,10 +17,10 @@ public:
     typedef std::variant<
             uint8_t, int8_t, uint32_t, int32_t, uint64_t, int64_t,
             float, double> union_type;
+    enum ValueClass { VAL, VREG, GLOBAL, STRING, FUN_PARAM } valClass;
 
 private:
     std::shared_ptr<IR_Type> type;
-    enum ValueClass { VAL, VREG, GLOBAL, STRING, FUN_PARAM } valClass;
     union_type val;
 
 public:
@@ -54,6 +54,7 @@ public:
     bool isGlobal() const;
     union_type const& getVal() const;
     std::string to_string() const;
+    std::string to_reg_name() const;
 
     template <class T>
     T castValTo() const {
@@ -65,6 +66,13 @@ public:
 
 
 // Expressions
+
+struct IR_ExprOper;
+struct IR_ExprAlloc;
+struct IR_ExprCast;
+struct IR_ExprCall;
+struct IR_ExprTerminator;
+struct IR_ExprPhi;
 
 enum IR_Ops {
     IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
@@ -80,6 +88,13 @@ struct IR_Expr {
     virtual ~IR_Expr() = default;
     virtual std::unique_ptr<IR_Expr> copy() const = 0;
     virtual std::vector<IRval*> getArgs() = 0;
+
+    IR_ExprOper const& getOper() const;
+    IR_ExprAlloc const& getAlloc() const;
+    IR_ExprCast const& getCast() const;
+    IR_ExprCall const& getCall() const;
+    IR_ExprTerminator const& getTerm() const;
+    IR_ExprPhi const& getPhi() const;
 };
 
 struct IR_ExprOper : public IR_Expr {
@@ -173,7 +188,6 @@ public:
     std::vector<IR_Node> phis;
     std::vector<IR_Node> body;
     std::optional<IR_Node> termNode;
-//    IR_ExprTerminator terminator;
 
     std::vector<int> prev;
     std::vector<int> next;

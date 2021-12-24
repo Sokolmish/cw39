@@ -564,13 +564,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.type == AST_Primary::STR) {
                 string_id_t parserStrId = expr.getString();
-                IRval strPtr =
-                        IRval::createString(cfg->putString(get_string_by_id(parserStrId)));
-                auto const &strPtrType = dynamic_cast<IR_TypePtr const &>(*strPtr.getType());
-
-                IRval str = cfg->createReg(strPtrType.child);
-                curBlock().addNode(IR_Node(str, std::make_unique<IR_ExprOper>(
-                        IR_LOAD, std::vector<IRval>{ strPtr })));
+                IRval str = IRval::createString(cfg->putString(get_string_by_id(parserStrId)));
                 strings.insert({ parserStrId, str });
                 return str;
             }

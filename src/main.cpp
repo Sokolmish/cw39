@@ -38,9 +38,9 @@ int main(int argc, char **argv) {
     auto cfg3 = SSA_Generator(cfg2).getCfg();
     auto cfg4 = AlgebraicTransformer(cfg3).getCfg();
     auto cfg5 = CopyPropagator(cfg4).getCfg();
-    cfg5->printCFG();
+//    cfg5->printCFG();
 
-    fmt::print("\n================\n");
+//    fmt::print("\n================\n");
 
     IR2LLVM materializer(cfg5);
     std::cout << materializer.getRes() << std::endl;

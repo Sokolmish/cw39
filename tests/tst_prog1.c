@@ -2,6 +2,11 @@ int gg = 142;
 
 int printf(const char *format, ...);
 
+void store555(int *addr) {
+    *addr = 555;
+    return;
+}
+
 int add(int a, int b) {
     if (a == b) {
         b = a;
@@ -11,16 +16,17 @@ int add(int a, int b) {
 
 int main() {
     int x = gg;
-    int y = 6;
+    int y;
+    store555(&y);
     x += 1;
     if (x == 7) {
-        y = 3;
+        y += 3;
         gg = 25;
     }
     else {
         x = add(x, 5);
     }
     y = add(x, y);
-    printf("%d\n", x);
+    printf("%d\n", y);
     return x + 0; // * 0
 }
