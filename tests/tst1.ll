@@ -8,7 +8,6 @@ source_filename = "top"
 @.str2 = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
 @.str3 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
 @.str4 = private unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
-@.str5 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
 @gg = internal global i32 142, align 8
 
 define internal void @__dummy_func() {
@@ -100,7 +99,18 @@ block_7:                                          ; preds = %block_6, %block_5
   %3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str2, i32 0, i32 0), double 0x4007FFFFFE666666)
   %4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str3, i32 0, i32 0), i32 123, i32 -123)
   %5 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i8 97)
-  %6 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str5, i32 0, i32 0), i32 0, i32 -1)
+  br label %block_8
+
+block_8:                                          ; preds = %block_9, %block_7
+  %vr88 = phi i32 [ 10, %block_7 ], [ %vr76, %block_9 ]
+  %vr74 = icmp ne i32 %vr88, 0
+  br i1 %vr74, label %block_9, label %block_10
+
+block_9:                                          ; preds = %block_8
+  %vr76 = sub i32 %vr88, 1
+  br label %block_8
+
+block_10:                                         ; preds = %block_8
   ret i32 %vr82
 }
 

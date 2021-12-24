@@ -57,5 +57,10 @@ int main() {
     c--;
     printf("%c\n", c);
 
+    int cnt = 10;
+    while (cnt) {
+        cnt--;
+    }
+
     return x + 0; // * 0
 }

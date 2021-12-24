@@ -207,7 +207,15 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         if (stmt.is_switch)
             NOT_IMPLEMENTED("switch");
 
-        auto cond = evalExpr(*stmt.condition);
+        IRval cond = evalExpr(*stmt.condition);
+        auto condNode = dynamic_cast<AST_Binop const *>(stmt.condition.get());
+        if (!condNode || !isComparsionOp(condNode->op)) {
+            IRval newCond = cfg->createReg(IR_TypeDirect::type_i32);
+            curBlock().addNode(IR_Node(newCond, std::make_unique<IR_ExprOper>(
+                    IR_NE, std::vector<IRval>{ cond, IRval::createVal(cond.getType(), 0UL ) })));
+            cond = newCond;
+        }
+
         curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                 IR_ExprTerminator::BRANCH, cond));
 
@@ -275,7 +283,16 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         cfg->linkBlocks(curBlock(), blockCond);
         selectBlock(blockCond);
 
-        auto cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
+        IRval cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
+        auto condNode = dynamic_cast<AST_Binop const *>(
+                std::get<std::unique_ptr<AST_Expr>>(stmt.control).get());
+        if (!condNode || !isComparsionOp(condNode->op)) {
+            IRval newCond = cfg->createReg(IR_TypeDirect::type_i32);
+            curBlock().addNode(IR_Node(newCond, std::make_unique<IR_ExprOper>(
+                    IR_NE, std::vector<IRval>{ cond, IRval::createVal(cond.getType(), 0UL ) })));
+            cond = newCond;
+        }
+
         curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                 IR_ExprTerminator::BRANCH, cond));
         cfg->linkBlocks(curBlock(), blockLoop);
