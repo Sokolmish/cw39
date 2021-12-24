@@ -46,6 +46,7 @@ private:
 
     std::map<int, IR_Block> blocks;
     std::map<int, Function> funcs;
+    std::map<int, Function> prototypes;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
     std::map<uint64_t, std::string> strings;
     std::map<int, GlobalVar> globals;
@@ -60,12 +61,15 @@ public:
     void linkBlocks(IR_Block &prev, IR_Block &next);
     Function& createFunction(std::string name, IR_StorageSpecifier stor, bool isInline,
                              std::shared_ptr<IR_Type> fullType);
+    Function& createPrototype(std::string name, IR_StorageSpecifier stor,
+                             std::shared_ptr<IR_Type> fullType);
     IRval createReg(std::shared_ptr<IR_Type> type);
     IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init);
 
     /** get block by id */
     IR_Block& block(int id);
     Function& getFunction(int id);
+    Function const& getFunction(int id) const;
 
     uint64_t putString(std::string str);
 

@@ -661,7 +661,10 @@ TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
     else if (type == AST_DirectDeclarator::FUNC) {
         auto node = TreeNode::create("function"s);
         node->addChild(std::get<uniq<AST_Node>>(base)->getTreeNode());
-        node->addChild(func_args->getTreeNode());
+        if (func_args)
+            node->addChild(func_args->getTreeNode());
+        else
+            node->addChild(TreeNode::create("no_args"s));
         return node;
     }
     else {

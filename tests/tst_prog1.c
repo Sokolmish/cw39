@@ -1,8 +1,6 @@
 int gg = 142;
 
-int* xxx() {
-    return &gg;
-}
+int printf(const char *format, ...);
 
 int add(int a, int b) {
     if (a == b) {
@@ -23,5 +21,6 @@ int main() {
         x = add(x, 5);
     }
     y = add(x, y);
+    printf("%d\n", x);
     return x + 0; // * 0
 }

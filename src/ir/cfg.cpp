@@ -39,8 +39,10 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
 
     for (const auto &[id, block]: oth.blocks)
         blocks.insert(blocks.end(), { id, block.copy() });
-    for (const auto &[id, block]: oth.funcs)
-        funcs.emplace_hint(funcs.end(), id, block);
+    for (const auto &[id, func]: oth.funcs)
+        funcs.emplace_hint(funcs.end(), id, func.clone());
+    for (const auto &[id, func]: oth.prototypes)
+        prototypes.emplace_hint(prototypes.end(), id, func.clone());
     for (const auto &[id, irStruct]: oth.structs)
         structs.emplace_hint(structs.end(), id, irStruct);
     strings = oth.strings;
@@ -65,8 +67,24 @@ IR_Block &ControlFlowGraph::block(int id) {
     return blocks.at(id);
 }
 
-ControlFlowGraph::Function &ControlFlowGraph::getFunction(int id) {
-    return funcs.at(id);
+ControlFlowGraph::Function& ControlFlowGraph::getFunction(int id) {
+    auto fIt = funcs.find(id);
+    if (fIt != funcs.end())
+        return fIt->second;
+    auto pIt = prototypes.find(id);
+    if (pIt != prototypes.end())
+        return pIt->second;
+    throw std::out_of_range("No functions with given id");
+}
+
+ControlFlowGraph::Function const& ControlFlowGraph::getFunction(int id) const {
+    auto fIt = funcs.find(id);
+    if (fIt != funcs.end())
+        return fIt->second;
+    auto pIt = prototypes.find(id);
+    if (pIt != prototypes.end())
+        return pIt->second;
+    throw std::out_of_range("No functions with given id");
 }
 
 IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
@@ -93,6 +111,19 @@ ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
     func.isInline = isInline;
     func.fullType = fullType;
     auto it = funcs.emplace_hint(funcs.end(), func.id, std::move(func));
+    return it->second;
+}
+
+ControlFlowGraph::Function& ControlFlowGraph::createPrototype(std::string name,
+        IR_StorageSpecifier stor, std::shared_ptr<IR_Type> fullType) {
+    Function func;
+    func.id = funcsCounter++;
+    func.name = std::move(name);
+    func.entryBlockId = -1;
+    func.storage = stor;
+    func.isInline = false;
+    func.fullType = fullType;
+    auto it = prototypes.emplace_hint(prototypes.end(), func.id, std::move(func));
     return it->second;
 }
 
@@ -230,7 +261,7 @@ void ControlFlowGraph::printBlock(IR_Block const &block) const {
         }
         else if (node.body->type == IR_Expr::CALL) {
             auto const &expr = dynamic_cast<IR_ExprCall const &>(*node.body);
-            fmt::print("call {} ( ", funcs.at(expr.funcId).name);
+            fmt::print("call {} ( ", getFunction(expr.funcId).name);
             for (auto const &arg : expr.args)
                 fmt::print("{} ", arg.to_string());
             fmt::print(")\n");
@@ -282,8 +313,14 @@ void ControlFlowGraph::printCFG() const {
     }
     fmt::print("\n");
 
+    for (auto const &[id, func] : prototypes) {
+        fmt::print("func {} {};\n", printType(*func.fullType), func.name);
+    }
+    fmt::print("\n");
+
     for (auto const &[id, func] : funcs) {
-        fmt::print("func {} -> block {}\n", func.name, func.entryBlockId);
+        fmt::print("func {} {} -> block {}\n", func.name,
+                   printType(*func.fullType), func.entryBlockId);
     }
     fmt::print("\n");
 

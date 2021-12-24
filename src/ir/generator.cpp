@@ -29,15 +29,31 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
                 getPrimaryType(decl.specifiers->type_specifiers);
                 continue;
             }
-            // TODO: function prototypes
 
+            int count = 0;
             for (const auto &singleDecl : decl.child->v) {
+                count++;
+                auto varType = getType(*decl.specifiers, *singleDecl->declarator);
+
+                if (varType->type == IR_Type::FUNCTION) {
+                    if (count > 1)
+                        semanticError("Only one function van be declared per one declaration");
+                    if (singleDecl->initializer)
+                        semanticError("Prototypes cannot be initialized");
+
+                    // TODO
+                    auto funcIdent = getDeclaredIdent(*singleDecl->declarator);
+                    auto fun = cfg->createPrototype(get_ident_by_id(funcIdent),
+                                                    IR_StorageSpecifier::EXTERN, varType);
+                    functions.emplace(funcIdent, fun.getId()); // TODO: functions?
+                    continue;
+                }
+
                 if (!singleDecl->initializer)
                     NOT_IMPLEMENTED("Unnitialized global variables");
                 if (singleDecl->initializer->is_compound)
                     NOT_IMPLEMENTED("Compound initializers");
 
-                auto varType = getType(*decl.specifiers, *singleDecl->declarator);
                 auto ident = getDeclaredIdent(*singleDecl->declarator);
                 if (globals.contains(ident))
                     semanticError("Global variable already declared");
