@@ -3,7 +3,6 @@
 IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs) {
     using bop = AST_Binop;
 
-    // TODO: pointers arithmetics
     if (lhs.getType()->type != IR_Type::DIRECT)
         NOT_IMPLEMENTED("Pointers arithmetics");
 
