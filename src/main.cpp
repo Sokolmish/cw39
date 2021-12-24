@@ -34,6 +34,8 @@ int main(int argc, char **argv) {
     auto gen = std::make_unique<IR_Generator>();
     gen->parseAST(ast);
 
+//    gen->getCfg()->printCFG();
+
     auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
     auto cfg3 = SSA_Generator(cfg2).getCfg();
     auto cfg4 = AlgebraicTransformer(cfg3).getCfg();

@@ -41,6 +41,7 @@ private:
     std::map<int, llvm::Value*> strings;
     std::map<int, llvm::GlobalVariable*> globals;
     std::map<int, llvm::Function*> functions;
+    std::map<int, llvm::Type*> structTypes;
 
     std::map<IRval, llvm::PHINode*, IRval::ComparatorVersions> unfilledPhis;
 

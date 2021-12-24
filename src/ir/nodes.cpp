@@ -523,8 +523,11 @@ IRval IRval::createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num) {
 
 
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
+    if (type->type == IR_Type::POINTER)
+        return IRval(type, IRval::VAL, static_cast<uint64_t>(0));
+
     if (type->type != IR_Type::DIRECT)
-        semanticError("Cannot create default value for not direct type");
+        semanticError("Cannot create default value for such type");
     auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(type);
 
     switch (dirType->spec) {

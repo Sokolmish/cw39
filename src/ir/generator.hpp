@@ -49,6 +49,8 @@ private:
     bool isComparsionOp(AST_Binop::OpType op);
     IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
+
+    void doAssignment(AST_Expr const &dest, IRval wrValue);
     IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     IRval evalExpr(AST_Expr const &node);
 

@@ -33,6 +33,7 @@ IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(cfg) {
     builder->SetInsertPoint(dummyEntryBlock);
     builder->CreateRet(nullptr);
 
+    createTypes();
     createGlobals();
     createPrototypes();
     createFunctions();
@@ -50,7 +51,14 @@ std::string IR2LLVM::getRes() const {
 }
 
 void IR2LLVM::createTypes() {
-    NOT_IMPLEMENTED("Aggregate types");
+    for (auto const &[sId, tstruct] : cfg->structs) {
+        std::vector<Type*> elements;
+        for (auto const &elem : tstruct->fields)
+            elements.push_back(getTypeFromIR(*elem.irType));
+        auto type =
+                StructType::create(*context, elements, fmt::format("struct{}", tstruct->structId));
+        structTypes.emplace(tstruct->structId, type);
+    }
 }
 
 void IR2LLVM::createGlobals() {
@@ -101,7 +109,8 @@ llvm::Type* IR2LLVM::getTypeFromIR(const IR_Type &ir_type) {
         return ArrayType::get(getTypeFromIR(*arrType.child), arrType.size);
     }
     else if (ir_type.type == IR_Type::TSTRUCT) {
-        NOT_IMPLEMENTED("LLVM struct type");
+        auto const &structType = dynamic_cast<IR_TypeStruct const &>(ir_type);
+        return structTypes.at(structType.structId);
     }
     else if (ir_type.type == IR_Type::FUNCTION) {
         NOT_IMPLEMENTED("LLVM function type");
@@ -495,16 +504,17 @@ void IR2LLVM::createBlock(int id) {
                                 getValue(operExpr.args[0]));
                         break;
                     case IR_EXTRACT:
-                        res = builder->CreateExtractElement(
+                        res = builder->CreateExtractValue(
                                 getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
+                                { operExpr.args[1].castValTo<uint32_t>() },
                                 resName);
                         break;
                     case IR_INSERT:
-                        builder->CreateInsertElement(
+                        res = builder->CreateInsertValue(
                                 getValue(operExpr.args[0]),
                                 getValue(operExpr.args[2]),
-                                getValue(operExpr.args[1]));
+                                { operExpr.args[1].castValTo<uint32_t>() },
+                                resName);
                         break;
                     case IR_MOV:
                         NOT_IMPLEMENTED("mov");
