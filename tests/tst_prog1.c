@@ -10,6 +10,7 @@ int add(int a, int b) {
 int main() {
     int x = gg;
     int y = 6;
+    x += 1;
     if (x == 7) {
         y = 3;
         gg = 25;

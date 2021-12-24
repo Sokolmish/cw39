@@ -1,5 +1,95 @@
 #include "generator.hpp"
 
+IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs) {
+    using bop = AST_Binop;
+
+    // TODO: pointers arithmetics
+    if (lhs.getType()->type != IR_Type::DIRECT)
+        NOT_IMPLEMENTED("Pointers arithmetics");
+
+    if (!lhs.getType()->equal(*rhs.getType()))
+        semanticError("Cannot do binary operation on different types");
+
+    auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
+//    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
+
+    if (isGeneralNumOp(op)) {
+        std::unique_ptr<IR_ExprOper> opNode;
+
+        if (op == bop::ADD)
+            opNode = std::make_unique<IR_ExprOper>(IR_ADD, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::SUB)
+            opNode = std::make_unique<IR_ExprOper>(IR_SUB, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::MUL)
+            opNode = std::make_unique<IR_ExprOper>(IR_MUL, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::DIV)
+            opNode = std::make_unique<IR_ExprOper>(IR_DIV, std::vector<IRval>{ lhs, rhs });
+        else
+            semanticError("Wrong general arithmetic operation");
+
+        IRval res = cfg->createReg(lhs.getType());
+        curBlock().addNode(IR_Node(res, std::move(opNode)));
+        return res;
+    }
+    else if (isIntegerNumOp(op)) {
+        if (!ltype.isInteger())
+            semanticError("Operation cannot be applied to non-integer types");
+
+        std::unique_ptr<IR_ExprOper> opNode;
+
+        if (op == bop::REM)
+            opNode = std::make_unique<IR_ExprOper>(IR_REM, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::SHL)
+            opNode = std::make_unique<IR_ExprOper>(IR_SHL, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::SHR)
+            opNode = std::make_unique<IR_ExprOper>(IR_SHR, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::BIT_XOR)
+            opNode = std::make_unique<IR_ExprOper>(IR_XOR, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::BIT_AND)
+            opNode = std::make_unique<IR_ExprOper>(IR_AND, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::BIT_OR)
+            opNode = std::make_unique<IR_ExprOper>(IR_OR, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::LOG_AND)
+            NOT_IMPLEMENTED("Logical operations");
+//            opNode = std::make_unique<IR_ExprOper>(IR_LAND, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::LOG_OR)
+            NOT_IMPLEMENTED("Logical operations");
+//            opNode = std::make_unique<IR_ExprOper>(IR_LOR, std::vector<IRval>{ lhs, rhs });
+        else
+            semanticError("Wrong general arithmetic operation");
+
+        IRval res = cfg->createReg(lhs.getType());
+        curBlock().addNode(IR_Node(res, std::move(opNode)));
+        return res;
+    }
+    else if (isComparsionOp(op)) {
+        std::unique_ptr<IR_ExprOper> opNode;
+
+        if (op == bop::EQ)
+            opNode = std::make_unique<IR_ExprOper>(IR_EQ, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::NE)
+            opNode = std::make_unique<IR_ExprOper>(IR_NE, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::GT)
+            opNode = std::make_unique<IR_ExprOper>(IR_GT, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::LT)
+            opNode = std::make_unique<IR_ExprOper>(IR_LT, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::GE)
+            opNode = std::make_unique<IR_ExprOper>(IR_GE, std::vector<IRval>{ lhs, rhs });
+        else if (op == bop::LE)
+            opNode = std::make_unique<IR_ExprOper>(IR_LE, std::vector<IRval>{ lhs, rhs });
+        else
+            semanticError("Wrong comparsion operation");
+
+        IRval res = cfg->createReg(IR_TypeDirect::type_i32);
+        auto node = IR_Node(res, std::move(opNode));
+        curBlock().addNode(std::move(node));
+        return res;
+    }
+    else {
+        semanticError("Wrong binary operation");
+    }
+}
+
 IRval IR_Generator::evalExpr(AST_Expr const &node) {
     switch (node.node_type) {
         case AST_COMMA_EXPR: {
@@ -13,9 +103,44 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
         case AST_ASSIGNMENT: {
             auto const &expr = dynamic_cast<AST_Assignment const &>(node);
-            if (expr.op != AST_Assignment::DIRECT)
-                NOT_IMPLEMENTED("compound assignment");
             IRval rhsVal = evalExpr(*expr.rhs);
+            if (expr.op != AST_Assignment::DIRECT) {
+                IRval lhsVal = evalExpr(*expr.lhs);
+                switch (expr.op) {
+                    case AST_Assignment::MUL:
+                        rhsVal = doBinOp(AST_Binop::MUL, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::DIV:
+                        rhsVal = doBinOp(AST_Binop::DIV, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::REM:
+                        rhsVal = doBinOp(AST_Binop::REM, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::ADD:
+                        rhsVal = doBinOp(AST_Binop::ADD, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::SUB:
+                        rhsVal = doBinOp(AST_Binop::SUB, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::SHL:
+                        rhsVal = doBinOp(AST_Binop::SHL, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::SHR:
+                        rhsVal = doBinOp(AST_Binop::SHR, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::AND:
+                        rhsVal = doBinOp(AST_Binop::BIT_AND, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::XOR:
+                        rhsVal = doBinOp(AST_Binop::BIT_XOR, lhsVal, rhsVal);
+                        break;
+                    case AST_Assignment::OR:
+                        rhsVal = doBinOp(AST_Binop::BIT_OR, lhsVal, rhsVal);
+                        break;
+                    default:
+                        semanticError("Wrong assignment type");
+                }
+            }
 
             if (expr.lhs->node_type == AST_PRIMARY) { // Identifiers
                 auto const &assignee = dynamic_cast<AST_Primary const &>(*expr.lhs);
@@ -110,94 +235,10 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_BINOP: {
-            using bop = AST_Binop;
-
             auto const &expr = dynamic_cast<AST_Binop const &>(node);
             IRval lhs = evalExpr(*expr.lhs);
             IRval rhs = evalExpr(*expr.rhs);
-
-            if (!lhs.getType()->equal(*rhs.getType()))
-                semanticError("Cannot do binary operation on different types");
-
-            // TODO: pointers arithmetics
-            if (lhs.getType()->type != IR_Type::DIRECT)
-                NOT_IMPLEMENTED("Pointers arithmetics");
-
-            auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
-//            auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
-
-            if (isGeneralNumOp(expr.op)) {
-                std::unique_ptr<IR_ExprOper> opNode;
-
-                if (expr.op == bop::ADD)
-                    opNode = std::make_unique<IR_ExprOper>(IR_ADD, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::SUB)
-                    opNode = std::make_unique<IR_ExprOper>(IR_SUB, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::MUL)
-                    opNode = std::make_unique<IR_ExprOper>(IR_MUL, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::DIV)
-                    opNode = std::make_unique<IR_ExprOper>(IR_DIV, std::vector<IRval>{ lhs, rhs });
-                else
-                    semanticError("Wrong general arithmetic operation");
-
-                auto res = cfg->createReg(lhs.getType());
-                curBlock().addNode(IR_Node(res, std::move(opNode)));
-                return res;
-            }
-            else if (isIntegerNumOp(expr.op)) {
-                if (!ltype.isInteger())
-                    semanticError("Operation cannot be applied to non-integer types");
-
-                std::unique_ptr<IR_ExprOper> opNode;
-
-                if (expr.op == bop::REM)
-                    opNode = std::make_unique<IR_ExprOper>(IR_REM, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::SHL)
-                    opNode = std::make_unique<IR_ExprOper>(IR_SHL, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::SHR)
-                    opNode = std::make_unique<IR_ExprOper>(IR_SHR, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::BIT_XOR)
-                    opNode = std::make_unique<IR_ExprOper>(IR_XOR, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::BIT_AND)
-                    opNode = std::make_unique<IR_ExprOper>(IR_AND, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::BIT_OR)
-                    opNode = std::make_unique<IR_ExprOper>(IR_OR, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::LOG_AND)
-                    opNode = std::make_unique<IR_ExprOper>(IR_LAND, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::LOG_OR)
-                    opNode = std::make_unique<IR_ExprOper>(IR_LOR, std::vector<IRval>{ lhs, rhs });
-                else
-                    semanticError("Wrong general arithmetic operation");
-
-                IRval res = cfg->createReg(lhs.getType());
-                curBlock().addNode(IR_Node(res, std::move(opNode)));
-                return res;
-            }
-            else if (isComparsionOp(expr.op)) {
-                std::unique_ptr<IR_ExprOper> opNode;
-
-                if (expr.op == bop::EQ)
-                    opNode = std::make_unique<IR_ExprOper>(IR_EQ, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::NE)
-                    opNode = std::make_unique<IR_ExprOper>(IR_NE, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::GT)
-                    opNode = std::make_unique<IR_ExprOper>(IR_GT, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::LT)
-                    opNode = std::make_unique<IR_ExprOper>(IR_LT, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::GE)
-                    opNode = std::make_unique<IR_ExprOper>(IR_GE, std::vector<IRval>{ lhs, rhs });
-                else if (expr.op == bop::LE)
-                    opNode = std::make_unique<IR_ExprOper>(IR_LE, std::vector<IRval>{ lhs, rhs });
-                else
-                    semanticError("Wrong comparsion operation");
-
-                auto res = cfg->createReg(IR_TypeDirect::type_i32);
-                curBlock().addNode(IR_Node(res, std::move(opNode)));
-                return res;
-            }
-            else {
-                semanticError("Wrong binary operation");
-            }
+            return doBinOp(expr.op, lhs, rhs);
         }
 
         case AST_CAST: {

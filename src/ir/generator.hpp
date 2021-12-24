@@ -49,6 +49,7 @@ private:
     bool isComparsionOp(AST_Binop::OpType op);
     IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
+    IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     IRval evalExpr(AST_Expr const &node);
 
     std::shared_ptr<IR_Type> getStructType(AST_StructOrUsionSpec const &spec);
