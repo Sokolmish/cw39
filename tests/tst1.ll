@@ -4,9 +4,11 @@ source_filename = "top"
 %struct2 = type { i32, i32 }
 
 @.str0 = private unnamed_addr constant [9 x i8] c"R??: %d\0A\00", align 1
-@.str1 = private unnamed_addr constant [4 x i8] c"%p\0A\00", align 1
-@.str2 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
-@.str3 = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
+@.str1 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
+@.str2 = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
+@.str3 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
+@.str4 = private unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
+@.str5 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
 @gg = internal global i32 142, align 8
 
 define internal void @__dummy_func() {
@@ -35,8 +37,8 @@ block_2:                                          ; preds = %block_1
   br label %block_3
 
 block_3:                                          ; preds = %block_2, %block_1
-  %vr66 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
-  %vr10 = add i32 %.arg_0, %vr66
+  %vr81 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
+  %vr10 = add i32 %.arg_0, %vr81
   ret i32 %vr10
 }
 
@@ -61,9 +63,9 @@ block_6:                                          ; preds = %block_4
   br label %block_7
 
 block_7:                                          ; preds = %block_6, %block_5
-  %vr67 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
+  %vr82 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
   %vr24 = load i32, i32* %vr13, align 4
-  %vr25 = call i32 @add(i32 %vr67, i32 %vr24)
+  %vr25 = call i32 @add(i32 %vr82, i32 %vr24)
   store i32 %vr25, i32* %vr13, align 4
   %vr27 = alloca [16 x i8], align 1
   %vr28 = bitcast [16 x i8]* %vr27 to i8*
@@ -83,21 +85,22 @@ block_7:                                          ; preds = %block_6, %block_5
   %vr44 = bitcast [16 x i8]* %vr27 to i8*
   %vr45 = load i32, i32* %vr13, align 4
   %1 = call i32 (i8*, ...) @printf(i8* %vr44, i32 %vr45)
-  %vr47 = bitcast [16 x i8]* %vr27 to i8*
-  %2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str1, i32 0, i32 0), i8* %vr47)
-  %vr49 = alloca %struct2, align 8
-  %vr50 = load %struct2, %struct2* %vr49, align 4
-  %vr51 = insertvalue %struct2 %vr50, i32 111, 0
-  store %struct2 %vr51, %struct2* %vr49, align 4
-  %vr52 = load %struct2, %struct2* %vr49, align 4
-  %vr53 = insertvalue %struct2 %vr52, i32 222, 1
-  store %struct2 %vr53, %struct2* %vr49, align 4
-  %vr54 = load %struct2, %struct2* %vr49, align 4
-  %vr55 = extractvalue %struct2 %vr54, 0
-  %vr56 = load %struct2, %struct2* %vr49, align 4
-  %vr57 = extractvalue %struct2 %vr56, 1
-  %3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str2, i32 0, i32 0), i32 %vr55, i32 %vr57)
-  %4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str3, i32 0, i32 0), double 0x4007FFFFFE666666)
-  ret i32 %vr67
+  %vr47 = alloca %struct2, align 8
+  %vr48 = load %struct2, %struct2* %vr47, align 4
+  %vr49 = insertvalue %struct2 %vr48, i32 111, 0
+  store %struct2 %vr49, %struct2* %vr47, align 4
+  %vr50 = load %struct2, %struct2* %vr47, align 4
+  %vr51 = insertvalue %struct2 %vr50, i32 222, 1
+  store %struct2 %vr51, %struct2* %vr47, align 4
+  %vr52 = load %struct2, %struct2* %vr47, align 4
+  %vr53 = extractvalue %struct2 %vr52, 0
+  %vr54 = load %struct2, %struct2* %vr47, align 4
+  %vr55 = extractvalue %struct2 %vr54, 1
+  %2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str1, i32 0, i32 0), i32 %vr53, i32 %vr55)
+  %3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str2, i32 0, i32 0), double 0x4007FFFFFE666666)
+  %4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str3, i32 0, i32 0), i32 123, i32 -123)
+  %5 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i8 97)
+  %6 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str5, i32 0, i32 0), i32 0, i32 -1)
+  ret i32 %vr82
 }
 

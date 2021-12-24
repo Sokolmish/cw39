@@ -154,15 +154,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
                     semanticError("Functions are not allowed inside compound statements");
                 }
 
-                std::shared_ptr<IR_Type> ptrType;
-//                if (varType->type == IR_Type::ARRAY) {
-//                    auto const &arrType = dynamic_cast<IR_TypeArray const &>(*varType);
-//                    ptrType = std::make_shared<IR_TypePtr>(arrType.child);
-//                    ptrType = std::make_shared<IR_TypePtr>(ptrType);
-//                }
-//                else {
-                    ptrType = std::make_shared<IR_TypePtr>(varType);
-//                }
+                std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
 
                 IRval res = cfg->createReg(ptrType);
                 auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);

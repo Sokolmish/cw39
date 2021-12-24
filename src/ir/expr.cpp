@@ -313,7 +313,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.op == uop::UN_MINUS) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
-                IRval zero = IRval::createVal(arg.getType(), 0U); // TODO: cast value
+                IRval zero = IRval::createVal(arg.getType(), 0U);
                 IRval res = cfg->createReg(arg.getType());
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
                         IR_SUB, std::vector<IRval>{ zero, arg })));
@@ -321,7 +321,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.op == uop::UN_NEG) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
-                IRval maxv = IRval::createVal(arg.getType(), -1U); // TODO: cast value
+                IRval maxv = IRval::createVal(arg.getType(), -1UL);
                 IRval res = cfg->createReg(arg.getType());
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
                         IR_XOR, std::vector<IRval>{ maxv, arg })));
@@ -329,7 +329,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.op == uop::UN_NOT) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
-                IRval maxv = IRval::createVal(arg.getType(), -1U); // TODO: cast value
+                IRval maxv = IRval::createVal(arg.getType(), -1UL);
                 IRval res = cfg->createReg(arg.getType());
                 curBlock().addNode(IR_Node(res,  std::make_unique<IR_ExprOper>(
                         IR_XOR, std::vector<IRval>{ maxv, arg })));
@@ -343,7 +343,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     semanticError("Inc/dec available only for variables");
 
                 IRval arg = evalExpr(dynamic_cast<AST_Expr &>(*expr.child));
-                IRval one = IRval::createVal(arg.getType(), 1U); // TODO: cast value
+                IRval one = IRval::createVal(arg.getType(), 1U);
                 IRval res = cfg->createReg(arg.getType());
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
                         expr.op == uop::PRE_INC ? IR_ADD : IR_SUB,
@@ -489,7 +489,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     semanticError("Inc/dec available only for variables");
 
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.base));
-                IRval one = IRval::createVal(arg.getType(), 1U); // TODO: cast value
+                IRval one = IRval::createVal(arg.getType(), 1U);
                 IRval res = cfg->createReg(arg.getType());
                 curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
                         expr.op == AST_Postfix::POST_INC ? IR_ADD : IR_SUB,
@@ -536,7 +536,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 NOT_IMPLEMENTED("pointer access (->)");
             }
             else {
-                NOT_IMPLEMENTED("Postfix expression");
+                semanticError("Unknown postfix expression");
             }
         }
 

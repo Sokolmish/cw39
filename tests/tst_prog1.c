@@ -41,7 +41,7 @@ int main() {
     *replace = 's';
     fixFmt[1UL] = 'e';
     printf(fixFmt, y);
-    printf("%p\n", fixFmt);
+//    printf("%p\n", fixFmt);
 
     struct TestStruct sss;
     sss.field1 = 111;
@@ -49,6 +49,13 @@ int main() {
     printf("%d %d\n", sss.field1, sss.field2);
 
     printf("%f\n", 2.3 + (double)0.7f);
+
+    int a = 123;
+    int b = -a;
+    printf("%d %d\n", a, b);
+    char c = 'b';
+    c--;
+    printf("%c\n", c);
 
     return x + 0; // * 0
 }
