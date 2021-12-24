@@ -1,7 +1,7 @@
 ; ModuleID = 'top'
 source_filename = "top"
 
-@.str0 = private unnamed_addr constant [9 x i8] c"Ref: %d\0A\00", align 1
+@.str0 = private unnamed_addr constant [9 x i8] c"Re?: %d\0A\00", align 1
 @.str1 = private unnamed_addr constant [7 x i8] c"%p %p\0A\00", align 1
 @gg = internal global i32 142, align 8
 

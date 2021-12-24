@@ -45,7 +45,7 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
                     auto funcIdent = getDeclaredIdent(*singleDecl->declarator);
                     auto fun = cfg->createPrototype(get_ident_by_id(funcIdent),
                                                     IR_StorageSpecifier::EXTERN, varType);
-                    functions.emplace(funcIdent, fun.getId()); // TODO: functions?
+                    functions.emplace(funcIdent, fun.getId());
                     continue;
                 }
 
@@ -150,7 +150,19 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
                 auto varType = getType(*decl.specifiers, *singleDecl->declarator);
                 auto ident = getDeclaredIdent(*singleDecl->declarator);
 
-                auto ptrType = std::make_shared<IR_TypePtr>(varType);
+                if (varType->type == IR_Type::FUNCTION) {
+                    semanticError("Functions are not allowed inside compound statements");
+                }
+
+                std::shared_ptr<IR_Type> ptrType;
+//                if (varType->type == IR_Type::ARRAY) {
+//                    auto const &arrType = dynamic_cast<IR_TypeArray const &>(*varType);
+//                    ptrType = std::make_shared<IR_TypePtr>(arrType.child);
+//                    ptrType = std::make_shared<IR_TypePtr>(ptrType);
+//                }
+//                else {
+                    ptrType = std::make_shared<IR_TypePtr>(varType);
+//                }
 
                 IRval res = cfg->createReg(ptrType);
                 auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);

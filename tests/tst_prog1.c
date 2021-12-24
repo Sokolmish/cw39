@@ -1,7 +1,7 @@
 int gg = 142;
 
 int printf(const char *format, ...);
-char *memcpy(char *dest, char const *src, unsigned long n);
+char *memcpy(char *dest, char const *src, unsigned long n); // Void pointers are not allowed
 unsigned long strlen(const char *s);
 
 void store555(int *addr) {
@@ -29,12 +29,12 @@ int main() {
         x = add(x, 5);
     }
     y = add(x, y);
-    char *fmt = "Ref: %d\n";
+    char *fmt = "Re?: %d\n";
     char fixFmt[16];
-    memcpy((char*)&fixFmt, fmt, strlen(fmt) + 1UL);
-    char *replace = (char *)((unsigned long)(char*)&fixFmt + 2UL);
+    memcpy(fixFmt, fmt, strlen(fmt) + 1UL);
+    char *replace = (char*)((unsigned long)(char*)&fixFmt + 2UL);
     *replace = 's';
-    printf((char*)&fixFmt, y);
-    printf("%p %p\n", (char*)&fixFmt, replace);
+    printf(fixFmt, y);
+    printf("%p %p\n", fixFmt, replace);
     return x + 0; // * 0
 }

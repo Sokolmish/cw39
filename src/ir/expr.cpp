@@ -538,25 +538,41 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 }
             }
             else if (expr.type == AST_Primary::IDENT) {
+                std::vector<IRval> ptrArg;
+                std::shared_ptr<IR_Type> resType;
+
                 auto var = variables.get(expr.getIdent());
                 auto globalIt = globals.find(expr.getIdent());
                 if (var.has_value()) {
                     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
-                    IRval res = cfg->createReg(ptrType->child);
-                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                            IR_LOAD, std::vector<IRval>{ *var })));
-                    return res;
+                    resType = ptrType->child;
+                    ptrArg = { *var };
                 }
                 else if (globalIt != globals.end()) {
                     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(
                             globalIt->second.getType());
-                    IRval res = cfg->createReg(ptrType->child);
-                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                            IR_LOAD, std::vector<IRval>{ globalIt->second })));
-                    return res;
+                    resType = ptrType->child;
+                    ptrArg = { globalIt->second };
                 }
                 else {
                     semanticError("Unknown variable");
+                }
+
+                if (resType->type == IR_Type::ARRAY) {
+                    auto const &arrType = dynamic_cast<IR_TypeArray const &>(*resType);
+                    auto ptrType = std::make_shared<IR_TypePtr>(arrType.child);
+                    IRval res = cfg->createReg(ptrType);
+//                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+//                            IR_MOV, ptrArg)));
+                    curBlock().addNode(IR_Node(res,std::make_unique<IR_ExprCast>(
+                            ptrArg[0], ptrType)));
+                    return res;
+                }
+                else {
+                    IRval res = cfg->createReg(resType);
+                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                            IR_LOAD, ptrArg)));
+                    return res;
                 }
             }
             else if (expr.type == AST_Primary::EXPR) {
