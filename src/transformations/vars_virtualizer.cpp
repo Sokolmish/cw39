@@ -1,5 +1,6 @@
 #include "vars_virtualizer.hpp"
 #include "cfg_cleaner.hpp"
+#include "utils.hpp"
 #include <deque>
 #include <set>
 
@@ -52,8 +53,11 @@ void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
     for (IR_Node const &instr: block.body) {
         if (instr.body->type == IR_Expr::ALLOCATION && instr.res.has_value() && instr.res->isVReg()) {
             auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
-            if (!alloc.isOnHeap)
-                toRedudeList.emplace(*instr.res, std::optional<IRval>());
+            if (!isInList(alloc.type->type, { IR_Type::DIRECT, IR_Type::POINTER }))
+                continue;
+            if (alloc.isOnHeap)
+                continue;
+            toRedudeList.emplace(*instr.res, std::optional<IRval>());
         }
         else {
             auto oper = dynamic_cast<IR_ExprOper const *>(instr.body.get());

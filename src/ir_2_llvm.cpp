@@ -96,8 +96,18 @@ llvm::Type* IR2LLVM::getTypeFromIR(const IR_Type &ir_type) {
         auto const &ptrType = dynamic_cast<IR_TypePtr const &>(ir_type);
         return PointerType::getUnqual(getTypeFromIR(*ptrType.child));
     }
+    else if (ir_type.type == IR_Type::ARRAY) {
+        auto const &arrType = dynamic_cast<IR_TypeArray const &>(ir_type);
+        return ArrayType::get(getTypeFromIR(*arrType.child), arrType.size);
+    }
+    else if (ir_type.type == IR_Type::TSTRUCT) {
+        NOT_IMPLEMENTED("LLVM struct type");
+    }
+    else if (ir_type.type == IR_Type::FUNCTION) {
+        NOT_IMPLEMENTED("LLVM function type");
+    }
     else {
-        NOT_IMPLEMENTED("LLVM indirect type");
+        semanticError("Unknown type");
     }
 }
 

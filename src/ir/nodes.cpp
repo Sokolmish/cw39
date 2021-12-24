@@ -302,8 +302,10 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
     if (source->type == IR_Type::FUNCTION || dest->type == IR_Type::FUNCTION) {
         semanticError("Function type cannot be cast");
     }
-    else if (source->type == IR_Type::ARRAY || dest->type == IR_Type::ARRAY) {
-        semanticError("Array type cannot be cast");
+    else if (source->type == IR_Type::ARRAY) {
+        if (dest->type != IR_Type::POINTER)
+            semanticError("Array type can be cast only to pointer");
+        castOp = BITCAST;
     }
     else if (source->type == IR_Type::POINTER && dest->type == IR_Type::POINTER) {
         castOp = BITCAST;

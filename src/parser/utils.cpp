@@ -32,15 +32,57 @@ string_id_t get_ident_id(const char *ident, int *type) {
     }
 }
 
+static char unescapeChar(char ch) {
+    // TODO: '\xhh'
+    switch (ch) {
+        case 'a':
+            return '\a';
+        case 'b':
+            return '\b';
+        case 'f':
+            return '\f';
+        case 'n':
+            return '\n';
+        case 'r':
+            return '\r';
+        case 't':
+            return '\t';
+        case 'v':
+            return '\v';
+        case '\\':
+            return '\\';
+        case '\'':
+            return '\'';
+        case '\"':
+            return '\"';
+        case '?':
+            return '\?';
+        default:
+            return ch;
+    }
+}
+
 string_id_t get_string_id(const char *str) {
-    auto it = strings_map.lower_bound(str);
-    if (it == strings_map.end() || it->first != str) {
-        char *trimStr = strdup(str + 1);
-        trimStr[strlen(trimStr) - 1] = '\0';
-        auto ins = strings_map.emplace_hint(it, trimStr, StringInfo(str_cntr));
+    size_t len = strlen(str);
+    std::string newStr;
+    newStr.reserve(len);
+
+    for (size_t i = 1; i < len - 1; i++) {
+        if (str[i] != '\\') {
+            newStr.push_back(str[i]);
+        }
+        else {
+            i++;
+            if (i < len - 1)
+                newStr.push_back(unescapeChar(str[i]));
+        }
+    }
+
+    auto it = strings_map.lower_bound(newStr);
+    if (it == strings_map.end() || it->first != newStr) {
+        auto ins = strings_map.emplace_hint(it, newStr, StringInfo(str_cntr));
         inv_strings_map.emplace_hint(inv_strings_map.end(), str_cntr, ins->first);
         str_cntr++;
-        free(trimStr);
         return ins->second.id;
     }
     else { // If already exists
@@ -166,7 +208,24 @@ AST_Literal_t get_float(const char *str) {
 }
 
 AST_Literal_t get_charval(const char *str) {
-    (void)str;
-    fprintf(stderr, "Character literals is not implemented\n");
-    exit(EXIT_FAILURE); // TODO: error
+    AST_Literal res;
+    res.type = CHAR_LITERAL;
+    res.isUnsigned = 0;
+    res.longCnt = 0;
+    res.isFloat = 0;
+
+    size_t len = strlen(str);
+
+    if (len == 3) {
+        res.val.v_char = str[1];
+    }
+    else {
+        if (str[1] != '\\' || len != 4) {
+            fprintf(stderr, "Wrong character literal\n");
+            exit(EXIT_FAILURE); // TODO: error
+        }
+        res.val.v_char = unescapeChar(str[2]);
+    }
+
+    return res;
 }

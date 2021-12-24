@@ -32,7 +32,7 @@ void CfgCleaner::fixVersions() {
     for (auto const &[fId, func]: cfg->getFuncs()) {
         cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
             auto &curBlock = cfg->block(blockId);
-            for (auto const &node : curBlock.getAllNodes()) {
+            for (IR_Node *node: curBlock.getAllNodes()) {
                 if (node->res) {
                     int curVers = *node->res->version;
                     auto it = versionedRegs.lower_bound(*node->res);
@@ -59,10 +59,15 @@ void CfgCleaner::fixVersions() {
                     if (it != versionedRegs.end() && !it->second.first)
                         node->res->version = {};
                 }
-                for (auto *arg : node->body->getArgs()) {
-                    auto it = versionedRegs.find(*arg);
-                    if (it != versionedRegs.end() && !it->second.first)
-                        arg->version = {};
+                for (IRval *arg : node->body->getArgs()) {
+                    if (arg->version && arg->version < 0) {
+                        *arg = IRval::createDefault(arg->getType());
+                    }
+                    else {
+                        auto it = versionedRegs.find(*arg);
+                        if (it != versionedRegs.end() && !it->second.first)
+                            arg->version = {};
+                    }
                 }
             }
         });
