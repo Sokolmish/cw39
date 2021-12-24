@@ -1,4 +1,5 @@
 #include "cfg_cleaner.hpp"
+#include "utils.hpp"
 
 CfgCleaner::CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {}
@@ -94,8 +95,13 @@ void CfgCleaner::removeUselessNodes() {
                     if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
                         changed = true;
                         node->res = {};
-                        if (node->body->type != IR_Expr::CALL)
-                            node->body = nullptr;
+                        if (node->body->type == IR_Expr::CALL)
+                            continue;
+                        else if (node->body->type == IR_Expr::OPERATION) {
+                            if (isInList(node->body->getOper().op, { IR_STORE, IR_INSERT }))
+                                continue;
+                        }
+                        node->body = nullptr;
                     }
                 }
             });
