@@ -48,5 +48,7 @@ int main() {
     sss.field2 = 222;
     printf("%d %d\n", sss.field1, sss.field2);
 
+    printf("%f\n", 2.3 + (double)0.7f);
+
     return x + 0; // * 0
 }

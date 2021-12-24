@@ -6,6 +6,7 @@ source_filename = "top"
 @.str0 = private unnamed_addr constant [9 x i8] c"R??: %d\0A\00", align 1
 @.str1 = private unnamed_addr constant [4 x i8] c"%p\0A\00", align 1
 @.str2 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
+@.str3 = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
 @gg = internal global i32 142, align 8
 
 define internal void @__dummy_func() {
@@ -34,8 +35,8 @@ block_2:                                          ; preds = %block_1
   br label %block_3
 
 block_3:                                          ; preds = %block_2, %block_1
-  %vr63 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
-  %vr10 = add i32 %.arg_0, %vr63
+  %vr66 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
+  %vr10 = add i32 %.arg_0, %vr66
   ret i32 %vr10
 }
 
@@ -60,9 +61,9 @@ block_6:                                          ; preds = %block_4
   br label %block_7
 
 block_7:                                          ; preds = %block_6, %block_5
-  %vr64 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
+  %vr67 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
   %vr24 = load i32, i32* %vr13, align 4
-  %vr25 = call i32 @add(i32 %vr64, i32 %vr24)
+  %vr25 = call i32 @add(i32 %vr67, i32 %vr24)
   store i32 %vr25, i32* %vr13, align 4
   %vr27 = alloca [16 x i8], align 1
   %vr28 = bitcast [16 x i8]* %vr27 to i8*
@@ -96,6 +97,7 @@ block_7:                                          ; preds = %block_6, %block_5
   %vr56 = load %struct2, %struct2* %vr49, align 4
   %vr57 = extractvalue %struct2 %vr56, 1
   %3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str2, i32 0, i32 0), i32 %vr55, i32 %vr57)
-  ret i32 %vr64
+  %4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str3, i32 0, i32 0), double 0x4007FFFFFE666666)
+  ret i32 %vr67
 }
 

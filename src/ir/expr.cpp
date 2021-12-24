@@ -564,7 +564,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     if (val.isFloat)
                         return IRval::createVal(valType, val.val.vf32);
                     else {
-                        NOT_IMPLEMENTED("double");
+                        return IRval::createVal(valType, val.val.vf64);
                     }
                 }
                 else if (val.type == CHAR_LITERAL) {

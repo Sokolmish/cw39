@@ -97,6 +97,8 @@ llvm::Type* IR2LLVM::getTypeFromIR(const IR_Type &ir_type) {
                 return builder->getInt64Ty();
             case IR_TypeDirect::F32:
                 return builder->getFloatTy();
+            case IR_TypeDirect::F64:
+                return builder->getDoubleTy();
         }
         throw;
     }
@@ -142,7 +144,9 @@ llvm::Constant *IR2LLVM::getConstantFromIR(IRval const &val) {
         case IR_TypeDirect::U64:
             return builder->getInt64(val.castValTo<uint64_t>());
         case IR_TypeDirect::F32:
-            semanticError("LLVM Cannot create float constant");
+            return ConstantFP::get(builder->getFloatTy(), val.castValTo<float>());
+        case IR_TypeDirect::F64:
+            return ConstantFP::get(builder->getDoubleTy(), val.castValTo<double>());
     }
     throw;
 }
@@ -152,22 +156,13 @@ llvm::Value *IR2LLVM::getValue(const IRval &val) {
         case IRval::VAL: {
             auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
             if (dirType.isInteger()) {
-//                return builder->getIntN(dirType.getBytesSize() * 8, val.castValTo<uint64_t>());
-                if (dirType.getBytesSize() == 1) {
-                    return builder->getInt8(val.castValTo<uint8_t>());
-                }
-                else if (dirType.getBytesSize() == 4) {
-                    return builder->getInt32(val.castValTo<uint32_t>());
-                }
-                else if (dirType.getBytesSize() == 8) {
-                    return builder->getInt64(val.castValTo<uint64_t>());
-                }
-                else {
-                    semanticError("Wrong integer size");
-                }
+                return builder->getIntN(dirType.getBytesSize() * 8, val.castValTo<uint64_t>());
             }
             else if (dirType.isFloat()) {
-                NOT_IMPLEMENTED("Float constants");
+                if (dirType.getBytesSize() == 4)
+                    return ConstantFP::get(builder->getFloatTy(), val.castValTo<float>());
+                else
+                    return ConstantFP::get(builder->getDoubleTy(), val.castValTo<double>());
             }
             else {
                 semanticError("Wrong constant type");
@@ -596,6 +591,18 @@ void IR2LLVM::createBlock(int id) {
                         break;
                     case IR_ExprCast::ITOPTR:
                         res = builder->CreateIntToPtr(
+                                getValue(castExpr.arg),
+                                getTypeFromIR(*castExpr.dest),
+                                resName);
+                        break;
+                    case IR_ExprCast::FPTRUNC:
+                        res = builder->CreateFPTrunc(
+                                getValue(castExpr.arg),
+                                getTypeFromIR(*castExpr.dest),
+                                resName);
+                        break;
+                    case IR_ExprCast::FPEXT:
+                        res = builder->CreateFPExt(
                                 getValue(castExpr.arg),
                                 getTypeFromIR(*castExpr.dest),
                                 resName);

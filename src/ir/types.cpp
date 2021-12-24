@@ -123,7 +123,10 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
             semanticError("Float point types cannot have signedness");
         if (longCnt != 0)
             semanticError("Float point types cannot have size modificators");
-        resType = IR_TypeDirect::F32;
+        if (typeSpec == ast_ts::T_FLOAT)
+            resType = IR_TypeDirect::F32;
+        else
+            resType = IR_TypeDirect::F64;
     }
     else {
         semanticError("WTF type");
@@ -303,8 +306,7 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
         if (lit.isFloat)
             return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F32);
         else {
-//            return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F64);
-            NOT_IMPLEMENTED("double");
+            return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F64);
         }
     }
     else if (lit.type == CHAR_LITERAL) {

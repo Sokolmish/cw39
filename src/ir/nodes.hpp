@@ -128,7 +128,8 @@ struct IR_ExprCast : public IR_Expr {
     enum CastType {
         BITCAST, SEXT, ZEXT, TRUNC,
         FPTOUI, FPTOSI, UITOFP, SITOFP,
-        PTRTOI, ITOPTR
+        PTRTOI, ITOPTR,
+        FPEXT, FPTRUNC,
     } castOp;
 
     IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest);

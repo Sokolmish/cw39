@@ -30,7 +30,7 @@ struct IR_Type {
 
 struct IR_TypeDirect : public IR_Type {
     enum DirType {
-        VOID, I8, U8, I32, U32, I64, U64, F32
+        VOID, I8, U8, I32, U32, I64, U64, F32, F64
     } spec;
 
     IR_TypeDirect(DirType spec);
@@ -51,6 +51,7 @@ struct IR_TypeDirect : public IR_Type {
     static std::shared_ptr<IR_TypeDirect> type_i64;
     static std::shared_ptr<IR_TypeDirect> type_u64;
     static std::shared_ptr<IR_TypeDirect> type_f32;
+    static std::shared_ptr<IR_TypeDirect> type_f64;
 };
 
 struct IR_TypeStruct : IR_Type {

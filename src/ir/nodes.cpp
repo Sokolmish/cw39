@@ -22,7 +22,7 @@ bool IR_TypeDirect::isInteger() const {
 }
 
 bool IR_TypeDirect::isFloat() const {
-    return isInList(spec, { F32 });
+    return isInList(spec, { F32, F64 });
 }
 
 bool IR_TypeDirect::isSigned() const {
@@ -46,6 +46,7 @@ int IR_TypeDirect::getBytesSize() const {
             return 4;
         case U64:
         case I64:
+        case F64:
             return 8;
     }
     throw;
@@ -78,6 +79,8 @@ std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u64 =
         std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
 std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f32 =
         std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f64 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
 
 
 // IR_TypeStruct
@@ -337,7 +340,12 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
                 castOp = ZEXT; // TODO: maybe wrong conversion here
         }
         else if (srcDir.isFloat() && dstDir.isFloat()) {
-            NOT_IMPLEMENTED("Float-float conversion");
+            if (srcDir.getBytesSize() == 8 && dstDir.getBytesSize() == 4)
+                castOp = FPTRUNC;
+            else if (srcDir.getBytesSize() == 4 && dstDir.getBytesSize() == 8)
+                castOp = FPEXT;
+            else
+                semanticError("Wrong float conversion");
         }
         else if (srcDir.isInteger() && dstDir.isFloat()) {
             if (srcDir.isSigned())
@@ -374,6 +382,8 @@ std::string IR_ExprCast::opToString() const {
         case SITOFP:    return "si_to_fp";
         case PTRTOI:    return "ptrtoi";
         case ITOPTR:    return "itoptr";
+        case FPEXT:     return "fpext";
+        case FPTRUNC:   return "fptrunc";
     }
     throw;
 }
@@ -545,6 +555,8 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
             return IRval(type, IRval::VAL, static_cast<uint64_t>(0));
         case IR_TypeDirect::F32:
             return IRval(type, IRval::VAL, static_cast<float>(0));
+        case IR_TypeDirect::F64:
+            return IRval(type, IRval::VAL, static_cast<double>(0));
         case IR_TypeDirect::VOID:
             semanticError("Cannot create value of type VOID");
     }

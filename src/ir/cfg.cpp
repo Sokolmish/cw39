@@ -197,6 +197,8 @@ static std::string printType(IR_Type const &type) {
                 return "i64";
             case IR_TypeDirect::F32:
                 return "f32";
+            case IR_TypeDirect::F64:
+                return "f64";
             case IR_TypeDirect::VOID:
                 return "void";
         }
