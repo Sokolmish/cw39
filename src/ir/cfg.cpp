@@ -37,16 +37,17 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     stringsCounter = oth.stringsCounter;
     globalsCounter = oth.globalsCounter;
 
-    for (const auto &[id, block] : oth.blocks)
+    for (const auto &[id, block]: oth.blocks)
         blocks.insert(blocks.end(), { id, block.copy() });
-    for (const auto &[id, block] : oth.funcs)
+    for (const auto &[id, block]: oth.funcs)
         funcs.emplace_hint(funcs.end(), id, block);
-    for (const auto &[id, irStruct] : oth.structs)
+    for (const auto &[id, irStruct]: oth.structs)
         structs.emplace_hint(structs.end(), id, irStruct);
     strings = oth.strings;
-    for (const auto &[id, global] : oth.globals)
-        globals.emplace_hint(globals.end(), id,
-                             GlobalVar{ global.self.copy(), global.val.copy() });
+    for (const auto &[id, global]: oth.globals) {
+        globals.emplace_hint(globals.end(), id, GlobalVar{
+                global.id, global.name, global.type->copy(), global.init.copy() });
+    }
 }
 
 IR_Block &ControlFlowGraph::createBlock() {
@@ -68,12 +69,16 @@ ControlFlowGraph::Function &ControlFlowGraph::getFunction(int id) {
     return funcs.at(id);
 }
 
-IRval ControlFlowGraph::getGlobalSelf(uint64_t id) {
-    return globals.at(id).self;
-}
-
 IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
     return IRval::createReg(type, regs_counter++);
+}
+
+/** Expects ptr type */
+IRval ControlFlowGraph::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init) {
+    auto newId = globalsCounter++;
+    IRval newGlobal = IRval::createGlobal(type, newId);
+    globals.insert({ newId, GlobalVar{ newId, name, type, init } });
+    return newGlobal;
 }
 
 ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
@@ -97,13 +102,6 @@ uint64_t ControlFlowGraph::putString(std::string str) {
     return newStringId;
 }
 
-uint64_t ControlFlowGraph::putGlobal(IRval val) {
-    uint64_t newGlobalId = globalsCounter++;
-    IRval globalSelf = IRval::createGlobal(val.getType(), newGlobalId);
-    globals.insert(globals.end(), { newGlobalId, GlobalVar{ globalSelf, std::move(val) }});
-    return newGlobalId;
-}
-
 const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
     return funcs;
 }
@@ -112,7 +110,7 @@ std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
     return blocks;
 }
 
-const std::map<uint64_t, ControlFlowGraph::GlobalVar>& ControlFlowGraph::getGlobals() const {
+const std::map<int, ControlFlowGraph::GlobalVar>& ControlFlowGraph::getGlobals() const {
     return globals;
 }
 
@@ -279,8 +277,8 @@ void ControlFlowGraph::printCFG() const {
     fmt::print("\n");
 
     for (auto const &[id, global] : globals) {
-        fmt::print("{} {} = {}\n", printType(*global.self.getType()),
-                   global.self.to_string(), global.val.to_string());
+        fmt::print("{} @{} = {}; \"{}\"\n", printType(*global.type),
+                   global.id, global.init.to_string(), global.name);
     }
     fmt::print("\n");
 

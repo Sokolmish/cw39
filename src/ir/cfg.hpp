@@ -31,23 +31,24 @@ public:
     };
 
     struct GlobalVar {
-        IRval self;
-        IRval val;
+        int id;
+        std::string name;
+        std::shared_ptr<IR_Type> type;
+        IRval init;
     };
-
 
 private:
     int blocksCounter = 0;
     uint64_t regs_counter = 0;
     int funcsCounter = 0;
     uint64_t stringsCounter = 0;
-    uint64_t globalsCounter = 0;
+    int globalsCounter = 0;
 
     std::map<int, IR_Block> blocks;
     std::map<int, Function> funcs;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
-    std::map <uint64_t, std::string> strings;
-    std::map <uint64_t, GlobalVar> globals;
+    std::map<uint64_t, std::string> strings;
+    std::map<int, GlobalVar> globals;
 
     friend class IR_Generator;
 
@@ -60,18 +61,17 @@ public:
     Function& createFunction(std::string name, IR_StorageSpecifier stor, bool isInline,
                              std::shared_ptr<IR_Type> fullType);
     IRval createReg(std::shared_ptr<IR_Type> type);
+    IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init);
 
     /** get block by id */
     IR_Block& block(int id);
     Function& getFunction(int id);
-    IRval getGlobalSelf(uint64_t id);
 
     uint64_t putString(std::string str);
-    uint64_t putGlobal(IRval val);
 
     std::map<int, Function> const& getFuncs() const;
     std::map<int, IR_Block> const& getBlocks() const;
-    std::map <uint64_t, GlobalVar> const& getGlobals() const;
+    std::map<int, GlobalVar> const& getGlobals() const;
 
     void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 

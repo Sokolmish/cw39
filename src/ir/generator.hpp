@@ -22,9 +22,9 @@ struct IR_FuncArgument {
 class IR_Generator {
 private:
     VariablesStack<string_id_t, IRval> variables;
+    std::map<string_id_t, IRval> globals;
     std::map<string_id_t, int> functions; // ident -> func_id
     std::map<string_id_t, IRval> strings;
-    std::map<string_id_t, uint64_t> globals; // ident -> func_id
 
     std::shared_ptr<ControlFlowGraph> cfg;
 

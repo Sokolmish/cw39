@@ -431,14 +431,17 @@ std::vector<IRval> IR_Block::getReferences() const {
     for (auto const &phiNode : phis)
         if (phiNode.body)
             for (IRval *arg : phiNode.body->getArgs())
-                refs.push_back(*arg);
+                if (arg->isVReg())
+                    refs.push_back(*arg);
     for (auto const &node : body)
         if (node.body)
             for (IRval *arg : node.body->getArgs())
-                refs.push_back(*arg);
+                if (arg->isVReg())
+                    refs.push_back(*arg);
     if (termNode)
         for (IRval *arg : termNode->body->getArgs())
-            refs.push_back(*arg);
+            if (arg->isVReg())
+                refs.push_back(*arg);
     return refs;
 }
 

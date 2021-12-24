@@ -156,11 +156,12 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                             IR_STORE, std::vector<IRval>{ *destVar, rhsVal })));
                 }
                 else if (destGlobal != globals.end()) {
-                    IRval globalSelf = cfg->getGlobalSelf(destGlobal->second);
-                    if (!globalSelf.getType()->equal(*rhsVal.getType()))
+                    auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(
+                            destGlobal->second.getType());
+                    if (!destVarPtrType->child->equal(*rhsVal.getType()))
                         semanticError("Cannot assign values of different types");
-                    curBlock().addNode(IR_Node(globalSelf, std::make_unique<IR_ExprOper>(
-                            IR_MOV, std::vector<IRval>{ rhsVal })));
+                    curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
+                            IR_STORE, std::vector<IRval>{ destGlobal->second, rhsVal })));
                 }
                 else {
                     semanticError("Unknown variable");
@@ -337,10 +338,15 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     auto const &subject = dynamic_cast<AST_Primary const &>(*expr.child);
                     if (subject.type != AST_Primary::IDENT)
                         semanticError("Address cannot be taken from literal");
+
                     auto var = variables.get(subject.getIdent());
-                    if (!var.has_value())
-                        semanticError("Unknown variable"); // TODO: address of global
-                    return *var;
+                    auto globalIt = globals.find(subject.getIdent());
+                    if (var.has_value())
+                        return *var;
+                    else if (globalIt != globals.end())
+                        return globalIt->second;
+                    else
+                        semanticError("Unknown variable");
                 }
                 else if (expr.child->node_type == AST_POSTFIX) { // Index, access
                     NOT_IMPLEMENTED("Address of aggregate's element");
@@ -542,7 +548,12 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     return res;
                 }
                 else if (globalIt != globals.end()) {
-                    return cfg->getGlobalSelf(globalIt->second);
+                    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(
+                            globalIt->second.getType());
+                    IRval res = cfg->createReg(ptrType->child);
+                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                            IR_LOAD, std::vector<IRval>{ globalIt->second })));
+                    return res;
                 }
                 else {
                     semanticError("Unknown variable");

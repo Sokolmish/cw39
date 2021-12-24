@@ -1,5 +1,9 @@
 int gg = 142;
 
+int* xxx() {
+    return &gg;
+}
+
 int add(int a, int b) {
     if (a == b) {
         b = a;

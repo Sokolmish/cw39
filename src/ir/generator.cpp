@@ -29,26 +29,30 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
                 getPrimaryType(decl.specifiers->type_specifiers);
                 continue;
             }
+            // TODO: function prototypes
 
             for (const auto &singleDecl : decl.child->v) {
                 if (!singleDecl->initializer)
-                    NOT_IMPLEMENTED("Uninitialized global variables");
+                    NOT_IMPLEMENTED("Unnitialized global variables");
                 if (singleDecl->initializer->is_compound)
                     NOT_IMPLEMENTED("Compound initializers");
 
                 auto varType = getType(*decl.specifiers, *singleDecl->declarator);
                 auto ident = getDeclaredIdent(*singleDecl->declarator);
+                if (globals.contains(ident))
+                    semanticError("Global variable already declared");
+
                 auto const &initExpr = dynamic_cast<AST_Expr const &>(
                         *singleDecl->initializer->val);
-                auto initVal = evalExpr(initExpr);
-                if (!initVal.getType()->equal(*varType)) {
+                auto initVal = evalConstantExpr(initExpr);
+                if (!initVal.has_value())
+                    semanticError("Global variable should be initialized with constant value");
+                if (!initVal->getType()->equal(*varType))
                     semanticError("Cannot initialize variable with different type");
-                }
 
-                auto newGlobalId = cfg->putGlobal(initVal);
-                if (globals.contains(ident))
-                    semanticError("Variable already declared");
-                globals.emplace(ident, newGlobalId);
+                auto ptrType = std::make_shared<IR_TypePtr>(varType);
+                IRval res = cfg->createGlobal(get_ident_by_id(ident), ptrType, *initVal);
+                globals.emplace(ident, res);
             }
         }
         else {
@@ -96,7 +100,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     int curArgNum = 0;
     for (auto const &[argIdent, argType] : declArgs) {
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
-        auto argPtr = cfg->createReg(argPtrType);
+        IRval argPtr = cfg->createReg(argPtrType);
         auto val = std::make_unique<IR_ExprAlloc>(argType, 1U);
         curBlock().addNode(IR_Node{ argPtr, std::move(val) });
 
@@ -132,7 +136,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
 
                 auto ptrType = std::make_shared<IR_TypePtr>(varType);
 
-                auto res = cfg->createReg(ptrType);
+                IRval res = cfg->createReg(ptrType);
                 auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);
                 curBlock().addNode(IR_Node{ res, std::move(val) });
 
