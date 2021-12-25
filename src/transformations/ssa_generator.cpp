@@ -137,12 +137,14 @@ void SSA_Generator::versionize() {
 
 void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     auto &curBlock = cfg->block(blockId);
+    int rollbackCnt = 0;
 
     // Phis
     for (auto &phiNode : curBlock.phis) {
         if (phiNode.res && *phiNode.res == var) {
             phiNode.res->version = versionsCnt;
             versions.push_back(versionsCnt++);
+            rollbackCnt++;
             break;
         }
     }
@@ -157,6 +159,7 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
         if (node.res && *node.res == var) {
             node.res->version = versionsCnt;
             versions.push_back(versionsCnt++);
+            rollbackCnt++;
         }
     }
 
@@ -192,19 +195,6 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     for (int domChild : doms->getChildren(blockId))
         traverseForVar(domChild, var);
 
-    // Rollback versions in stack
-    if (curBlock.termNode.has_value()) {
-        auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
-        if (terminator.arg && *terminator.arg == var)
-            versions.pop_back();
-    }
-    for (auto &node : curBlock.body)
-        if (node.res && *node.res == var)
-            versions.pop_back();
-    for (auto &phiNode : curBlock.phis) {
-        if (phiNode.res && *phiNode.res == var) {
-            versions.pop_back();
-            break;
-        }
-    }
+    while (rollbackCnt--)
+        versions.pop_back();
 }
