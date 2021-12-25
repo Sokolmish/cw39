@@ -208,14 +208,6 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             NOT_IMPLEMENTED("switch");
 
         IRval cond = evalExpr(*stmt.condition);
-        auto condNode = dynamic_cast<AST_Binop const *>(stmt.condition.get());
-        if (!condNode || !isComparsionOp(condNode->op)) {
-            IRval newCond = cfg->createReg(IR_TypeDirect::type_i32);
-            curBlock().addNode(IR_Node(newCond, std::make_unique<IR_ExprOper>(
-                    IR_NE, std::vector<IRval>{ cond, IRval::createVal(cond.getType(), 0UL ) })));
-            cond = newCond;
-        }
-
         curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                 IR_ExprTerminator::BRANCH, cond));
 
@@ -271,47 +263,40 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     }
     else if (rawStmt.type == AST_Statement::ITER) {
         auto const &stmt = dynamic_cast<AST_IterationStmt const &>(rawStmt);
-        if (stmt.type != AST_IterationStmt::WHILE_LOOP)
-            NOT_IMPLEMENTED("Only while loops implemented");
+        if (stmt.type == AST_IterationStmt::WHILE_LOOP) {
+            auto &blockCond = cfg->createBlock();
+            auto &blockLoop = cfg->createBlock();
+            auto &blockAfter = cfg->createBlock();
 
-        auto &blockCond = cfg->createBlock();
-        auto &blockLoop = cfg->createBlock();
-        auto &blockAfter = cfg->createBlock();
-
-        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-                IR_ExprTerminator::JUMP));
-        cfg->linkBlocks(curBlock(), blockCond);
-        selectBlock(blockCond);
-
-        IRval cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
-        auto condNode = dynamic_cast<AST_Binop const *>(
-                std::get<std::unique_ptr<AST_Expr>>(stmt.control).get());
-        if (!condNode || !isComparsionOp(condNode->op)) {
-            IRval newCond = cfg->createReg(IR_TypeDirect::type_i32);
-            curBlock().addNode(IR_Node(newCond, std::make_unique<IR_ExprOper>(
-                    IR_NE, std::vector<IRval>{ cond, IRval::createVal(cond.getType(), 0UL ) })));
-            cond = newCond;
-        }
-
-        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-                IR_ExprTerminator::BRANCH, cond));
-        cfg->linkBlocks(curBlock(), blockLoop);
-        cfg->linkBlocks(curBlock(), blockAfter);
-
-        activeLoops.push({ blockCond.id, blockAfter.id });
-        selectBlock(blockLoop);
-        if (stmt.body->type == AST_Statement::COMPOUND)
-            fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
-        else
-            insertStatement(*stmt.body);
-        activeLoops.pop();
-
-        if (selectedBlock != nullptr) {
             curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                     IR_ExprTerminator::JUMP));
             cfg->linkBlocks(curBlock(), blockCond);
+            selectBlock(blockCond);
+
+            IRval cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
+            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::BRANCH, cond));
+            cfg->linkBlocks(curBlock(), blockLoop);
+            cfg->linkBlocks(curBlock(), blockAfter);
+
+            activeLoops.push({ blockCond.id, blockAfter.id });
+            selectBlock(blockLoop);
+            if (stmt.body->type == AST_Statement::COMPOUND)
+                fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
+            else
+                insertStatement(*stmt.body);
+            activeLoops.pop();
+
+            if (selectedBlock != nullptr) {
+                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                        IR_ExprTerminator::JUMP));
+                cfg->linkBlocks(curBlock(), blockCond);
+            }
+            selectBlock(blockAfter);
         }
-        selectBlock(blockAfter);
+        else {
+            NOT_IMPLEMENTED("Only while loops implemented");
+        }
     }
     else if (rawStmt.type == AST_Statement::JUMP) {
         auto const &stmt = dynamic_cast<AST_JumpStmt const &>(rawStmt);

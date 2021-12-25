@@ -11,7 +11,7 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
     while (globalChanged) {
         globalChanged = false;
         propagateCopies();
-        foldConstants();
+//        foldConstants();
     }
 
     CfgCleaner cleaner(cfg);
@@ -163,19 +163,19 @@ IRval CopyPropagator::doConstOperation(const IR_ExprOper &oper) {
         case IR_AND:
             return IR_Generator::doConstBinOperation(bop::BIT_AND, oper.args[0], oper.args[1]);
         case IR_OR:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::BIT_OR, oper.args[0], oper.args[1]);
         case IR_EQ:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::EQ, oper.args[0], oper.args[1]);
         case IR_NE:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::NE, oper.args[0], oper.args[1]);
         case IR_GT:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::GT, oper.args[0], oper.args[1]);
         case IR_LT:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::LT, oper.args[0], oper.args[1]);
         case IR_GE:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::GE, oper.args[0], oper.args[1]);
         case IR_LE:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
+            return IR_Generator::doConstBinOperation(bop::LE, oper.args[0], oper.args[1]);
 
         case IR_MOV:
         case IR_LOAD:

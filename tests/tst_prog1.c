@@ -74,5 +74,14 @@ int main() {
         printf("%d ", arr[i++]);
     printf("\n");
 
+    i = 3;
+    while (1) {
+        i--;
+        printf("%d ", i);
+        if (i == 0)
+            break;
+    }
+    printf("\n");
+
     return x + 0; // * 0
 }

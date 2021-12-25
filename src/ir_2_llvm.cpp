@@ -298,8 +298,17 @@ void IR2LLVM_Impl::createFunctions() {
             }
             else if (term->termType == IR_ExprTerminator::BRANCH) {
                 builder->SetInsertPoint(blocksMap.at(blockId));
+
+                // TODO: check types
+                Value *cond = getValue(*term->arg);
+                if (cond->getType()->getIntegerBitWidth() != 1) {
+                    cond = builder->CreateICmpNE(
+                            cond,
+                            builder->getIntN(term->arg->getType()->getBytesSize() * 8, 0ULL));
+                }
+
                 builder->CreateCondBr(
-                        regsMap.at(*term->arg),
+                        cond,
                         blocksMap.at(cfgBlock.next.at(0)),
                         blocksMap.at(cfgBlock.next.at(1)));
             }
