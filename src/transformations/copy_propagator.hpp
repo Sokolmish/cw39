@@ -12,7 +12,12 @@ private:
     std::shared_ptr<ControlFlowGraph> cfg;
 
     std::map<IRval, IRval, IRval::ComparatorVersions> remlacementMap;
-    bool changed;
+    bool changed, globalChanged;
+
+    void propagateCopies();
+    void foldConstants();
+
+    IRval doConstOperation(IR_ExprOper const &oper);
 
 public:
     CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg);

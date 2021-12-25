@@ -44,10 +44,6 @@ private:
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertStatement(AST_Statement const &rawStmt);
 
-    bool isGeneralNumOp(AST_Binop::OpType op);
-    bool isIntegerNumOp(AST_Binop::OpType op);
-    bool isComparsionOp(AST_Binop::OpType op);
-    IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 
     void doAssignment(AST_Expr const &dest, IRval wrValue);
@@ -77,6 +73,12 @@ public:
 
     void parseAST(std::shared_ptr<AST_TranslationUnit> const &ast);
     std::shared_ptr<ControlFlowGraph> getCfg() const;
+
+    // Some util functions used in transformations
+    static bool isGeneralNumOp(AST_Binop::OpType op);
+    static bool isIntegerNumOp(AST_Binop::OpType op);
+    static bool isComparsionOp(AST_Binop::OpType op);
+    static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
 };
 
 #endif /* __GENERATOR_HPP__ */

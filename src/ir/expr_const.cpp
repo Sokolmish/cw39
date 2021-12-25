@@ -36,7 +36,7 @@ IRval IR_Generator::doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, 
         if (ltype.isFloat() || rtype.isFloat())
             semanticError("Invalid operation on floats");
 
-        uint64_t val1 = lhs.castValTo<uint64_t>();
+        uint64_t val1 = lhs.castValTo<uint64_t>(); // TODO: signedness
         uint64_t val2 = rhs.castValTo<uint64_t>();
         IRval::union_type resVal;
         switch (op) {

@@ -29,6 +29,7 @@ public:
     IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, union_type v);
     IRval copy() const;
 
+    // TODO: clear versioned and unversioned comparsion
     bool operator==(IRval const &oth) const;
 
     static bool less(const IRval &a, const IRval &b);
@@ -74,6 +75,8 @@ struct IR_ExprCall;
 struct IR_ExprTerminator;
 struct IR_ExprPhi;
 
+// TODO: move enum into IR_Oper
+// TODO: move memory operations into separate category
 enum IR_Ops {
     IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
     IR_XOR, IR_AND, IR_OR, IR_LAND, IR_LOR,

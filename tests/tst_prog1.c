@@ -62,7 +62,7 @@ int main() {
         cnt--;
     }
 
-    int arr[4];
+    int arr[2 + 2];
 
     int i = 0;
     while (i < 4) {
