@@ -98,12 +98,22 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
                             index, IR_TypeDirect::type_u64)));
                 }
 
+                IRval scaledIndex = fixedIndex;
+                if (ptrType->child->getBytesSize() != 1) {
+                    IRval multiplyer = IRval::createVal(
+                            IR_TypeDirect::type_u64,
+                            static_cast<uint64_t>(ptrType->child->getBytesSize()));
+                    scaledIndex = cfg->createReg(fixedIndex.getType());
+                    curBlock().addNode(IR_Node(scaledIndex, std::make_unique<IR_ExprOper>(
+                            IR_MUL, std::vector<IRval>{ fixedIndex, multiplyer })));
+                }
+
                 IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
                 curBlock().addNode(IR_Node(iptr, std::make_unique<IR_ExprCast>(
                         base, IR_TypeDirect::type_u64)));
                 IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
                 curBlock().addNode(IR_Node(wOffset, std::make_unique<IR_ExprOper>(
-                        IR_ADD, std::vector<IRval>{ iptr, fixedIndex })));
+                        IR_ADD, std::vector<IRval>{ iptr, scaledIndex })));
                 IRval finPtr = cfg->createReg(ptrType);
                 curBlock().addNode(IR_Node(finPtr, std::make_unique<IR_ExprCast>(
                         wOffset, ptrType)));
@@ -336,7 +346,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return res;
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {
-                if (expr.child->node_type != AST_PRIMARY)
+                if (expr.child->node_type != AST_PRIMARY) // TODO: assign
                     semanticError("Inc/dec available only for primary expressions");
                 auto const &prim = dynamic_cast<AST_Primary &>(*expr.child);
                 if (prim.type != AST_Primary::IDENT)
@@ -425,7 +435,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 //                        semanticError("Cannot take address");
 //                    }
                 }
-                else if (expr.child->node_type == AST_UNARY_OP) { // Deref
+                else if (expr.child->node_type == AST_UNARY_OP) { // Deref // TODO
                     NOT_IMPLEMENTED("Address of dereference result");
                 }
                 else if (expr.child->node_type == AST_CAST) { // Cast
@@ -506,14 +516,51 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval array = evalExpr(*expr.base);
                 IRval index = evalExpr(expr.getExpr());
 
-                if (array.getType()->type != IR_Type::ARRAY)
-                    semanticError("Indexation cannot be performed on non-array type");
-                auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
+                if (array.getType()->type == IR_Type::ARRAY) {
+                    auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
+                    IRval res = cfg->createReg(arrayType.child);
+                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                            IR_EXTRACT, std::vector<IRval>{ array, index })));
+                    return res;
+                }
+                else if (array.getType()->type == IR_Type::POINTER) {
+                    // TODO: common code for this indexation with assignment
+                    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
 
-                IRval res = cfg->createReg(arrayType.child);
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_EXTRACT, std::vector<IRval>{ array, index })));
-                return res;
+                    IRval fixedIndex = index;
+                    if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64)) {
+                        fixedIndex = cfg->createReg(IR_TypeDirect::type_u64);
+                        curBlock().addNode(IR_Node(fixedIndex, std::make_unique<IR_ExprCast>(
+                                index, IR_TypeDirect::type_u64)));
+                    }
+
+                    IRval scaledIndex = fixedIndex;
+                    if (ptrType->child->getBytesSize() != 1) {
+                        IRval multiplyer = IRval::createVal(
+                                IR_TypeDirect::type_u64,
+                                static_cast<uint64_t>(ptrType->child->getBytesSize()));
+                        scaledIndex = cfg->createReg(fixedIndex.getType());
+                        curBlock().addNode(IR_Node(scaledIndex, std::make_unique<IR_ExprOper>(
+                                IR_MUL, std::vector<IRval>{ fixedIndex, multiplyer })));
+                    }
+
+                    IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
+                    curBlock().addNode(IR_Node(iptr, std::make_unique<IR_ExprCast>(
+                            array, IR_TypeDirect::type_u64)));
+                    IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
+                    curBlock().addNode(IR_Node(wOffset, std::make_unique<IR_ExprOper>(
+                            IR_ADD, std::vector<IRval>{ iptr, scaledIndex })));
+                    IRval finPtr = cfg->createReg(ptrType);
+                    curBlock().addNode(IR_Node(finPtr, std::make_unique<IR_ExprCast>(
+                            wOffset, ptrType)));
+                    IRval res = cfg->createReg(ptrType->child);
+                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
+                            IR_LOAD, std::vector<IRval>{ finPtr })));
+                    return res;
+                }
+                else {
+                    semanticError("Indexation cannot be performed on non-array type");
+                }
             }
             else if (expr.op == AST_Postfix::DIR_ACCESS) {
                 IRval object = evalExpr(*expr.base);

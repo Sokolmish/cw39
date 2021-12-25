@@ -37,7 +37,7 @@ int main() {
     char *fmt = "R??: %d\n";
     char fixFmt[16];
     memcpy(fixFmt, fmt, strlen(fmt) + 1UL);
-    char *replace = (char*)((unsigned long)(char*)&fixFmt + 2UL);
+    char *replace = (char*)((unsigned long)fixFmt + 2UL);
     *replace = 's';
     fixFmt[1UL] = 'e';
     printf(fixFmt, y);
@@ -61,6 +61,18 @@ int main() {
     while (cnt) {
         cnt--;
     }
+
+    int arr[4];
+
+    int i = 0;
+    while (i < 4) {
+        arr[i] = i * i;
+        i++;
+    }
+    i = 0;
+    while (i < 4)
+        printf("%d ", arr[i++]);
+    printf("\n");
 
     return x + 0; // * 0
 }

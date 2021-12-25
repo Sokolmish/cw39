@@ -8,6 +8,8 @@ source_filename = "top"
 @.str2 = private unnamed_addr constant [4 x i8] c"%f\0A\00", align 1
 @.str3 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
 @.str4 = private unnamed_addr constant [4 x i8] c"%c\0A\00", align 1
+@.str5 = private unnamed_addr constant [4 x i8] c"%d \00", align 1
+@.str6 = private unnamed_addr constant [2 x i8] c"\0A\00", align 1
 @gg = internal global i32 142, align 8
 
 define internal void @__dummy_func() {
@@ -36,8 +38,8 @@ block_2:                                          ; preds = %block_1
   br label %block_3
 
 block_3:                                          ; preds = %block_2, %block_1
-  %vr81 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
-  %vr10 = add i32 %.arg_0, %vr81
+  %vr110 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
+  %vr10 = add i32 %.arg_0, %vr110
   ret i32 %vr10
 }
 
@@ -62,9 +64,9 @@ block_6:                                          ; preds = %block_4
   br label %block_7
 
 block_7:                                          ; preds = %block_6, %block_5
-  %vr82 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
+  %vr111 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
   %vr24 = load i32, i32* %vr13, align 4
-  %vr25 = call i32 @add(i32 %vr82, i32 %vr24)
+  %vr25 = call i32 @add(i32 %vr111, i32 %vr24)
   store i32 %vr25, i32* %vr13, align 4
   %vr27 = alloca [16 x i8], align 1
   %vr28 = bitcast [16 x i8]* %vr27 to i8*
@@ -102,15 +104,57 @@ block_7:                                          ; preds = %block_6, %block_5
   br label %block_8
 
 block_8:                                          ; preds = %block_9, %block_7
-  %vr88 = phi i32 [ 10, %block_7 ], [ %vr76, %block_9 ]
-  %vr74 = icmp ne i32 %vr88, 0
+  %vr117 = phi i32 [ 10, %block_7 ], [ %vr76, %block_9 ]
+  %vr74 = icmp ne i32 %vr117, 0
   br i1 %vr74, label %block_9, label %block_10
 
 block_9:                                          ; preds = %block_8
-  %vr76 = sub i32 %vr88, 1
+  %vr76 = sub i32 %vr117, 1
   br label %block_8
 
 block_10:                                         ; preds = %block_8
-  ret i32 %vr82
+  %vr77 = alloca [4 x i32], align 4
+  br label %block_11
+
+block_11:                                         ; preds = %block_12, %block_10
+  %vr118.1 = phi i32 [ 0, %block_10 ], [ %vr92, %block_12 ]
+  %vr80 = icmp slt i32 %vr118.1, 4
+  br i1 %vr80, label %block_12, label %block_13
+
+block_12:                                         ; preds = %block_11
+  %vr83 = mul i32 %vr118.1, %vr118.1
+  %vr84 = bitcast [4 x i32]* %vr77 to i32*
+  %vr86 = zext i32 %vr118.1 to i64
+  %vr87 = mul i64 %vr86, 4
+  %vr88 = ptrtoint i32* %vr84 to i64
+  %vr89 = add i64 %vr88, %vr87
+  %vr90 = inttoptr i64 %vr89 to i32*
+  store i32 %vr83, i32* %vr90, align 4
+  %vr92 = add i32 %vr118.1, 1
+  br label %block_11
+
+block_13:                                         ; preds = %block_11
+  br label %block_14
+
+block_14:                                         ; preds = %block_15, %block_13
+  %vr118.4 = phi i32 [ 0, %block_13 ], [ %vr97, %block_15 ]
+  %vr94 = icmp slt i32 %vr118.4, 4
+  br i1 %vr94, label %block_15, label %block_16
+
+block_15:                                         ; preds = %block_14
+  %vr95 = bitcast [4 x i32]* %vr77 to i32*
+  %vr97 = add i32 %vr118.4, 1
+  %vr98 = zext i32 %vr118.4 to i64
+  %vr99 = mul i64 %vr98, 4
+  %vr100 = ptrtoint i32* %vr95 to i64
+  %vr101 = add i64 %vr100, %vr99
+  %vr102 = inttoptr i64 %vr101 to i32*
+  %vr103 = load i32, i32* %vr102, align 4
+  %6 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str5, i32 0, i32 0), i32 %vr103)
+  br label %block_14
+
+block_16:                                         ; preds = %block_14
+  %7 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str6, i32 0, i32 0))
+  ret i32 %vr111
 }
 
