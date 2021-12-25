@@ -137,12 +137,24 @@ const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() co
     return funcs;
 }
 
+const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getPrototypes() const {
+    return prototypes;
+}
+
 std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
     return blocks;
 }
 
 const std::map<int, ControlFlowGraph::GlobalVar>& ControlFlowGraph::getGlobals() const {
     return globals;
+}
+
+std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& ControlFlowGraph::getStructs() const {
+    return structs;
+}
+
+std::map<uint64_t, std::string> const& ControlFlowGraph::getStrings() const {
+    return strings;
 }
 
 void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action) {

@@ -1,34 +1,96 @@
 #include "ir_2_llvm.hpp"
-#include "utils.hpp"
+
+#include <map>
 #include <set>
 #include <deque>
 #include <fmt/core.h>
+
+#include "utils.hpp"
+#include "transformations/dominators.hpp"
+
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/LLVMContext.h"
 
 #include "llvm/ADT/APInt.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
+
 //#include "llvm/IR/Verifier.h"
 //#include "llvm/ExecutionEngine/ExecutionEngine.h"
 //#include "llvm/Support/TargetSelect.h"
 
 using namespace llvm;
 
-IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(cfg) {
-    doms = std::make_unique<Dominators>(cfg);
+class IR2LLVM_Impl {
+public:
+    IR2LLVM *parent;
 
-    context = new LLVMContext();
-    module = new Module("top", *context);
-    builder = new IRBuilder<>(*context);
+    std::unique_ptr<Dominators> doms;
+
+    std::unique_ptr<LLVMContext> context;
+    std::unique_ptr<Module> module;
+    std::unique_ptr<IRBuilder<>> builder;
+
+    void createTypes();
+    void createGlobals();
+    void createPrototypes();
+
+    void createFunctions();
+    void createBlock(int id);
+    void buildOperation(IR_Node const &node);
+    void buildCast(IR_Node const &node);
+
+    Type* getTypeFromIR(IR_Type const &ir_type);
+    Constant* getConstantFromIR(IRval const &val);
+    Value* getValue(IRval const &val);
+
+    Function *curFunction;
+
+    std::map<IRval, Value*, IRval::ComparatorVersions> regsMap;
+    std::map<int, BasicBlock*> blocksMap;
+    std::map<int, Value*> strings;
+    std::map<int, GlobalVariable*> globals;
+    std::map<int, Function*> functions;
+    std::map<int, Type*> structTypes;
+
+    std::map<IRval, PHINode*, IRval::ComparatorVersions> unfilledPhis;
+
+    IR2LLVM_Impl(IR2LLVM *par);
+
+    IR2LLVM_Impl(IR2LLVM_Impl const&) = delete;
+    IR2LLVM_Impl& operator=(IR2LLVM_Impl const&) = delete;
+};
+
+
+IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(cfg) {
+    impl = std::make_unique<IR2LLVM_Impl>(this);
+}
+
+std::string IR2LLVM::getRes() const {
+    return llvmIR;
+}
+
+IR2LLVM::~IR2LLVM() {}
+
+
+IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
+    doms = std::make_unique<Dominators>(parent->cfg);
+
+    context = std::make_unique<LLVMContext>();
+    module = std::make_unique<Module>("top", *context);
+    builder = std::make_unique<IRBuilder<>>(*context);
 
     Function *dummyFunc = Function::Create(FunctionType::get(builder->getVoidTy(), false),
-                                           Function::InternalLinkage, "__dummy_func", module);
+                                           Function::InternalLinkage, "__dummy_func", *module);
     BasicBlock *dummyEntryBlock = BasicBlock::Create(*context, "dummy_block", dummyFunc);
     builder->SetInsertPoint(dummyEntryBlock);
     builder->CreateRet(nullptr);
@@ -38,20 +100,17 @@ IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(cfg) {
     createPrototypes();
     createFunctions();
 
-    raw_string_ostream output(llvmIR);
+    raw_string_ostream output(parent->llvmIR);
     module->print(output, nullptr);
 
-    delete builder;
-    delete module;
-    delete context;
+    builder.reset();
+    module.reset();
+    context.reset();
 }
 
-std::string IR2LLVM::getRes() const {
-    return llvmIR;
-}
 
-void IR2LLVM::createTypes() {
-    for (auto const &[sId, tstruct] : cfg->structs) {
+void IR2LLVM_Impl::createTypes() {
+    for (auto const &[sId, tstruct] : parent->cfg->getStructs()) {
         std::vector<Type*> elements;
         for (auto const &elem : tstruct->fields)
             elements.push_back(getTypeFromIR(*elem.irType));
@@ -61,12 +120,12 @@ void IR2LLVM::createTypes() {
     }
 }
 
-void IR2LLVM::createGlobals() {
-    for (auto const &[sId, str] : cfg->strings) {
+void IR2LLVM_Impl::createGlobals() {
+    for (auto const &[sId, str] : parent->cfg->getStrings()) {
         auto res = builder->CreateGlobalStringPtr(StringRef(str), fmt::format(".str{}", sId));
         strings.emplace(sId, res);
     }
-    for (auto const &[gId, global] : cfg->globals) {
+    for (auto const &[gId, global] : parent->cfg->getGlobals()) {
         auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(global.type);
         auto gType = ptrType->child;
                 module->getOrInsertGlobal(global.name, getTypeFromIR(*gType));
@@ -80,7 +139,7 @@ void IR2LLVM::createGlobals() {
     }
 }
 
-llvm::Type* IR2LLVM::getTypeFromIR(const IR_Type &ir_type) {
+llvm::Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
     if (ir_type.type == IR_Type::DIRECT) {
         auto const &dirType = dynamic_cast<IR_TypeDirect const &>(ir_type);
         switch (dirType.spec) {
@@ -122,7 +181,7 @@ llvm::Type* IR2LLVM::getTypeFromIR(const IR_Type &ir_type) {
     }
 }
 
-llvm::Constant *IR2LLVM::getConstantFromIR(IRval const &val) {
+llvm::Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) {
     if (!val.isConstant())
         semanticError("LLVM Not a constant value");
     if (val.getType()->type != IR_Type::DIRECT)
@@ -151,7 +210,7 @@ llvm::Constant *IR2LLVM::getConstantFromIR(IRval const &val) {
     throw;
 }
 
-llvm::Value *IR2LLVM::getValue(const IRval &val) {
+llvm::Value *IR2LLVM_Impl::getValue(const IRval &val) {
     switch (val.valClass) {
         case IRval::VAL: {
             auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
@@ -185,31 +244,29 @@ llvm::Value *IR2LLVM::getValue(const IRval &val) {
 }
 
 
-void IR2LLVM::createPrototypes() {
-    for (auto const &[fId, func] : cfg->prototypes) {
+void IR2LLVM_Impl::createPrototypes() {
+    for (auto const &[fId, func] : parent->cfg->getPrototypes()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
-        llvm::Type *retType = getTypeFromIR(*irFuncType->ret);
-        std::vector<llvm::Type*> args;
+        Type *retType = getTypeFromIR(*irFuncType->ret);
+        std::vector<Type*> args;
         for (auto const &arg : irFuncType->args)
             args.push_back(getTypeFromIR(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
-        auto prototype =
-                Function::Create(ftype, Function::ExternalLinkage, func.getName(), *module);
+        auto prototype = Function::Create(ftype, Function::ExternalLinkage, func.getName(), *module);
         functions.emplace(fId, prototype);
     }
 }
 
-void IR2LLVM::createFunctions() {
-    for (auto const &[fId, func]: cfg->funcs) {
+void IR2LLVM_Impl::createFunctions() {
+    for (auto const &[fId, func]: parent->cfg->getFuncs()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
-        llvm::Type *retType = getTypeFromIR(*irFuncType->ret);
-        std::vector<llvm::Type *> args;
+        Type *retType = getTypeFromIR(*irFuncType->ret);
+        std::vector<Type *> args;
         for (auto const &arg: irFuncType->args)
             args.push_back(getTypeFromIR(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
 
-        curFunction =
-                Function::Create(ftype, Function::ExternalLinkage, func.getName(), *module);
+        curFunction = Function::Create(ftype, Function::ExternalLinkage, func.getName(), *module);
         functions.emplace(fId, curFunction);
 
         int argsCntr = 0;
@@ -233,7 +290,7 @@ void IR2LLVM::createFunctions() {
 
         // Link blocks
         for (int blockId: visited) {
-            auto const &cfgBlock = cfg->block(blockId);
+            auto const &cfgBlock = parent->cfg->block(blockId);
             IR_ExprTerminator const *term = cfgBlock.getTerminator();
             if (term->termType == IR_ExprTerminator::JUMP) {
                 builder->SetInsertPoint(blocksMap.at(blockId));
@@ -250,13 +307,12 @@ void IR2LLVM::createFunctions() {
 
         // Link phis
         for (int blockId: visited) {
-            auto const &cfgBlock = cfg->block(blockId);
+            auto const &cfgBlock = parent->cfg->block(blockId);
             for (auto const &phiNode: cfgBlock.phis) {
                 auto cfgPhiFunc = phiNode.body->getPhi();
                 auto ph = unfilledPhis.at(*phiNode.res);
                 for (auto const &[pos, arg]: cfgPhiFunc.args) {
-                    ph->addIncoming(getValue(arg),
-                                    blocksMap.at(cfgBlock.prev.at(pos)));
+                    ph->addIncoming(getValue(arg), blocksMap.at(cfgBlock.prev.at(pos)));
                 }
             }
         }
@@ -264,8 +320,8 @@ void IR2LLVM::createFunctions() {
     }
 }
 
-void IR2LLVM::createBlock(int id) {
-    auto const &cfgBlock = cfg->block(id);
+void IR2LLVM_Impl::createBlock(int id) {
+    auto const &cfgBlock = parent->cfg->block(id);
     BasicBlock *cur_bb =
             BasicBlock::Create(*context, fmt::format("block_{}", id), curFunction);
     blocksMap.emplace(id, cur_bb);
@@ -283,241 +339,7 @@ void IR2LLVM::createBlock(int id) {
     for (auto const &node : cfgBlock.body) {
         switch (node.body->type) {
             case IR_Expr::OPERATION: {
-                auto const &operExpr = node.body->getOper();
-                auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(operExpr.args[0].getType());
-                std::string resName = node.res.has_value() ? node.res->to_reg_name() : "";
-                Value *res = nullptr;
-                switch (operExpr.op) {
-                    case IR_MUL:
-                        if (dirType->isInteger()) {
-                            res = builder->CreateMul(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else if (dirType->isFloat()) {
-                            res = builder->CreateFMul(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            semanticError("Wrong mul types");
-                        }
-                        break;
-                    case IR_DIV:
-                        if (dirType->isInteger()) {
-                            if (dirType->isSigned()) {
-                                res = builder->CreateSDiv(
-                                        getValue(operExpr.args[0]),
-                                        getValue(operExpr.args[1]),
-                                        resName);
-                            }
-                            else {
-                                res = builder->CreateUDiv(
-                                        getValue(operExpr.args[0]),
-                                        getValue(operExpr.args[1]),
-                                        resName);
-                            }
-                        }
-                        else if (dirType->isFloat()) {
-                            res = builder->CreateFDiv(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            semanticError("Wrong div types");
-                        }
-                        break;
-                    case IR_REM:
-                        break;
-                    case IR_ADD:
-                        if (dirType->isInteger()) {
-                            res = builder->CreateAdd(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else if (dirType->isFloat()) {
-                            res = builder->CreateFAdd(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            semanticError("Wrong add types");
-                        }
-                        break;
-                    case IR_SUB:
-                        if (dirType->isInteger()) {
-                            res = builder->CreateSub(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else if (dirType->isFloat()) {
-                            res = builder->CreateFSub(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            semanticError("Wrong sub types");
-                        }
-                        break;
-                    case IR_SHR:
-                        if (dirType->isSigned()) {
-                            res = builder->CreateAShr(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            res = builder->CreateLShr(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        break;
-                    case IR_SHL:
-                        res = builder->CreateShl(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_XOR:
-                        res = builder->CreateXor(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_AND:
-                        res = builder->CreateAnd(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_OR:
-                        res = builder->CreateOr(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_LAND:
-                        res = builder->CreateLogicalAnd(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_LOR:
-                        res = builder->CreateLogicalOr(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_EQ:
-                        res = builder->CreateICmpEQ(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_NE:
-                        res = builder->CreateICmpNE(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[1]),
-                                resName);
-                        break;
-                    case IR_GT:
-                        if (dirType->isSigned()) {
-                            res = builder->CreateICmpSGT(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            res = builder->CreateICmpUGT(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        break;
-                    case IR_LT:
-                        if (dirType->isSigned()) {
-                            res = builder->CreateICmpSLT(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            res = builder->CreateICmpULT(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        break;
-                    case IR_GE:
-                        if (dirType->isSigned()) {
-                            res = builder->CreateICmpSGE(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            res = builder->CreateICmpUGE(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        break;
-                    case IR_LE:
-                        if (dirType->isSigned()) {
-                            res = builder->CreateICmpSLE(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        else {
-                            res = builder->CreateICmpULE(
-                                    getValue(operExpr.args[0]),
-                                    getValue(operExpr.args[1]),
-                                    resName);
-                        }
-                        break;
-                    case IR_LOAD: {
-                        auto const &ptrType = dynamic_cast<IR_TypePtr const &>(
-                                *operExpr.args[0].getType());
-                        res = builder->CreateLoad(
-                                getTypeFromIR(*ptrType.child),
-                                getValue(operExpr.args[0]),
-                                resName);
-                        break;
-                    }
-                    case IR_STORE:
-                        builder->CreateStore(
-                                getValue(operExpr.args[1]),
-                                getValue(operExpr.args[0]));
-                        break;
-                    case IR_EXTRACT:
-                        res = builder->CreateExtractValue(
-                                getValue(operExpr.args[0]),
-                                { operExpr.args[1].castValTo<uint32_t>() },
-                                resName);
-                        break;
-                    case IR_INSERT:
-                        res = builder->CreateInsertValue(
-                                getValue(operExpr.args[0]),
-                                getValue(operExpr.args[2]),
-                                { operExpr.args[1].castValTo<uint32_t>() },
-                                resName);
-                        break;
-                    case IR_MOV:
-                        NOT_IMPLEMENTED("mov");
-                    default:
-                        semanticError("Wrong op value");
-                }
-                if (res)
-                    regsMap.emplace(*node.res, res);
+                buildOperation(node);
                 break;
             }
 
@@ -531,87 +353,7 @@ void IR2LLVM::createBlock(int id) {
             }
 
             case IR_Expr::CAST: {
-                auto const &castExpr = node.body->getCast();
-                std::string resName = node.res.has_value() ? node.res->to_reg_name() : "";
-                Value *res = nullptr;
-                switch (castExpr.castOp) {
-                    case IR_ExprCast::BITCAST:
-                        res = builder->CreateBitCast(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::SEXT:
-                        res = builder->CreateSExt(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::ZEXT:
-                        res = builder->CreateZExt(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::TRUNC:
-                        res = builder->CreateTrunc(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::FPTOUI:
-                        res = builder->CreateFPToUI(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::FPTOSI:
-                        res = builder->CreateFPToSI(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::UITOFP:
-                        res = builder->CreateUIToFP(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::SITOFP:
-                        res = builder->CreateSIToFP(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::PTRTOI:
-                        res = builder->CreatePtrToInt(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::ITOPTR:
-                        res = builder->CreateIntToPtr(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::FPTRUNC:
-                        res = builder->CreateFPTrunc(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    case IR_ExprCast::FPEXT:
-                        res = builder->CreateFPExt(
-                                getValue(castExpr.arg),
-                                getTypeFromIR(*castExpr.dest),
-                                resName);
-                        break;
-                    default:
-                        semanticError("Wrong cast type");
-                }
-                if (res)
-                    regsMap.emplace(*node.res, res);
+                buildCast(node);
                 break;
             }
 
@@ -634,11 +376,9 @@ void IR2LLVM::createBlock(int id) {
             case IR_Expr::TERM: {
                 semanticError("LLVM Term node in general list");
             }
-
             case IR_Expr::PHI: {
                 semanticError("LLVM Phi node in general list");
             }
-
             default: {
                 semanticError("Wrong node type");
             }
@@ -654,5 +394,233 @@ void IR2LLVM::createBlock(int id) {
             builder->CreateRet(getValue(*termNode->arg));
         else
             builder->CreateRet(nullptr);
+    }
+}
+
+void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
+    const IR_ExprOper &oper = node.body->getOper();
+
+    auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[0].getType());
+    std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
+    Value *res = nullptr;
+
+    switch (oper.op) {
+        case IR_MUL:
+            if (dirType->isInteger())
+                res = builder->CreateMul(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else if (dirType->isFloat())
+                res = builder->CreateFMul(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                semanticError("Wrong mul types");
+            break;
+
+        case IR_DIV:
+            if (dirType->isInteger()) {
+                if (dirType->isSigned())
+                    res = builder->CreateSDiv(getValue(oper.args[0]), getValue(oper.args[1]), name);
+                else
+                    res = builder->CreateUDiv(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
+            else if (dirType->isFloat())
+                res = builder->CreateFDiv(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                semanticError("Wrong div types");
+            break;
+
+        case IR_REM:
+            if (dirType->isInteger()) {
+                if (dirType->isSigned())
+                    res = builder->CreateSRem(getValue(oper.args[0]), getValue(oper.args[1]), name);
+                else
+                    res = builder->CreateURem(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
+            else if (dirType->isFloat())
+                res = builder->CreateFRem(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                semanticError("Wrong div types");
+            break;
+
+        case IR_ADD:
+            if (dirType->isInteger())
+                res = builder->CreateAdd(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else if (dirType->isFloat())
+                res = builder->CreateFAdd(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                semanticError("Wrong add types");
+            break;
+
+        case IR_SUB:
+            if (dirType->isInteger())
+                res = builder->CreateSub(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else if (dirType->isFloat())
+                res = builder->CreateFSub(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                semanticError("Wrong sub types");
+            break;
+
+        case IR_SHR:
+            if (dirType->isSigned())
+                res = builder->CreateAShr(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateLShr(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_SHL:
+            res = builder->CreateShl(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_XOR:
+            res = builder->CreateXor(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_AND:
+            res = builder->CreateAnd(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_OR:
+            res = builder->CreateOr(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_LAND:
+            res = builder->CreateLogicalAnd(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_LOR:
+            res = builder->CreateLogicalOr(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_EQ:
+            res = builder->CreateICmpEQ(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_NE:
+            res = builder->CreateICmpNE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_GT:
+            if (dirType->isSigned())
+                res = builder->CreateICmpSGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateICmpUGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_LT:
+            if (dirType->isSigned())
+                res = builder->CreateICmpSLT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateICmpULT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_GE:
+            if (dirType->isSigned())
+                res = builder->CreateICmpSGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateICmpUGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_LE:
+            if (dirType->isSigned())
+                res = builder->CreateICmpSLE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateICmpULE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            break;
+
+        case IR_LOAD: {
+            auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.args[0].getType());
+            res = builder->CreateLoad(getTypeFromIR(*ptrTp.child), getValue(oper.args[0]), name);
+            break;
+        }
+
+        case IR_STORE:
+            builder->CreateStore(getValue(oper.args[1]), getValue(oper.args[0]));
+            break;
+
+        case IR_EXTRACT:
+            res = builder->CreateExtractValue(
+                    getValue(oper.args[0]),
+                    { oper.args[1].castValTo<uint32_t>() },
+                    name);
+            break;
+
+        case IR_INSERT:
+            res = builder->CreateInsertValue(
+                    getValue(oper.args[0]), getValue(oper.args[2]),
+                    { oper.args[1].castValTo<uint32_t>() },
+                    name);
+            break;
+
+        case IR_MOV:
+            NOT_IMPLEMENTED("mov");
+
+        default:
+            semanticError("Wrong op value");
+    }
+    if (res) {
+        regsMap.emplace(*node.res, res);
+    }
+}
+
+void IR2LLVM_Impl::buildCast(IR_Node const &node) {
+    auto const &castExpr = node.body->getCast();
+
+    auto argVal = getValue(castExpr.arg);
+    auto destType = getTypeFromIR(*castExpr.dest);
+    std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
+    Value *res = nullptr;
+
+    switch (castExpr.castOp) {
+        case IR_ExprCast::BITCAST:
+            res = builder->CreateBitCast(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::SEXT:
+            res = builder->CreateSExt(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::ZEXT:
+            res = builder->CreateZExt(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::TRUNC:
+            res = builder->CreateTrunc(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::FPTOUI:
+            res = builder->CreateFPToUI(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::FPTOSI:
+            res = builder->CreateFPToSI(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::UITOFP:
+            res = builder->CreateUIToFP(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::SITOFP:
+            res = builder->CreateSIToFP(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::PTRTOI:
+            res = builder->CreatePtrToInt(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::ITOPTR:
+            res = builder->CreateIntToPtr(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::FPTRUNC:
+            res = builder->CreateFPTrunc(argVal, destType, name);
+            break;
+
+        case IR_ExprCast::FPEXT:
+            res = builder->CreateFPExt(argVal, destType, name);
+            break;
+
+        default:
+            semanticError("Wrong cast type");
+    }
+    if (res) {
+        regsMap.emplace(*node.res, res);
     }
 }

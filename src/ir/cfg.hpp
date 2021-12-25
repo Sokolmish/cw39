@@ -52,7 +52,6 @@ private:
     std::map<int, GlobalVar> globals;
 
     friend class IR_Generator;
-    friend class IR2LLVM;
 
 public:
     ControlFlowGraph() = default;
@@ -75,8 +74,12 @@ public:
     uint64_t putString(std::string str);
 
     std::map<int, Function> const& getFuncs() const;
+    std::map<int, Function> const& getPrototypes() const;
     std::map<int, IR_Block> const& getBlocks() const;
     std::map<int, GlobalVar> const& getGlobals() const;
+    std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& getStructs() const;
+    std::map<uint64_t, std::string> const& getStrings() const;
+
 
     void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 
