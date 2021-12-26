@@ -31,6 +31,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/parser/lex.yy.c
 
         ${PROJECT_SOURCE_DIR}/src/ir/nodes.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir/value.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/generator.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/types.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/expr.cpp
