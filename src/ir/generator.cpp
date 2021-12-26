@@ -275,8 +275,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         if (stmt.type == AST_IterationStmt::FOR_LOOP) {
             variables.increaseLevel();
 
-            auto const &preAction = // TODO: getter
-                    *std::get<AST_IterationStmt::ForLoopControls>(stmt.control).decl;
+            auto const &preAction = *stmt.getForLoopControls().decl;
             if (preAction.node_type == AST_STATEMENT)
                 insertStatement(dynamic_cast<AST_ExprStmt const &>(preAction));
             else if (preAction.node_type == AST_DECLARATION)
@@ -295,9 +294,10 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
 
         // Create condition
         selectBlock(blockCond);
-        IRval cond = evalExpr(stmt.type == AST_IterationStmt::FOR_LOOP ?
-                              *std::get<AST_IterationStmt::ForLoopControls>(stmt.control).cond->child :
-                              *std::get<std::unique_ptr<AST_Expr>>(stmt.control));
+        auto const &condNode = stmt.getCond();
+        IRval cond = condNode ?
+                evalExpr(*condNode) :
+                IRval::createVal(IR_TypeDirect::type_i32, 1);
         curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                 IR_ExprTerminator::BRANCH, cond));
         cfg->linkBlocks(curBlock(), blockLoop);
@@ -310,7 +310,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
                     IR_ExprTerminator::JUMP));
             cfg->linkBlocks(blockLastAct, blockCond);
             selectBlock(blockLastAct);
-            evalExpr(*std::get<AST_IterationStmt::ForLoopControls>(stmt.control).action);
+            evalExpr(*stmt.getForLoopControls().action);
 
             activeLoops.push({ blockLastAct.id, blockAfter.id });
         }

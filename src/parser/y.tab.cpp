@@ -3231,37 +3231,37 @@ yyreduce:
 
   case 198:
 #line 554 "parser.y"
-                                                                                        { (yyval.iter_stmt) = AST_IterationStmt::get_while((yyvsp[0].stmt), (yyvsp[-2].expr), false); }
+                                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeWhileLoop((yyvsp[0].stmt), (yyvsp[-2].expr), false); }
 #line 3236 "y.tab.cpp"
     break;
 
   case 199:
 #line 555 "parser.y"
-                                                                                { (yyval.iter_stmt) = AST_IterationStmt::get_while((yyvsp[-5].stmt), (yyvsp[-2].expr), true); }
+                                                                                { (yyval.iter_stmt) = AST_IterationStmt::makeWhileLoop((yyvsp[-5].stmt), (yyvsp[-2].expr), true); }
 #line 3242 "y.tab.cpp"
     break;
 
   case 200:
 #line 556 "parser.y"
-                                                                        { (yyval.iter_stmt) = AST_IterationStmt::get_for((yyvsp[0].stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr_stmt), nullptr); }
+                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr_stmt), nullptr); }
 #line 3248 "y.tab.cpp"
     break;
 
   case 201:
 #line 557 "parser.y"
-                                                                        { (yyval.iter_stmt) = AST_IterationStmt::get_for((yyvsp[0].stmt), (yyvsp[-4].expr_stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); }
+                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-4].expr_stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); }
 #line 3254 "y.tab.cpp"
     break;
 
   case 202:
 #line 558 "parser.y"
-                                                                        { (yyval.iter_stmt) = AST_IterationStmt::get_for((yyvsp[0].stmt), (yyvsp[-3].declaration), (yyvsp[-2].expr_stmt), nullptr); }
+                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-3].declaration), (yyvsp[-2].expr_stmt), nullptr); }
 #line 3260 "y.tab.cpp"
     break;
 
   case 203:
 #line 559 "parser.y"
-                                                                { (yyval.iter_stmt) = AST_IterationStmt::get_for((yyvsp[0].stmt), (yyvsp[-4].declaration), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); }
+                                                                { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-4].declaration), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); }
 #line 3266 "y.tab.cpp"
     break;
 

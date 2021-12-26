@@ -2660,7 +2660,7 @@ void comment(yyscan_t yyscanner) {
             return;
         prev = c;
     }
-    fprintf(stderr, "unterminated comment\n");
+    fprintf(stderr, "unterminated comment\n"); // TODO: exit?
 }
 
 

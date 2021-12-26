@@ -14,6 +14,8 @@ source_filename = "top"
 @.str8 = private unnamed_addr constant [2 x i8] c"\0A\00", align 1
 @.str9 = private unnamed_addr constant [4 x i8] c"%d \00", align 1
 @.str10 = private unnamed_addr constant [2 x i8] c"\0A\00", align 1
+@.str11 = private unnamed_addr constant [4 x i8] c"%d \00", align 1
+@.str12 = private unnamed_addr constant [2 x i8] c"\0A\00", align 1
 @gg = internal global i32 142, align 8
 
 define internal void @__dummy_func() {
@@ -42,8 +44,8 @@ block_2:                                          ; preds = %block_1
   br label %block_3
 
 block_3:                                          ; preds = %block_2, %block_1
-  %vr127 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
-  %vr10 = add i32 %.arg_0, %vr127
+  %vr135 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
+  %vr10 = add i32 %.arg_0, %vr135
   ret i32 %vr10
 }
 
@@ -68,9 +70,9 @@ block_6:                                          ; preds = %block_4
   br label %block_7
 
 block_7:                                          ; preds = %block_6, %block_5
-  %vr128 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
+  %vr136 = phi i32 [ %vr16, %block_5 ], [ %vr22, %block_6 ]
   %vr24 = load i32, i32* %vr13, align 4
-  %vr25 = call i32 @add(i32 %vr128, i32 %vr24)
+  %vr25 = call i32 @add(i32 %vr136, i32 %vr24)
   store i32 %vr25, i32* %vr13, align 4
   %vr27 = alloca [16 x i8], align 1
   %vr28 = bitcast [16 x i8]* %vr27 to i8*
@@ -108,12 +110,12 @@ block_7:                                          ; preds = %block_6, %block_5
   br label %block_8
 
 block_8:                                          ; preds = %block_9, %block_7
-  %vr134 = phi i32 [ 10, %block_7 ], [ %vr75, %block_9 ]
-  %6 = icmp ne i32 %vr134, 0
+  %vr142 = phi i32 [ 10, %block_7 ], [ %vr75, %block_9 ]
+  %6 = icmp ne i32 %vr142, 0
   br i1 %6, label %block_9, label %block_10
 
 block_9:                                          ; preds = %block_8
-  %vr75 = sub i32 %vr134, 1
+  %vr75 = sub i32 %vr142, 1
   br label %block_8
 
 block_10:                                         ; preds = %block_8
@@ -121,33 +123,33 @@ block_10:                                         ; preds = %block_8
   br label %block_11
 
 block_11:                                         ; preds = %block_12, %block_10
-  %vr135.1 = phi i32 [ 0, %block_10 ], [ %vr91, %block_12 ]
-  %vr79 = icmp slt i32 %vr135.1, 4
+  %vr143.1 = phi i32 [ 0, %block_10 ], [ %vr91, %block_12 ]
+  %vr79 = icmp slt i32 %vr143.1, 4
   br i1 %vr79, label %block_12, label %block_13
 
 block_12:                                         ; preds = %block_11
-  %vr82 = mul i32 %vr135.1, %vr135.1
+  %vr82 = mul i32 %vr143.1, %vr143.1
   %vr83 = bitcast [4 x i32]* %vr76 to i32*
-  %vr85 = zext i32 %vr135.1 to i64
+  %vr85 = zext i32 %vr143.1 to i64
   %vr86 = mul i64 %vr85, 4
   %vr87 = ptrtoint i32* %vr83 to i64
   %vr88 = add i64 %vr87, %vr86
   %vr89 = inttoptr i64 %vr88 to i32*
   store i32 %vr82, i32* %vr89, align 4
-  %vr91 = add i32 %vr135.1, 1
+  %vr91 = add i32 %vr143.1, 1
   br label %block_11
 
 block_13:                                         ; preds = %block_11
   br label %block_14
 
 block_14:                                         ; preds = %block_17, %block_13
-  %vr136 = phi i32 [ 0, %block_13 ], [ %vr96, %block_17 ]
-  %vr94 = icmp slt i32 %vr136, 4
+  %vr144 = phi i32 [ 0, %block_13 ], [ %vr96, %block_17 ]
+  %vr94 = icmp slt i32 %vr144, 4
   br i1 %vr94, label %block_15, label %block_16
 
 block_15:                                         ; preds = %block_14
   %vr97 = bitcast [4 x i32]* %vr76 to i32*
-  %vr99 = zext i32 %vr136 to i64
+  %vr99 = zext i32 %vr144 to i64
   %vr100 = mul i64 %vr99, 4
   %vr101 = ptrtoint i32* %vr97 to i64
   %vr102 = add i64 %vr101, %vr100
@@ -161,15 +163,15 @@ block_16:                                         ; preds = %block_14
   br label %block_18
 
 block_17:                                         ; preds = %block_15
-  %vr96 = add i32 %vr136, 1
+  %vr96 = add i32 %vr144, 1
   br label %block_14
 
 block_18:                                         ; preds = %block_22, %block_16
-  %vr135.4 = phi i32 [ 3, %block_16 ], [ %vr108, %block_22 ]
+  %vr143.4 = phi i32 [ 3, %block_16 ], [ %vr108, %block_22 ]
   br i1 true, label %block_19, label %block_20
 
 block_19:                                         ; preds = %block_18
-  %vr108 = sub i32 %vr135.4, 1
+  %vr108 = sub i32 %vr143.4, 1
   %9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str7, i32 0, i32 0), i32 %vr108)
   %vr112 = icmp eq i32 %vr108, 0
   br i1 %vr112, label %block_21, label %block_22
@@ -187,39 +189,62 @@ block_22:                                         ; preds = %block_19
 block_24:                                         ; preds = %block_23, %block_20
   %vr120.0 = phi i32 [ 0, %block_20 ], [ %vr120.2, %block_23 ]
   %vr121.0 = phi i32 [ 0, %block_20 ], [ %vr121.2, %block_23 ]
-  %vr135.8 = phi i32 [ 0, %block_20 ], [ %vr135.11, %block_23 ]
-  %11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str9, i32 0, i32 0), i32 %vr135.8)
-  %vr119 = icmp eq i32 %vr135.8, 0
+  %vr143.8 = phi i32 [ 0, %block_20 ], [ %vr143.11, %block_23 ]
+  %11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str9, i32 0, i32 0), i32 %vr143.8)
+  %vr119 = icmp eq i32 %vr143.8, 0
   br i1 %vr119, label %block_26, label %block_27
 
 block_26:                                         ; preds = %block_24
   br label %block_28
 
 block_27:                                         ; preds = %block_24
-  %vr121.1 = sub i32 %vr135.8, 1
+  %vr121.1 = sub i32 %vr143.8, 1
   br label %block_28
 
 block_28:                                         ; preds = %block_27, %block_26
-  %vr120.2 = phi i32 [ %vr120.0, %block_26 ], [ %vr135.8, %block_27 ]
+  %vr120.2 = phi i32 [ %vr120.0, %block_26 ], [ %vr143.8, %block_27 ]
   %vr121.2 = phi i32 [ %vr121.0, %block_26 ], [ %vr121.1, %block_27 ]
-  %vr135.11 = phi i32 [ 2, %block_26 ], [ %vr121.1, %block_27 ]
+  %vr143.11 = phi i32 [ 2, %block_26 ], [ %vr121.1, %block_27 ]
   br label %block_23
 
 block_23:                                         ; preds = %block_28
-  %vr115 = icmp ne i32 %vr135.11, 0
+  %vr115 = icmp ne i32 %vr143.11, 0
   br i1 %vr115, label %block_24, label %block_25
 
 block_25:                                         ; preds = %block_23
   %12 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str10, i32 0, i32 0))
   br label %block_29
 
-block_29:                                         ; preds = %block_25
+block_29:                                         ; preds = %block_32, %block_25
+  %vr145 = phi i32 [ 0, %block_25 ], [ %vr125, %block_32 ]
   br i1 true, label %block_30, label %block_31
 
 block_30:                                         ; preds = %block_29
-  ret i32 %vr128
+  %13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str11, i32 0, i32 0), i32 %vr145)
+  %vr129 = icmp eq i32 %vr145, 4
+  br i1 %vr129, label %block_33, label %block_34
 
-block_31:                                         ; preds = %block_29
+block_31:                                         ; preds = %block_33, %block_29
+  %14 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str12, i32 0, i32 0))
+  br label %block_35
+
+block_33:                                         ; preds = %block_30
+  br label %block_31
+
+block_34:                                         ; preds = %block_30
+  br label %block_32
+
+block_35:                                         ; preds = %block_31
+  br i1 true, label %block_36, label %block_37
+
+block_32:                                         ; preds = %block_34
+  %vr125 = add i32 %vr145, 1
+  br label %block_29
+
+block_36:                                         ; preds = %block_35
+  ret i32 %vr136
+
+block_37:                                         ; preds = %block_35
   ret i32 199
 }
 

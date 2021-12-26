@@ -92,8 +92,17 @@ int main() {
     } while (i != 0);
     printf("\n");
 
+    int k;
+    for (k = 0;; k++) {
+        printf("%d ", k);
+        if (k == 4)
+            break;
+    }
+    printf("\n");
+
     while (1) {
         return x + 0; // * 0
     }
+
     return 199;
 }

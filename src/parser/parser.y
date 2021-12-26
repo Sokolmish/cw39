@@ -551,12 +551,12 @@ select_stmt
 	;
 
 loop_stmt
-	: WHILE '(' expr ')' stmt							{ $$ = AST_IterationStmt::get_while($5, $3, false); }
-	| DO stmt WHILE '(' expr ')' ';'					{ $$ = AST_IterationStmt::get_while($2, $5, true); }
-	| FOR '(' expr_stmt expr_stmt ')' stmt				{ $$ = AST_IterationStmt::get_for($6, $3, $4, nullptr); }
-	| FOR '(' expr_stmt expr_stmt expr ')' stmt			{ $$ = AST_IterationStmt::get_for($7, $3, $4, $5); }
-	| FOR '(' declaration expr_stmt ')' stmt			{ $$ = AST_IterationStmt::get_for($6, $3, $4, nullptr); }
-	| FOR '(' declaration expr_stmt expr ')' stmt		{ $$ = AST_IterationStmt::get_for($7, $3, $4, $5); }
+	: WHILE '(' expr ')' stmt							{ $$ = AST_IterationStmt::makeWhileLoop($5, $3, false); }
+	| DO stmt WHILE '(' expr ')' ';'					{ $$ = AST_IterationStmt::makeWhileLoop($2, $5, true); }
+	| FOR '(' expr_stmt expr_stmt ')' stmt				{ $$ = AST_IterationStmt::makeForLoop($6, $3, $4, nullptr); }
+	| FOR '(' expr_stmt expr_stmt expr ')' stmt			{ $$ = AST_IterationStmt::makeForLoop($7, $3, $4, $5); }
+	| FOR '(' declaration expr_stmt ')' stmt			{ $$ = AST_IterationStmt::makeForLoop($6, $3, $4, nullptr); }
+	| FOR '(' declaration expr_stmt expr ')' stmt		{ $$ = AST_IterationStmt::makeForLoop($7, $3, $4, $5); }
 	;
 
 jmp_stmt

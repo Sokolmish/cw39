@@ -554,9 +554,13 @@ struct AST_IterationStmt : public AST_Statement {
     uniq<AST_Statement> body;
     std::variant<uniq<AST_Expr>, ForLoopControls> control;
 
-    static AST_IterationStmt* get_while(AST_Statement *body, AST_Expr *ctl, bool is_do);
-    static AST_IterationStmt* get_for(AST_Statement *body, AST_Node *decl,
-                                      AST_ExprStmt *cond, AST_Expr *act);
+    std::unique_ptr<AST_Expr> const& getCond() const;
+    ForLoopControls const& getForLoopControls() const;
+
+    static AST_IterationStmt* makeWhileLoop(AST_Statement *body, AST_Expr *ctl, bool is_do);
+    static AST_IterationStmt* makeForLoop(AST_Statement *body, AST_Node *decl,
+                                          AST_ExprStmt *cond, AST_Expr *act);
+
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 
 private:

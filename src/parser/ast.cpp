@@ -1051,17 +1051,28 @@ TreeNodeRef AST_SelectionStmt::getTreeNode() const {
 AST_IterationStmt::AST_IterationStmt(LoopType ltype, AST_Statement *body)
     : AST_Statement(AST_Statement::ITER), type(ltype), body(body) {}
 
-AST_IterationStmt* AST_IterationStmt::get_while(AST_Statement *body, AST_Expr *ctl, bool is_do) {
+std::unique_ptr<AST_Expr> const& AST_IterationStmt::getCond() const {
+    if (type == AST_IterationStmt::FOR_LOOP)
+        return std::get<ForLoopControls>(control).cond->child;
+    else
+        return std::get<std::unique_ptr<AST_Expr>>(control);
+}
+
+const AST_IterationStmt::ForLoopControls &AST_IterationStmt::getForLoopControls() const {
+    return std::get<ForLoopControls>(control);
+}
+
+AST_IterationStmt* AST_IterationStmt::makeWhileLoop(AST_Statement *body, AST_Expr *ctl, bool is_do) {
     auto ltype = is_do ? AST_IterationStmt::DO_LOOP : AST_IterationStmt::WHILE_LOOP;
     auto res = new AST_IterationStmt(ltype, body);
     res->control = uniqify(ctl);
     return res;
 }
 
-AST_IterationStmt* AST_IterationStmt::get_for(AST_Statement *body, AST_Node *dcl,
-                                              AST_ExprStmt *cond, AST_Expr *act) {
+AST_IterationStmt* AST_IterationStmt::makeForLoop(AST_Statement *body, AST_Node *decl,
+                                                  AST_ExprStmt *cond, AST_Expr *act) {
     auto res = new AST_IterationStmt(AST_IterationStmt::FOR_LOOP, body);
-    res->control = ForLoopControls{ uniqify(dcl), uniqify(cond), uniqify(act) };
+    res->control = ForLoopControls{ uniqify(decl), uniqify(cond), uniqify(act) };
     return res;
 }
 
