@@ -138,49 +138,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     variables.increaseLevel();
     for (auto const &elem: compStmt.body->v) {
         if (elem->node_type == AST_DECLARATION) {
-            auto const &decl = dynamic_cast<AST_Declaration const &>(*elem);
-
-            // Save struct type if such is there
-            if (!decl.child) {
-                getPrimaryType(decl.specifiers->type_specifiers);
-                continue;
-            }
-
-            for (const auto &singleDecl : decl.child->v) {
-                auto varType = getType(*decl.specifiers, *singleDecl->declarator);
-                auto ident = getDeclaredIdent(*singleDecl->declarator);
-
-                if (varType->type == IR_Type::FUNCTION) {
-                    semanticError("Functions are not allowed inside compound statements");
-                }
-
-                std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
-
-                IRval res = cfg->createReg(ptrType);
-                auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);
-                curBlock().addNode(IR_Node{ res, std::move(val) });
-
-                if (variables.hasOnTop(ident))
-                    semanticError("Variable already declared");
-                variables.put(ident, res);
-
-                if (singleDecl->initializer) {
-                    if (!singleDecl->initializer->is_compound) {
-                        auto const &initExpr = dynamic_cast<AST_Expr const &>(
-                                *singleDecl->initializer->val);
-                        auto initVal = evalExpr(initExpr);
-                        if (!initVal.getType()->equal(*varType)) {
-                            semanticError("Cannot initialize variable with different type");
-                        }
-                        auto storeNode = std::make_unique<IR_ExprOper>(
-                                IR_STORE, std::vector<IRval>{ res, initVal });
-                        curBlock().addNode(IR_Node(std::move(storeNode)));
-                    }
-                    else {
-                        NOT_IMPLEMENTED("Compound initializers");
-                    }
-                }
-            }
+            insertDeclaration(dynamic_cast<AST_Declaration const &>(*elem));
         }
         else if (elem->node_type == AST_STATEMENT) {
             insertStatement(dynamic_cast<AST_Statement const &>(*elem));
@@ -192,6 +150,51 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         // Unreachable code doesn't even validating
         if (selectedBlock == nullptr || curBlock().termNode.has_value())
             break;
+    }
+    variables.decreaseLevel();
+}
+
+void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
+    // Save struct type if such is there
+    if (!decl.child) {
+        getPrimaryType(decl.specifiers->type_specifiers);
+        return; // continue;
+    }
+
+    for (const auto &singleDecl : decl.child->v) {
+        auto varType = getType(*decl.specifiers, *singleDecl->declarator);
+        auto ident = getDeclaredIdent(*singleDecl->declarator);
+
+        if (varType->type == IR_Type::FUNCTION) {
+            semanticError("Functions are not allowed inside compound statements");
+        }
+
+        std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
+
+        IRval res = cfg->createReg(ptrType);
+        auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);
+        curBlock().addNode(IR_Node{ res, std::move(val) });
+
+        if (variables.hasOnTop(ident))
+            semanticError("Variable already declared");
+        variables.put(ident, res);
+
+        if (singleDecl->initializer) {
+            if (!singleDecl->initializer->is_compound) {
+                auto const &initExpr = dynamic_cast<AST_Expr const &>(
+                        *singleDecl->initializer->val);
+                auto initVal = evalExpr(initExpr);
+                if (!initVal.getType()->equal(*varType)) {
+                    semanticError("Cannot initialize variable with different type");
+                }
+                auto storeNode = std::make_unique<IR_ExprOper>(
+                        IR_STORE, std::vector<IRval>{ res, initVal });
+                curBlock().addNode(IR_Node(std::move(storeNode)));
+            }
+            else {
+                NOT_IMPLEMENTED("Compound initializers");
+            }
+        }
     }
 }
 
@@ -263,41 +266,76 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     }
     else if (rawStmt.type == AST_Statement::ITER) {
         auto const &stmt = dynamic_cast<AST_IterationStmt const &>(rawStmt);
-        if (stmt.type == AST_IterationStmt::WHILE_LOOP) {
-            auto &blockCond = cfg->createBlock();
-            auto &blockLoop = cfg->createBlock();
-            auto &blockAfter = cfg->createBlock();
 
+        auto &blockCond = cfg->createBlock();
+        auto &blockLoop = cfg->createBlock();
+        auto &blockAfter = cfg->createBlock();
+
+        // Create for-loop initializer
+        if (stmt.type == AST_IterationStmt::FOR_LOOP) {
+            variables.increaseLevel();
+
+            auto const &preAction = // TODO: getter
+                    *std::get<AST_IterationStmt::ForLoopControls>(stmt.control).decl;
+            if (preAction.node_type == AST_STATEMENT)
+                insertStatement(dynamic_cast<AST_ExprStmt const &>(preAction));
+            else if (preAction.node_type == AST_DECLARATION)
+                insertDeclaration(dynamic_cast<AST_Declaration const &>(preAction));
+            else
+                semanticError("Wrong for-loop preAction type");
+        }
+
+        // Make jump to condition
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::JUMP));
+        if (stmt.type == AST_IterationStmt::DO_LOOP)
+            cfg->linkBlocks(curBlock(), blockLoop);
+        else
+            cfg->linkBlocks(curBlock(), blockCond);
+
+        // Create condition
+        selectBlock(blockCond);
+        IRval cond = evalExpr(stmt.type == AST_IterationStmt::FOR_LOOP ?
+                              *std::get<AST_IterationStmt::ForLoopControls>(stmt.control).cond->child :
+                              *std::get<std::unique_ptr<AST_Expr>>(stmt.control));
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::BRANCH, cond));
+        cfg->linkBlocks(curBlock(), blockLoop);
+        cfg->linkBlocks(curBlock(), blockAfter);
+
+        // Create last action
+        if (stmt.type == AST_IterationStmt::FOR_LOOP) {
+            auto &blockLastAct = cfg->createBlock();
+            blockLastAct.termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                    IR_ExprTerminator::JUMP));
+            cfg->linkBlocks(blockLastAct, blockCond);
+            selectBlock(blockLastAct);
+            evalExpr(*std::get<AST_IterationStmt::ForLoopControls>(stmt.control).action);
+
+            activeLoops.push({ blockLastAct.id, blockAfter.id });
+        }
+        else { // WHILE_LOOP, DO_LOOP
+            activeLoops.push({ blockCond.id, blockAfter.id });
+        }
+
+        // Fill body
+        selectBlock(blockLoop);
+        if (stmt.body->type == AST_Statement::COMPOUND)
+            fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
+        else
+            insertStatement(*stmt.body);
+
+        // Terminate body
+        if (selectedBlock != nullptr) {
             curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                     IR_ExprTerminator::JUMP));
-            cfg->linkBlocks(curBlock(), blockCond);
-            selectBlock(blockCond);
-
-            IRval cond = evalExpr(*std::get<std::unique_ptr<AST_Expr>>(stmt.control));
-            curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-                    IR_ExprTerminator::BRANCH, cond));
-            cfg->linkBlocks(curBlock(), blockLoop);
-            cfg->linkBlocks(curBlock(), blockAfter);
-
-            activeLoops.push({ blockCond.id, blockAfter.id });
-            selectBlock(blockLoop);
-            if (stmt.body->type == AST_Statement::COMPOUND)
-                fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
-            else
-                insertStatement(*stmt.body);
-            activeLoops.pop();
-
-            // TODO: check for active terminator
-            if (selectedBlock != nullptr) {
-                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-                        IR_ExprTerminator::JUMP));
-                cfg->linkBlocks(curBlock(), blockCond);
-            }
-            selectBlock(blockAfter);
+            cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().nextIter));
         }
-        else {
-            NOT_IMPLEMENTED("Only while loops implemented");
-        }
+        selectBlock(blockAfter);
+
+        activeLoops.pop();
+        if (stmt.type == AST_IterationStmt::FOR_LOOP)
+            variables.decreaseLevel();
     }
     else if (rawStmt.type == AST_Statement::JUMP) {
         auto const &stmt = dynamic_cast<AST_JumpStmt const &>(rawStmt);
@@ -327,7 +365,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
             curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                     IR_ExprTerminator::JUMP));
-            cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().cond));
+            cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().nextIter));
             deselectBlock();
         }
         else if (stmt.type == AST_JumpStmt::J_GOTO) {

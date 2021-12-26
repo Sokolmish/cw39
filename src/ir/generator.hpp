@@ -36,12 +36,13 @@ private:
     std::shared_ptr<IR_TypeFunc> curFunctionType = nullptr;
 
     struct LoopBlocks {
-        int cond, exit;
+        int nextIter, exit;
     };
     std::stack<LoopBlocks> activeLoops;
 
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
+    void insertDeclaration(AST_Declaration const &decl);
     void insertStatement(AST_Statement const &rawStmt);
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);

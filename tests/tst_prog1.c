@@ -69,9 +69,8 @@ int main() {
         arr[i] = i * i;
         i++;
     }
-    i = 0;
-    while (i < 4)
-        printf("%d ", arr[i++]);
+    for (int j = 0; j < 4; j++)
+        printf("%d ", arr[j]);
     printf("\n");
 
     i = 3;
@@ -81,6 +80,16 @@ int main() {
         if (i == 0)
             break;
     }
+    printf("\n");
+
+    i = 0;
+    do {
+        printf("%d ", i);
+        if (i == 0)
+            i = 2;
+        else
+            i--;
+    } while (i != 0);
     printf("\n");
 
     while (1) {
