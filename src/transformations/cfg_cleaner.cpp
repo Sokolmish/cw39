@@ -103,7 +103,7 @@ void CfgCleaner::removeUselessNodes() {
                         if (node->body->type == IR_Expr::CALL)
                             continue;
                         else if (node->body->type == IR_Expr::OPERATION) {
-                            if (isInList(node->body->getOper().op, { IR_STORE, IR_INSERT }))
+                            if (isInList(node->body->getOper().op, { IR_ExprOper::STORE, IR_ExprOper::INSERT }))
                                 continue;
                         }
                         node->body = nullptr;

@@ -49,35 +49,35 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     auto &oper = dynamic_cast<IR_ExprOper &>(*node->body);
 
     // Add or subtract 0
-    if (isInList(oper.op, { IR_ADD, IR_SUB })) {
+    if (isInList(oper.op, { IR_ExprOper::ADD, IR_ExprOper::SUB })) {
         if (isConstEqual(oper.args[0], 0ULL)) {
-            if (oper.op == IR_ADD) {
-                oper.op = IR_MOV;
+            if (oper.op == IR_ExprOper::ADD) {
+                oper.op = IR_ExprOper::MOV;
                 oper.args = std::vector<IRval>{ oper.args[1] };
             }
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
     }
 
     // Mul by 0
-    if (isInList(oper.op, { IR_MUL })) {
+    if (isInList(oper.op, { IR_ExprOper::MUL })) {
         if (isConstEqual(oper.args[0], 0ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[1] };
         }
     }
 
     // Zero division
-    if (isInList(oper.op, { IR_DIV, IR_REM })) {
+    if (isInList(oper.op, { IR_ExprOper::DIV, IR_ExprOper::REM })) {
         if (isConstEqual(oper.args[0], 0ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
@@ -86,54 +86,54 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Bit shift of 0 and by 0
-    if (isInList(oper.op, { IR_SHR, IR_SHL })) {
+    if (isInList(oper.op, { IR_ExprOper::SHR, IR_ExprOper::SHL })) {
         if (isConstEqual(oper.args[1], 0ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
         else if (isConstEqual(oper.args[0], 0ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
     }
 
     // Mul by 1
-    if (isInList(oper.op, { IR_MUL })) {
+    if (isInList(oper.op, { IR_ExprOper::MUL })) {
         if (isConstEqual(oper.args[1], 1ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
         else if (isConstEqual(oper.args[0], 1ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[1] };
         }
     }
 
     // Div by 1
-    if (isInList(oper.op, { IR_MUL })) {
+    if (isInList(oper.op, { IR_ExprOper::MUL })) {
         if (isConstEqual(oper.args[1], 1ULL)) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
     }
 
     // Zero subtraction
-    if (isInList(oper.op, { IR_SUB, IR_XOR })) {
+    if (isInList(oper.op, { IR_ExprOper::SUB, IR_ExprOper::XOR })) {
         // TODO: see note at comparsion operator
         if (oper.args[0] == oper.args[1] && oper.args[0].version == oper.args[1].version) {
-            oper.op = IR_MOV;
+            oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ IRval::createVal(oper.args[0].getType(), 0ULL) };
         }
     }
 
     // Mul by power of 2
-    if (oper.op == IR_MUL) {
+    if (oper.op == IR_ExprOper::MUL) {
         if (isConstEqual(oper.args[1], 2ULL)) {
-            oper.op = IR_ADD;
+            oper.op = IR_ExprOper::ADD;
             oper.args = std::vector<IRval>{ oper.args[0], oper.args[0] };
         }
         else if (isConstEqual(oper.args[0], 2ULL)) {
-            oper.op = IR_ADD;
+            oper.op = IR_ExprOper::ADD;
             oper.args = std::vector<IRval>{ oper.args[1], oper.args[1] };
         }
     }

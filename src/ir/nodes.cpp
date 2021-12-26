@@ -244,29 +244,29 @@ std::vector<IRval*> IR_ExprOper::getArgs() {
 
 std::string IR_ExprOper::opToString() const {
     switch (op) {
-        case IR_MUL:        return "mul";
-        case IR_DIV:        return "div";
-        case IR_REM:        return "rem";
-        case IR_ADD:        return "add";
-        case IR_SUB:        return "sub";
-        case IR_SHR:        return "shr";
-        case IR_SHL:        return "shl";
-        case IR_XOR:        return "xor";
-        case IR_AND:        return "and";
-        case IR_OR:         return "or";
-        case IR_LAND:       return "land";
-        case IR_LOR:        return "lor";
-        case IR_EQ:         return "eq";
-        case IR_NE:         return "ne";
-        case IR_GT:         return "gt";
-        case IR_LT:         return "lt";
-        case IR_GE:         return "ge";
-        case IR_LE:         return "le";
-        case IR_LOAD:       return "load";
-        case IR_STORE:      return "store";
-        case IR_EXTRACT:    return "extract";
-        case IR_INSERT:     return "insert";
-        case IR_MOV:        return "mov";
+        case MUL:        return "mul";
+        case DIV:        return "div";
+        case REM:        return "rem";
+        case ADD:        return "add";
+        case SUB:        return "sub";
+        case SHR:        return "shr";
+        case SHL:        return "shl";
+        case XOR:        return "xor";
+        case AND:        return "and";
+        case OR:         return "or";
+        case LAND:       return "land";
+        case LOR:        return "lor";
+        case EQ:         return "eq";
+        case NE:         return "ne";
+        case GT:         return "gt";
+        case LT:         return "lt";
+        case GE:         return "ge";
+        case LE:         return "le";
+        case LOAD:       return "load";
+        case STORE:      return "store";
+        case EXTRACT:    return "extract";
+        case INSERT:     return "insert";
+        case MOV:        return "mov";
 //        case IR_GEP:        return "gep";
     }
     throw;
@@ -434,6 +434,25 @@ IR_Block::IR_Block(int id) : id(id) {}
 
 void IR_Block::addNode(IR_Node node) {
     body.push_back(std::move(node));
+}
+
+void IR_Block::addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr) {
+    if (res.has_value())
+        body.push_back(IR_Node(res.value(), std::move(expr)));
+    else
+        body.push_back(IR_Node(std::move(expr)));
+}
+
+void IR_Block::addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
+    addNode(res, std::make_unique<IR_ExprOper>(op, std::move(args)));
+}
+
+void IR_Block::addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest) {
+    addNode(res, make_unique<IR_ExprCast>(sourceVal, dest));
+}
+
+void IR_Block::addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args) {
+    addNode(res, std::make_unique<IR_ExprCall>(callee, args));
 }
 
 IR_Block IR_Block::copy() const {

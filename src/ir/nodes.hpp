@@ -13,21 +13,14 @@
 #include "parser/common.hpp"
 
 
+// Expressions
+
 struct IR_ExprOper;
 struct IR_ExprAlloc;
 struct IR_ExprCast;
 struct IR_ExprCall;
 struct IR_ExprTerminator;
 struct IR_ExprPhi;
-
-// TODO: move enum into IR_Oper
-// TODO: move memory operations into separate category
-enum IR_Ops {
-    IR_MUL, IR_DIV, IR_REM, IR_ADD, IR_SUB, IR_SHR, IR_SHL,
-    IR_XOR, IR_AND, IR_OR, IR_LAND, IR_LOR,
-    IR_EQ, IR_NE, IR_GT, IR_LT, IR_GE, IR_LE,
-    IR_LOAD, IR_STORE, IR_EXTRACT, IR_INSERT, IR_MOV // IR_GEP
-};
 
 struct IR_Expr {
     enum Type { OPERATION, ALLOCATION, CAST, CALL, TERM, PHI } type;
@@ -46,6 +39,14 @@ struct IR_Expr {
 };
 
 struct IR_ExprOper : public IR_Expr {
+    // TODO: move memory operations into separate category
+    enum IR_Ops {
+        MUL, DIV, REM, ADD, SUB, SHR, SHL,
+        XOR, AND, OR, LAND, LOR,
+        EQ, NE, GT, LT, GE, LE,
+        LOAD, STORE, EXTRACT, INSERT, MOV // GEP
+    };
+
     IR_Ops op;
     std::vector<IRval> args;
 
@@ -142,8 +143,13 @@ public:
     std::vector<int> next;
 
     explicit IR_Block(int id);
-    void addNode(IR_Node node);
     IR_Block copy() const;
+
+    void addNode(IR_Node node);
+    void addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr);
+    void addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args);
+    void addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest);
+    void addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args);
 
     std::vector<IRval> getDefinitions() const;
     std::vector<IRval> getReferences() const;

@@ -1,5 +1,4 @@
 #include "generator.hpp"
-#include <sstream>
 
 IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}
 
@@ -117,13 +116,10 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     for (auto const &[argIdent, argType] : declArgs) {
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
         IRval argPtr = cfg->createReg(argPtrType);
-        auto val = std::make_unique<IR_ExprAlloc>(argType, 1U);
-        curBlock().addNode(IR_Node{ argPtr, std::move(val) });
+        curBlock().addNode(IR_Node{ argPtr, std::make_unique<IR_ExprAlloc>(argType, 1U) });
 
         auto argVal = IRval::createFunArg(argType, curArgNum);
-        auto storeNode = std::make_unique<IR_ExprOper>(
-                IR_STORE, std::vector<IRval>{ argPtr, argVal });
-        curBlock().addNode(IR_Node(std::move(storeNode)));
+        curBlock().addOperNode({}, IR_ExprOper::STORE, { argPtr, argVal });
 
         variables.put(argIdent, argPtr);
         curArgNum++;
@@ -172,8 +168,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
 
         IRval res = cfg->createReg(ptrType);
-        auto val = std::make_unique<IR_ExprAlloc>(varType, 1U);
-        curBlock().addNode(IR_Node{ res, std::move(val) });
+        curBlock().addNode(IR_Node{ res, std::make_unique<IR_ExprAlloc>(varType, 1U) });
 
         if (variables.hasOnTop(ident))
             semanticError("Variable already declared");
@@ -187,9 +182,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
                 if (!initVal.getType()->equal(*varType)) {
                     semanticError("Cannot initialize variable with different type");
                 }
-                auto storeNode = std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ res, initVal });
-                curBlock().addNode(IR_Node(std::move(storeNode)));
+                curBlock().addOperNode({}, IR_ExprOper::STORE, { res, initVal });
             }
             else {
                 NOT_IMPLEMENTED("Compound initializers");

@@ -42,7 +42,7 @@ void CopyPropagator::propagateCopies() {
                 for (auto *node: curBlock.getAllNodes()) {
                     if (node->res && node->res->isVReg() && node->body && node->body->type == IR_Expr::OPERATION) {
                         auto oper = dynamic_cast<IR_ExprOper &>(*node->body);
-                        if (oper.op == IR_MOV) {
+                        if (oper.op == IR_ExprOper::MOV) {
                             changed = true;
                             globalChanged = true;
                             remlacementMap.emplace(*node->res, oper.args.at(0));
@@ -84,11 +84,14 @@ void CopyPropagator::foldConstants() {
                     if (node->body->type == IR_Expr::OPERATION) {
                         auto &operExpr = dynamic_cast<IR_ExprOper &>(*node->body);
 
-                        if (isInList(operExpr.op, { IR_MOV, IR_STORE, IR_LOAD, IR_INSERT, IR_EXTRACT }))
+                        if (isInList(operExpr.op, { IR_ExprOper::MOV, IR_ExprOper::STORE,
+                                                    IR_ExprOper::LOAD, IR_ExprOper::INSERT,
+                                                    IR_ExprOper::EXTRACT })) {
                             continue;
+                        }
 
                         bool isConst = true;
-                        for (auto const &arg : operExpr.args) {
+                        for (auto const &arg: operExpr.args) {
                             if (!arg.isConstant()) {
                                 isConst = false;
                                 break;
@@ -100,7 +103,7 @@ void CopyPropagator::foldConstants() {
                         changed = true;
                         globalChanged = true;
                         IRval newVal = doConstOperation(operExpr);
-                        operExpr.op = IR_MOV;
+                        operExpr.op = IR_ExprOper::MOV;
                         operExpr.args = { newVal };
                     }
                     else if (node->body->type == IR_Expr::CAST) {
@@ -132,7 +135,7 @@ void CopyPropagator::foldConstants() {
                         changed = true;
                         globalChanged = true;
                         node->body = std::make_unique<IR_ExprOper>(
-                                IR_MOV, std::vector<IRval>{ commonVal });
+                                IR_ExprOper::MOV, std::vector<IRval>{ commonVal });
                     }
                 }
             });
@@ -144,46 +147,46 @@ IRval CopyPropagator::doConstOperation(const IR_ExprOper &oper) {
     using bop = AST_Binop;
 
     switch (oper.op) {
-        case IR_MUL:
+        case IR_ExprOper::MUL:
             return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
-        case IR_DIV:
+        case IR_ExprOper::DIV:
             return IR_Generator::doConstBinOperation(bop::DIV, oper.args[0], oper.args[1]);
-        case IR_REM:
+        case IR_ExprOper::REM:
             return IR_Generator::doConstBinOperation(bop::REM, oper.args[0], oper.args[1]);
-        case IR_ADD:
+        case IR_ExprOper::ADD:
             return IR_Generator::doConstBinOperation(bop::ADD, oper.args[0], oper.args[1]);
-        case IR_SUB:
+        case IR_ExprOper::SUB:
             return IR_Generator::doConstBinOperation(bop::SUB, oper.args[0], oper.args[1]);
-        case IR_SHR:
+        case IR_ExprOper::SHR:
             return IR_Generator::doConstBinOperation(bop::SHR, oper.args[0], oper.args[1]);
-        case IR_SHL:
+        case IR_ExprOper::SHL:
             return IR_Generator::doConstBinOperation(bop::SHL, oper.args[0], oper.args[1]);
-        case IR_XOR:
+        case IR_ExprOper::XOR:
             return IR_Generator::doConstBinOperation(bop::BIT_XOR, oper.args[0], oper.args[1]);
-        case IR_AND:
+        case IR_ExprOper::AND:
             return IR_Generator::doConstBinOperation(bop::BIT_AND, oper.args[0], oper.args[1]);
-        case IR_OR:
+        case IR_ExprOper::OR:
             return IR_Generator::doConstBinOperation(bop::BIT_OR, oper.args[0], oper.args[1]);
-        case IR_EQ:
+        case IR_ExprOper::EQ:
             return IR_Generator::doConstBinOperation(bop::EQ, oper.args[0], oper.args[1]);
-        case IR_NE:
+        case IR_ExprOper::NE:
             return IR_Generator::doConstBinOperation(bop::NE, oper.args[0], oper.args[1]);
-        case IR_GT:
+        case IR_ExprOper::GT:
             return IR_Generator::doConstBinOperation(bop::GT, oper.args[0], oper.args[1]);
-        case IR_LT:
+        case IR_ExprOper::LT:
             return IR_Generator::doConstBinOperation(bop::LT, oper.args[0], oper.args[1]);
-        case IR_GE:
+        case IR_ExprOper::GE:
             return IR_Generator::doConstBinOperation(bop::GE, oper.args[0], oper.args[1]);
-        case IR_LE:
+        case IR_ExprOper::LE:
             return IR_Generator::doConstBinOperation(bop::LE, oper.args[0], oper.args[1]);
 
-        case IR_MOV:
-        case IR_LOAD:
-        case IR_STORE:
-        case IR_EXTRACT:
-        case IR_INSERT:
-        case IR_LAND:
-        case IR_LOR:
+        case IR_ExprOper::MOV:
+        case IR_ExprOper::LOAD:
+        case IR_ExprOper::STORE:
+        case IR_ExprOper::EXTRACT:
+        case IR_ExprOper::INSERT:
+        case IR_ExprOper::LAND:
+        case IR_ExprOper::LOR:
         default:
             semanticError("Unsupported operation");
     }

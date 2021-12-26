@@ -17,16 +17,14 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
             auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
             if (!destVarPtrType->child->equal(*wrValue.getType()))
                 semanticError("Cannot assign values of different types");
-            curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                    IR_STORE, std::vector<IRval>{ *destVar, wrValue })));
+            curBlock().addOperNode({}, IR_ExprOper::STORE, { *destVar, wrValue });
         }
         else if (destGlobal != globals.end()) {
             auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(
                     destGlobal->second.getType());
             if (!destVarPtrType->child->equal(*wrValue.getType()))
                 semanticError("Cannot assign values of different types");
-            curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                    IR_STORE, std::vector<IRval>{ destGlobal->second, wrValue })));
+            curBlock().addOperNode({}, IR_ExprOper::STORE, { destGlobal->second, wrValue });
         }
         else {
             semanticError("Unknown variable");
@@ -46,8 +44,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
         if (!ptrType->child->equal(*wrValue.getType()))
             semanticError("Cannot assign values of different types");
 
-        curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                IR_STORE, std::vector<IRval>{ ptrVal, wrValue })));
+        curBlock().addOperNode({}, IR_ExprOper::STORE, { ptrVal, wrValue });
     }
     else if (dest.node_type == AST_POSTFIX) { // Accessors
         auto const &assignee = dynamic_cast<AST_Postfix const &>(dest);
@@ -66,8 +63,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
             IRval index = IRval::createVal(
                     IR_TypeDirect::type_u64,
                     static_cast<uint64_t>(field->index));
-            curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                    IR_INSERT, std::vector<IRval>{ base, index, wrValue })));
+            curBlock().addOperNode(res, IR_ExprOper::INSERT, { base, index, wrValue });
 
             doAssignment(*assignee.base, res);
         }
@@ -83,8 +79,8 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
                 if (!arrayType->child->equal(*wrValue.getType()))
                     semanticError("Cannot assign values of different types");
 
-                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                        IR_INSERT, std::vector<IRval>{ base, index, wrValue })));
+                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>( // TODO: no res value (and unused)
+                        IR_ExprOper::INSERT, std::vector<IRval>{ base, index, wrValue })));
             }
             else if (base.getType()->type == IR_Type::POINTER) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
@@ -94,8 +90,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
                 IRval fixedIndex = index;
                 if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64)) {
                     fixedIndex = cfg->createReg(IR_TypeDirect::type_u64);
-                    curBlock().addNode(IR_Node(fixedIndex, std::make_unique<IR_ExprCast>(
-                            index, IR_TypeDirect::type_u64)));
+                    curBlock().addCastNode(fixedIndex, index, IR_TypeDirect::type_u64);
                 }
 
                 IRval scaledIndex = fixedIndex;
@@ -104,21 +99,16 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
                             IR_TypeDirect::type_u64,
                             static_cast<uint64_t>(ptrType->child->getBytesSize()));
                     scaledIndex = cfg->createReg(fixedIndex.getType());
-                    curBlock().addNode(IR_Node(scaledIndex, std::make_unique<IR_ExprOper>(
-                            IR_MUL, std::vector<IRval>{ fixedIndex, multiplyer })));
+                    curBlock().addOperNode(scaledIndex, IR_ExprOper::MUL, { fixedIndex, multiplyer });
                 }
 
                 IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
-                curBlock().addNode(IR_Node(iptr, std::make_unique<IR_ExprCast>(
-                        base, IR_TypeDirect::type_u64)));
+                curBlock().addCastNode(iptr, base, IR_TypeDirect::type_u64);
                 IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
-                curBlock().addNode(IR_Node(wOffset, std::make_unique<IR_ExprOper>(
-                        IR_ADD, std::vector<IRval>{ iptr, scaledIndex })));
+                curBlock().addOperNode(wOffset, IR_ExprOper::ADD, { iptr, scaledIndex });
                 IRval finPtr = cfg->createReg(ptrType);
-                curBlock().addNode(IR_Node(finPtr, std::make_unique<IR_ExprCast>(
-                        wOffset, ptrType)));
-                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ finPtr, wrValue })));
+                curBlock().addCastNode(finPtr, wOffset, ptrType);
+                curBlock().addOperNode({}, IR_ExprOper::STORE, { finPtr, wrValue });
             }
             else {
                 semanticError("Wrong type for indexation");
@@ -146,75 +136,66 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
 //    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
 
     if (isGeneralNumOp(op)) {
-        std::unique_ptr<IR_ExprOper> opNode;
+        IRval res = cfg->createReg(lhs.getType());
 
         if (op == bop::ADD)
-            opNode = std::make_unique<IR_ExprOper>(IR_ADD, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::ADD, { lhs, rhs });
         else if (op == bop::SUB)
-            opNode = std::make_unique<IR_ExprOper>(IR_SUB, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::SUB, { lhs, rhs });
         else if (op == bop::MUL)
-            opNode = std::make_unique<IR_ExprOper>(IR_MUL, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::MUL, { lhs, rhs });
         else if (op == bop::DIV)
-            opNode = std::make_unique<IR_ExprOper>(IR_DIV, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::DIV, { lhs, rhs });
         else
             semanticError("Wrong general arithmetic operation");
 
-        IRval res = cfg->createReg(lhs.getType());
-        curBlock().addNode(IR_Node(res, std::move(opNode)));
         return res;
     }
     else if (isIntegerNumOp(op)) {
         if (!ltype.isInteger())
             semanticError("Operation cannot be applied to non-integer types");
 
-        std::unique_ptr<IR_ExprOper> opNode;
+        IRval res = cfg->createReg(lhs.getType());
 
         if (op == bop::REM)
-            opNode = std::make_unique<IR_ExprOper>(IR_REM, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::REM, { lhs, rhs });
         else if (op == bop::SHL)
-            opNode = std::make_unique<IR_ExprOper>(IR_SHL, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::SHL, { lhs, rhs });
         else if (op == bop::SHR)
-            opNode = std::make_unique<IR_ExprOper>(IR_SHR, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::SHR, { lhs, rhs });
         else if (op == bop::BIT_XOR)
-            opNode = std::make_unique<IR_ExprOper>(IR_XOR, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::XOR, { lhs, rhs });
         else if (op == bop::BIT_AND)
-            opNode = std::make_unique<IR_ExprOper>(IR_AND, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::AND, { lhs, rhs });
         else if (op == bop::BIT_OR)
-            opNode = std::make_unique<IR_ExprOper>(IR_OR, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::OR, { lhs, rhs });
         else if (op == bop::LOG_AND)
             NOT_IMPLEMENTED("Logical operations");
-//            opNode = std::make_unique<IR_ExprOper>(IR_LAND, std::vector<IRval>{ lhs, rhs });
         else if (op == bop::LOG_OR)
             NOT_IMPLEMENTED("Logical operations");
-//            opNode = std::make_unique<IR_ExprOper>(IR_LOR, std::vector<IRval>{ lhs, rhs });
         else
             semanticError("Wrong general arithmetic operation");
 
-        IRval res = cfg->createReg(lhs.getType());
-        curBlock().addNode(IR_Node(res, std::move(opNode)));
         return res;
     }
     else if (isComparsionOp(op)) {
-        std::unique_ptr<IR_ExprOper> opNode;
+        IRval res = cfg->createReg(IR_TypeDirect::type_i32);
 
         if (op == bop::EQ)
-            opNode = std::make_unique<IR_ExprOper>(IR_EQ, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::EQ, { lhs, rhs });
         else if (op == bop::NE)
-            opNode = std::make_unique<IR_ExprOper>(IR_NE, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::NE, { lhs, rhs });
         else if (op == bop::GT)
-            opNode = std::make_unique<IR_ExprOper>(IR_GT, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::GT, { lhs, rhs });
         else if (op == bop::LT)
-            opNode = std::make_unique<IR_ExprOper>(IR_LT, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::LT, { lhs, rhs });
         else if (op == bop::GE)
-            opNode = std::make_unique<IR_ExprOper>(IR_GE, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::GE, { lhs, rhs });
         else if (op == bop::LE)
-            opNode = std::make_unique<IR_ExprOper>(IR_LE, std::vector<IRval>{ lhs, rhs });
+            curBlock().addOperNode(res, IR_ExprOper::LE, { lhs, rhs });
         else
             semanticError("Wrong comparsion operation");
 
-        IRval res = cfg->createReg(IR_TypeDirect::type_i32);
-        auto node = IR_Node(res, std::move(opNode));
-        curBlock().addNode(std::move(node));
         return res;
     }
     else {
@@ -297,7 +278,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return arg;
 
             IRval res = cfg->createReg(dest);
-            curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprCast>(arg, dest)));
+            curBlock().addCastNode(res, arg, dest);
             return res;
         }
 
@@ -325,28 +306,25 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval zero = IRval::createVal(arg.getType(), 0U);
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_SUB, std::vector<IRval>{ zero, arg })));
+                curBlock().addOperNode(res, IR_ExprOper::SUB, { zero, arg });
                 return res;
             }
             else if (expr.op == uop::UN_NEG) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval maxv = IRval::createVal(arg.getType(), -1UL);
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_XOR, std::vector<IRval>{ maxv, arg })));
+                curBlock().addOperNode(res, IR_ExprOper::XOR, { maxv, arg });
                 return res;
             }
-            else if (expr.op == uop::UN_NOT) {
+            else if (expr.op == uop::UN_NOT) { // TODO: fix
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval maxv = IRval::createVal(arg.getType(), -1UL);
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res,  std::make_unique<IR_ExprOper>(
-                        IR_XOR, std::vector<IRval>{ maxv, arg })));
+                curBlock().addOperNode(res, IR_ExprOper::XOR, { maxv, arg });
                 return res;
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {
-                if (expr.child->node_type != AST_PRIMARY) // TODO: assign
+                if (expr.child->node_type != AST_PRIMARY) // TODO: use assignment
                     semanticError("Inc/dec available only for primary expressions");
                 auto const &prim = dynamic_cast<AST_Primary &>(*expr.child);
                 if (prim.type != AST_Primary::IDENT)
@@ -355,15 +333,13 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr &>(*expr.child));
                 IRval one = IRval::createVal(arg.getType(), 1U);
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        expr.op == uop::PRE_INC ? IR_ADD : IR_SUB,
-                        std::vector<IRval>{ arg, one })));
+                auto op = expr.op == uop::PRE_INC ? IR_ExprOper::ADD : IR_ExprOper::SUB;
+                curBlock().addOperNode(res, op, { arg, one });
 
                 auto var = variables.get(prim.getIdent());
                 if (!var.has_value())
                     semanticError("Unknown variable");
-                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ *var, res })));
+                curBlock().addOperNode({}, IR_ExprOper::STORE, { *var, res });
 
                 return res;
             }
@@ -376,8 +352,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     semanticError("Pointer to function cannot be dereferenced");
 
                 IRval res = cfg->createReg(ptrType->child);
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_LOAD, std::vector<IRval>{ ptrVal })));
+                curBlock().addOperNode(res, IR_ExprOper::LOAD, { ptrVal });
                 return res;
             }
             else if (expr.op == uop::ADDR_OF) {
@@ -408,7 +383,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 //
 //                        IRval res = cfg->createReg(std::make_shared<IR_TypePtr>(arrayType.child));
 //                        curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-//                                IR_GEP, std::vector<IRval>{ array, index })));
+//                                IR_GEP, std::vector<IRval>{ array, index }))); // addOperNode
 //                        return res;
 //                    }
 //                    else if (subject.op == AST_Postfix::DIR_ACCESS) {
@@ -425,7 +400,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 //                                IR_TypeDirect::type_u64,
 //                                static_cast<uint64_t>(field->index));
 //                        curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-//                                IR_GEP, std::vector<IRval>{ object, index })));
+//                                IR_GEP, std::vector<IRval>{ object, index }))); // addOperNode
 //                        return res;
 //                    }
 //                    else if (subject.op == AST_Postfix::DIR_ACCESS) {
@@ -488,7 +463,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 }
 
                 IRval res = cfg->createReg(fun.getFuncType().ret);
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprCall>(fun.getId(), args)));
+                curBlock().addCallNode(res, fun.getId(), args);
                 return res;
             }
             else if (expr.op == AST_Postfix::POST_INC || expr.op == AST_Postfix::POST_DEC) {
@@ -501,15 +476,13 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.base));
                 IRval one = IRval::createVal(arg.getType(), 1U);
                 IRval res = cfg->createReg(arg.getType());
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        expr.op == AST_Postfix::POST_INC ? IR_ADD : IR_SUB,
-                        std::vector<IRval>{ arg, one })));
+                auto op = expr.op == AST_Postfix::POST_INC ? IR_ExprOper::ADD : IR_ExprOper::SUB;
+                curBlock().addOperNode(res, op, { arg, one });
 
                 auto var = variables.get(prim.getIdent());
                 if (!var.has_value())
                     semanticError("Unknown variable");
-                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
-                        IR_STORE, std::vector<IRval>{ *var, res })));
+                curBlock().addOperNode({}, IR_ExprOper::STORE, { *var, res });
                 return arg;
             }
             else if (expr.op == AST_Postfix::INDEXATION) {
@@ -519,8 +492,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 if (array.getType()->type == IR_Type::ARRAY) {
                     auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
                     IRval res = cfg->createReg(arrayType.child);
-                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                            IR_EXTRACT, std::vector<IRval>{ array, index })));
+                    curBlock().addOperNode(res, IR_ExprOper::EXTRACT, { array, index });
                     return res;
                 }
                 else if (array.getType()->type == IR_Type::POINTER) {
@@ -530,8 +502,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     IRval fixedIndex = index;
                     if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64)) {
                         fixedIndex = cfg->createReg(IR_TypeDirect::type_u64);
-                        curBlock().addNode(IR_Node(fixedIndex, std::make_unique<IR_ExprCast>(
-                                index, IR_TypeDirect::type_u64)));
+                        curBlock().addCastNode(fixedIndex, index, IR_TypeDirect::type_u64);
                     }
 
                     IRval scaledIndex = fixedIndex;
@@ -540,22 +511,17 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                                 IR_TypeDirect::type_u64,
                                 static_cast<uint64_t>(ptrType->child->getBytesSize()));
                         scaledIndex = cfg->createReg(fixedIndex.getType());
-                        curBlock().addNode(IR_Node(scaledIndex, std::make_unique<IR_ExprOper>(
-                                IR_MUL, std::vector<IRval>{ fixedIndex, multiplyer })));
+                        curBlock().addOperNode(scaledIndex, IR_ExprOper::MUL, { fixedIndex, multiplyer });
                     }
 
                     IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
-                    curBlock().addNode(IR_Node(iptr, std::make_unique<IR_ExprCast>(
-                            array, IR_TypeDirect::type_u64)));
+                    curBlock().addCastNode(iptr, array, IR_TypeDirect::type_u64);
                     IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
-                    curBlock().addNode(IR_Node(wOffset, std::make_unique<IR_ExprOper>(
-                            IR_ADD, std::vector<IRval>{ iptr, scaledIndex })));
+                    curBlock().addOperNode(wOffset, IR_ExprOper::ADD, { iptr, scaledIndex });
                     IRval finPtr = cfg->createReg(ptrType);
-                    curBlock().addNode(IR_Node(finPtr, std::make_unique<IR_ExprCast>(
-                            wOffset, ptrType)));
+                    curBlock().addCastNode(finPtr, wOffset, ptrType);
                     IRval res = cfg->createReg(ptrType->child);
-                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                            IR_LOAD, std::vector<IRval>{ finPtr })));
+                    curBlock().addOperNode(res, IR_ExprOper::LOAD, { finPtr });
                     return res;
                 }
                 else {
@@ -575,8 +541,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval index = IRval::createVal(
                         IR_TypeDirect::type_u64,
                         static_cast<uint64_t>(field->index));
-                curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                        IR_EXTRACT, std::vector<IRval>{ object, index })));
+                curBlock().addOperNode(res, IR_ExprOper::EXTRACT, { object, index });
                 return res;
             }
             else if (expr.op == AST_Postfix::PTR_ACCESS) {
@@ -646,14 +611,12 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     auto const &arrType = dynamic_cast<IR_TypeArray const &>(*resType);
                     auto ptrType = std::make_shared<IR_TypePtr>(arrType.child);
                     IRval res = cfg->createReg(ptrType);
-                    curBlock().addNode(IR_Node(res,std::make_unique<IR_ExprCast>(
-                            ptrArg[0], ptrType)));
+                    curBlock().addCastNode(res, ptrArg[0], ptrType);
                     return res;
                 }
                 else {
                     IRval res = cfg->createReg(resType);
-                    curBlock().addNode(IR_Node(res, std::make_unique<IR_ExprOper>(
-                            IR_LOAD, ptrArg)));
+                    curBlock().addOperNode(res, IR_ExprOper::LOAD, ptrArg);
                     return res;
                 }
             }

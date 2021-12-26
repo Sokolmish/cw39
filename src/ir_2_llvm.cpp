@@ -414,7 +414,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
     Value *res = nullptr;
 
     switch (oper.op) {
-        case IR_MUL:
+        case IR_ExprOper::MUL:
             if (dirType->isInteger())
                 res = builder->CreateMul(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else if (dirType->isFloat())
@@ -423,7 +423,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 semanticError("Wrong mul types");
             break;
 
-        case IR_DIV:
+        case IR_ExprOper::DIV:
             if (dirType->isInteger()) {
                 if (dirType->isSigned())
                     res = builder->CreateSDiv(getValue(oper.args[0]), getValue(oper.args[1]), name);
@@ -436,7 +436,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 semanticError("Wrong div types");
             break;
 
-        case IR_REM:
+        case IR_ExprOper::REM:
             if (dirType->isInteger()) {
                 if (dirType->isSigned())
                     res = builder->CreateSRem(getValue(oper.args[0]), getValue(oper.args[1]), name);
@@ -449,7 +449,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 semanticError("Wrong div types");
             break;
 
-        case IR_ADD:
+        case IR_ExprOper::ADD:
             if (dirType->isInteger())
                 res = builder->CreateAdd(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else if (dirType->isFloat())
@@ -458,7 +458,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 semanticError("Wrong add types");
             break;
 
-        case IR_SUB:
+        case IR_ExprOper::SUB:
             if (dirType->isInteger())
                 res = builder->CreateSub(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else if (dirType->isFloat())
@@ -467,98 +467,98 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 semanticError("Wrong sub types");
             break;
 
-        case IR_SHR:
+        case IR_ExprOper::SHR:
             if (dirType->isSigned())
                 res = builder->CreateAShr(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
                 res = builder->CreateLShr(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_SHL:
+        case IR_ExprOper::SHL:
             res = builder->CreateShl(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_XOR:
+        case IR_ExprOper::XOR:
             res = builder->CreateXor(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_AND:
+        case IR_ExprOper::AND:
             res = builder->CreateAnd(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_OR:
+        case IR_ExprOper::OR:
             res = builder->CreateOr(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_LAND:
+        case IR_ExprOper::LAND:
             res = builder->CreateLogicalAnd(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_LOR:
+        case IR_ExprOper::LOR:
             res = builder->CreateLogicalOr(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_EQ:
+        case IR_ExprOper::EQ:
             res = builder->CreateICmpEQ(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_NE:
+        case IR_ExprOper::NE:
             res = builder->CreateICmpNE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_GT:
+        case IR_ExprOper::GT:
             if (dirType->isSigned())
                 res = builder->CreateICmpSGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
                 res = builder->CreateICmpUGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_LT:
+        case IR_ExprOper::LT:
             if (dirType->isSigned())
                 res = builder->CreateICmpSLT(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
                 res = builder->CreateICmpULT(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_GE:
+        case IR_ExprOper::GE:
             if (dirType->isSigned())
                 res = builder->CreateICmpSGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
                 res = builder->CreateICmpUGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_LE:
+        case IR_ExprOper::LE:
             if (dirType->isSigned())
                 res = builder->CreateICmpSLE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
                 res = builder->CreateICmpULE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_LOAD: {
+        case IR_ExprOper::LOAD: {
             auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.args[0].getType());
             res = builder->CreateLoad(getTypeFromIR(*ptrTp.child), getValue(oper.args[0]), name);
             break;
         }
 
-        case IR_STORE:
+        case IR_ExprOper::STORE:
             builder->CreateStore(getValue(oper.args[1]), getValue(oper.args[0]));
             break;
 
-        case IR_EXTRACT:
+        case IR_ExprOper::EXTRACT:
             res = builder->CreateExtractValue(
                     getValue(oper.args[0]),
                     { oper.args[1].castValTo<uint32_t>() },
                     name);
             break;
 
-        case IR_INSERT:
+        case IR_ExprOper::INSERT:
             res = builder->CreateInsertValue(
                     getValue(oper.args[0]), getValue(oper.args[2]),
                     { oper.args[1].castValTo<uint32_t>() },
                     name);
             break;
 
-        case IR_MOV:
+        case IR_ExprOper::MOV:
             NOT_IMPLEMENTED("mov");
 
         default:
