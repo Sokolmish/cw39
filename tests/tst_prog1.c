@@ -1,13 +1,14 @@
+int printf(const char *format, ...);
+char *memcpy(char *dest, char const *src, unsigned long n); // Void pointers are not allowed
+unsigned long strlen(const char *s);
+int atoi(const char *nptr);
+
 int gg = 142;
 
 struct TestStruct {
     int field1;
     int field2;
 };
-
-int printf(const char *format, ...);
-char *memcpy(char *dest, char const *src, unsigned long n); // Void pointers are not allowed
-unsigned long strlen(const char *s);
 
 void store555(int *addr) {
     *addr = 555;

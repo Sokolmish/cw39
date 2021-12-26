@@ -150,6 +150,7 @@ public:
     void addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args);
     void addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest);
     void addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args);
+    // TODO: terminator and PHI
 
     std::vector<IRval> getDefinitions() const;
     std::vector<IRval> getReferences() const;

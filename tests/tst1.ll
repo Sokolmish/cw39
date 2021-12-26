@@ -1,7 +1,7 @@
 ; ModuleID = 'top'
 source_filename = "top"
 
-%struct2 = type { i32, i32 }
+%struct12 = type { i32, i32 }
 
 @.str0 = private unnamed_addr constant [9 x i8] c"R??: %d\0A\00", align 1
 @.str1 = private unnamed_addr constant [7 x i8] c"%d %d\0A\00", align 1
@@ -28,6 +28,8 @@ declare i32 @printf(i8*, ...)
 declare i8* @memcpy(i8*, i8*, i64)
 
 declare i64 @strlen(i8*)
+
+declare i32 @atoi(i8*)
 
 define void @store555(i32* %.arg_0) {
 block_0:
@@ -92,17 +94,17 @@ block_7:                                          ; preds = %block_6, %block_5
   %vr44 = bitcast [16 x i8]* %vr27 to i8*
   %vr45 = load i32, i32* %vr13, align 4
   %1 = call i32 (i8*, ...) @printf(i8* %vr44, i32 %vr45)
-  %vr47 = alloca %struct2, align 8
-  %vr48 = load %struct2, %struct2* %vr47, align 4
-  %vr49 = insertvalue %struct2 %vr48, i32 111, 0
-  store %struct2 %vr49, %struct2* %vr47, align 4
-  %vr50 = load %struct2, %struct2* %vr47, align 4
-  %vr51 = insertvalue %struct2 %vr50, i32 222, 1
-  store %struct2 %vr51, %struct2* %vr47, align 4
-  %vr52 = load %struct2, %struct2* %vr47, align 4
-  %vr53 = extractvalue %struct2 %vr52, 0
-  %vr54 = load %struct2, %struct2* %vr47, align 4
-  %vr55 = extractvalue %struct2 %vr54, 1
+  %vr47 = alloca %struct12, align 8
+  %vr48 = load %struct12, %struct12* %vr47, align 4
+  %vr49 = insertvalue %struct12 %vr48, i32 111, 0
+  store %struct12 %vr49, %struct12* %vr47, align 4
+  %vr50 = load %struct12, %struct12* %vr47, align 4
+  %vr51 = insertvalue %struct12 %vr50, i32 222, 1
+  store %struct12 %vr51, %struct12* %vr47, align 4
+  %vr52 = load %struct12, %struct12* %vr47, align 4
+  %vr53 = extractvalue %struct12 %vr52, 0
+  %vr54 = load %struct12, %struct12* %vr47, align 4
+  %vr55 = extractvalue %struct12 %vr54, 1
   %2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str1, i32 0, i32 0), i32 %vr53, i32 %vr55)
   %3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str2, i32 0, i32 0), double 0x4007FFFFFE666666)
   %4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str3, i32 0, i32 0), i32 123, i32 -123)

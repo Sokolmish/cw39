@@ -169,10 +169,8 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             curBlock().addOperNode(res, IR_ExprOper::AND, { lhs, rhs });
         else if (op == bop::BIT_OR)
             curBlock().addOperNode(res, IR_ExprOper::OR, { lhs, rhs });
-        else if (op == bop::LOG_AND)
-            NOT_IMPLEMENTED("Logical operations");
-        else if (op == bop::LOG_OR)
-            NOT_IMPLEMENTED("Logical operations");
+        else if (op == bop::LOG_AND || op == bop::LOG_OR)
+            semanticError("Logical operations in general context");
         else
             semanticError("Wrong general arithmetic operation");
 
@@ -264,9 +262,53 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
         case AST_BINOP: {
             auto const &expr = dynamic_cast<AST_Binop const &>(node);
-            IRval lhs = evalExpr(*expr.lhs);
-            IRval rhs = evalExpr(*expr.rhs);
-            return doBinOp(expr.op, lhs, rhs);
+
+            if (!isInList(expr.op, { AST_Binop::LOG_AND, AST_Binop::LOG_OR })) {
+                IRval lhs = evalExpr(*expr.lhs);
+                IRval rhs = evalExpr(*expr.rhs);
+                return doBinOp(expr.op, lhs, rhs);
+            }
+            else { // Logical operation (with short evaluation)
+                IRval lhs = evalExpr(*expr.lhs);
+
+                if (lhs.getType()->type != IR_Type::DIRECT)
+                    semanticError("Cannon perform logical operation on non-integer type");
+                auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
+                if (!ltype.isInteger())
+                    semanticError("Cannon perform logical operation on non-integer type");
+
+                IRval res = cfg->createReg(lhs.getType());
+                curBlock().addOperNode(res, IR_ExprOper::MOV, { lhs });
+
+                IR_Block &blockLong = cfg->createBlock();
+                IR_Block &blockAfter = cfg->createBlock();
+
+                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                        IR_ExprTerminator::BRANCH, lhs));
+                if (expr.op == AST_Binop::LOG_AND) {
+                    cfg->linkBlocks(curBlock(), blockLong);
+                    cfg->linkBlocks(curBlock(), blockAfter);
+                }
+                else {
+                    cfg->linkBlocks(curBlock(), blockAfter);
+                    cfg->linkBlocks(curBlock(), blockLong);
+                }
+
+                selectBlock(blockLong);
+                IRval rhs = evalExpr(*expr.rhs);
+
+                if (!lhs.getType()->equal(*rhs.getType()))
+                    semanticError("Cannot do binary operation on different types");
+
+                curBlock().addOperNode(res, IR_ExprOper::MOV, { rhs });
+
+                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                        IR_ExprTerminator::JUMP, lhs));
+                cfg->linkBlocks(curBlock(), blockAfter);
+
+                selectBlock(blockAfter);
+                return res; // Maybe PHI node here?
+            }
         }
 
         case AST_CAST: {
