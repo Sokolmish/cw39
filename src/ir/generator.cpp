@@ -229,7 +229,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         else
             insertStatement(*stmt.body);
 
-        if (!curBlock().termNode.has_value()) {
+        if (selectedBlock != nullptr) { // !curBlock().termNode.has_value()
             blockAfter = &cfg->createBlock();
             cfg->linkBlocks(curBlock(), *blockAfter);
             curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
@@ -242,7 +242,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
                 fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.else_body));
             else
                 insertStatement(*stmt.else_body);
-            if (!curBlock().termNode.has_value()) {
+            if (selectedBlock != nullptr) { // !curBlock().termNode.has_value()
                 if (!blockAfter)
                     blockAfter = &cfg->createBlock();
                 cfg->linkBlocks(curBlock(), *blockAfter);
@@ -287,6 +287,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
                 insertStatement(*stmt.body);
             activeLoops.pop();
 
+            // TODO: check for active terminator
             if (selectedBlock != nullptr) {
                 curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                         IR_ExprTerminator::JUMP));
@@ -315,16 +316,19 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
                 curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                         IR_ExprTerminator::RET));
             }
+            deselectBlock();
         }
         else if (stmt.type == AST_JumpStmt::J_BREAK) {
             curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                     IR_ExprTerminator::JUMP));
             cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().exit));
+            deselectBlock();
         }
         else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
             curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                     IR_ExprTerminator::JUMP));
             cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().cond));
+            deselectBlock();
         }
         else if (stmt.type == AST_JumpStmt::J_GOTO) {
             NOT_IMPLEMENTED("goto");

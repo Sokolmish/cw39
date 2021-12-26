@@ -83,5 +83,8 @@ int main() {
     }
     printf("\n");
 
-    return x + 0; // * 0
+    while (1) {
+        return x + 0; // * 0
+    }
+    return 199;
 }

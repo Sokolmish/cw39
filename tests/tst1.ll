@@ -171,12 +171,21 @@ block_18:                                         ; preds = %block_17
 
 block_19:                                         ; preds = %block_20, %block_17
   %10 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str8, i32 0, i32 0))
-  ret i32 %vr117
+  br label %block_22
 
 block_20:                                         ; preds = %block_18
   br label %block_19
 
 block_21:                                         ; preds = %block_18
   br label %block_17
+
+block_22:                                         ; preds = %block_19
+  br i1 true, label %block_23, label %block_24
+
+block_23:                                         ; preds = %block_22
+  ret i32 %vr117
+
+block_24:                                         ; preds = %block_22
+  ret i32 199
 }
 
