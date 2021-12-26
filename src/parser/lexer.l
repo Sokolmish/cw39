@@ -129,7 +129,8 @@ void comment(yyscan_t yyscanner) {
             return;
         prev = c;
     }
-    fprintf(stderr, "unterminated comment\n"); // TODO: exit?
+    fprintf(stderr, "unterminated comment\n");
+    exit(EXIT_FAILURE);
 }
 
 
