@@ -14,22 +14,20 @@ AlgebraicTransformer::AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> raw
     }
 }
 
-// /**
-// * Returns log2(v) if it is whole or -1 otherwise
-// * http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog
-// */
-//static int getTwosPower(int v) {
-//    if (!v)
-//        return 0;
-//    if ((v & (v - 1)) != 0)
-//        return -1;
-//    static const unsigned int b[] = {
-//            0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 0xFF00FF00, 0xFFFF0000 };
-//    unsigned int r = (v & b[0]) != 0;
-//    for (int i = 4; i > 0; i--)
-//        r |= ((v & b[i]) != 0) << i;
-//    return r;
-//}
+ /**
+ * Returns log2(v) if it is whole or -1 otherwise
+ */
+static int getTwosPower(uint64_t v) {
+     if (!v)
+         return 0;
+     if ((v & (v - 1)) != 0)
+         return -1;
+
+     int res = 0;
+     while (v >>= 1)
+         res++;
+     return res;
+ }
 
 static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
     if (!ir_val.isConstant())
@@ -128,13 +126,45 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
 
     // Mul by power of 2
     if (oper.op == IR_ExprOper::MUL) {
-        if (isConstEqual(oper.args[1], 2ULL)) {
-            oper.op = IR_ExprOper::ADD;
-            oper.args = std::vector<IRval>{ oper.args[0], oper.args[0] };
+        if (oper.args[0].isConstant() && oper.args[0].getType()->type == IR_Type::DIRECT) {
+            auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[0].getType());
+            if (dirType->isInteger()) {
+                int log = getTwosPower(oper.args[0].castValTo<uint64_t>());
+                if (log >= 0) {
+                    oper.op = IR_ExprOper::SHL;
+                    oper.args = std::vector<IRval>{
+                            oper.args[1],
+                            IRval::createVal(oper.args[0].getType(), static_cast<uint64_t>(log)) };
+                }
+            }
         }
-        else if (isConstEqual(oper.args[0], 2ULL)) {
-            oper.op = IR_ExprOper::ADD;
-            oper.args = std::vector<IRval>{ oper.args[1], oper.args[1] };
+        if (oper.args[1].isConstant() && oper.args[1].getType()->type == IR_Type::DIRECT) {
+            auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[1].getType());
+            if (dirType->isInteger()) {
+                int log = getTwosPower(oper.args[1].castValTo<uint64_t>());
+                if (log >= 0) {
+                    oper.op = IR_ExprOper::SHL;
+                    oper.args = std::vector<IRval>{
+                            oper.args[0],
+                            IRval::createVal(oper.args[0].getType(), static_cast<uint64_t>(log)) };
+                }
+            }
+        }
+    }
+
+    // Div by power of 2
+    if (oper.op == IR_ExprOper::DIV) {
+        auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[1].getType());
+        if (dirType->isInteger()) {
+            if (oper.args[1].isConstant() && oper.args[1].getType()->type == IR_Type::DIRECT) {
+                int log = getTwosPower(oper.args[1].castValTo<uint64_t>());
+                if (log >= 0) {
+                    oper.op = IR_ExprOper::SHR;
+                    oper.args = std::vector<IRval>{
+                            oper.args[0],
+                            IRval::createVal(oper.args[1].getType(), static_cast<uint64_t>(log)) };
+                }
+            }
         }
     }
 }
