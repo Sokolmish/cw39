@@ -84,7 +84,9 @@ public:
     void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 
     void printBlock(IR_Block const &block) const;
-    void printCFG() const;
+    void printIR() const;
+    void drawBlock(IR_Block const &block) const;
+    void drawCFG() const;
 };
 
 #endif /* __CFG_HPP__ */

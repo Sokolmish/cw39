@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     printf("%d\n", tr(1) || fl(2));
     printf("%d\n", fl(1) || tr(2));
     printf("%d\n", tr(1) && fl(2) || tr(3));
-    printf("%d\n", fl(1) && tr(2) || tr(3));
+    printf("%d\n", fl(1) && (tr(2) || tr(3)));
 
     if (tr(1) && fl(2))
         printf("true\n");

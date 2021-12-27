@@ -1,6 +1,8 @@
 #include "cfg.hpp"
 #include <fmt/core.h>
+#include <fmt/ostream.h>
 #include <sstream>
+#include <stack>
 
 ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
     auto res = ControlFlowGraph::Function();
@@ -307,7 +309,7 @@ void ControlFlowGraph::printBlock(IR_Block const &block) const {
     fmt::print("\n");
 }
 
-void ControlFlowGraph::printCFG() const {
+void ControlFlowGraph::printIR() const {
     for (auto const &[id, structDecl] : structs) {
         fmt::print("struct({}) {{ ", structDecl->structId);
         for (const auto &field : structDecl->fields)
@@ -341,4 +343,112 @@ void ControlFlowGraph::printCFG() const {
     for (auto const &[id, block] : blocks) {
         printBlock(block);
     }
+}
+
+void ControlFlowGraph::drawCFG() const {
+    fmt::print("digraph{{\n"
+               "node [fontname=\"helvetica\"]\n");
+
+    for (auto const &[fId, func] : funcs) {
+        std::set<int> visited;
+        std::stack<int> stack;
+        stack.push(func.entryBlockId);
+        visited.insert(func.entryBlockId);
+
+        while (!stack.empty()) {
+            IR_Block const &curBlock = this->blocks.at(stack.top());
+            stack.pop();
+            drawBlock(curBlock);
+            for (int nextId : curBlock.next) {
+                fmt::print("block_{} -> block_{}\n", curBlock.id, nextId);
+                if (!visited.contains(nextId)) {
+                    visited.insert(nextId);
+                    stack.push(nextId);
+                }
+            }
+            fmt::print("\n");
+        }
+    }
+
+    fmt::print("}}\n");
+}
+
+void ControlFlowGraph::drawBlock(IR_Block const &block) const {
+    std::stringstream ss;
+
+    fmt::print(ss, "block_{}:\\l", block.id);
+    fmt::print(ss, "--------------------\\l");
+
+    // PHIs
+    for (auto const &[phiRes, phiFunc] : block.phis) {
+        if (!phiFunc) {
+            fmt::print(ss, "nop\\l");
+            continue;
+        }
+        if (phiRes)
+            fmt::print(ss, "{} <- ", phiRes->to_string());
+        fmt::print(ss, "\u03d5( "); // phi
+        auto const &phiExpr = dynamic_cast<IR_ExprPhi const &>(*phiFunc);
+        for (auto const &[index, val] : phiExpr.args)
+            fmt::print(ss, "{}[ b{} ] ", val.to_string(), block.prev.at(index));
+        fmt::print(ss, ")\\l");
+    }
+
+    // Instructions
+    for (auto const &node: block.body) {
+        if (!node.body) {
+            fmt::print(ss, "nop\\l");
+            continue;
+        }
+
+        if (node.res.has_value())
+            fmt::print(ss, "{} <- ", node.res->to_string());
+        if (node.body->type == IR_Expr::OPERATION) {
+            auto const &expr = dynamic_cast<IR_ExprOper const &>(*node.body);
+            fmt::print(ss, "{}", expr.opToString());
+            for (auto const &arg: expr.args)
+                fmt::print(ss, " {}", arg.to_string());
+            fmt::print(ss, "\\l");
+        }
+        else if (node.body->type == IR_Expr::ALLOCATION) {
+            auto const &expr = dynamic_cast<IR_ExprAlloc const &>(*node.body);
+            fmt::print(ss, "{} {} x {}\\l", expr.opToString(), printType(*expr.type), expr.size);
+        }
+        else if (node.body->type == IR_Expr::CAST) {
+            auto const &expr = dynamic_cast<IR_ExprCast const &>(*node.body);
+            fmt::print(ss, "{} {} : {} -> {}\\l", expr.opToString(), expr.arg.to_string(),
+                       printType(*expr.arg.getType()), printType(*expr.dest));
+        }
+        else if (node.body->type == IR_Expr::CALL) {
+            auto const &expr = dynamic_cast<IR_ExprCall const &>(*node.body);
+            fmt::print(ss, "call {} ( ", getFunction(expr.funcId).name);
+            for (auto const &arg : expr.args)
+                fmt::print(ss, "{} ", arg.to_string());
+            fmt::print(ss, ")\\l");
+        }
+    }
+
+    // Terminator
+    if (!block.termNode) {
+        fmt::print(ss, "; No terminator\\l");
+    }
+    else if (block.getTerminator()->termType == IR_ExprTerminator::RET) {
+        if (!block.getTerminator()->arg.has_value())
+            fmt::print(ss, "ret\\l");
+        else
+            fmt::print(ss, "ret {}\\l", block.getTerminator()->arg->to_string());
+    }
+    else if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
+        fmt::print(ss, "jump ->b{}\\l", block.next[0]);
+    }
+    else if (block.getTerminator()->termType == IR_ExprTerminator::BRANCH) {
+        fmt::print(ss, "branch {} true->b{} false->b{}\\l",
+                   block.getTerminator()->arg->to_string(),
+                   block.next[0], block.next[1]);
+    }
+    else {
+        fmt::print(ss, "; Unknown terminator\\l");
+    }
+
+    fmt::print("block_{} [shape=rectangle,label=\"{}\"]\n", block.id, ss.str());
 }
