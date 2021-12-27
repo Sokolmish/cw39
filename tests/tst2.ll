@@ -135,30 +135,30 @@ block_16:                                         ; preds = %block_15, %block_14
 
 block_17:                                         ; preds = %block_16
   %vr66 = call i32 @tr(i32 2)
-  br label %block_18
-
-block_18:                                         ; preds = %block_17, %block_16
-  %vr65 = phi i32 [ %vr64, %block_16 ], [ %vr66, %block_17 ]
-  %14 = icmp ne i32 %vr65, 0
+  %14 = icmp ne i32 %vr66, 0
   br i1 %14, label %block_20, label %block_19
 
-block_19:                                         ; preds = %block_18
-  %vr68 = call i32 @tr(i32 3)
-  br label %block_20
-
-block_20:                                         ; preds = %block_19, %block_18
-  %vr67 = phi i32 [ %vr65, %block_18 ], [ %vr68, %block_19 ]
-  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str9, i32 0, i32 0), i32 %vr67)
+block_18:                                         ; preds = %block_20, %block_16
+  %vr65 = phi i32 [ %vr64, %block_16 ], [ %vr67, %block_20 ]
+  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str9, i32 0, i32 0), i32 %vr65)
   %vr70 = call i32 @tr(i32 1)
   %16 = icmp ne i32 %vr70, 0
   br i1 %16, label %block_21, label %block_22
 
-block_21:                                         ; preds = %block_20
+block_19:                                         ; preds = %block_17
+  %vr68 = call i32 @tr(i32 3)
+  br label %block_20
+
+block_20:                                         ; preds = %block_19, %block_17
+  %vr67 = phi i32 [ %vr66, %block_17 ], [ %vr68, %block_19 ]
+  br label %block_18
+
+block_21:                                         ; preds = %block_18
   %vr72 = call i32 @fl(i32 2)
   br label %block_22
 
-block_22:                                         ; preds = %block_21, %block_20
-  %vr71 = phi i32 [ %vr70, %block_20 ], [ %vr72, %block_21 ]
+block_22:                                         ; preds = %block_21, %block_18
+  %vr71 = phi i32 [ %vr70, %block_18 ], [ %vr72, %block_21 ]
   %17 = icmp ne i32 %vr71, 0
   br i1 %17, label %block_23, label %block_24
 

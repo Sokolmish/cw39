@@ -11,7 +11,7 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
     while (globalChanged) {
         globalChanged = false;
         propagateCopies();
-//        foldConstants();
+        foldConstants();
     }
 
     CfgCleaner cleaner(cfg);
