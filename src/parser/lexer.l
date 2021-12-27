@@ -11,9 +11,9 @@
 D           [0-9]
 L           [a-zA-Z_]
 H           [a-fA-F0-9]
-EXP         ([Ee][+-]?{D}+)
-FSF         (f|F|l|L)
-ISF         ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
+EXP         ([Ee][\-+]?[0-9]+)
+FSF         [fFlL]
+ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 
 %%
 
@@ -65,7 +65,7 @@ ISF         ((u|U)|(u|U)?(l|L|ll|LL)|(l|L|ll|LL)(u|U))
 {D}*"."{D}+{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 {D}+"."{D}*{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 
-'(\\.|[^\\'\n])+'           { yylval->num_literal = get_charval(yytext); return(CONSTANT); }
+'(\\.|[^\\'\n])'           { yylval->num_literal = get_charval(yytext); return(CONSTANT); }
 
 \"(\\.|[^\\"\n])*\"         { yylval->str = get_string_id(yytext); return(STRING_LITERAL); }
 
