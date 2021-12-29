@@ -2,6 +2,7 @@
 #include "parser.hpp"
 #include <memory>
 #include <string>
+#include <fmt/core.h>
 
 using namespace std::string_literals;
 
@@ -289,7 +290,8 @@ static void update_type_qualifiers(AST_TypeQualifiers &list, AST_TypeQualifiers:
             list.is_volatile = true;
             return;
         default:
-            throw; // TODO: verbosity
+            fmt::print(stderr, "Wrong qualifier: {}\n", qual);
+            throw;
     }
 }
 
@@ -348,8 +350,10 @@ AST_DeclSpecifiers::AST_DeclSpecifiers()
     : AST_Node(AST_DECL_SPECIFIERS), type_qualifiers(new AST_TypeQualifiers()) {}
 
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_storage(ast_enum_t val) {
-    if (storage_specifier != ST_NONE || val == ST_NONE)
-        throw; // TODO: verbosity
+    if (storage_specifier != ST_NONE || val == ST_NONE) {
+        fmt::print(stderr, "Wrong storage specifier: {}\n", storage_specifier);
+        throw;
+    }
     storage_specifier = StorageSpec(val);
     return this;
 }
@@ -367,8 +371,10 @@ AST_DeclSpecifiers* AST_DeclSpecifiers::update_type_qual(ast_enum_t val) {
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_func_qual(ast_enum_t val) {
     if (val == AST_DeclSpecifiers::Q_INLINE)
         is_inline = true;
-    else
-        throw; // TODO: verbosity
+    else {
+        fmt::print(stderr, "Wrong storage specifier: {}\n", storage_specifier);
+        throw;
+    }
     return this;
 }
 
@@ -668,7 +674,8 @@ TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
         return node;
     }
     else {
-        throw; // TODO: verbosity
+        fmt::print(stderr, "Wrong direct declarator type: {}\n", type);
+        throw;
     }
 }
 
@@ -827,7 +834,8 @@ TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
         return node;
     }
     else {
-        throw; // TODO: verbosity
+        fmt::print(stderr, "Wrong direct abstract declarator type: {}\n", type);
+        throw;
     }
 }
 
@@ -941,14 +949,14 @@ AST_LabeledStmt::AST_LabeledStmt(AST_Node *label, AST_Statement *stmt, LabelType
     : AST_Statement(AST_Statement::LABEL), label(uniqify(label)), child(stmt), type(type)
 {
     if (type == AST_LabeledStmt::SIMPL)
-        throw; // TODO: verbosity
+        throw; // TODO: labeled statements
 }
 
 AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelType type)
     : AST_Statement(AST_Statement::LABEL), label(label), child(stmt), type(type) 
 {
     if (type != AST_LabeledStmt::SIMPL)
-        throw; // TODO: verbosity
+        throw; // TODO: labeled statements
 }
 
 TreeNodeRef AST_LabeledStmt::getTreeNode() const {
