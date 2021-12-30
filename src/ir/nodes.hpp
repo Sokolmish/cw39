@@ -89,12 +89,18 @@ struct IR_ExprCast : public IR_Expr {
 };
 
 struct IR_ExprCall : public IR_Expr {
-    int funcId;
+    std::variant<int, IRval> callee;
     std::vector<IRval> args;
 
     IR_ExprCall(int callee, std::vector<IRval> args);
+    IR_ExprCall(IRval callee, std::vector<IRval> args);
+
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
+
+    bool isIndirect() const;
+    int getFuncId() const;
+    IRval getFuncPtr() const;
 };
 
 struct IR_ExprTerminator : public IR_Expr {
@@ -150,6 +156,7 @@ public:
     void addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args);
     void addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest);
     void addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args);
+    void addIndirectCallNode(std::optional<IRval> res, IRval callee, std::vector<IRval> args);
     // TODO: terminator and PHI
 
     std::vector<IRval> getDefinitions() const;

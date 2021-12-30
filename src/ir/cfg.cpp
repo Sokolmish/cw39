@@ -27,8 +27,8 @@ int ControlFlowGraph::Function::getEntryBlockId() const {
     return entryBlockId;
 }
 
-IR_TypeFunc const& ControlFlowGraph::Function::getFuncType() const {
-    return dynamic_cast<IR_TypeFunc const&>(*fullType);
+std::shared_ptr<IR_TypeFunc> ControlFlowGraph::Function::getFuncType() const {
+    return std::dynamic_pointer_cast<IR_TypeFunc>(fullType);
 }
 
 
@@ -277,7 +277,10 @@ void ControlFlowGraph::printBlock(IR_Block const &block) const {
         }
         else if (node.body->type == IR_Expr::CALL) {
             auto const &expr = dynamic_cast<IR_ExprCall const &>(*node.body);
-            fmt::print("call {} ( ", getFunction(expr.funcId).name);
+            if (expr.isIndirect())
+                fmt::print("call {} ( ", expr.getFuncPtr().to_string());
+            else
+                fmt::print("call {} ( ", getFunction(expr.getFuncId()).name);
             for (auto const &arg : expr.args)
                 fmt::print("{} ", arg.to_string());
             fmt::print(")\n");
@@ -421,7 +424,10 @@ void ControlFlowGraph::drawBlock(IR_Block const &block) const {
         }
         else if (node.body->type == IR_Expr::CALL) {
             auto const &expr = dynamic_cast<IR_ExprCall const &>(*node.body);
-            fmt::print(ss, "call {} ( ", getFunction(expr.funcId).name);
+            if (expr.isIndirect())
+                fmt::print("call {} ( ", expr.getFuncPtr().to_string());
+            else
+                fmt::print("call {} ( ", getFunction(expr.getFuncId()).name);
             for (auto const &arg : expr.args)
                 fmt::print(ss, "{} ", arg.to_string());
             fmt::print(ss, ")\\l");
