@@ -31,6 +31,10 @@ IRval IRval::createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num) {
     return IRval(globalType, IRval::GLOBAL, num);
 }
 
+IRval IRval::createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num) {
+    return IRval(funPtrType, IRval::FUN_PTR, num);
+}
+
 
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
     if (type->type == IR_Type::POINTER)
@@ -108,6 +112,11 @@ std::string IRval::to_string() const {
         case IRval::STRING:
             return std::visit([](auto e) -> std::string {
                 return fmt::format("@str_{}", e);
+            }, val);
+
+        case IRval::FUN_PTR:
+            return std::visit([](auto e) -> std::string {
+                return fmt::format("@fun.{}", e);
             }, val);
     }
     throw;

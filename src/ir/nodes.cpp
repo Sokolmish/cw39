@@ -392,20 +392,40 @@ std::string IR_ExprCast::opToString() const {
 // IR_ExprCall
 
 IR_ExprCall::IR_ExprCall(int callee, std::vector<IRval> args)
-        : IR_Expr(CALL), funcId(callee), args(std::move(args)) {}
+        : IR_Expr(CALL), callee(callee), args(std::move(args)) {}
+
+IR_ExprCall::IR_ExprCall(IRval callee, std::vector<IRval> args)
+        : IR_Expr(CALL), callee(callee), args(std::move(args)) {}
 
 std::unique_ptr<IR_Expr> IR_ExprCall::copy() const {
     std::vector<IRval> newArgs;
     for (auto const &arg : args)
         newArgs.push_back(arg.copy());
-    return std::make_unique<IR_ExprCall>(funcId, std::move(newArgs));
+    if (isIndirect())
+        return std::make_unique<IR_ExprCall>(getFuncPtr().copy(), std::move(newArgs));
+    else
+        return std::make_unique<IR_ExprCall>(getFuncId(), std::move(newArgs));
 }
 
 std::vector<IRval*> IR_ExprCall::getArgs() {
     std::vector<IRval*> resArgs;
+    if (isIndirect())
+        resArgs.push_back(&std::get<IRval>(callee));
     for (auto &arg : args)
         resArgs.push_back(&arg);
     return resArgs;
+}
+
+bool IR_ExprCall::isIndirect() const {
+    return std::holds_alternative<IRval>(callee);
+}
+
+int IR_ExprCall::getFuncId() const {
+    return std::get<int>(callee);
+}
+
+IRval IR_ExprCall::getFuncPtr() const {
+    return std::get<IRval>(callee);
 }
 
 
@@ -452,6 +472,10 @@ void IR_Block::addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> 
 }
 
 void IR_Block::addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args) {
+    addNode(res, std::make_unique<IR_ExprCall>(callee, args));
+}
+
+void IR_Block::addIndirectCallNode(std::optional<IRval> res, IRval callee, std::vector<IRval> args) {
     addNode(res, std::make_unique<IR_ExprCall>(callee, args));
 }
 

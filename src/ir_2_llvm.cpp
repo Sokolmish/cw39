@@ -174,7 +174,11 @@ llvm::Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
         return structTypes.at(structType.structId);
     }
     else if (ir_type.type == IR_Type::FUNCTION) {
-        NOT_IMPLEMENTED("LLVM function type");
+        auto const &funType = dynamic_cast<IR_TypeFunc const &>(ir_type);
+        std::vector<Type*> args;
+        for (auto const &arg : funType.args)
+            args.push_back(getTypeFromIR(*arg));
+        return FunctionType::get(getTypeFromIR(*funType.ret), args, funType.isVariadic);
     }
     else {
         semanticError("Unknown type");
@@ -227,6 +231,9 @@ llvm::Value *IR2LLVM_Impl::getValue(const IRval &val) {
                 semanticError("Wrong constant type");
             }
         }
+
+        case IRval::FUN_PTR:
+            return functions.at(val.castValTo<int>());
 
         case IRval::VREG:
             return regsMap.at(val);
@@ -355,8 +362,8 @@ void IR2LLVM_Impl::createBlock(int id) {
             case IR_Expr::ALLOCATION: {
                 auto allocExpr = node.body->getAlloc();
                 Value *res = builder->CreateAlloca(getTypeFromIR(*allocExpr.type),
-                                      nullptr,
-                                      node.res->to_reg_name());
+                                                   nullptr,
+                                                   node.res->to_reg_name());
                 regsMap.emplace(*node.res, res);
                 break;
             }
@@ -368,16 +375,34 @@ void IR2LLVM_Impl::createBlock(int id) {
 
             case IR_Expr::CALL: {
                 auto const &callExpr = node.body->getCall();
-                auto func = functions.at(callExpr.funcId);
-                std::vector<Value*> args;
-                for (auto const &arg : callExpr.args)
+
+                std::vector<Value *> args;
+                for (auto const &arg: callExpr.args)
                     args.push_back(getValue(arg));
-                if (node.res.has_value()) {
-                    auto res = builder->CreateCall(func, args, node.res->to_reg_name());
-                    regsMap.emplace(*node.res, res);
+
+                if (callExpr.isIndirect()) {
+                    auto ptrVal = callExpr.getFuncPtr();
+                    auto irPtrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
+                    auto irFuncType = irPtrType->child;
+                    auto funcTy = static_cast<FunctionType *>(getTypeFromIR(*irFuncType)); // TODO: static cast...
+                    if (node.res.has_value()) {
+                        auto res = builder->CreateCall(
+                                funcTy, getValue(ptrVal), args, node.res->to_reg_name());
+                        regsMap.emplace(*node.res, res);
+                    }
+                    else {
+                        builder->CreateCall(funcTy, getValue(ptrVal), args);
+                    }
                 }
                 else {
-                    builder->CreateCall(func, args);
+                    auto func = functions.at(callExpr.getFuncId());
+                    if (node.res.has_value()) {
+                        auto res = builder->CreateCall(func, args, node.res->to_reg_name());
+                        regsMap.emplace(*node.res, res);
+                    }
+                    else {
+                        builder->CreateCall(func, args);
+                    }
                 }
                 break;
             }

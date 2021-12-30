@@ -23,6 +23,10 @@ int add(int a, int b) {
     return a + b;
 }
 
+int mysqr(int x) {
+    return x * x;
+}
+
 int main() {
     int x = gg;
     int y;
@@ -101,6 +105,9 @@ int main() {
             break;
     }
     printf("\n");
+
+    int (*f)(int) = mysqr;
+    printf("%d\n", f(5));
 
     while (1) {
         return x + 0; // * 0

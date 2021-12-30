@@ -27,7 +27,7 @@ public:
         int getId() const;
         std::string getName() const;
         int getEntryBlockId() const;
-        IR_TypeFunc const& getFuncType() const;
+        std::shared_ptr<IR_TypeFunc> getFuncType() const;
     };
 
     struct GlobalVar {

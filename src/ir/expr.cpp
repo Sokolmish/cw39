@@ -427,16 +427,30 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             auto const &expr = static_cast<AST_Postfix const &>(node);
 
             if (expr.op == AST_Postfix::CALL) {
-                if (expr.base->node_type != AST_PRIMARY)
-                    NOT_IMPLEMENTED("Indirect call");
-                auto const &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
-                if (funcBase.type != AST_Primary::IDENT)
-                    semanticError("Only identifier can be called");
-                auto funIt = functions.find(funcBase.getIdent());
-                if (funIt == functions.end())
-                    semanticError("Call of undeclared function");
+                std::shared_ptr<IR_TypeFunc> funType;
+                int dirFuncId = -1;
+                std::optional<IRval> funPtr;
+                if (expr.base->node_type == AST_PRIMARY) {
+                    auto const &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
+                    if (funcBase.type == AST_Primary::IDENT) {
+                        auto funIt = functions.find(funcBase.getIdent());
+                        if (funIt != functions.end()) {
+                            dirFuncId = funIt->second;
+                            auto const &fun = cfg->getFunction(dirFuncId);
+                            funType = fun.getFuncType();
+                        }
+                    }
+                }
+                if (dirFuncId == -1) {
+                    funPtr = evalExpr(*expr.base);
+                    if (funPtr->getType()->type != IR_Type::POINTER)
+                        semanticError("Cannot make call with non-pointer type");
+                    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(funPtr->getType());
+                    if (ptrType->child->type != IR_Type::FUNCTION)
+                        semanticError("Only pointers to functions can be called");
+                    funType = std::dynamic_pointer_cast<IR_TypeFunc>(ptrType->child);
+                }
 
-                auto const &fun = cfg->getFunction(funIt->second);
                 auto const &argsList = expr.getArgsList();
 
                 std::vector<IRval> args;
@@ -444,24 +458,27 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 for (auto const &arg : argsList.children) {
                     IRval argVal = evalExpr(*arg); // TODO: promotion
 
-                    if (argNum < fun.getFuncType().args.size()) {
-                        if (!argVal.getType()->equal(*fun.getFuncType().args[argNum])) {
+                    if (argNum < funType->args.size()) {
+                        if (!argVal.getType()->equal(*funType->args[argNum])) {
                             semanticError("Wrong argnument type");
                         }
                     }
-                    else if (!fun.getFuncType().isVariadic) {
+                    else if (!funType->isVariadic) {
                         semanticError("Too manny arguments in function call");
                     }
 
                     args.push_back(argVal);
                     argNum++;
                 }
-                if (argNum < fun.getFuncType().args.size()) {
+                if (argNum < funType->args.size()) {
                     semanticError("Too few argument in function call");
                 }
 
-                IRval res = cfg->createReg(fun.getFuncType().ret);
-                curBlock().addCallNode(res, fun.getId(), args);
+                IRval res = cfg->createReg(funType->ret);
+                if (dirFuncId != -1)
+                    curBlock().addCallNode(res, dirFuncId, args);
+                else
+                    curBlock().addIndirectCallNode(res, *funPtr, args);
                 return res;
             }
             else if (expr.op == AST_Postfix::POST_INC || expr.op == AST_Postfix::POST_DEC) {
@@ -530,8 +547,17 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.type == AST_Primary::IDENT) {
                 std::optional<IRval> var = getPtrToVariable(expr.getIdent());
-                if (!var.has_value())
+                if (!var.has_value()) {
+                    auto fIt = functions.find(expr.getIdent());
+                    if (fIt != functions.end()) {
+                        auto fType = cfg->getFunction(fIt->second).fullType;
+                        auto ptrType = std::make_shared<IR_TypePtr>(fType);
+                        return IRval::createFunPtr(ptrType, fIt->second);
+                    }
+                    
                     semanticError("Unknown variable");
+                }
+
                 auto varType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
                 auto resType = varType->child;
 
