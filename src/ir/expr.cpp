@@ -29,7 +29,7 @@ IRval IR_Generator::getPtrWithOffset(IRval base, IRval index) {
 
 void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
     if (dest.node_type == AST_PRIMARY) { // Identifiers
-        auto const &assignee = dynamic_cast<AST_Primary const &>(dest);
+        auto const &assignee = static_cast<AST_Primary const &>(dest);
         if (assignee.type == AST_Primary::EXPR) {
             doAssignment(assignee.getExpr(), wrValue);
             return;
@@ -47,7 +47,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
         curBlock().addOperNode({}, IR_ExprOper::STORE, { *destVar, wrValue });
     }
     else if (dest.node_type == AST_UNARY_OP) { // Dereference write
-        auto const &assignee = dynamic_cast<AST_Unop const &>(dest);
+        auto const &assignee = static_cast<AST_Unop const &>(dest);
         if (assignee.op != AST_Unop::DEREF)
             semanticError("Cannot be assigned");
 
@@ -63,7 +63,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
         curBlock().addOperNode({}, IR_ExprOper::STORE, { ptrVal, wrValue });
     }
     else if (dest.node_type == AST_POSTFIX) { // Accessors
-        auto const &assignee = dynamic_cast<AST_Postfix const &>(dest);
+        auto const &assignee = static_cast<AST_Postfix const &>(dest);
         if (assignee.op == AST_Postfix::DIR_ACCESS) {
             IRval base = evalExpr(*assignee.base);
             if (base.getType()->type != IR_Type::TSTRUCT)
@@ -241,7 +241,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
 IRval IR_Generator::evalExpr(AST_Expr const &node) {
     switch (node.node_type) {
         case AST_COMMA_EXPR: {
-            auto const &expr = dynamic_cast<AST_CommaExpression const &>(node);
+            auto const &expr = static_cast<AST_CommaExpression const &>(node);
             if (expr.children.empty())
                 semanticError("Empty comma expression");
             for (size_t i = 0; i < expr.children.size() - 1; i++)
@@ -250,7 +250,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_ASSIGNMENT: {
-            auto const &expr = dynamic_cast<AST_Assignment const &>(node);
+            auto const &expr = static_cast<AST_Assignment const &>(node);
             IRval rhsVal = evalExpr(*expr.rhs);
             if (expr.op != AST_Assignment::DIRECT) {
                 IRval lhsVal = evalExpr(*expr.lhs);
@@ -268,8 +268,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_BINOP: {
-            auto const &expr = dynamic_cast<AST_Binop const &>(node);
-
+            auto const &expr = static_cast<AST_Binop const &>(node);
             if (!isInList(expr.op, { AST_Binop::LOG_AND, AST_Binop::LOG_OR })) {
                 IRval lhs = evalExpr(*expr.lhs);
                 IRval rhs = evalExpr(*expr.rhs);
@@ -281,7 +280,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_CAST: {
-            auto const &expr = dynamic_cast<AST_Cast const &>(node);
+            auto const &expr = static_cast<AST_Cast const &>(node);
 
             IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
             auto dest = getType(*expr.type_name);
@@ -296,10 +295,10 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         case AST_UNARY_OP: {
             using uop = AST_Unop;
 
-            auto const &expr = dynamic_cast<AST_Unop const &>(node);
+            auto const &expr = static_cast<AST_Unop const &>(node);
 
             if (expr.op == uop::SIZEOF_OP) {
-                auto typeName = dynamic_cast<AST_TypeName*>(expr.child.get());
+                auto typeName = dynamic_cast<AST_TypeName *>(expr.child.get());
                 if (typeName != nullptr) {
                     auto irType = getType(*typeName);
                     uint64_t bytesSize = irType->getBytesSize();
@@ -425,7 +424,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_POSTFIX: {
-            auto const &expr = dynamic_cast<AST_Postfix const &>(node);
+            auto const &expr = static_cast<AST_Postfix const &>(node);
 
             if (expr.op == AST_Postfix::CALL) {
                 if (expr.base->node_type != AST_PRIMARY)
@@ -472,7 +471,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval one = IRval::createVal(arg.getType(), 1UL);
                 IRval res = cfg->createReg(arg.getType());
                 auto op = expr.op == AST_Postfix::POST_INC ?
-                        IR_ExprOper::ADD : IR_ExprOper::SUB;
+                          IR_ExprOper::ADD : IR_ExprOper::SUB;
                 curBlock().addOperNode(res, op, { arg, one });
 
                 doAssignment(baseExpr, res);
@@ -524,7 +523,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         }
 
         case AST_PRIMARY: {
-            auto const &expr = dynamic_cast<AST_Primary const &>(node);
+            auto const &expr = static_cast<AST_Primary const &>(node);
 
             if (expr.type == AST_Primary::CONST) {
                 return getLiteralIRval(expr.getLiteral());

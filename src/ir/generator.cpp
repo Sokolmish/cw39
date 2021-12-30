@@ -190,13 +190,13 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
 
 void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
     if (rawStmt.type == AST_Statement::EXPR) {
-        auto const &stmt = dynamic_cast<AST_ExprStmt const &>(rawStmt);
+        auto const &stmt = static_cast<AST_ExprStmt const &>(rawStmt);
         if (!stmt.child)
             return;
         evalExpr(*stmt.child);
     }
     else if (rawStmt.type == AST_Statement::SELECT) {
-        auto const &stmt = dynamic_cast<AST_SelectionStmt const &>(rawStmt);
+        auto const &stmt = static_cast<AST_SelectionStmt const &>(rawStmt);
         if (stmt.is_switch)
             NOT_IMPLEMENTED("switch");
 
@@ -255,7 +255,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
            deselectBlock();
     }
     else if (rawStmt.type == AST_Statement::ITER) {
-        auto const &stmt = dynamic_cast<AST_IterationStmt const &>(rawStmt);
+        auto const &stmt = static_cast<AST_IterationStmt const &>(rawStmt);
 
         auto &blockCond = cfg->createBlock();
         auto &blockLoop = cfg->createBlock();
@@ -311,7 +311,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         // Fill body
         selectBlock(blockLoop);
         if (stmt.body->type == AST_Statement::COMPOUND)
-            fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
+            fillBlock(static_cast<AST_CompoundStmt const &>(*stmt.body));
         else
             insertStatement(*stmt.body);
 
@@ -328,7 +328,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             variables.decreaseLevel();
     }
     else if (rawStmt.type == AST_Statement::JUMP) {
-        auto const &stmt = dynamic_cast<AST_JumpStmt const &>(rawStmt);
+        auto const &stmt = static_cast<AST_JumpStmt const &>(rawStmt);
         if (stmt.type == AST_JumpStmt::J_RET) {
             auto const &arg = stmt.getExpr();
             if (arg) {
@@ -366,7 +366,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         }
     }
     else if (rawStmt.type == AST_Statement::COMPOUND) {
-        auto const &stmt = dynamic_cast<AST_CompoundStmt const &>(rawStmt);
+        auto const &stmt = static_cast<AST_CompoundStmt const &>(rawStmt);
         if (stmt.body->v.empty())
             return;
 
