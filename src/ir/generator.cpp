@@ -71,7 +71,7 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
             }
         }
         else {
-            semanticError("Only functions definitions and declarations allowed as top-level instructions");
+            internalError("Wrong top-level instruction");
         }
     }
 }
@@ -87,7 +87,7 @@ static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec co
         case AST_DeclSpecifiers::ST_REGISTER:
             return IR_StorageSpecifier::REGISTER;
         default:
-            semanticError("Wrong storage specifier");
+            internalError("Wrong storage specifier");
     }
 }
 
@@ -133,15 +133,12 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
 void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     variables.increaseLevel();
     for (auto const &elem: compStmt.body->v) {
-        if (elem->node_type == AST_DECLARATION) {
+        if (elem->node_type == AST_DECLARATION)
             insertDeclaration(dynamic_cast<AST_Declaration const &>(*elem));
-        }
-        else if (elem->node_type == AST_STATEMENT) {
+        else if (elem->node_type == AST_STATEMENT)
             insertStatement(dynamic_cast<AST_Statement const &>(*elem));
-        }
-        else {
-            semanticError("Only statements and declarations allowed in compound statement");
-        }
+        else
+            internalError("Wrong node in compound statement");
 
         // Unreachable code doesn't even validating
         if (selectedBlock == nullptr || curBlock().termNode.has_value())
@@ -274,7 +271,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             else if (preAction.node_type == AST_DECLARATION)
                 insertDeclaration(dynamic_cast<AST_Declaration const &>(preAction));
             else
-                semanticError("Wrong for-loop preAction type");
+                internalError("Wrong for-loop preAction type");
         }
 
         // Make jump to condition
@@ -365,7 +362,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
             NOT_IMPLEMENTED("goto");
         }
         else {
-            semanticError("Unknown jump statement");
+            internalError("Wrong jump statement");
         }
     }
     else if (rawStmt.type == AST_Statement::COMPOUND) {
@@ -392,7 +389,7 @@ void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
         NOT_IMPLEMENTED("Labeled statements");
     }
     else {
-        semanticError("Unknown statement type");
+        internalError("Wrong statement type");
     }
 }
 

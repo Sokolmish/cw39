@@ -34,7 +34,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     using ast_ts = AST_TypeSpecifier;
 
     if (spec.empty()) {
-        semanticError("Empty AST_DeclSpecifiers");
+        internalError("Empty AST_DeclSpecifiers");
     }
 
     if (spec[0]->spec_type == ast_ts::T_UNISTRUCT) {
@@ -129,7 +129,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
             resType = IR_TypeDirect::F64;
     }
     else {
-        semanticError("WTF type");
+        internalError("Wrong type");
     }
 
     return std::make_unique<IR_TypeDirect>(resType);
@@ -199,7 +199,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
         }
     }
     else {
-        semanticError("Unknown direct declarator type");
+        internalError("Unknown direct declarator type");
     }
 }
 
@@ -237,7 +237,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractD
             return std::make_unique<IR_TypeFunc>(std::move(base));
         }
     }
-    semanticError("Unknown direct abstract declarator type");
+    internalError("Unknown direct abstract declarator type");
 }
 
 std::shared_ptr<IR_Type> IR_Generator::getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl) {
@@ -264,7 +264,7 @@ string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirectDeclarator const &dec
         return getDeclaredIdentDirect(decl.getBaseDirectDecl());
     }
     else {
-        semanticError("Wrong direct declarator type");
+        internalError("Wrong direct declarator type");
     }
 }
 
@@ -313,6 +313,6 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
         return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I8);
     }
     else {
-        semanticError("Unknown literal type");
+        internalError("Wrong literal type");
     }
 }

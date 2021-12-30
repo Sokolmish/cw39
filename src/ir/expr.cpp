@@ -142,7 +142,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
         else if (op == bop::DIV)
             curBlock().addOperNode(res, IR_ExprOper::DIV, { lhs, rhs });
         else
-            semanticError("Wrong general arithmetic operation");
+            internalError("Wrong general arithmetic operation");
 
         return res;
     }
@@ -164,10 +164,8 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             curBlock().addOperNode(res, IR_ExprOper::AND, { lhs, rhs });
         else if (op == bop::BIT_OR)
             curBlock().addOperNode(res, IR_ExprOper::OR, { lhs, rhs });
-        else if (op == bop::LOG_AND || op == bop::LOG_OR)
-            semanticError("Logical operations in general context");
         else
-            semanticError("Wrong general arithmetic operation");
+            internalError("Wrong general arithmetic operation");
 
         return res;
     }
@@ -187,12 +185,12 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
         else if (op == bop::LE)
             curBlock().addOperNode(res, IR_ExprOper::LE, { lhs, rhs });
         else
-            semanticError("Wrong comparsion operation");
+            internalError("Wrong comparsion operation");
 
         return res;
     }
     else {
-        semanticError("Wrong binary operation");
+        internalError("Wrong binary operation");
     }
 }
 
@@ -258,7 +256,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval lhsVal = evalExpr(*expr.lhs);
                 auto binOp = expr.toBinop();
                 if (!binOp.has_value())
-                    semanticError("Wrong assignment type");
+                    internalError("Wrong assignment type");
                 rhsVal = doBinOp(binOp.value(), lhsVal, rhsVal);
             }
             doAssignment(*expr.lhs, rhsVal);
@@ -422,7 +420,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 }
             }
             else {
-                semanticError("Unknown unary operator");
+                internalError("Unknown unary operator");
             }
         }
 
@@ -562,12 +560,12 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return str;
             }
             else {
-                semanticError("Unexpected primary type");
+                internalError("Wrong primary type");
             }
         }
 
         default: {
-            semanticError("Unexpected node type in expression");
+            internalError("Wrong node type in expression");
         }
     }
 }
@@ -598,7 +596,7 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
         return IRval::createVal(valType, static_cast<int8_t>(lit.val.v_char));
     }
     else {
-        semanticError("Wrong literal type");
+        internalError("Wrong literal type");
     }
 }
 

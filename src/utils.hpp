@@ -9,14 +9,20 @@
 #include <exception>
 
 
-// TODO: internalError
+// TODO: use source_location
+
+[[noreturn]] inline void internalError(const std::string &msg) {
+    throw std::runtime_error(fmt::format("[INTERNAL] {}\n", msg));
+}
 
 [[noreturn]] inline void semanticError(const std::string &msg) {
     throw std::runtime_error(fmt::format("{}\n", msg));
 }
+
 [[noreturn]] inline void notImplemented(int line, const std::string &msg = "") {
     throw std::runtime_error(fmt::format("Not implemented ({}): {}\n", line, msg));
 }
+
 #define NOT_IMPLEMENTED(msg) notImplemented(__LINE__, __FILE__ " " msg)
 
 

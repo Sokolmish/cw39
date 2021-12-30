@@ -67,7 +67,7 @@ IRval IR_Generator::doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, 
                 resVal = static_cast<uint64_t>(val1 && val2);
                 break;
             default:
-                semanticError("WTF");
+                internalError("Wrong binary operation");
         }
 
         int maxSize = std::max(ltype.getBytesSize(), rtype.getBytesSize());
@@ -81,7 +81,7 @@ IRval IR_Generator::doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, 
         else if (maxSize == 8)
             dirType = isUnsigned ? IR_TypeDirect::U64 : IR_TypeDirect::I64;
         else
-            semanticError("WTF");
+            internalError("Wrong integer size");
         return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType), resVal);
     }
     else if (isGeneralNumOp(op)) {
@@ -98,7 +98,7 @@ IRval IR_Generator::doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, 
                     case bop::DIV:
                         return l / r;
                     default:
-                        semanticError("WTF");
+                        internalError("Wrong general arithm operation");
                 }
             }, rhs.getVal());
         }, lhs.getVal());
@@ -119,7 +119,7 @@ IRval IR_Generator::doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, 
         } else if (maxSize == 8) {
             dirType = isUnsigned ? IR_TypeDirect::U64 : IR_TypeDirect::I64;
         } else {
-            semanticError("WTF");
+            internalError("Wrong integer size");
         }
 
         return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType), resVal);
@@ -141,7 +141,7 @@ IRval IR_Generator::doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, 
                     case bop::NE:
                         return l != static_cast<decltype(l)>(r);
                     default:
-                        semanticError("WTF");
+                        internalError("Wrong comparsion type");
                 }
             }, rhs.getVal());
         }, lhs.getVal());
@@ -233,7 +233,7 @@ std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
                 return IRval::createVal(std::make_unique<IR_TypeDirect>(dirType.spec), resVal);
             }
             else {
-                semanticError("WTF");
+                semanticError("Unsupported constant unary operation");
             }
         }
 
@@ -249,13 +249,13 @@ std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
 
             AST_Literal val = expr.getLiteral();
             if (val.type != INTEGER_LITERAL || val.longCnt != 0 || val.isUnsigned) {
-                NOT_IMPLEMENTED("Non i32 literal");
+                NOT_IMPLEMENTED("Non i32 literal"); // TODO
             }
             return IRval::createVal(getLiteralType(val), static_cast<uint64_t>(val.val.vi32));
         }
 
         default: {
-            semanticError("Unexpected node type in expression");
+            internalError("Wrong node type in expression");
         }
     }
 }

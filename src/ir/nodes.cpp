@@ -169,7 +169,7 @@ std::shared_ptr<IR_Type> IR_TypeFunc::copy() const {
 }
 
 int IR_TypeFunc::getBytesSize() const {
-    throw std::runtime_error("Cannot get size of function type");
+    semanticError("Cannot get size of function type");
 }
 
 
@@ -300,10 +300,10 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
         : IR_Expr(CAST), arg(sourceVal), dest(dest) {
     auto source = sourceVal.getType();
     if (source->equal(*dest))
-        semanticError("Casting equal types");
+        semanticError("Casting equal types"); // TODO
 
     if (source->type == IR_Type::FUNCTION || dest->type == IR_Type::FUNCTION) {
-        semanticError("Function type cannot be cast");
+        semanticError("Function type cannot be cast"); // TODO
     }
     else if (source->type == IR_Type::ARRAY) {
         if (dest->type != IR_Type::POINTER)
@@ -345,7 +345,7 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
             else if (srcDir.getBytesSize() == 4 && dstDir.getBytesSize() == 8)
                 castOp = FPEXT;
             else
-                semanticError("Wrong float conversion");
+                internalError("Wrong float conversion");
         }
         else if (srcDir.isInteger() && dstDir.isFloat()) {
             if (srcDir.isSigned())
