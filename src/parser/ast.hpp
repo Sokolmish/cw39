@@ -430,6 +430,9 @@ struct AST_DirectAbstractDeclarator : public AST_Node {
     uniq<AST_Expr> arr_size = nullptr;
     uniq<AST_ParameterTypeList> func_args = nullptr;
 
+    AST_DirectAbstractDeclarator const& getBaseDirectDecl() const;
+    AST_AbstractDeclarator const& getBaseDecl() const;
+
     static AST_DirectAbstractDeclarator* makeNested(AST_Node *decl);
     static AST_DirectAbstractDeclarator* makeArr(AST_Node *base, AST_Expr *sz);
     static AST_DirectAbstractDeclarator* makeFunc(AST_Node *base, AST_ParameterTypeList *args);

@@ -819,21 +819,18 @@ TreeNodeRef AST_TypeName::getTreeNode() const {
 AST_DirectAbstractDeclarator::AST_DirectAbstractDeclarator(DeclType dtype)
         : AST_Node(AST_DIR_ABSTRACT_DECL), type(dtype) {}
 
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeNested(
-        AST_Node *decl) {
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeNested(AST_Node *decl) {
     auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::NESTED);
     res->base = uniqify(decl);
     return res;
 }
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeArr(
-        AST_Node *base, AST_Expr *sz) {
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeArr(AST_Node *base, AST_Expr *sz) {
     auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::ARRAY);
     res->base = uniqify(base);
     res->arr_size = uniqify(sz);
     return res;
 }
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeFunc(
-        AST_Node *base, AST_ParameterTypeList *args) {
+AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeFunc(AST_Node *base, AST_ParameterTypeList *args) {
     auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::FUNC);
     res->base = uniqify(base);
     res->func_args = uniqify(args);
@@ -864,6 +861,14 @@ TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
         fmt::print(stderr, "Wrong direct abstract declarator type: {}\n", type);
         throw;
     }
+}
+
+AST_DirectAbstractDeclarator const &AST_DirectAbstractDeclarator::getBaseDirectDecl() const {
+    return dynamic_cast<AST_DirectAbstractDeclarator const &>(*base);
+}
+
+AST_AbstractDeclarator const &AST_DirectAbstractDeclarator::getBaseDecl() const {
+    return dynamic_cast<AST_AbstractDeclarator const &>(*base);
 }
 
 

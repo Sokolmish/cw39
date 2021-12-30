@@ -184,7 +184,8 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
         if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
             semanticError("Non integer array size");
         auto size = sizeExpr->castValTo<uint64_t>();
-        return std::make_unique<IR_TypeArray>(std::move(base), size);
+        auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
+        return getDirectType(decl.getBaseDirectDecl(), arr);
     }
     else if (decl.type == AST_DirectDeclarator::FUNC) {
         if (decl.func_args) {
@@ -192,10 +193,12 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
             for (const auto &param: decl.func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
             bool isVararg = decl.func_args->has_ellipsis;
-            return std::make_unique<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
+            auto func = std::make_shared<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
+            return getDirectType(decl.getBaseDirectDecl(), func);
         }
         else {
-            return std::make_unique<IR_TypeFunc>(std::move(base));
+            auto func = std::make_shared<IR_TypeFunc>(std::move(base));
+            return getDirectType(decl.getBaseDirectDecl(), func);
         }
     }
     else {
@@ -210,9 +213,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractD
         return base;
     }
     else if (decl->type == AST_DirectAbstractDeclarator::NESTED) {
-        return getIndirectType(
-                dynamic_cast<AST_AbstractDeclarator const *>(decl->base.get()),
-                std::move(base));
+        return getIndirectType(&decl->getBaseDecl(), std::move(base));
     }
     else if (decl->type == AST_DirectAbstractDeclarator::ARRAY) {
         auto sizeExpr = evalConstantExpr(*decl->arr_size);
@@ -223,7 +224,8 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractD
         if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
             semanticError("Non integer array size");
         auto size = sizeExpr->castValTo<uint64_t>();
-        return std::make_unique<IR_TypeArray>(std::move(base), size);
+        auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
+        return getDirectAbstractType(&decl->getBaseDirectDecl(), arr);
     }
     else if (decl->type == AST_DirectAbstractDeclarator::FUNC) {
         if (decl->func_args) {
@@ -231,10 +233,12 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractD
             for (const auto &param: decl->func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
             bool isVararg = decl->func_args->has_ellipsis;
-            return std::make_unique<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
+            auto func = std::make_shared<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
+            return getDirectAbstractType(&decl->getBaseDirectDecl(), func);
         }
         else {
-            return std::make_unique<IR_TypeFunc>(std::move(base));
+            auto func = std::make_shared<IR_TypeFunc>(std::move(base));
+            return getDirectAbstractType(&decl->getBaseDirectDecl(), func);
         }
     }
     internalError("Unknown direct abstract declarator type");
