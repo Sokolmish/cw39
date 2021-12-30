@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <optional>
 #include "common.h"
 #include "print_tree.hpp"
 
@@ -98,7 +99,7 @@ struct AST_Postfix : public AST_Expr {
     uniq<AST_Expr> base = nullptr;
     std::variant<uniq<AST_Node>, string_id_t> arg; // Expr ArgumentsList
 
-    AST_Expr const& getExpr() const;
+    AST_Expr const& getExpr() const; // TODO: getArgExpr
     AST_ArgumentsList const& getArgsList() const;
     string_id_t getIdent() const;
 
@@ -169,6 +170,8 @@ struct AST_Assignment : public AST_Expr {
         DIRECT, MUL, DIV, REM, ADD, SUB, SHL, SHR, AND, XOR, OR
     } op;
     uniq<AST_Expr> lhs, rhs;
+
+    std::optional<AST_Binop::OpType> toBinop() const;
 
     AST_Assignment(OpType op, AST_Expr *lhs, AST_Expr *rhs);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;

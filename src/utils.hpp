@@ -9,6 +9,8 @@
 #include <exception>
 
 
+// TODO: internalError
+
 [[noreturn]] inline void semanticError(const std::string &msg) {
     throw std::runtime_error(fmt::format("{}\n", msg));
 }

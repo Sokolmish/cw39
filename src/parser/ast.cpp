@@ -251,6 +251,33 @@ TreeNodeRef AST_Assignment::getTreeNode() const {
     return node;
 }
 
+std::optional<AST_Binop::OpType> AST_Assignment::toBinop() const {
+    switch (op) {
+        case MUL:
+            return AST_Binop::MUL;
+        case DIV:
+            return AST_Binop::DIV;
+        case REM:
+            return AST_Binop::REM;
+        case ADD:
+            return AST_Binop::ADD;
+        case SUB:
+            return AST_Binop::SUB;
+        case SHL:
+            return AST_Binop::SHL;
+        case SHR:
+            return AST_Binop::SHR;
+        case AND:
+            return AST_Binop::BIT_AND;
+        case XOR:
+            return AST_Binop::BIT_XOR;
+        case OR:
+            return AST_Binop::BIT_OR;
+        default: // +DIRECT
+            return {};
+    }
+}
+
 
 // AST_CommaExpression
 

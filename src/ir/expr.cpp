@@ -1,5 +1,32 @@
 #include "generator.hpp"
 
+IRval IR_Generator::getPtrWithOffset(IRval base, IRval index) {
+    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
+
+    IRval fixedIndex = index;
+    if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64)) {
+        fixedIndex = cfg->createReg(IR_TypeDirect::type_u64);
+        curBlock().addCastNode(fixedIndex, index, IR_TypeDirect::type_u64);
+    }
+
+    IRval scaledIndex = fixedIndex;
+    if (ptrType->child->getBytesSize() != 1) {
+        IRval multiplyer = IRval::createVal(
+                IR_TypeDirect::type_u64,
+                static_cast<uint64_t>(ptrType->child->getBytesSize()));
+        scaledIndex = cfg->createReg(fixedIndex.getType());
+        curBlock().addOperNode(scaledIndex, IR_ExprOper::MUL, { fixedIndex, multiplyer });
+    }
+
+    IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
+    curBlock().addCastNode(iptr, base, IR_TypeDirect::type_u64);
+    IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
+    curBlock().addOperNode(wOffset, IR_ExprOper::ADD, { iptr, scaledIndex });
+    IRval finPtr = cfg->createReg(ptrType);
+    curBlock().addCastNode(finPtr, wOffset, ptrType);
+    return finPtr;
+}
+
 void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
     if (dest.node_type == AST_PRIMARY) { // Identifiers
         auto const &assignee = dynamic_cast<AST_Primary const &>(dest);
@@ -11,24 +38,13 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
             semanticError("Only variables can be assigned");
         }
 
-        auto destVar = variables.get(assignee.getIdent());
-        auto destGlobal = globals.find(assignee.getIdent());
-        if (destVar.has_value()) {
-            auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
-            if (!destVarPtrType->child->equal(*wrValue.getType()))
-                semanticError("Cannot assign values of different types");
-            curBlock().addOperNode({}, IR_ExprOper::STORE, { *destVar, wrValue });
-        }
-        else if (destGlobal != globals.end()) {
-            auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(
-                    destGlobal->second.getType());
-            if (!destVarPtrType->child->equal(*wrValue.getType()))
-                semanticError("Cannot assign values of different types");
-            curBlock().addOperNode({}, IR_ExprOper::STORE, { destGlobal->second, wrValue });
-        }
-        else {
+        std::optional<IRval> destVar = getPtrToVariable(assignee.getIdent());
+        if (!destVar.has_value())
             semanticError("Unknown variable");
-        }
+        auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
+        if (!destVarPtrType->child->equal(*wrValue.getType()))
+            semanticError("Cannot assign values of different types");
+        curBlock().addOperNode({}, IR_ExprOper::STORE, { *destVar, wrValue });
     }
     else if (dest.node_type == AST_UNARY_OP) { // Dereference write
         auto const &assignee = dynamic_cast<AST_Unop const &>(dest);
@@ -74,51 +90,31 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
             IRval base = evalExpr(*assignee.base);
             IRval index = evalExpr(assignee.getExpr());
 
-            if (base.getType()->type == IR_Type::ARRAY) { // Not used?
-                auto arrayType = std::dynamic_pointer_cast<IR_TypeArray>(base.getType());
-                if (!arrayType->child->equal(*wrValue.getType()))
-                    semanticError("Cannot assign values of different types");
-
-                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>( // TODO: no res value (and unused)
-                        IR_ExprOper::INSERT, std::vector<IRval>{ base, index, wrValue })));
+            if (base.getType()->type == IR_Type::ARRAY) {
+//                auto arrayType = std::dynamic_pointer_cast<IR_TypeArray>(base.getType());
+//                if (!arrayType->child->equal(*wrValue.getType()))
+//                    semanticError("Cannot assign values of different types");
+//
+//                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
+//                        IR_ExprOper::INSERT, std::vector<IRval>{ base, index, wrValue })));
+                semanticError("Something went wrong");
             }
             else if (base.getType()->type == IR_Type::POINTER) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
                 if (!ptrType->child->equal(*wrValue.getType()))
                     semanticError("Cannot assign values of different types");
-
-                IRval fixedIndex = index;
-                if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64)) {
-                    fixedIndex = cfg->createReg(IR_TypeDirect::type_u64);
-                    curBlock().addCastNode(fixedIndex, index, IR_TypeDirect::type_u64);
-                }
-
-                IRval scaledIndex = fixedIndex;
-                if (ptrType->child->getBytesSize() != 1) {
-                    IRval multiplyer = IRval::createVal(
-                            IR_TypeDirect::type_u64,
-                            static_cast<uint64_t>(ptrType->child->getBytesSize()));
-                    scaledIndex = cfg->createReg(fixedIndex.getType());
-                    curBlock().addOperNode(scaledIndex, IR_ExprOper::MUL, { fixedIndex, multiplyer });
-                }
-
-                IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
-                curBlock().addCastNode(iptr, base, IR_TypeDirect::type_u64);
-                IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
-                curBlock().addOperNode(wOffset, IR_ExprOper::ADD, { iptr, scaledIndex });
-                IRval finPtr = cfg->createReg(ptrType);
-                curBlock().addCastNode(finPtr, wOffset, ptrType);
+                IRval finPtr = getPtrWithOffset(base, index);
                 curBlock().addOperNode({}, IR_ExprOper::STORE, { finPtr, wrValue });
             }
-            else {
+            else { // base.getType()->type
                 semanticError("Wrong type for indexation");
             }
         }
-        else {
+        else { // assignee.op
             semanticError("Only struct's field or array element can be assigned");
         }
     }
-    else {
+    else { // dest.node_type
         semanticError("Cannot be assigned");
     }
 }
@@ -133,7 +129,6 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
         semanticError("Cannot do binary operation on different types");
 
     auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
-//    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(*rhs.getType());
 
     if (isGeneralNumOp(op)) {
         IRval res = cfg->createReg(lhs.getType());
@@ -201,6 +196,50 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
     }
 }
 
+IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right) {
+    // TODO: assert operation
+
+    IRval lhs = evalExpr(left);
+
+    if (lhs.getType()->type != IR_Type::DIRECT)
+        semanticError("Cannon perform logical operation on non-integer type");
+    auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
+    if (!ltype.isInteger())
+        semanticError("Cannon perform logical operation on non-integer type");
+
+    IRval res = cfg->createReg(lhs.getType());
+    curBlock().addOperNode(res, IR_ExprOper::MOV, { lhs });
+
+    IR_Block &blockLong = cfg->createBlock();
+    IR_Block &blockAfter = cfg->createBlock();
+
+    curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+            IR_ExprTerminator::BRANCH, lhs));
+    if (op == AST_Binop::LOG_AND) {
+        cfg->linkBlocks(curBlock(), blockLong);
+        cfg->linkBlocks(curBlock(), blockAfter);
+    }
+    else {
+        cfg->linkBlocks(curBlock(), blockAfter);
+        cfg->linkBlocks(curBlock(), blockLong);
+    }
+
+    selectBlock(blockLong);
+    IRval rhs = evalExpr(right);
+
+    if (!lhs.getType()->equal(*rhs.getType()))
+        semanticError("Cannot do binary operation on different types");
+
+    curBlock().addOperNode(res, IR_ExprOper::MOV, { rhs });
+
+    curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+            IR_ExprTerminator::JUMP, lhs));
+    cfg->linkBlocks(curBlock(), blockAfter);
+
+    selectBlock(blockAfter);
+    return res; // Maybe PHI node here?
+}
+
 IRval IR_Generator::evalExpr(AST_Expr const &node) {
     switch (node.node_type) {
         case AST_COMMA_EXPR: {
@@ -217,40 +256,10 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             IRval rhsVal = evalExpr(*expr.rhs);
             if (expr.op != AST_Assignment::DIRECT) {
                 IRval lhsVal = evalExpr(*expr.lhs);
-                switch (expr.op) {
-                    case AST_Assignment::MUL:
-                        rhsVal = doBinOp(AST_Binop::MUL, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::DIV:
-                        rhsVal = doBinOp(AST_Binop::DIV, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::REM:
-                        rhsVal = doBinOp(AST_Binop::REM, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::ADD:
-                        rhsVal = doBinOp(AST_Binop::ADD, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::SUB:
-                        rhsVal = doBinOp(AST_Binop::SUB, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::SHL:
-                        rhsVal = doBinOp(AST_Binop::SHL, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::SHR:
-                        rhsVal = doBinOp(AST_Binop::SHR, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::AND:
-                        rhsVal = doBinOp(AST_Binop::BIT_AND, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::XOR:
-                        rhsVal = doBinOp(AST_Binop::BIT_XOR, lhsVal, rhsVal);
-                        break;
-                    case AST_Assignment::OR:
-                        rhsVal = doBinOp(AST_Binop::BIT_OR, lhsVal, rhsVal);
-                        break;
-                    default:
-                        semanticError("Wrong assignment type");
-                }
+                auto binOp = expr.toBinop();
+                if (!binOp.has_value())
+                    semanticError("Wrong assignment type");
+                rhsVal = doBinOp(binOp.value(), lhsVal, rhsVal);
             }
             doAssignment(*expr.lhs, rhsVal);
             return rhsVal;
@@ -268,46 +277,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval rhs = evalExpr(*expr.rhs);
                 return doBinOp(expr.op, lhs, rhs);
             }
-            else { // Logical operation (with short evaluation)
-                IRval lhs = evalExpr(*expr.lhs);
-
-                if (lhs.getType()->type != IR_Type::DIRECT)
-                    semanticError("Cannon perform logical operation on non-integer type");
-                auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
-                if (!ltype.isInteger())
-                    semanticError("Cannon perform logical operation on non-integer type");
-
-                IRval res = cfg->createReg(lhs.getType());
-                curBlock().addOperNode(res, IR_ExprOper::MOV, { lhs });
-
-                IR_Block &blockLong = cfg->createBlock();
-                IR_Block &blockAfter = cfg->createBlock();
-
-                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-                        IR_ExprTerminator::BRANCH, lhs));
-                if (expr.op == AST_Binop::LOG_AND) {
-                    cfg->linkBlocks(curBlock(), blockLong);
-                    cfg->linkBlocks(curBlock(), blockAfter);
-                }
-                else {
-                    cfg->linkBlocks(curBlock(), blockAfter);
-                    cfg->linkBlocks(curBlock(), blockLong);
-                }
-
-                selectBlock(blockLong);
-                IRval rhs = evalExpr(*expr.rhs);
-
-                if (!lhs.getType()->equal(*rhs.getType()))
-                    semanticError("Cannot do binary operation on different types");
-
-                curBlock().addOperNode(res, IR_ExprOper::MOV, { rhs });
-
-                curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-                        IR_ExprTerminator::JUMP, lhs));
-                cfg->linkBlocks(curBlock(), blockAfter);
-
-                selectBlock(blockAfter);
-                return res; // Maybe PHI node here?
+            else {
+                return doShortLogicOp(expr.op, *expr.lhs, *expr.rhs);
             }
         }
 
@@ -366,23 +337,15 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return res;
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {
-                if (expr.child->node_type != AST_PRIMARY) // TODO: use assignment
-                    semanticError("Inc/dec available only for primary expressions");
-                auto const &prim = dynamic_cast<AST_Primary &>(*expr.child);
-                if (prim.type != AST_Primary::IDENT)
-                    semanticError("Inc/dec available only for variables");
+                auto const &baseExpr = dynamic_cast<AST_Expr &>(*expr.child);
 
-                IRval arg = evalExpr(dynamic_cast<AST_Expr &>(*expr.child));
+                IRval arg = evalExpr(baseExpr);
                 IRval one = IRval::createVal(arg.getType(), 1U);
                 IRval res = cfg->createReg(arg.getType());
                 auto op = expr.op == uop::PRE_INC ? IR_ExprOper::ADD : IR_ExprOper::SUB;
                 curBlock().addOperNode(res, op, { arg, one });
 
-                auto var = variables.get(prim.getIdent());
-                if (!var.has_value())
-                    semanticError("Unknown variable");
-                curBlock().addOperNode({}, IR_ExprOper::STORE, { *var, res });
-
+                doAssignment(baseExpr, res);
                 return res;
             }
             else if (expr.op == uop::DEREF) {
@@ -403,14 +366,10 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     if (subject.type != AST_Primary::IDENT)
                         semanticError("Address cannot be taken from literal");
 
-                    auto var = variables.get(subject.getIdent());
-                    auto globalIt = globals.find(subject.getIdent());
-                    if (var.has_value())
-                        return *var;
-                    else if (globalIt != globals.end())
-                        return globalIt->second;
-                    else
+                    std::optional<IRval> var = getPtrToVariable(subject.getIdent());
+                    if (!var.has_value())
                         semanticError("Unknown variable");
+                    return var.value();
                 }
                 else if (expr.child->node_type == AST_POSTFIX) { // Index, access
                     NOT_IMPLEMENTED("Address of aggregate's element");
@@ -472,7 +431,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
             if (expr.op == AST_Postfix::CALL) {
                 if (expr.base->node_type != AST_PRIMARY)
-                    NOT_IMPLEMENTED("Pointers call");
+                    NOT_IMPLEMENTED("Indirect call");
                 auto const &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
                 if (funcBase.type != AST_Primary::IDENT)
                     semanticError("Only identifier can be called");
@@ -486,7 +445,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 std::vector<IRval> args;
                 size_t argNum = 0;
                 for (auto const &arg : argsList.children) {
-                    IRval argVal = evalExpr(*arg);
+                    IRval argVal = evalExpr(*arg); // TODO: promotion
 
                     if (argNum < fun.getFuncType().args.size()) {
                         if (!argVal.getType()->equal(*fun.getFuncType().args[argNum])) {
@@ -509,22 +468,16 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return res;
             }
             else if (expr.op == AST_Postfix::POST_INC || expr.op == AST_Postfix::POST_DEC) {
-                if (expr.base->node_type != AST_PRIMARY)
-                    semanticError("Inc/dec available only for primary expressions");
-                auto const &prim = dynamic_cast<AST_Primary const &>(*expr.base);
-                if (prim.type != AST_Primary::IDENT)
-                    semanticError("Inc/dec available only for variables");
+                auto const &baseExpr = dynamic_cast<AST_Expr const &>(*expr.base);
 
-                IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.base));
-                IRval one = IRval::createVal(arg.getType(), 1U);
+                IRval arg = evalExpr(baseExpr);
+                IRval one = IRval::createVal(arg.getType(), 1UL);
                 IRval res = cfg->createReg(arg.getType());
-                auto op = expr.op == AST_Postfix::POST_INC ? IR_ExprOper::ADD : IR_ExprOper::SUB;
+                auto op = expr.op == AST_Postfix::POST_INC ?
+                        IR_ExprOper::ADD : IR_ExprOper::SUB;
                 curBlock().addOperNode(res, op, { arg, one });
 
-                auto var = variables.get(prim.getIdent());
-                if (!var.has_value())
-                    semanticError("Unknown variable");
-                curBlock().addOperNode({}, IR_ExprOper::STORE, { *var, res });
+                doAssignment(baseExpr, res);
                 return arg;
             }
             else if (expr.op == AST_Postfix::INDEXATION) {
@@ -538,30 +491,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     return res;
                 }
                 else if (array.getType()->type == IR_Type::POINTER) {
-                    // TODO: common code for this indexation with assignment
                     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
-
-                    IRval fixedIndex = index;
-                    if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64)) {
-                        fixedIndex = cfg->createReg(IR_TypeDirect::type_u64);
-                        curBlock().addCastNode(fixedIndex, index, IR_TypeDirect::type_u64);
-                    }
-
-                    IRval scaledIndex = fixedIndex;
-                    if (ptrType->child->getBytesSize() != 1) {
-                        IRval multiplyer = IRval::createVal(
-                                IR_TypeDirect::type_u64,
-                                static_cast<uint64_t>(ptrType->child->getBytesSize()));
-                        scaledIndex = cfg->createReg(fixedIndex.getType());
-                        curBlock().addOperNode(scaledIndex, IR_ExprOper::MUL, { fixedIndex, multiplyer });
-                    }
-
-                    IRval iptr = cfg->createReg(IR_TypeDirect::type_u64);
-                    curBlock().addCastNode(iptr, array, IR_TypeDirect::type_u64);
-                    IRval wOffset = cfg->createReg(IR_TypeDirect::type_u64);
-                    curBlock().addOperNode(wOffset, IR_ExprOper::ADD, { iptr, scaledIndex });
-                    IRval finPtr = cfg->createReg(ptrType);
-                    curBlock().addCastNode(finPtr, wOffset, ptrType);
+                    IRval finPtr = getPtrWithOffset(array, index);
                     IRval res = cfg->createReg(ptrType->child);
                     curBlock().addOperNode(res, IR_ExprOper::LOAD, { finPtr });
                     return res;
@@ -598,67 +529,25 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             auto const &expr = dynamic_cast<AST_Primary const &>(node);
 
             if (expr.type == AST_Primary::CONST) {
-                AST_Literal val = expr.getLiteral();
-                auto valType = getLiteralType(val);
-                if (val.type == INTEGER_LITERAL) {
-                    if (val.isUnsigned) {
-                        if (val.longCnt)
-                            return IRval::createVal(valType, val.val.vu64);
-                        else
-                            return IRval::createVal(valType, val.val.vu32);
-                    }
-                    else { // Signed
-                        if (val.longCnt)
-                            return IRval::createVal(valType, val.val.vi64);
-                        else
-                            return IRval::createVal(valType, val.val.vi32);
-                    }
-                }
-                else if (val.type == FLOAT_LITERAL) {
-                    if (val.isFloat)
-                        return IRval::createVal(valType, val.val.vf32);
-                    else {
-                        return IRval::createVal(valType, val.val.vf64);
-                    }
-                }
-                else if (val.type == CHAR_LITERAL) {
-                    return IRval::createVal(valType, static_cast<int8_t>(val.val.v_char));
-                }
-                else {
-                    semanticError("Unknown literal type");
-                }
+                return getLiteralIRval(expr.getLiteral());
             }
             else if (expr.type == AST_Primary::IDENT) {
-                std::vector<IRval> ptrArg;
-                std::shared_ptr<IR_Type> resType;
-
-                auto var = variables.get(expr.getIdent());
-                auto globalIt = globals.find(expr.getIdent());
-                if (var.has_value()) {
-                    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
-                    resType = ptrType->child;
-                    ptrArg = { *var };
-                }
-                else if (globalIt != globals.end()) {
-                    auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(
-                            globalIt->second.getType());
-                    resType = ptrType->child;
-                    ptrArg = { globalIt->second };
-                }
-                else {
+                std::optional<IRval> var = getPtrToVariable(expr.getIdent());
+                if (!var.has_value())
                     semanticError("Unknown variable");
-                }
+                auto varType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
+                auto resType = varType->child;
 
                 if (resType->type == IR_Type::ARRAY) {
                     auto const &arrType = dynamic_cast<IR_TypeArray const &>(*resType);
                     auto ptrType = std::make_shared<IR_TypePtr>(arrType.child);
                     IRval res = cfg->createReg(ptrType);
-                    curBlock().addCastNode(res, ptrArg[0], ptrType);
+                    curBlock().addCastNode(res, *var, ptrType);
                     return res;
                 }
                 else {
                     IRval res = cfg->createReg(resType);
-                    curBlock().addOperNode(res, IR_ExprOper::LOAD, ptrArg);
+                    curBlock().addOperNode(res, IR_ExprOper::LOAD, { *var });
                     return res;
                 }
             }
@@ -667,7 +556,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             }
             else if (expr.type == AST_Primary::STR) {
                 string_id_t parserStrId = expr.getString();
-                IRval str = IRval::createString(cfg->putString(get_string_by_id(parserStrId)));
+                IRval str = IRval::createString(
+                        cfg->putString(get_string_by_id(parserStrId)));
                 strings.insert({ parserStrId, str });
                 return str;
             }
@@ -680,4 +570,49 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             semanticError("Unexpected node type in expression");
         }
     }
+}
+
+IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
+    auto valType = getLiteralType(lit);
+    if (lit.type == INTEGER_LITERAL) {
+        if (lit.isUnsigned) {
+            if (lit.longCnt)
+                return IRval::createVal(valType, lit.val.vu64);
+            else
+                return IRval::createVal(valType, lit.val.vu32);
+        }
+        else { // Signed
+            if (lit.longCnt)
+                return IRval::createVal(valType, lit.val.vi64);
+            else
+                return IRval::createVal(valType, lit.val.vi32);
+        }
+    }
+    else if (lit.type == FLOAT_LITERAL) {
+        if (lit.isFloat)
+            return IRval::createVal(valType, lit.val.vf32);
+        else
+            return IRval::createVal(valType, lit.val.vf64);
+    }
+    else if (lit.type == CHAR_LITERAL) {
+        return IRval::createVal(valType, static_cast<int8_t>(lit.val.v_char));
+    }
+    else {
+        semanticError("Wrong literal type");
+    }
+}
+
+std::optional<IRval> IR_Generator::getPtrToVariable(string_id_t ident) {
+    std::vector<IRval> ptrArg;
+    std::shared_ptr<IR_Type> resType;
+
+    std::optional<IRval> var = variables.get(ident);
+    if (var.has_value())
+        return var.value();
+
+    auto globalIt = globals.find(ident);
+    if (globalIt != globals.end())
+        return globalIt->second;
+
+    return {};
 }

@@ -11,7 +11,8 @@ struct TestStruct {
 };
 
 void store555(int *addr) {
-    *addr = 555;
+    *addr = 554;
+    (*addr)++;
     return;
 }
 

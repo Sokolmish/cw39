@@ -47,9 +47,13 @@ private:
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 
+    IRval getPtrWithOffset(IRval base, IRval index);
     void doAssignment(AST_Expr const &dest, IRval wrValue);
     IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
+    IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &lhs, AST_Expr const &rhs);
     IRval evalExpr(AST_Expr const &node);
+    IRval getLiteralIRval(AST_Literal const &lit);
+    std::optional<IRval> getPtrToVariable(string_id_t ident);
 
     std::shared_ptr<IR_Type> getStructType(AST_StructOrUsionSpec const &spec);
     typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
@@ -64,6 +68,7 @@ private:
     std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl);
     std::shared_ptr<IR_Type> getType(AST_SpecifierQualifierList const &spec, AST_Declarator const &decl);
     std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
+
     string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);

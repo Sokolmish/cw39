@@ -1,5 +1,7 @@
 #include "generator.hpp"
 
+// TODO: is shortLogic
+
 bool IR_Generator::isGeneralNumOp(AST_Binop::OpType op) {
     using bop = AST_Binop;
     return isInList(op, { bop::ADD, bop::SUB, bop::DIV, bop::MUL });
