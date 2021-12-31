@@ -51,6 +51,7 @@ private:
     void doAssignment(AST_Expr const &dest, IRval wrValue);
     IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &lhs, AST_Expr const &rhs);
+    IRval doAddrOf(const AST_Expr &expr);
     IRval evalExpr(AST_Expr const &node);
     IRval getLiteralIRval(AST_Literal const &lit);
     std::optional<IRval> getPtrToVariable(string_id_t ident);
