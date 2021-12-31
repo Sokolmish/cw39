@@ -170,7 +170,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
         return res;
     }
     else if (isComparsionOp(op)) {
-        IRval res = cfg->createReg(IR_TypeDirect::type_i32);
+        IRval res = cfg->createReg(IR_TypeDirect::type_i8); // TODO: i1
 
         if (op == bop::EQ)
             curBlock().addOperNode(res, IR_ExprOper::EQ, { lhs, rhs });
@@ -187,7 +187,9 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
         else
             internalError("Wrong comparsion operation");
 
-        return res;
+        IRval fixedRes = cfg->createReg(IR_TypeDirect::type_i32);
+        curBlock().addCastNode(fixedRes, res, IR_TypeDirect::type_i32);
+        return fixedRes;
     }
     else {
         internalError("Wrong binary operation");
