@@ -23,7 +23,7 @@ include_directories(
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp
         ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
+        ${PROJECT_SOURCE_DIR}/src/cli_args.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/utils.cpp
@@ -44,6 +44,8 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/transformations/cfg_cleaner.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/copy_propagator.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/algebraic_transformer.cpp
+
+        ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
         )
 
 add_executable(cw39 ${PROJ_SRCS})
