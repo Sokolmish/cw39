@@ -217,8 +217,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     IR_Block &blockLong = cfg->createBlock();
     IR_Block &blockAfter = cfg->createBlock();
 
-    curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-            IR_ExprTerminator::BRANCH, lhs));
+    curBlock().setTerminator(IR_ExprTerminator::BRANCH, lhs);
     if (op == AST_Binop::LOG_AND) {
         cfg->linkBlocks(curBlock(), blockLong);
         cfg->linkBlocks(curBlock(), blockAfter);
@@ -235,9 +234,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
         semanticError("Cannot do binary operation on different types");
 
     curBlock().addOperNode(res, IR_ExprOper::MOV, { rhs });
-
-    curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
-            IR_ExprTerminator::JUMP, lhs));
+    curBlock().setTerminator(IR_ExprTerminator::JUMP);
     cfg->linkBlocks(curBlock(), blockAfter);
 
     selectBlock(blockAfter);

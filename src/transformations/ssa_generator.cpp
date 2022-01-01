@@ -42,9 +42,7 @@ void SSA_Generator::placePhis() {
     for (auto const &[var, varDefs] : varsDefSet) {
         std::set<int> JP = getSetDFP(varDefs); // JP == DFP (theorem)
         for (int blockId : JP) {
-//            cfg->block(blockId).phis.insert({ var, {} });
-            auto phiNode = IR_Node(var, std::make_unique<IR_ExprPhi>());
-            cfg->block(blockId).phis.push_back(std::move(phiNode));
+            cfg->block(blockId).addNewPhiNode(var);
         }
     }
 }

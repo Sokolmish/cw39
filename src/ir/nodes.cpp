@@ -479,6 +479,28 @@ void IR_Block::addIndirectCallNode(std::optional<IRval> res, IRval callee, std::
     addNode(res, std::make_unique<IR_ExprCall>(callee, args));
 }
 
+void IR_Block::addAllocNode(IRval res, std::shared_ptr<IR_Type> type, bool isOnHeap) {
+    if (isOnHeap)
+        NOT_IMPLEMENTED("builtin malloc");
+    addNode(res, std::make_unique<IR_ExprAlloc>(type, 1ULL));
+}
+
+void IR_Block::addNewPhiNode(IRval res) {
+    phis.push_back(IR_Node(res, std::make_unique<IR_ExprPhi>()));
+}
+
+void IR_Block::setTerminator(IR_ExprTerminator::TermType type) {
+    if (type == IR_ExprTerminator::BRANCH)
+        semanticError("Branck term statement needs argument");
+    termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type));
+}
+
+void IR_Block::setTerminator(IR_ExprTerminator::TermType type, IRval arg) {
+    if (type == IR_ExprTerminator::JUMP)
+        semanticError("Jump term statement doesn't have arguments");
+    termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type, arg));
+}
+
 IR_Block IR_Block::copy() const {
     IR_Block newBlock(id);
     for (auto const &phiNode : phis)
