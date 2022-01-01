@@ -6,10 +6,12 @@ IR_Block &IR_Generator::curBlock() {
     return *selectedBlock;
 }
 
+/** Select block as current (nodes will be inserted in this block) */
 void IR_Generator::selectBlock(IR_Block &block) {
     selectedBlock = &block;
 }
 
+/** Deselect block in case if current branch is terminated (e.g. by ret) */
 void IR_Generator::deselectBlock() {
     selectedBlock = nullptr;
 }
@@ -30,6 +32,7 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
     }
 }
 
+/** Insert global variable declaration, new struct type or function prototype */
 void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
     // Save struct type if such is there
     if (!decl.child) {
@@ -76,6 +79,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
     }
 }
 
+/** Convert storage specifier from AST enum to IR one */
 static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec const &spec) {
     switch (spec) {
         case AST_DeclSpecifiers::ST_AUTO:
@@ -91,6 +95,7 @@ static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec co
     }
 }
 
+/** Create function definition */
 void IR_Generator::createFunction(AST_FunctionDef const &def) {
     variables.increaseLevel();
 
@@ -131,6 +136,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     labels.clear();
 }
 
+/** Process compound statement */
 void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     variables.increaseLevel();
     for (auto const &elem: compStmt.body->v) {
@@ -148,6 +154,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     variables.decreaseLevel();
 }
 
+/** Create new local variables */
 void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
     // Save struct type if such is there
     if (!decl.child) {
@@ -383,6 +390,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
     }
 }
 
+/** Create new scope and fill block from compound statement */
 void IR_Generator::insertCompoundStatement(const AST_CompoundStmt &stmt) {
     if (stmt.body->v.empty())
         return;

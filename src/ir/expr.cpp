@@ -1,5 +1,6 @@
 #include "generator.hpp"
 
+/** Creates pointer to element with given index in array pointed to by base */
 IRval IR_Generator::getPtrWithOffset(IRval base, IRval index) {
     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
 
@@ -27,6 +28,7 @@ IRval IR_Generator::getPtrWithOffset(IRval base, IRval index) {
     return finPtr;
 }
 
+/** Store wrValue in object described by dest (variable, pointer, field, etc) */
 void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
     if (dest.node_type == AST_PRIMARY) { // Identifiers
         auto const &assignee = static_cast<AST_Primary const &>(dest);
@@ -119,6 +121,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
     }
 }
 
+/** Create node with specified binary operation */
 IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs) {
     using bop = AST_Binop;
 
@@ -196,6 +199,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
     }
 }
 
+/** Create nodes and blocks for logical operation with short evaluation */
 IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right) {
     // TODO: assert operation
 
@@ -240,6 +244,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     return res; // Maybe PHI node here?
 }
 
+/** Get value with address of expr */
 IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
     if (expr.node_type == AST_PRIMARY) {
         auto const &subject = dynamic_cast<AST_Primary const &>(expr);
@@ -616,6 +621,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
     }
 }
 
+/** Create value from literal */
 IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
     auto valType = getLiteralType(lit);
     if (lit.type == INTEGER_LITERAL) {
@@ -646,6 +652,7 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
     }
 }
 
+/** Get value with pointer to local or global variable */
 std::optional<IRval> IR_Generator::getPtrToVariable(string_id_t ident) {
     std::vector<IRval> ptrArg;
     std::shared_ptr<IR_Type> resType;
