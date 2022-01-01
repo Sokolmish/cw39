@@ -3581,7 +3581,11 @@ AST_TranslationUnit* parse_program(std::string const &str) {
 	lex_extra_t extra;
 	init_scanner(str.c_str(), &scanner, &extra);
 	AST_TranslationUnit *res;
-	yyparse(scanner, &res);
+	int isFailure = yyparse(scanner, &res);
 	destroy_scanner(scanner);
+	if (isFailure) {
+		fprintf(stderr, "Parsing failed\n");
+		exit(EXIT_FAILURE);
+	}
 	return res;
 }
