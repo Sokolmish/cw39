@@ -405,12 +405,14 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 curBlock().addOperNode(res, IR_ExprOper::XOR, { maxv, arg });
                 return res;
             }
-            else if (expr.op == uop::UN_NOT) { // TODO: fix
+            else if (expr.op == uop::UN_NOT) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
-                IRval maxv = IRval::createVal(arg.getType(), -1UL);
-                IRval res = cfg->createReg(arg.getType());
-                curBlock().addOperNode(res, IR_ExprOper::XOR, { maxv, arg });
-                return res;
+                IRval zero = IRval::createVal(arg.getType(), 0U);
+                IRval res = cfg->createReg(IR_TypeDirect::type_i8); // TODO: i1
+                curBlock().addOperNode(res, IR_ExprOper::EQ, { arg, zero });
+                IRval fixedRes = cfg->createReg(IR_TypeDirect::type_i32);
+                curBlock().addCastNode(fixedRes, res, IR_TypeDirect::type_i32);
+                return fixedRes;
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {
                 auto const &baseExpr = dynamic_cast<AST_Expr &>(*expr.child);

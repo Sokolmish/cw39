@@ -52,7 +52,7 @@ block_2:                                          ; preds = %block_1
   br label %block_3
 
 block_3:                                          ; preds = %block_2, %block_1
-  %vr155 = phi i32 [ %.arg_0, %block_2 ], [ %.arg_1, %block_1 ]
+  %vr155 = phi i32 [ %.arg_1, %block_1 ], [ %.arg_0, %block_2 ]
   %vr15 = add i32 %.arg_0, %vr155
   ret i32 %vr15
 }

@@ -323,6 +323,7 @@ std::string ControlFlowGraph::printIR() const {
     fmt::print(ss, "\n");
 
     for (auto const &[id, str] : strings) {
+        // TODO: print escape sequences
         fmt::print(ss, "string_{} = \"{}\"\n", id, str);
     }
     fmt::print(ss, "\n");
