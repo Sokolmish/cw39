@@ -18,7 +18,7 @@ private:
     std::map<int, int> postOrder;
     std::map<int, std::set<int>> verticesDF;
 
-    int versionsCnt;
+    int versionsCnt = -1;
     std::deque<int> versions;
 
     void placePhis();
@@ -32,7 +32,7 @@ private:
     void traverseForVar(int blockId, IRval const &var);
 
 public:
-    SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg);
+    explicit SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg);
 
     std::shared_ptr<ControlFlowGraph> getCfg();
 };

@@ -9,8 +9,6 @@
 #include "common.h"
 #include "print_tree.hpp"
 
-#define DISABLE_COPY(cl) cl(const cl&) = delete; cl& operator=(const cl&) = delete;
-
 typedef int ast_enum_t;
 
 enum : ast_enum_t {
@@ -28,7 +26,8 @@ enum : ast_enum_t {
 };
 
 struct AST_Node {
-    DISABLE_COPY(AST_Node)
+    AST_Node(AST_Node const &) = delete;
+    AST_Node& operator=(AST_Node const &) = delete;
 
     int node_type;
 

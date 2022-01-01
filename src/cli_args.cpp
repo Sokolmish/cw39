@@ -35,7 +35,7 @@ CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc)
 CLIArgs::CLIArgs(int argc, char **argv)
         : impl(std::make_unique<CLIArgs_Impl>(argc, argv)) {}
 
-CLIArgs::~CLIArgs() {}
+CLIArgs::~CLIArgs() = default;
 
 std::vector<std::string> CLIArgs::unmatched() const {
     return impl->res.unmatched();

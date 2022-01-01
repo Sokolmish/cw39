@@ -4,9 +4,10 @@
 #include "ir/generator.hpp"
 
 
-CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
+CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> const &rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
 
+    changed = true;
     globalChanged = true;
     while (globalChanged) {
         globalChanged = false;
@@ -19,8 +20,6 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg)
     cleaner.fixVersions();
     cleaner.removeUselessNodes();
     cfg = cleaner.getCfg();
-
-    rawCfg.reset();
 }
 
 std::shared_ptr<ControlFlowGraph> CopyPropagator::getCfg() {

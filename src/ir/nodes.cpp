@@ -63,6 +63,7 @@ std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
     return std::make_shared<IR_TypeDirect>(spec);
 }
 
+// TODO: replace with getters
 std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_void =
         std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
 std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i8 =
@@ -89,7 +90,7 @@ IR_TypeStruct::IR_TypeStruct(string_id_t ident, std::vector<StructField> fields)
         : IR_Type(TSTRUCT), structId(ident), fields(std::move(fields)) {}
 
 IR_TypeStruct::StructField::StructField(string_id_t ident, std::shared_ptr<IR_Type> type, int index)
-        : fieldName(ident), irType(type), index(index) {}
+        : fieldName(ident), irType(std::move(type)), index(index) {}
 
 bool IR_TypeStruct::equal(IR_Type const &rhs) const {
     if (rhs.type != IR_Type::TSTRUCT)
@@ -117,7 +118,7 @@ IR_TypeStruct::StructField const* IR_TypeStruct::getField(string_id_t id) const 
 // IR_TypePtr
 
 IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :
-        IR_Type(IR_Type::POINTER), child(child) {}
+        IR_Type(IR_Type::POINTER), child(std::move(child)) {}
 
 bool IR_TypePtr::equal(const IR_Type &rhs) const {
     if (rhs.type != IR_Type::POINTER)
@@ -142,10 +143,10 @@ int IR_TypePtr::getBytesSize() const {
 // IR_TypeFunc
 
 IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
-        IR_Type(FUNCTION), ret(ret), args(), isVariadic(false) {}
+        IR_Type(FUNCTION), ret(std::move(ret)), args(), isVariadic(false) {}
 
 IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic) :
-        IR_Type(IR_Type::FUNCTION), ret(ret), args(args), isVariadic(variadic) {}
+        IR_Type(IR_Type::FUNCTION), ret(std::move(ret)), args(std::move(args)), isVariadic(variadic) {}
 
 bool IR_TypeFunc::equal(const IR_Type &rhs) const {
     if (rhs.type != IR_Type::FUNCTION)
@@ -176,7 +177,7 @@ int IR_TypeFunc::getBytesSize() const {
 // IR_TypeArray
 
 IR_TypeArray::IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size) :
-        IR_Type(IR_Type::ARRAY), child(child), size(size) {}
+        IR_Type(IR_Type::ARRAY), child(std::move(child)), size(size) {}
 
 bool IR_TypeArray::equal(const IR_Type &rhs) const {
     if (rhs.type != IR_Type::ARRAY)
@@ -190,7 +191,7 @@ std::shared_ptr<IR_Type> IR_TypeArray::copy() const {
 }
 
 int IR_TypeArray::getBytesSize() const {
-    return size * child->getBytesSize();
+    return static_cast<int>(size) * child->getBytesSize();
 }
 
 
@@ -276,10 +277,10 @@ std::string IR_ExprOper::opToString() const {
 // IR_ExprAlloc
 
 IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size) :
-        IR_Expr(ALLOCATION), type(type), size(size) {}
+        IR_Expr(ALLOCATION), type(std::move(type)), size(size) {}
 
 IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap) :
-        IR_Expr(ALLOCATION), type(type), size(size), isOnHeap(onHeap) {}
+        IR_Expr(ALLOCATION), type(std::move(type)), size(size), isOnHeap(onHeap) {}
 
 std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
     return std::make_unique<IR_ExprAlloc>(type->copy(), size, isOnHeap);
@@ -296,9 +297,9 @@ std::vector<IRval*> IR_ExprAlloc::getArgs() {
 
 // IR_ExprCast
 
-IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest)
-        : IR_Expr(CAST), arg(sourceVal), dest(dest) {
-    auto source = sourceVal.getType();
+IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
+        : IR_Expr(CAST), arg(std::move(sourceVal)), dest(std::move(cdest)) {
+    const auto &source = arg.getType();
     if (source->equal(*dest))
         semanticError("Casting equal types"); // TODO
 
@@ -458,35 +459,35 @@ void IR_Block::addNode(IR_Node node) {
 
 void IR_Block::addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr) {
     if (res.has_value())
-        body.push_back(IR_Node(res.value(), std::move(expr)));
+        body.emplace_back(res.value(), std::move(expr));
     else
-        body.push_back(IR_Node(std::move(expr)));
+        body.emplace_back(std::move(expr));
 }
 
 void IR_Block::addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
-    addNode(res, std::make_unique<IR_ExprOper>(op, std::move(args)));
+    addNode(std::move(res), std::make_unique<IR_ExprOper>(op, std::move(args)));
 }
 
 void IR_Block::addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest) {
-    addNode(res, make_unique<IR_ExprCast>(sourceVal, dest));
+    addNode(std::move(res), make_unique<IR_ExprCast>(std::move(sourceVal), std::move(dest)));
 }
 
 void IR_Block::addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args) {
-    addNode(res, std::make_unique<IR_ExprCall>(callee, args));
+    addNode(std::move(res), std::make_unique<IR_ExprCall>(callee, std::move(args)));
 }
 
 void IR_Block::addIndirectCallNode(std::optional<IRval> res, IRval callee, std::vector<IRval> args) {
-    addNode(res, std::make_unique<IR_ExprCall>(callee, args));
+    addNode(std::move(res), std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
 }
 
 void IR_Block::addAllocNode(IRval res, std::shared_ptr<IR_Type> type, bool isOnHeap) {
     if (isOnHeap)
         NOT_IMPLEMENTED("builtin malloc");
-    addNode(res, std::make_unique<IR_ExprAlloc>(type, 1ULL));
+    addNode(res, std::make_unique<IR_ExprAlloc>(std::move(type), 1ULL));
 }
 
 void IR_Block::addNewPhiNode(IRval res) {
-    phis.push_back(IR_Node(res, std::make_unique<IR_ExprPhi>()));
+    phis.emplace_back(std::move(res), std::make_unique<IR_ExprPhi>());
 }
 
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type) {
@@ -498,7 +499,7 @@ void IR_Block::setTerminator(IR_ExprTerminator::TermType type) {
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type, IRval arg) {
     if (type == IR_ExprTerminator::JUMP)
         semanticError("Jump term statement doesn't have arguments");
-    termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type, arg));
+    termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type, std::move(arg)));
 }
 
 IR_Block IR_Block::copy() const {

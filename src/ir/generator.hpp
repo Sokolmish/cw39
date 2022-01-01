@@ -55,8 +55,8 @@ private:
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 
-    IRval getPtrWithOffset(IRval base, IRval index);
-    void doAssignment(AST_Expr const &dest, IRval wrValue);
+    IRval getPtrWithOffset(IRval const &base, IRval const &index);
+    void doAssignment(AST_Expr const &dest, IRval const &wrValue);
     IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
     IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &lhs, AST_Expr const &rhs);
     IRval doAddrOf(const AST_Expr &expr);
@@ -87,7 +87,7 @@ public:
     IR_Generator();
 
     void parseAST(std::shared_ptr<AST_TranslationUnit> const &ast);
-    std::shared_ptr<ControlFlowGraph> getCfg() const;
+    [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 
     // Some util functions used in transformations
     static bool isGeneralNumOp(AST_Binop::OpType op);

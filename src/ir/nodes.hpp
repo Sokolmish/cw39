@@ -107,7 +107,7 @@ struct IR_ExprTerminator : public IR_Expr {
     enum TermType { RET, BRANCH, JUMP } termType;
     std::optional<IRval> arg;
 
-    IR_ExprTerminator(TermType type);
+    explicit IR_ExprTerminator(TermType type);
     IR_ExprTerminator(TermType type, IRval val);
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;

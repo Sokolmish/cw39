@@ -11,7 +11,7 @@ private:
     void processNode(IR_Node *node);
 
 public:
-    AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> rawCfg);
+    explicit AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> const &rawCfg);
     std::shared_ptr<ControlFlowGraph> getCfg();
 };
 

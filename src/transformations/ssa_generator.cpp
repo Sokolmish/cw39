@@ -2,7 +2,7 @@
 #include "cfg_cleaner.hpp"
 
 SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
-        : origCfg(in_cfg) {
+        : origCfg(std::move(in_cfg)) {
     cfg = std::make_shared<ControlFlowGraph>(*origCfg);
     doms = std::make_unique<Dominators>(cfg);
 
@@ -115,14 +115,14 @@ void SSA_Generator::versionize() {
     // Collect variables from graph because its was not passed in CFG
     std::set<IRval, IRval::Comparator> variables;
     for (auto const &[bId, block] : cfg->getBlocks()) {
-        for (IRval def : block.getDefinitions())
+        for (const IRval& def : block.getDefinitions())
             variables.insert(def);
-        for (IRval ref : block.getReferences())
+        for (const IRval& ref : block.getReferences())
             variables.insert(ref);
     }
 
 //    versions = std::make_unique<std::deque<int>>();
-    for (IRval var : variables) {
+    for (const IRval& var : variables) {
         versionsCnt = 0;
         versions.clear();
         versions.push_back(-1); // In case of uninitialized variable
@@ -174,7 +174,7 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
         int j = -1;
         for (size_t k = 0; k < nextBlock.prev.size(); k++) {
             if (nextBlock.prev.at(k) == blockId) {
-                j = k;
+                j = static_cast<int>(k);
                 break;
             }
         }

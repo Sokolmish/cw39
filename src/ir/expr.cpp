@@ -1,7 +1,7 @@
 #include "generator.hpp"
 
 /** Creates pointer to element with given index in array pointed to by base */
-IRval IR_Generator::getPtrWithOffset(IRval base, IRval index) {
+IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index) {
     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
 
     IRval fixedIndex = index;
@@ -29,7 +29,7 @@ IRval IR_Generator::getPtrWithOffset(IRval base, IRval index) {
 }
 
 /** Store wrValue in object described by dest (variable, pointer, field, etc) */
-void IR_Generator::doAssignment(AST_Expr const &dest, IRval wrValue) {
+void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
     if (dest.node_type == AST_PRIMARY) { // Identifiers
         auto const &assignee = static_cast<AST_Primary const &>(dest);
         if (assignee.type == AST_Primary::EXPR) {

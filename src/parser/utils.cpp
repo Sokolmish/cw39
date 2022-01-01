@@ -134,11 +134,13 @@ AST_Literal_t get_integer(const char *str) {
     const char *endptr, *suff;
     uint64_t val = strtoull(str, (char**)(&endptr), 0);
 
-    AST_Literal res;
-    res.type = INTEGER_LITERAL;
-    res.isUnsigned = 0;
-    res.longCnt = 0;
-    res.isFloat = 0;
+    AST_Literal res{
+        .type = INTEGER_LITERAL,
+        .longCnt = 0,
+        .isUnsigned = 0,
+        .isFloat = 0,
+        .val = { 0ULL },
+    };
     
     suff = endptr;
     while (*endptr) {
@@ -173,11 +175,13 @@ AST_Literal_t get_integer(const char *str) {
 }
 
 AST_Literal_t get_float(const char *str) {
-    AST_Literal res;
-    res.type = FLOAT_LITERAL;
-    res.isUnsigned = 0;
-    res.longCnt = 0;
-    res.isFloat = 0;
+    AST_Literal res{
+        .type = FLOAT_LITERAL,
+        .longCnt = 0,
+        .isUnsigned = 0,
+        .isFloat = 0,
+        .val = { 0ULL },
+    };
 
     size_t len = strlen(str);
     char *tmpStr = strdup(str);
@@ -208,11 +212,13 @@ AST_Literal_t get_float(const char *str) {
 }
 
 AST_Literal_t get_charval(const char *str) {
-    AST_Literal res;
-    res.type = CHAR_LITERAL;
-    res.isUnsigned = 0;
-    res.longCnt = 0;
-    res.isFloat = 0;
+    AST_Literal res{
+        .type = CHAR_LITERAL,
+        .longCnt = 0,
+        .isUnsigned = 0,
+        .isFloat = 0,
+        .val = { 0ULL },
+    };
 
     size_t len = strlen(str);
 

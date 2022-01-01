@@ -50,10 +50,10 @@ public:
     void buildCast(IR_Node const &node);
 
     Type* getTypeFromIR(IR_Type const &ir_type);
-    Constant* getConstantFromIR(IRval const &val);
+    Constant* getConstantFromIR(IRval const &val) const;
     Value* getValue(IRval const &val);
 
-    Function *curFunction;
+    Function *curFunction = nullptr;
 
     std::map<IRval, Value*, IRval::ComparatorVersions> regsMap;
     std::map<int, BasicBlock*> blocksMap;
@@ -64,7 +64,7 @@ public:
 
     std::map<IRval, PHINode*, IRval::ComparatorVersions> unfilledPhis;
 
-    IR2LLVM_Impl(IR2LLVM *par);
+    explicit IR2LLVM_Impl(IR2LLVM *par);
 
     IR2LLVM_Impl(IR2LLVM_Impl const&) = delete;
     IR2LLVM_Impl& operator=(IR2LLVM_Impl const&) = delete;
@@ -72,7 +72,7 @@ public:
 
 using IR2LLVM_Impl = IR2LLVM::IR2LLVM_Impl;
 
-IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(cfg) {
+IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(std::move(cfg)) {
     impl = std::make_unique<IR2LLVM_Impl>(this);
 }
 
@@ -80,7 +80,7 @@ std::string IR2LLVM::getRes() const {
     return llvmIR;
 }
 
-IR2LLVM::~IR2LLVM() {}
+IR2LLVM::~IR2LLVM() = default;
 
 
 IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
@@ -186,7 +186,7 @@ llvm::Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
     }
 }
 
-llvm::Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) {
+llvm::Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) const {
     if (!val.isConstant())
         semanticError("LLVM Not a constant value");
     if (val.getType()->type != IR_Type::DIRECT)

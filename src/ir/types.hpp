@@ -33,7 +33,7 @@ struct IR_TypeDirect : public IR_Type {
         VOID, I8, U8, I32, U32, I64, U64, F32, F64
     } spec;
 
-    IR_TypeDirect(DirType spec);
+    explicit IR_TypeDirect(DirType spec);
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
 

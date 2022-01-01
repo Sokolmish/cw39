@@ -48,7 +48,7 @@ private:
     void dominators(std::vector<int> &nodes);
 
 public:
-    Dominators(std::shared_ptr<ControlFlowGraph> in_cfg);
+    explicit Dominators(std::shared_ptr<ControlFlowGraph> in_cfg);
 
     /** Is immediate dominator */
     bool isIdom(int x, int y) const;

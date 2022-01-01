@@ -7,12 +7,12 @@
 
 class IR2LLVM {
 public:
-    IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg);
+    explicit IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg);
 
     IR2LLVM(IR2LLVM const&) = delete;
     IR2LLVM& operator=(IR2LLVM const&) = delete;
 
-    std::string getRes() const;
+    [[nodiscard]] std::string getRes() const;
 
     ~IR2LLVM(); // Needed for unique_ptr to incomplete type
 
@@ -23,7 +23,7 @@ private:
     std::unique_ptr<IR2LLVM_Impl> impl;
 
     std::shared_ptr<ControlFlowGraph> cfg;
-    std::string llvmIR = "";
+    std::string llvmIR;
 };
 
 

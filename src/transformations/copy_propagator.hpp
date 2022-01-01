@@ -20,7 +20,7 @@ private:
     IRval doConstOperation(IR_ExprOper const &oper);
 
 public:
-    CopyPropagator(std::shared_ptr<ControlFlowGraph> rawCfg);
+    explicit CopyPropagator(std::shared_ptr<ControlFlowGraph> const &rawCfg);
     std::shared_ptr<ControlFlowGraph> getCfg();
 };
 

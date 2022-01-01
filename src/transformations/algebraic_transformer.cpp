@@ -1,7 +1,7 @@
 #include "algebraic_transformer.hpp"
 #include "utils.hpp"
 
-AlgebraicTransformer::AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> rawCfg)
+AlgebraicTransformer::AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> const &rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
     std::set<int> visited;
     for (auto const &[fId, func] : cfg->getFuncs()) {
