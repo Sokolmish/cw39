@@ -4,7 +4,6 @@
 #include <memory>
 #include "ir/cfg.hpp"
 
-class IR2LLVM_Impl;
 
 class IR2LLVM {
 public:
@@ -16,6 +15,8 @@ public:
     std::string getRes() const;
 
     ~IR2LLVM(); // Needed for unique_ptr to incomplete type
+
+    class IR2LLVM_Impl;
 
 private:
     friend class IR2LLVM_Impl;

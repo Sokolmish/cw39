@@ -30,7 +30,7 @@
 
 using namespace llvm;
 
-class IR2LLVM_Impl {
+class IR2LLVM::IR2LLVM_Impl {
 public:
     IR2LLVM *parent;
 
@@ -70,6 +70,7 @@ public:
     IR2LLVM_Impl& operator=(IR2LLVM_Impl const&) = delete;
 };
 
+using IR2LLVM_Impl = IR2LLVM::IR2LLVM_Impl;
 
 IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(cfg) {
     impl = std::make_unique<IR2LLVM_Impl>(this);
