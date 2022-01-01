@@ -505,13 +505,16 @@ struct AST_Statement : public AST_Node {
 };
 
 struct AST_LabeledStmt : public AST_Statement {
-    std::variant<uniq<AST_Node>, string_id_t> label;
+    std::variant<uniq<AST_Expr>, string_id_t> label;
     uniq<AST_Statement> child;
     enum LabelType : ast_enum_t { SIMPL, SW_CASE, SW_DEFAULT } type;
 
-    AST_LabeledStmt(AST_Node *label, AST_Statement *stmt, LabelType type);
+    AST_LabeledStmt(AST_Expr *label, AST_Statement *stmt, LabelType type);
     AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelType type);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
+
+    string_id_t getIdent() const;
+    AST_Expr const& getExpr() const;
 };
 
 struct AST_BlockItemList : public AST_Node {

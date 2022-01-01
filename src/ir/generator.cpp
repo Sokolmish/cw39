@@ -128,6 +128,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     fillBlock(*def.body);
     curFunctionType = nullptr;
     variables.decreaseLevel();
+    labels.clear();
 }
 
 void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
@@ -184,30 +185,24 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
     }
 }
 
-void IR_Generator::insertStatement(const AST_Statement &rawStmt) {
-    if (rawStmt.type == AST_Statement::EXPR) {
-        auto const &stmt = static_cast<AST_ExprStmt const &>(rawStmt);
-        if (stmt.child) // Skip empty statements
-            evalExpr(*stmt.child);
+void IR_Generator::insertStatement(const AST_Statement &stmt) {
+    if (stmt.type == AST_Statement::EXPR) {
+        auto const &exprStmt = static_cast<AST_ExprStmt const &>(stmt);
+        if (exprStmt.child) // Skip empty statements
+            evalExpr(*exprStmt.child);
     }
-    else if (rawStmt.type == AST_Statement::SELECT) {
-        insertIfStatement(static_cast<AST_SelectionStmt const &>(rawStmt));
-    }
-    else if (rawStmt.type == AST_Statement::ITER) {
-        insertLoopStatement(static_cast<AST_IterationStmt const &>(rawStmt));
-    }
-    else if (rawStmt.type == AST_Statement::JUMP) {
-        insertJumpStatement(static_cast<AST_JumpStmt const &>(rawStmt));
-    }
-    else if (rawStmt.type == AST_Statement::COMPOUND) {
-        insertCompoindStatement(static_cast<AST_CompoundStmt const &>(rawStmt));
-    }
-    else if (rawStmt.type == AST_Statement::LABEL) {
-        NOT_IMPLEMENTED("Labeled statements");
-    }
-    else {
+    else if (stmt.type == AST_Statement::SELECT)
+        insertIfStatement(static_cast<AST_SelectionStmt const &>(stmt));
+    else if (stmt.type == AST_Statement::ITER)
+        insertLoopStatement(static_cast<AST_IterationStmt const &>(stmt));
+    else if (stmt.type == AST_Statement::JUMP)
+        insertJumpStatement(static_cast<AST_JumpStmt const &>(stmt));
+    else if (stmt.type == AST_Statement::COMPOUND)
+        insertCompoundStatement(static_cast<AST_CompoundStmt const &>(stmt));
+    else if (stmt.type == AST_Statement::LABEL)
+        insertLabeledStatement(static_cast<AST_LabeledStmt const &>(stmt));
+    else
         internalError("Wrong statement type");
-    }
 }
 
 void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
@@ -388,7 +383,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
     }
 }
 
-void IR_Generator::insertCompoindStatement(const AST_CompoundStmt &stmt) {
+void IR_Generator::insertCompoundStatement(const AST_CompoundStmt &stmt) {
     if (stmt.body->v.empty())
         return;
 
@@ -405,5 +400,29 @@ void IR_Generator::insertCompoindStatement(const AST_CompoundStmt &stmt) {
         curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
                 IR_ExprTerminator::JUMP));
         selectBlock(blockAfter);
+    }
+}
+
+void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
+    if (stmt.type == AST_LabeledStmt::SIMPL) {
+        IR_Block &nextBlock = cfg->createBlock();
+        cfg->linkBlocks(curBlock(), nextBlock);
+        curBlock().termNode = IR_Node(std::make_unique<IR_ExprTerminator>(
+                IR_ExprTerminator::JUMP));
+
+        string_id_t ident = stmt.getIdent();
+        auto lIt = labels.lower_bound(ident);
+        if (lIt->first == ident)
+            semanticError("Such label already exists");
+        labels.emplace_hint(lIt, ident, nextBlock.id);
+
+        selectBlock(nextBlock);
+        insertStatement(*stmt.child);
+    }
+    else if (isInList(stmt.type, { AST_LabeledStmt::SW_CASE, AST_LabeledStmt::SW_DEFAULT })) {
+        NOT_IMPLEMENTED("switch labels");
+    }
+    else {
+        internalError("Wrong label type");
     }
 }

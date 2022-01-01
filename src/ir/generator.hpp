@@ -40,15 +40,18 @@ private:
     };
     std::stack<LoopBlocks> activeLoops;
 
+    std::map<string_id_t, int> labels;
+
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertGlobalDeclaration(AST_Declaration const &decl);
     void insertDeclaration(AST_Declaration const &decl);
-    void insertStatement(AST_Statement const &rawStmt);
+    void insertStatement(AST_Statement const &stmt);
     void insertIfStatement(AST_SelectionStmt const &stmt);
     void insertLoopStatement(AST_IterationStmt const &stmt);
     void insertJumpStatement(AST_JumpStmt const &stmt);
-    void insertCompoindStatement(AST_CompoundStmt const &stmt);
+    void insertCompoundStatement(AST_CompoundStmt const &stmt);
+    void insertLabeledStatement(const AST_LabeledStmt &stmt);
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 

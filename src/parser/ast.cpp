@@ -985,33 +985,45 @@ AST_Statement::AST_Statement(StmtType stype) : AST_Node(AST_STATEMENT), type(sty
 
 // AST_LabeledStmt
 
-AST_LabeledStmt::AST_LabeledStmt(AST_Node *label, AST_Statement *stmt, LabelType type)
+AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Statement *stmt, LabelType type)
     : AST_Statement(AST_Statement::LABEL), label(uniqify(label)), child(stmt), type(type)
 {
     if (type == AST_LabeledStmt::SIMPL)
-        throw; // TODO: labeled statements
+        throw std::runtime_error("Wrong type for simple label");
+    else if (type == AST_LabeledStmt::SW_CASE && !child)
+        throw std::runtime_error("'case' label without argument");
+    else if (type == AST_LabeledStmt::SW_DEFAULT && child)
+        throw std::runtime_error("'default' label with argument");
 }
 
 AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelType type)
     : AST_Statement(AST_Statement::LABEL), label(label), child(stmt), type(type) 
 {
     if (type != AST_LabeledStmt::SIMPL)
-        throw; // TODO: labeled statements
+        throw std::runtime_error("Wrong type for switch label");
 }
 
 TreeNodeRef AST_LabeledStmt::getTreeNode() const {
     std::string str;
     if (type == AST_LabeledStmt::SIMPL)
-        str = "label "s + get_ident_by_id(std::get<string_id_t>(label));
+        str = "label "s + get_ident_by_id(getIdent());
     else if (type == AST_LabeledStmt::SW_CASE)
         str = "case"s;
     else if (type == AST_LabeledStmt::SW_DEFAULT)
         str = "default"s;
     auto node = TreeNode::create(str);
     if (type == AST_LabeledStmt::SW_CASE)
-        node->addChild(std::get<uniq<AST_Node>>(label)->getTreeNode());
+        node->addChild(getExpr().getTreeNode());
     node->addChild(child->getTreeNode());
     return node;
+}
+
+string_id_t AST_LabeledStmt::getIdent() const {
+    return std::get<string_id_t>(label);
+}
+
+AST_Expr const &AST_LabeledStmt::getExpr() const {
+    return *std::get<uniq<AST_Expr>>(label);
 }
 
 
