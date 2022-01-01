@@ -959,6 +959,14 @@ AST_Initializer::AST_Initializer(AST_InitializerList *nest)
 AST_Initializer::AST_Initializer(AST_Expr *val)
     : AST_Node(AST_INITIALIZER), is_compound(false), val(val) {}
 
+AST_Expr const &AST_Initializer::getExpr() const {
+    return dynamic_cast<AST_Expr const &>(*val);
+}
+
+AST_InitializerList const &AST_Initializer::getInitList() const {
+    return dynamic_cast<AST_InitializerList const &>(*val);
+}
+
 TreeNodeRef AST_Initializer::getTreeNode() const {
     auto node = TreeNode::create(is_compound ? "compound_init"s : "direct_init"s);
     node->addChild(val->getTreeNode());

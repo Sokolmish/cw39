@@ -157,7 +157,7 @@ public:
     void addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest);
     void addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args);
     void addIndirectCallNode(std::optional<IRval> res, IRval callee, std::vector<IRval> args);
-    // TODO: terminator and PHI
+    // TODO: alloca, terminator and PHI
 
     std::vector<IRval> getDefinitions() const;
     std::vector<IRval> getReferences() const;

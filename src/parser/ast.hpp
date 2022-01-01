@@ -484,6 +484,9 @@ struct AST_Initializer : public AST_Node {
     bool is_compound;
     uniq<AST_Node> val; // AST_InitializerList AST_Expr
 
+    AST_Expr const& getExpr() const;
+    AST_InitializerList const& getInitList() const;
+
     explicit AST_Initializer(AST_InitializerList *nest);
     explicit AST_Initializer(AST_Expr *val);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
