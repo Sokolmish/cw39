@@ -247,6 +247,9 @@ llvm::Value *IR2LLVM_Impl::getValue(const IRval &val) {
 
         case IRval::FUN_PARAM:
             return curFunction->getArg(val.castValTo<int>());
+
+        case IRval::UNDEF:
+            return UndefValue::get(getTypeFromIR(*val.getType()));
     }
     throw;
 }

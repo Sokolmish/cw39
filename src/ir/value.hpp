@@ -12,13 +12,11 @@ public:
     typedef std::variant<
             uint8_t, int8_t, uint32_t, int32_t, uint64_t, int64_t,
             float, double> union_type;
-    enum ValueClass { VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR } valClass;
 
-private:
-    std::shared_ptr<IR_Type> type;
-    union_type val;
+    enum ValueClass {
+        VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR, UNDEF
+    } valClass;
 
-public:
     std::optional<int> version = {};
 
     IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, union_type v);
@@ -43,6 +41,8 @@ public:
     [[nodiscard]] static IRval createString(uint64_t num);
     [[nodiscard]] static IRval createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num);
     [[nodiscard]] static IRval createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num);
+    [[nodiscard]] static IRval createUndef(std::shared_ptr<IR_Type> type);
+
     [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
 
     std::shared_ptr<IR_Type> const& getType() const;
@@ -59,6 +59,10 @@ public:
             return static_cast<T>(arg);
         }, val);
     }
+
+private:
+    std::shared_ptr<IR_Type> type;
+    union_type val;
 };
 
 #endif /* __IR_VALUE_HPP__ */

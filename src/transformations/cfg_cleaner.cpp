@@ -61,7 +61,7 @@ void CfgCleaner::fixVersions() {
                 }
                 for (IRval *arg : node->body->getArgs()) {
                     if (arg->version && arg->version < 0) {
-                        *arg = IRval::createDefault(arg->getType());
+                        *arg = IRval::createUndef(arg->getType());
                     }
                     else {
                         auto it = versionedRegs.find(*arg);

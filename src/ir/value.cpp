@@ -9,30 +9,34 @@ std::shared_ptr<IR_Type> const& IRval::getType() const {
 }
 
 IRval IRval::createVal(std::shared_ptr<IR_Type> type, IRval::union_type v) {
-    return IRval(type, IRval::VAL, v);
+    return IRval(std::move(type), IRval::VAL, v);
 }
 
 IRval IRval::createReg(std::shared_ptr<IR_Type> type, uint64_t id) {
-    return IRval(type, IRval::VREG, id);
+    return IRval(std::move(type), IRval::VREG, id);
 }
 
 IRval IRval::createFunArg(std::shared_ptr<IR_Type> type, uint64_t num) {
-    return IRval(type, IRval::FUN_PARAM, num);
+    return IRval(std::move(type), IRval::FUN_PARAM, num);
 }
 
 IRval IRval::createString(uint64_t num) {
     auto strType = std::make_shared<IR_TypePtr>(IR_TypeDirect::type_i8);
 //    auto strPtrType = std::make_shared<IR_TypePtr>(strType);
 //    strType->is_const = true;
-    return IRval(strType, IRval::STRING, num);
+    return IRval(std::move(strType), IRval::STRING, num);
 }
 
 IRval IRval::createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num) {
-    return IRval(globalType, IRval::GLOBAL, num);
+    return IRval(std::move(globalType), IRval::GLOBAL, num);
 }
 
 IRval IRval::createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num) {
-    return IRval(funPtrType, IRval::FUN_PTR, num);
+    return IRval(std::move(funPtrType), IRval::FUN_PTR, num);
+}
+
+IRval IRval::createUndef(std::shared_ptr<IR_Type> type) {
+    return IRval(std::move(type), IRval::UNDEF, 0ULL);
 }
 
 
@@ -118,6 +122,9 @@ std::string IRval::to_string() const {
             return std::visit([](auto e) -> std::string {
                 return fmt::format("@fun.{}", e);
             }, val);
+
+        case IRval::UNDEF:
+            return "undef";
     }
     throw;
 }

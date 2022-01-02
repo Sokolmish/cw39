@@ -57,7 +57,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     if (spec[0]->spec_type == ast_ts::T_VOID) {
         if (spec.size() != 1)
             semanticError("Void type specifier cannot be combined with others");
-        return std::make_unique<IR_TypeDirect>(IR_TypeDirect::VOID);
+        return std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
     }
 
     int longCnt = 0;
@@ -132,7 +132,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
         internalError("Wrong type");
     }
 
-    return std::make_unique<IR_TypeDirect>(resType);
+    return std::make_shared<IR_TypeDirect>(resType);
 }
 
 template <typename DeclaratorType>
@@ -145,7 +145,7 @@ std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *dec
 
     std::shared_ptr<IR_Type> lastPtr = std::move(base);
     for (auto curAstPtr = decl->ptr.get(); curAstPtr; curAstPtr = curAstPtr->child.get()) {
-        auto newPtr = std::make_unique<IR_TypePtr>(std::move(lastPtr));
+        auto newPtr = std::make_shared<IR_TypePtr>(std::move(lastPtr));
         if (decl->ptr->qualifiers) {
             newPtr->is_const = decl->ptr->qualifiers->is_const;
             newPtr->is_restrict = decl->ptr->qualifiers->is_restrict;
@@ -295,26 +295,26 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
     if (lit.type == INTEGER_LITERAL) {
         if (lit.isUnsigned) {
             if (lit.longCnt)
-                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::U64);
+                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
             else
-                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::U32);
+                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::U32);
         }
         else { // Signed
             if (lit.longCnt)
-                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I64);
+                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I64);
             else
-                return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I32);
+                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
         }
     }
     else if (lit.type == FLOAT_LITERAL) {
         if (lit.isFloat)
-            return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F32);
+            return std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
         else {
-            return std::make_unique<IR_TypeDirect>(IR_TypeDirect::F64);
+            return std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
         }
     }
     else if (lit.type == CHAR_LITERAL) {
-        return std::make_unique<IR_TypeDirect>(IR_TypeDirect::I8);
+        return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
     }
     else {
         internalError("Wrong literal type");

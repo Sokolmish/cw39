@@ -209,8 +209,8 @@ block_23:                                         ; preds = %block_20
   br label %block_19
 
 block_25:                                         ; preds = %block_24, %block_21
-  %vr135.0 = phi i32 [ 0, %block_21 ], [ %vr135.2, %block_24 ]
-  %vr136.0 = phi i32 [ 0, %block_21 ], [ %vr136.2, %block_24 ]
+  %vr135.0 = phi i32 [ undef, %block_21 ], [ %vr135.2, %block_24 ]
+  %vr136.0 = phi i32 [ undef, %block_21 ], [ %vr136.2, %block_24 ]
   %vr164.8 = phi i32 [ 0, %block_21 ], [ %vr164.11, %block_24 ]
   %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str9, i32 0, i32 0), i32 %vr164.8)
   %vr133 = icmp eq i32 %vr164.8, 0
