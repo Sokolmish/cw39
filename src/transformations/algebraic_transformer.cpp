@@ -1,5 +1,6 @@
 #include "algebraic_transformer.hpp"
 #include "utils.hpp"
+#include <bit>
 
 AlgebraicTransformer::AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> const &rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
@@ -13,21 +14,6 @@ AlgebraicTransformer::AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> con
         });
     }
 }
-
- /**
- * Returns log2(v) if it is whole or -1 otherwise
- */
-static int getTwosPower(uint64_t v) {
-     if (!v)
-         return 0;
-     if ((v & (v - 1)) != 0)
-         return -1;
-
-     int res = 0;
-     while (v >>= 1)
-         res++;
-     return res;
- }
 
 static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
     if (!ir_val.isConstant())
@@ -129,24 +115,22 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (oper.args[0].isConstant() && oper.args[0].getType()->type == IR_Type::DIRECT) {
             auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[0].getType());
             if (dirType->isInteger()) {
-                int log = getTwosPower(oper.args[0].castValTo<uint64_t>());
-                if (log >= 0) {
+                uint64_t val = oper.args[0].castValTo<uint64_t>();
+                if (std::has_single_bit(val)) {
+                    uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper.op = IR_ExprOper::SHL;
-                    oper.args = std::vector<IRval>{
-                            oper.args[1],
-                            IRval::createVal(oper.args[0].getType(), static_cast<uint64_t>(log)) };
+                    oper.args = std::vector<IRval>{ oper.args[1], IRval::createVal(dirType, log) };
                 }
             }
         }
         if (oper.args[1].isConstant() && oper.args[1].getType()->type == IR_Type::DIRECT) {
             auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[1].getType());
             if (dirType->isInteger()) {
-                int log = getTwosPower(oper.args[1].castValTo<uint64_t>());
-                if (log >= 0) {
+                uint64_t val = oper.args[1].castValTo<uint64_t>();
+                if (std::has_single_bit(val)) {
+                    uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper.op = IR_ExprOper::SHL;
-                    oper.args = std::vector<IRval>{
-                            oper.args[0],
-                            IRval::createVal(oper.args[0].getType(), static_cast<uint64_t>(log)) };
+                    oper.args = std::vector<IRval>{ oper.args[0], IRval::createVal(dirType, log) };
                 }
             }
         }
@@ -157,12 +141,11 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[1].getType());
         if (dirType->isInteger()) {
             if (oper.args[1].isConstant() && oper.args[1].getType()->type == IR_Type::DIRECT) {
-                int log = getTwosPower(oper.args[1].castValTo<uint64_t>());
-                if (log >= 0) {
+                uint64_t val = oper.args[1].castValTo<uint64_t>();
+                if (std::has_single_bit(val)) {
+                    uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper.op = IR_ExprOper::SHR;
-                    oper.args = std::vector<IRval>{
-                            oper.args[0],
-                            IRval::createVal(oper.args[1].getType(), static_cast<uint64_t>(log)) };
+                    oper.args = std::vector<IRval>{ oper.args[0], IRval::createVal(dirType, log) };
                 }
             }
         }
