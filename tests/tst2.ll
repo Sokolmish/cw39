@@ -6,13 +6,8 @@ source_filename = "top"
 @.str2 = private unnamed_addr constant [22 x i8] c"Wrong arguments count\00", align 1
 @.str3 = private unnamed_addr constant [10 x i8] c"%d %d %d\0A\00", align 1
 @.str4 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str5 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str6 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str7 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str8 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str9 = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
-@.str10 = private unnamed_addr constant [6 x i8] c"true\0A\00", align 1
-@.str11 = private unnamed_addr constant [7 x i8] c"false\0A\00", align 1
+@.str5 = private unnamed_addr constant [6 x i8] c"true\0A\00", align 1
+@.str6 = private unnamed_addr constant [7 x i8] c"false\0A\00", align 1
 
 define internal void @__dummy_func() {
 dummy_block:
@@ -88,7 +83,7 @@ block_7:                                          ; preds = %block_6
 
 block_8:                                          ; preds = %block_7, %block_6
   %vr48 = phi i32 [ %vr47, %block_6 ], [ %vr49, %block_7 ]
-  %6 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str5, i32 0, i32 0), i32 %vr48)
+  %6 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr48)
   %vr51 = call i32 @tr(i32 1)
   %7 = icmp ne i32 %vr51, 0
   br i1 %7, label %block_10, label %block_9
@@ -99,7 +94,7 @@ block_9:                                          ; preds = %block_8
 
 block_10:                                         ; preds = %block_9, %block_8
   %vr52 = phi i32 [ %vr51, %block_8 ], [ %vr53, %block_9 ]
-  %8 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str6, i32 0, i32 0), i32 %vr52)
+  %8 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr52)
   %vr55 = call i32 @fl(i32 1)
   %9 = icmp ne i32 %vr55, 0
   br i1 %9, label %block_12, label %block_11
@@ -110,7 +105,7 @@ block_11:                                         ; preds = %block_10
 
 block_12:                                         ; preds = %block_11, %block_10
   %vr56 = phi i32 [ %vr55, %block_10 ], [ %vr57, %block_11 ]
-  %10 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str7, i32 0, i32 0), i32 %vr56)
+  %10 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr56)
   %vr59 = call i32 @tr(i32 1)
   %11 = icmp ne i32 %vr59, 0
   br i1 %11, label %block_13, label %block_14
@@ -130,7 +125,7 @@ block_15:                                         ; preds = %block_14
 
 block_16:                                         ; preds = %block_15, %block_14
   %vr62 = phi i32 [ %vr60, %block_14 ], [ %vr63, %block_15 ]
-  %13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str8, i32 0, i32 0), i32 %vr62)
+  %13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr62)
   %vr65 = call i32 @fl(i32 1)
   %14 = icmp ne i32 %vr65, 0
   br i1 %14, label %block_17, label %block_18
@@ -142,7 +137,7 @@ block_17:                                         ; preds = %block_16
 
 block_18:                                         ; preds = %block_20, %block_16
   %vr66 = phi i32 [ %vr65, %block_16 ], [ %vr68, %block_20 ]
-  %16 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str9, i32 0, i32 0), i32 %vr66)
+  %16 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr66)
   %vr71 = call i32 @tr(i32 1)
   %17 = icmp ne i32 %vr71, 0
   br i1 %17, label %block_21, label %block_22
@@ -165,11 +160,11 @@ block_22:                                         ; preds = %block_21, %block_18
   br i1 %18, label %block_23, label %block_24
 
 block_23:                                         ; preds = %block_22
-  %19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str10, i32 0, i32 0))
+  %19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str5, i32 0, i32 0))
   br label %block_25
 
 block_24:                                         ; preds = %block_22
-  %20 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str11, i32 0, i32 0))
+  %20 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str6, i32 0, i32 0))
   br label %block_25
 
 block_25:                                         ; preds = %block_24, %block_23
