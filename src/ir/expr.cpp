@@ -483,7 +483,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
                     if (argNum < funType->args.size()) {
                         if (!argVal.getType()->equal(*funType->args[argNum])) {
-                            semanticError("Wrong argnument type");
+                            semanticError("Wrong argument type");
                         }
                     }
                     else if (!funType->isVariadic) {

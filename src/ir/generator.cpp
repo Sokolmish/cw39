@@ -169,6 +169,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         if (varType->type == IR_Type::FUNCTION)
             semanticError("Functions are not allowed inside compound statements");
 
+        // TODO: check for void allocation (and in globals too)
         std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
 
         IRval res = cfg->createReg(ptrType);

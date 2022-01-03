@@ -140,7 +140,7 @@ void IR2LLVM_Impl::createGlobals() {
     }
 }
 
-llvm::Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
+Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
     if (ir_type.type == IR_Type::DIRECT) {
         auto const &dirType = dynamic_cast<IR_TypeDirect const &>(ir_type);
         switch (dirType.spec) {
@@ -164,6 +164,14 @@ llvm::Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
     }
     else if (ir_type.type == IR_Type::POINTER) {
         auto const &ptrType = dynamic_cast<IR_TypePtr const &>(ir_type);
+
+        // Void pointers are not allowed in LLVM, so they replaced with i8*
+        if (ptrType.child->type == IR_Type::DIRECT) {
+            auto childType = std::dynamic_pointer_cast<IR_TypeDirect>(ptrType.child);
+            if (childType->spec == IR_TypeDirect::VOID)
+                return PointerType::getUnqual(builder->getInt8Ty());
+        }
+
         return PointerType::getUnqual(getTypeFromIR(*ptrType.child));
     }
     else if (ir_type.type == IR_Type::ARRAY) {
@@ -186,7 +194,7 @@ llvm::Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
     }
 }
 
-llvm::Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) const {
+Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) const {
     if (!val.isConstant())
         semanticError("LLVM Not a constant value");
     if (val.getType()->type != IR_Type::DIRECT)
@@ -215,7 +223,7 @@ llvm::Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) const {
     throw;
 }
 
-llvm::Value *IR2LLVM_Impl::getValue(const IRval &val) {
+Value *IR2LLVM_Impl::getValue(const IRval &val) {
     switch (val.valClass) {
         case IRval::VAL: {
             auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
@@ -310,7 +318,6 @@ void IR2LLVM_Impl::createFunctions() {
             else if (term->termType == IR_ExprTerminator::BRANCH) {
                 builder->SetInsertPoint(blocksMap.at(blockId));
 
-                // TODO: check types
                 Value *cond = getValue(*term->arg);
                 if (cond->getType()->getIntegerBitWidth() != 1) {
                     cond = builder->CreateICmpNE(
