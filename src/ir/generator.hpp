@@ -36,9 +36,9 @@ private:
     std::shared_ptr<IR_TypeFunc> curFunctionType = nullptr;
 
     struct LoopBlocks {
-        int nextIter, exit;
+        int skip, exit, before;
     };
-    std::stack<LoopBlocks> activeLoops;
+    std::deque<LoopBlocks> activeLoops; // One also need to get the topmost loop, so it is deque
 
     std::map<string_id_t, int> labels;
 

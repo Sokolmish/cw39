@@ -59,7 +59,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
         }
 
         if (!singleDecl->initializer)
-            NOT_IMPLEMENTED("Unnitialized global variables");
+            NOT_IMPLEMENTED("Uninitialized global variables");
         if (singleDecl->initializer->is_compound)
             NOT_IMPLEMENTED("Compound initializers");
 
@@ -172,7 +172,10 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
 
         IRval res = cfg->createReg(ptrType);
-        curBlock().addAllocNode(res, varType);
+        if (activeLoops.empty())
+            curBlock().addAllocNode(res, varType);
+        else // Do not create allocations inside loops
+            cfg->block(activeLoops.front().before).addAllocNode(res, varType);
 
         if (variables.hasOnTop(ident))
             semanticError("Variable already declared");
@@ -277,6 +280,8 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     IR_Block &blockLoop = cfg->createBlock();
     IR_Block &blockAfter = cfg->createBlock();
 
+    IR_Block &blockBefore = curBlock();
+
     // Create for-loop initializer
     if (stmt.type == AST_IterationStmt::FOR_LOOP) {
         variables.increaseLevel();
@@ -316,14 +321,23 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
             selectBlock(blockLastAct);
             evalExpr(*stmt.getForLoopControls().action);
 
-            activeLoops.push({ blockLastAct.id, blockAfter.id });
+            activeLoops.push_back(LoopBlocks{
+                    .skip = blockLastAct.id,
+                    .exit = blockAfter.id,
+                    .before = blockBefore.id });
         }
-        else {
-            activeLoops.push({ blockCond.id, blockAfter.id });
+        else { // No last action
+            activeLoops.push_back(LoopBlocks{
+                    .skip = blockCond.id,
+                    .exit = blockAfter.id,
+                    .before = blockBefore.id });
         }
     }
     else { // WHILE_LOOP, DO_LOOP
-        activeLoops.push({ blockCond.id, blockAfter.id });
+        activeLoops.push_back(LoopBlocks{
+                .skip = blockCond.id,
+                .exit = blockAfter.id,
+                .before = blockBefore.id });
     }
 
     // Fill body
@@ -336,11 +350,11 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     // Terminate body
     if (selectedBlock != nullptr) {
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().nextIter));
+        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.back().skip));
     }
     selectBlock(blockAfter);
 
-    activeLoops.pop();
+    activeLoops.pop_back();
     if (stmt.type == AST_IterationStmt::FOR_LOOP)
         variables.decreaseLevel();
 }
@@ -363,12 +377,12 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
     }
     else if (stmt.type == AST_JumpStmt::J_BREAK) {
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().exit));
+        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.back().exit));
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.top().nextIter));
+        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.back().skip));
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_GOTO) {
