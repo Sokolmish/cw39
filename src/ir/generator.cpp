@@ -58,14 +58,14 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             continue; // break?
         }
 
-        if (!singleDecl->initializer)
-            NOT_IMPLEMENTED("Uninitialized global variables");
-
         auto ident = getDeclaredIdent(*singleDecl->declarator);
         if (globals.contains(ident)) // TODO: check in functions (not only there)
             semanticError("Global variable already declared");
 
-        IRval initVal = getInitializerVal(varType, *singleDecl->initializer);
+        IRval initVal = singleDecl->initializer ?
+                        getInitializerVal(varType, *singleDecl->initializer) :
+                        IRval::createZeroinit(varType);
+
         if (!initVal.isConstant())
             semanticError("Global variable should be initialized with constant value");
 

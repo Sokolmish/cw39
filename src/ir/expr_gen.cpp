@@ -661,26 +661,27 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_Init
     // TODO: template and constexpr
     if (type->type == IR_Type::ARRAY) {
         auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
-        if (arrType.size != lst.children.size())
-            NOT_IMPLEMENTED("Wrong array initializer size"); // TODO: zeroinit
+        if (arrType.size < lst.children.size())
+            semanticError("Too many values in initializer");
     }
     else if (type->type == IR_Type::TSTRUCT) {
         auto const &structType = dynamic_cast<IR_TypeStruct const &>(*type);
-        if (structType.fields.size() != lst.children.size())
-            NOT_IMPLEMENTED("Wrong array initializer size"); // TODO: zeroinit
+        if (structType.fields.size() < lst.children.size())
+            semanticError("Too many values in initializer");
     }
     else
         semanticError("Compound initializer for non-aggregate type");
 
     std::vector<IRval> aggrVals;
-    for (int elemNum = 0; auto const &[val, designator] : lst.children) {
+    size_t elemNum = 0;
+    for (auto const &[val, designator] : lst.children) {
         if (designator) {
             NOT_IMPLEMENTED("designators");
         }
 
         IRval elem = *evalConstantExpr(val->getExpr()); // TODO: optional
         if (!val->is_compound) {
-            if (type->type == IR_Type::ARRAY) { // TODO: template and constexpr
+            if (type->type == IR_Type::ARRAY) {
                 auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
                 if (!elem.getType()->equal(*arrType.child))
                     semanticError("Wrong type of initializer element");
@@ -690,8 +691,9 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_Init
                 if (!elem.getType()->equal(*structType.fields.at(elemNum).irType))
                     semanticError("Wrong type of initializer element");
             }
-            else
-                semanticError("Compound initializer for non-aggregate type");
+            else {
+                internalError("Compound initializer for non-aggregate type");
+            }
 
             aggrVals.push_back(elem);
         }
@@ -701,6 +703,26 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_Init
 
         elemNum++;
     }
+
+
+    if (type->type == IR_Type::ARRAY) {
+        auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
+        while (elemNum < arrType.size) {
+            aggrVals.push_back(IRval::createZeroinit(arrType.child));
+            elemNum++;
+        }
+    }
+    else if (type->type == IR_Type::TSTRUCT) {
+        auto const &structType = dynamic_cast<IR_TypeStruct const &>(*type);
+        while (elemNum < structType.fields.size()) {
+            aggrVals.push_back(IRval::createZeroinit(structType.fields.at(elemNum).irType));
+            elemNum++;
+        }
+    }
+    else {
+        internalError("Compound initializer for non-aggregate type");
+    }
+
     return IRval::createAggregate(type, std::move(aggrVals));
 }
 

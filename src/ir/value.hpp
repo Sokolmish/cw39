@@ -14,7 +14,8 @@ public:
             float, double>;
 
     enum ValueClass {
-        VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR, UNDEF, AGGREGATE
+        VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR,
+        UNDEF, ZEROINIT, AGGREGATE,
     };
 
     IRval copy() const;
@@ -40,16 +41,20 @@ public:
     [[nodiscard]] static IRval createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num);
     [[nodiscard]] static IRval createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num);
     [[nodiscard]] static IRval createUndef(std::shared_ptr<IR_Type> type);
-    [[nodiscard]] static IRval createAggregate(std::shared_ptr<IR_Type> aggrType, std::vector<IRval> vals);
+    [[nodiscard]] static IRval createZeroinit(std::shared_ptr<IR_Type> type);
+    [[nodiscard]] static IRval createAggregate(std::shared_ptr<IR_Type> type, std::vector<IRval> vals);
 
     [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
 
     ValueClass getValueClass() const;
     std::shared_ptr<IR_Type> const& getType() const;
+    union_type const& getVal() const;
+
+    /** Check if value is constant, zeroinit or aggregate (always constant) */
     bool isConstant() const;
+
     bool isVReg() const;
     bool isGlobal() const;
-    union_type const& getVal() const;
 
     [[nodiscard]] std::string to_string() const;
     [[nodiscard]] std::string to_reg_name() const;

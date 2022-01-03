@@ -48,8 +48,12 @@ IRval IRval::createUndef(std::shared_ptr<IR_Type> type) {
     return IRval(IRval::UNDEF, std::move(type), 0ULL);
 }
 
-IRval IRval::createAggregate(std::shared_ptr<IR_Type> aggrType, std::vector<IRval> vals) {
-    return IRval(IRval::AGGREGATE, aggrType, std::move(vals));
+IRval IRval::createAggregate(std::shared_ptr<IR_Type> type, std::vector<IRval> vals) {
+    return IRval(IRval::AGGREGATE, type, std::move(vals));
+}
+
+IRval IRval::createZeroinit(std::shared_ptr<IR_Type> type) {
+    return IRval(IRval::ZEROINIT, type, 0ULL);
 }
 
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
@@ -85,7 +89,7 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
 
 
 bool IRval::isConstant() const {
-    return valClass == IRval::VAL || valClass == IRval::AGGREGATE;
+    return isInList(valClass, { IRval::VAL, IRval::ZEROINIT, IRval::AGGREGATE });
 }
 
 bool IRval::isVReg() const {
@@ -144,6 +148,9 @@ std::string IRval::to_string() const {
         case IRval::UNDEF:
             return "undef";
 
+        case IRval::ZEROINIT:
+            return "zeroinit";
+
         case IRval::AGGREGATE: {
             if (aggregateVals.empty())
                 return "{ }";
@@ -184,6 +191,7 @@ bool IRval::equal(const IRval &oth) const {
     return equalIgnoreVers(oth) && version == oth.version;
 }
 
+// TODO: comparsion with zeroinit?
 bool IRval::equalIgnoreVers(const IRval &oth) const {
     return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
 }

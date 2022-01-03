@@ -198,6 +198,10 @@ Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
 Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) {
     if (!val.isConstant())
         semanticError("LLVM Not a constant value");
+
+    if (val.getValueClass() == IRval::ZEROINIT)
+        return ConstantAggregateZero::get(getTypeFromIR(*val.getType()));
+
     auto valTypeClass = val.getType()->type;
     if (valTypeClass == IR_Type::DIRECT) {
         auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
@@ -280,6 +284,9 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
 
         case IRval::UNDEF:
             return UndefValue::get(getTypeFromIR(*val.getType()));
+
+        case IRval::ZEROINIT:
+            return ConstantAggregateZero::get(getTypeFromIR(*val.getType()));
     }
     throw;
 }
