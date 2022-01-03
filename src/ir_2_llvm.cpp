@@ -50,7 +50,7 @@ public:
     void buildCast(IR_Node const &node);
 
     Type* getTypeFromIR(IR_Type const &ir_type);
-    Constant* getConstantFromIR(IRval const &val) const;
+    Constant* getConstantFromIR(IRval const &val);
     Value* getValue(IRval const &val);
 
     Function *curFunction = nullptr;
@@ -194,36 +194,44 @@ Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
     }
 }
 
-Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) const {
+// TODO: remove code repeating
+Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) {
     if (!val.isConstant())
         semanticError("LLVM Not a constant value");
-    if (val.getType()->type != IR_Type::DIRECT)
-        NOT_IMPLEMENTED("LLVM indirect type");
-    auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
-    switch (dirType.spec) {
-        case IR_TypeDirect::VOID:
-            semanticError("LLVM Cannot create void constant");
-        case IR_TypeDirect::I8:
-            return builder->getInt8(val.castValTo<int8_t>());
-        case IR_TypeDirect::U8:
-            return builder->getInt8(val.castValTo<uint8_t>());
-        case IR_TypeDirect::I32:
-            return builder->getInt32(val.castValTo<int32_t>());
-        case IR_TypeDirect::U32:
-            return builder->getInt32(val.castValTo<uint32_t>());
-        case IR_TypeDirect::I64:
-            return builder->getInt64(val.castValTo<int64_t>());
-        case IR_TypeDirect::U64:
-            return builder->getInt64(val.castValTo<uint64_t>());
-        case IR_TypeDirect::F32:
-            return ConstantFP::get(builder->getFloatTy(), val.castValTo<float>());
-        case IR_TypeDirect::F64:
-            return ConstantFP::get(builder->getDoubleTy(), val.castValTo<double>());
+    auto valTypeClass = val.getType()->type;
+    if (valTypeClass == IR_Type::DIRECT) {
+        auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
+        switch (dirType.spec) {
+            case IR_TypeDirect::VOID:
+                semanticError("LLVM Cannot create void constant");
+            case IR_TypeDirect::I8:
+                return builder->getInt8(val.castValTo<int8_t>());
+            case IR_TypeDirect::U8:
+                return builder->getInt8(val.castValTo<uint8_t>());
+            case IR_TypeDirect::I32:
+                return builder->getInt32(val.castValTo<int32_t>());
+            case IR_TypeDirect::U32:
+                return builder->getInt32(val.castValTo<uint32_t>());
+            case IR_TypeDirect::I64:
+                return builder->getInt64(val.castValTo<int64_t>());
+            case IR_TypeDirect::U64:
+                return builder->getInt64(val.castValTo<uint64_t>());
+            case IR_TypeDirect::F32:
+                return ConstantFP::get(builder->getFloatTy(), val.castValTo<float>());
+            case IR_TypeDirect::F64:
+                return ConstantFP::get(builder->getDoubleTy(), val.castValTo<double>());
+        }
+    }
+    else if (valTypeClass == IR_Type::TSTRUCT || valTypeClass == IR_Type::ARRAY) {
+        return dyn_cast<Constant>(getValue(val));
+    }
+    else {
+        internalError("LLVM non constant type");
     }
     throw;
 }
 
-Value *IR2LLVM_Impl::getValue(const IRval &val) {
+Value* IR2LLVM_Impl::getValue(const IRval &val) {
     switch (val.getValueClass()) {
         case IRval::VAL: {
             auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
@@ -239,6 +247,20 @@ Value *IR2LLVM_Impl::getValue(const IRval &val) {
             else {
                 semanticError("Wrong constant type");
             }
+        }
+
+        case IRval::AGGREGATE: {
+            Type *aggregateType = getTypeFromIR(*val.getType());
+            std::vector<Constant *> args;
+            for (auto const &elem : val.getAggregateVal())
+                args.push_back(dyn_cast<Constant>(getValue(elem)));
+
+            if (val.getType()->type == IR_Type::TSTRUCT)
+                return ConstantStruct::get(dyn_cast<StructType>(aggregateType), std::move(args));
+            else if (val.getType()->type == IR_Type::ARRAY)
+                return ConstantArray::get(dyn_cast<ArrayType>(aggregateType), std::move(args));
+            else
+                semanticError("Wrong aggregate initializer type");
         }
 
         case IRval::FUN_PTR:
@@ -395,7 +417,7 @@ void IR2LLVM_Impl::createBlock(int id) {
                     auto ptrVal = callExpr.getFuncPtr();
                     auto irPtrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
                     auto irFuncType = irPtrType->child;
-                    auto funcTy = static_cast<FunctionType *>(getTypeFromIR(*irFuncType)); // TODO: static cast...
+                    auto funcTy = dyn_cast<FunctionType>(getTypeFromIR(*irFuncType));
                     if (node.res.has_value()) {
                         auto res = builder->CreateCall(
                                 funcTy, getValue(ptrVal), args, node.res->to_reg_name());

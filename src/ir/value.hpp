@@ -14,10 +14,9 @@ public:
             float, double>;
 
     enum ValueClass {
-        VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR, UNDEF
+        VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR, UNDEF, AGGREGATE
     };
 
-    IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, union_type v);
     IRval copy() const;
 
     bool equal(IRval const &oth) const;
@@ -41,6 +40,7 @@ public:
     [[nodiscard]] static IRval createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num);
     [[nodiscard]] static IRval createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num);
     [[nodiscard]] static IRval createUndef(std::shared_ptr<IR_Type> type);
+    [[nodiscard]] static IRval createAggregate(std::shared_ptr<IR_Type> aggrType, std::vector<IRval> vals);
 
     [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
 
@@ -62,16 +62,28 @@ public:
 
     template <class T>
     T castValTo() const {
+        if (valClass == IRval::AGGREGATE)
+            throw std::runtime_error("Cannot cast aggregate value");
         return std::visit([](auto const &arg) -> T {
             return static_cast<T>(arg);
         }, val);
     }
 
+    std::vector<IRval> const& getAggregateVal() const;
+
+
 private:
-    ValueClass valClass;
+    ValueClass valClass = ValueClass(0ULL);
     std::shared_ptr<IR_Type> type;
+
+    // Aggregate vals is not part of union type for convenience reasons
     union_type val;
+    std::vector<IRval> aggregateVals; // TODO: optional
+
     std::optional<int> version = {};
+
+    IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type v);
+    IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, std::vector<IRval> vals);
 };
 
 #endif /* __IR_VALUE_HPP__ */

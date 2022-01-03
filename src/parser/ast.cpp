@@ -40,6 +40,15 @@ AST_Primary* AST_Primary::makeConst(AST_Literal val) {
     return res;
 }
 
+AST_Primary *AST_Primary::makeCompound(AST_TypeName *compType, AST_InitializerList *init_lst) {
+    auto res = new AST_Primary(AST_Primary::COMPOUND);
+    res->v = CompoundLiteral{
+        .compType = uniqify(compType),
+        .val = uniqify(init_lst)
+    };
+    return res;
+}
+
 string_id_t AST_Primary::getIdent() const {
     return std::get<string_id_t>(v);
 }
@@ -54,6 +63,10 @@ AST_Literal AST_Primary::getLiteral() const {
 
 AST_Expr const& AST_Primary::getExpr() const {
     return *std::get<std::unique_ptr<AST_Expr>>(v);
+}
+
+const AST_Primary::CompoundLiteral &AST_Primary::getCompound() const {
+    return std::get<CompoundLiteral>(v);
 }
 
 TreeNodeRef AST_Primary::getTreeNode() const {

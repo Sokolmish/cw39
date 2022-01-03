@@ -60,21 +60,17 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
 
         if (!singleDecl->initializer)
             NOT_IMPLEMENTED("Uninitialized global variables");
-        if (singleDecl->initializer->is_compound)
-            NOT_IMPLEMENTED("Compound initializers");
 
         auto ident = getDeclaredIdent(*singleDecl->declarator);
         if (globals.contains(ident)) // TODO: check in functions (not only there)
             semanticError("Global variable already declared");
 
-        auto initVal = evalConstantExpr(singleDecl->initializer->getExpr());
-        if (!initVal.has_value())
+        IRval initVal = getInitializerVal(varType, *singleDecl->initializer);
+        if (!initVal.isConstant())
             semanticError("Global variable should be initialized with constant value");
-        if (!initVal->getType()->equal(*varType))
-            semanticError("Cannot initialize variable with different type");
 
         auto ptrType = std::make_shared<IR_TypePtr>(varType);
-        IRval res = cfg->createGlobal(get_ident_by_id(ident), ptrType, *initVal);
+        IRval res = cfg->createGlobal(get_ident_by_id(ident), ptrType, initVal);
         globals.emplace(ident, res);
     }
 }
@@ -183,16 +179,22 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         variables.put(ident, res);
 
         if (singleDecl->initializer) {
-            if (!singleDecl->initializer->is_compound) {
-                IRval initVal = evalExpr(singleDecl->initializer->getExpr());
-                if (!initVal.getType()->equal(*varType))
-                    semanticError("Cannot initialize variable with different type");
-                curBlock().addOperNode({}, IR_ExprOper::STORE, { res, initVal });
-            }
-            else {
-                NOT_IMPLEMENTED("Compound initializers");
-            }
+            IRval initVal = getInitializerVal(varType, *singleDecl->initializer);
+            curBlock().addOperNode({}, IR_ExprOper::STORE, { res, initVal });
         }
+    }
+}
+
+IRval IR_Generator::getInitializerVal(std::shared_ptr<IR_Type> type, const AST_Initializer &init) {
+    if (init.is_compound) {
+        auto const &initLst = dynamic_cast<AST_InitializerList const &>(*init.val);
+        return getCompoundVal(type, initLst);
+    }
+    else {
+        IRval res = evalExpr(init.getExpr());
+        if (!res.getType()->equal(*type))
+            semanticError("Cannot initialize variable with different type");
+        return res;
     }
 }
 

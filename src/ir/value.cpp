@@ -1,8 +1,13 @@
 #include "value.hpp"
 #include "utils.hpp"
+#include <sstream>
 
-IRval::IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, IRval::union_type v) :
+IRval::IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type v) :
         valClass(vclass), type(type), val(v) {}
+
+IRval::IRval(IRval::ValueClass vclass, std::shared_ptr<IR_Type> type, std::vector<IRval> vals) :
+        valClass(vclass), type(type), aggregateVals(std::move(vals)) {}
+
 
 IRval::ValueClass IRval::getValueClass() const {
     return valClass;
@@ -13,40 +18,43 @@ std::shared_ptr<IR_Type> const& IRval::getType() const {
 }
 
 IRval IRval::createVal(std::shared_ptr<IR_Type> type, IRval::union_type v) {
-    return IRval(std::move(type), IRval::VAL, v);
+    return IRval(IRval::VAL, std::move(type), v);
 }
 
 IRval IRval::createReg(std::shared_ptr<IR_Type> type, uint64_t id) {
-    return IRval(std::move(type), IRval::VREG, id);
+    return IRval(IRval::VREG, std::move(type), id);
 }
 
 IRval IRval::createFunArg(std::shared_ptr<IR_Type> type, uint64_t num) {
-    return IRval(std::move(type), IRval::FUN_PARAM, num);
+    return IRval(IRval::FUN_PARAM, std::move(type), num);
 }
 
 IRval IRval::createString(uint64_t num) {
     auto strType = std::make_shared<IR_TypePtr>(IR_TypeDirect::type_i8);
 //    auto strPtrType = std::make_shared<IR_TypePtr>(strType);
 //    strType->is_const = true;
-    return IRval(std::move(strType), IRval::STRING, num);
+    return IRval(IRval::STRING, std::move(strType), num);
 }
 
 IRval IRval::createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num) {
-    return IRval(std::move(globalType), IRval::GLOBAL, num);
+    return IRval(IRval::GLOBAL, std::move(globalType), num);
 }
 
 IRval IRval::createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num) {
-    return IRval(std::move(funPtrType), IRval::FUN_PTR, num);
+    return IRval(IRval::FUN_PTR, std::move(funPtrType), num);
 }
 
 IRval IRval::createUndef(std::shared_ptr<IR_Type> type) {
-    return IRval(std::move(type), IRval::UNDEF, 0ULL);
+    return IRval(IRval::UNDEF, std::move(type), 0ULL);
 }
 
+IRval IRval::createAggregate(std::shared_ptr<IR_Type> aggrType, std::vector<IRval> vals) {
+    return IRval(IRval::AGGREGATE, aggrType, std::move(vals));
+}
 
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
     if (type->type == IR_Type::POINTER)
-        return IRval(type, IRval::VAL, static_cast<uint64_t>(0));
+        return IRval(IRval::VAL, type, static_cast<uint64_t>(0));
 
     if (type->type != IR_Type::DIRECT)
         semanticError("Cannot create default value for such type");
@@ -54,21 +62,21 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
 
     switch (dirType->spec) {
         case IR_TypeDirect::I8:
-            return IRval(type, IRval::VAL, static_cast<int8_t>(0));
+            return IRval(IRval::VAL, type, static_cast<int8_t>(0));
         case IR_TypeDirect::U8:
-            return IRval(type, IRval::VAL, static_cast<uint8_t>(0));
+            return IRval(IRval::VAL, type, static_cast<uint8_t>(0));
         case IR_TypeDirect::I32:
-            return IRval(type, IRval::VAL, static_cast<int32_t>(0));
+            return IRval(IRval::VAL, type, static_cast<int32_t>(0));
         case IR_TypeDirect::U32:
-            return IRval(type, IRval::VAL, static_cast<uint32_t>(0));
+            return IRval(IRval::VAL, type, static_cast<uint32_t>(0));
         case IR_TypeDirect::I64:
-            return IRval(type, IRval::VAL, static_cast<int64_t>(0));
+            return IRval(IRval::VAL, type, static_cast<int64_t>(0));
         case IR_TypeDirect::U64:
-            return IRval(type, IRval::VAL, static_cast<uint64_t>(0));
+            return IRval(IRval::VAL, type, static_cast<uint64_t>(0));
         case IR_TypeDirect::F32:
-            return IRval(type, IRval::VAL, static_cast<float>(0));
+            return IRval(IRval::VAL, type, static_cast<float>(0));
         case IR_TypeDirect::F64:
-            return IRval(type, IRval::VAL, static_cast<double>(0));
+            return IRval(IRval::VAL, type, static_cast<double>(0));
         case IR_TypeDirect::VOID:
             semanticError("Cannot create value of type VOID");
     }
@@ -77,7 +85,7 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
 
 
 bool IRval::isConstant() const {
-    return valClass == IRval::VAL;
+    return valClass == IRval::VAL || valClass == IRval::AGGREGATE;
 }
 
 bool IRval::isVReg() const {
@@ -90,6 +98,12 @@ bool IRval::isGlobal() const {
 
 const IRval::union_type &IRval::getVal() const {
     return val;
+}
+
+std::vector<IRval> const& IRval::getAggregateVal() const {
+    if (valClass != IRval::AGGREGATE)
+        throw std::runtime_error("Cannot get aggregate values from regular value");
+    return aggregateVals;
 }
 
 std::string IRval::to_string() const {
@@ -129,6 +143,17 @@ std::string IRval::to_string() const {
 
         case IRval::UNDEF:
             return "undef";
+
+        case IRval::AGGREGATE: {
+            if (aggregateVals.empty())
+                return "{ }";
+            std::stringstream ss;
+            ss << "{ ";
+            for (ssize_t i = 0; i < std::ssize(aggregateVals) - 1; i++)
+                ss << aggregateVals.at(i).to_string() << ", ";
+            ss << aggregateVals.back().to_string() << " }";
+            return ss.str();
+        }
     }
     throw;
 }
@@ -144,8 +169,14 @@ std::string IRval::to_reg_name() const {
 }
 
 IRval IRval::copy() const {
-    auto res = IRval(type->copy(), valClass, val);
+    auto res = IRval(valClass, type->copy(), val);
     res.version = version;
+
+    std::vector<IRval> newAggregateVals; // TODO: check this
+    for (const auto &v : aggregateVals)
+        newAggregateVals.push_back(v.copy());
+    res.aggregateVals = newAggregateVals;
+
     return res;
 }
 

@@ -610,8 +610,12 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 strings.insert({ parserStrId, str });
                 return str;
             }
+            else if (expr.type == AST_Primary::COMPOUND) {
+                auto const &compVal = expr.getCompound();
+                return getCompoundVal(getType(*compVal.compType), *compVal.val);
+            }
             else {
-                internalError("Wrong primary type");
+                internalError("Wrong primary expr type");
             }
         }
 
@@ -650,6 +654,54 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
     else {
         internalError("Wrong literal type");
     }
+}
+
+/** Get aggreagate value of given type from initializer list */
+IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_InitializerList &lst) {
+    // TODO: template and constexpr
+    if (type->type == IR_Type::ARRAY) {
+        auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
+        if (arrType.size != lst.children.size())
+            NOT_IMPLEMENTED("Wrong array initializer size"); // TODO: zeroinit
+    }
+    else if (type->type == IR_Type::TSTRUCT) {
+        auto const &structType = dynamic_cast<IR_TypeStruct const &>(*type);
+        if (structType.fields.size() != lst.children.size())
+            NOT_IMPLEMENTED("Wrong array initializer size"); // TODO: zeroinit
+    }
+    else
+        semanticError("Compound initializer for non-aggregate type");
+
+    std::vector<IRval> aggrVals;
+    for (int elemNum = 0; auto const &[val, designator] : lst.children) {
+        if (designator) {
+            NOT_IMPLEMENTED("designators");
+        }
+
+        IRval elem = *evalConstantExpr(val->getExpr()); // TODO: optional
+        if (!val->is_compound) {
+            if (type->type == IR_Type::ARRAY) { // TODO: template and constexpr
+                auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
+                if (!elem.getType()->equal(*arrType.child))
+                    semanticError("Wrong type of initializer element");
+            }
+            else if (type->type == IR_Type::TSTRUCT) {
+                auto const &structType = dynamic_cast<IR_TypeStruct const &>(*type);
+                if (!elem.getType()->equal(*structType.fields.at(elemNum).irType))
+                    semanticError("Wrong type of initializer element");
+            }
+            else
+                semanticError("Compound initializer for non-aggregate type");
+
+            aggrVals.push_back(elem);
+        }
+        else {
+            NOT_IMPLEMENTED("nested compound initializers");
+        }
+
+        elemNum++;
+    }
+    return IRval::createAggregate(type, std::move(aggrVals));
 }
 
 /** Get value with pointer to local or global variable */

@@ -50,6 +50,7 @@ struct AST_EnumSpecifier;
 struct AST_Declarator;
 struct AST_AbstractDeclarator;
 struct AST_TypeName;
+struct AST_InitializerList;
 struct AST_Initializer;
 struct AST_ParameterTypeList;
 struct AST_Statement;
@@ -64,18 +65,25 @@ struct AST_Expr : public AST_Node {
 };
 
 struct AST_Primary : public AST_Expr {
-    enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST } type;
-    std::variant<uniq<AST_Expr>, string_id_t, AST_Literal> v;
+    struct CompoundLiteral {
+        std::unique_ptr<AST_TypeName> compType = nullptr;
+        std::unique_ptr<AST_InitializerList> val = nullptr;
+    };
+
+    enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST, COMPOUND } type;
+    std::variant<uniq<AST_Expr>, string_id_t, AST_Literal, CompoundLiteral> v;
 
     string_id_t getIdent() const;
     string_id_t getString() const;
     AST_Literal getLiteral() const;
     AST_Expr const& getExpr() const;
+    CompoundLiteral const& getCompound() const;
 
     static AST_Primary* makeIdent(string_id_t id);
     static AST_Primary* makeExpr(AST_Expr *expr);
     static AST_Primary* makeStr(string_id_t str);
     static AST_Primary* makeConst(AST_Literal val);
+    static AST_Primary* makeCompound(AST_TypeName *compType, AST_InitializerList *init_lst);
 
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 

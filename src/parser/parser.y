@@ -169,10 +169,12 @@
 	/* Expressions */
 
 primary_expr
-	: IDENTIFIER							{ $$ = AST_Primary::makeIdent($1); }
-	| CONSTANT								{ $$ = AST_Primary::makeConst($1); }
-	| STRING_LITERAL						{ $$ = AST_Primary::makeStr($1); }
-	| '(' expr ')'							{ $$ = AST_Primary::makeExpr($2); }
+	: IDENTIFIER							    { $$ = AST_Primary::makeIdent($1); }
+	| CONSTANT								    { $$ = AST_Primary::makeConst($1); }
+	| STRING_LITERAL						    { $$ = AST_Primary::makeStr($1); }
+	| '(' expr ')'							    { $$ = AST_Primary::makeExpr($2); }
+    | '(' type_name ')' '{' init_lst '}'        { $$ = AST_Primary::makeCompound($2, $5); }
+    | '(' type_name ')' '{' init_lst ',' '}'    { $$ = AST_Primary::makeCompound($2, $5); }
 	;
 
 postfix_expr

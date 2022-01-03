@@ -46,6 +46,8 @@ private:
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertGlobalDeclaration(AST_Declaration const &decl);
     void insertDeclaration(AST_Declaration const &decl);
+    IRval getInitializerVal(std::shared_ptr<IR_Type> type, AST_Initializer const &init);
+
     void insertStatement(AST_Statement const &stmt);
     void insertIfStatement(AST_SelectionStmt const &stmt);
     void insertLoopStatement(AST_IterationStmt const &stmt);
@@ -63,6 +65,7 @@ private:
     IRval evalExpr(AST_Expr const &node);
     IRval getLiteralIRval(AST_Literal const &lit);
     std::optional<IRval> getPtrToVariable(string_id_t ident);
+    IRval getCompoundVal(std::shared_ptr<IR_Type> type, AST_InitializerList const &lst);
 
     std::shared_ptr<IR_Type> getStructType(AST_StructOrUsionSpec const &spec);
     typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
