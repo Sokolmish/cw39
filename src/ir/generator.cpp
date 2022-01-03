@@ -400,17 +400,20 @@ void IR_Generator::insertCompoundStatement(const AST_CompoundStmt &stmt) {
 
 void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
     if (stmt.type == AST_LabeledStmt::SIMPL) {
-        IR_Block &nextBlock = cfg->createBlock();
-        cfg->linkBlocks(curBlock(), nextBlock);
-        curBlock().setTerminator(IR_ExprTerminator::JUMP);
+        // Do not create new block if current one doesn't contain nodes
+        if (!curBlock().getAllNodes().empty()) {
+            IR_Block &nextBlock = cfg->createBlock();
+            cfg->linkBlocks(curBlock(), nextBlock);
+            curBlock().setTerminator(IR_ExprTerminator::JUMP);
+            selectBlock(nextBlock);
+        }
 
         string_id_t ident = stmt.getIdent();
         auto lIt = labels.lower_bound(ident);
         if (lIt->first == ident)
             semanticError("Such label already exists");
-        labels.emplace_hint(lIt, ident, nextBlock.id);
+        labels.emplace_hint(lIt, ident, curBlock().id);
 
-        selectBlock(nextBlock);
         insertStatement(*stmt.child);
     }
     else if (isInList(stmt.type, { AST_LabeledStmt::SW_CASE, AST_LabeledStmt::SW_DEFAULT })) {
