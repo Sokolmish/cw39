@@ -330,6 +330,9 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
         auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
         auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
 
+        if (dstDir.spec == IR_TypeDirect::VOID)
+            semanticError("Casts to void are not allowed");
+
         if (srcDir.isInteger() && dstDir.isInteger()) {
             if (srcDir.getBytesSize() == dstDir.getBytesSize())
                 castOp = BITCAST;
