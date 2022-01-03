@@ -121,9 +121,9 @@ void CopyPropagator::foldConstants() {
                         IRval commonVal = phiExpr.args.at(0);
 
                         bool isConst = true;
-                        for (auto const &arg : phiExpr.args) {
-                            // TODO: check comparsion
-                            if (!arg.second.isConstant() || !(arg.second == commonVal)) {
+                        for (auto const &[pos, arg] : phiExpr.args) {
+                            // TODO: also collapse on same non-const values
+                            if (!arg.isConstant() || !arg.equal(commonVal)) {
                                 isConst = false;
                                 break;
                             }

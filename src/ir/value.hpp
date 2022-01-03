@@ -9,29 +9,28 @@
 
 class IRval {
 public:
-    typedef std::variant<
+    using union_type = std::variant<
             uint8_t, int8_t, uint32_t, int32_t, uint64_t, int64_t,
-            float, double> union_type;
+            float, double>;
 
     enum ValueClass {
         VAL, VREG, GLOBAL, STRING, FUN_PARAM, FUN_PTR, UNDEF
-    } valClass;
-
-    std::optional<int> version = {};
+    };
 
     IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, union_type v);
     IRval copy() const;
 
-    // TODO: clear versioned and unversioned comparsion
-    bool operator==(IRval const &oth) const;
+    bool equal(IRval const &oth) const;
+    /** Consider same values with different versions equal */
+    bool equalIgnoreVers(IRval const &oth) const;
 
-    static bool less(const IRval &a, const IRval &b);
-    struct Comparator {
+    static bool lessIgnoreVers(const IRval &a, const IRval &b);
+    struct ComparatorIgnoreVers {
         bool operator()(const IRval& a, const IRval& b) const;
     };
 
-    static bool lessVersions(const IRval &a, const IRval &b);
-    struct ComparatorVersions {
+    static bool less(const IRval &a, const IRval &b);
+    struct Comparator {
         bool operator()(const IRval& a, const IRval& b) const;
     };
 
@@ -45,13 +44,21 @@ public:
 
     [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
 
+    ValueClass getValueClass() const;
     std::shared_ptr<IR_Type> const& getType() const;
     bool isConstant() const;
     bool isVReg() const;
     bool isGlobal() const;
     union_type const& getVal() const;
-    std::string to_string() const;
-    std::string to_reg_name() const;
+
+    [[nodiscard]] std::string to_string() const;
+    [[nodiscard]] std::string to_reg_name() const;
+
+    bool hasVersion() const;
+    bool isUndefVersion() const;
+    std::optional<int> getVersion() const;
+    void setVersion(int vers);
+    void dropVersion();
 
     template <class T>
     T castValTo() const {
@@ -61,8 +68,10 @@ public:
     }
 
 private:
+    ValueClass valClass;
     std::shared_ptr<IR_Type> type;
     union_type val;
+    std::optional<int> version = {};
 };
 
 #endif /* __IR_VALUE_HPP__ */

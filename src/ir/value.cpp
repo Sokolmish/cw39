@@ -4,6 +4,10 @@
 IRval::IRval(std::shared_ptr<IR_Type> type, ValueClass vclass, IRval::union_type v) :
         valClass(vclass), type(type), val(v) {}
 
+IRval::ValueClass IRval::getValueClass() const {
+    return valClass;
+}
+
 std::shared_ptr<IR_Type> const& IRval::getType() const {
     return type;
 }
@@ -92,7 +96,7 @@ std::string IRval::to_string() const {
     switch (valClass) {
         case IRval::VREG:
             return std::visit([this](auto e) -> std::string {
-                if (version)
+                if (version.has_value())
                     return fmt::format("%{}.{}", e, *version);
                 else
                     return fmt::format("%{}", e);
@@ -145,11 +149,15 @@ IRval IRval::copy() const {
     return res;
 }
 
-bool IRval::operator==(const IRval &oth) const {
+bool IRval::equal(const IRval &oth) const {
+    return equalIgnoreVers(oth) && version == oth.version;
+}
+
+bool IRval::equalIgnoreVers(const IRval &oth) const {
     return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
 }
 
-bool IRval::less(const IRval &a, const IRval &b) {
+bool IRval::lessIgnoreVers(const IRval &a, const IRval &b) {
     if (a.valClass < b.valClass)
         return true;
     else if (a.valClass > b.valClass)
@@ -158,7 +166,7 @@ bool IRval::less(const IRval &a, const IRval &b) {
         return a.val < b.val;
 }
 
-bool IRval::lessVersions(const IRval &a, const IRval &b) {
+bool IRval::less(const IRval &a, const IRval &b) {
     if (a.valClass < b.valClass)
         return true;
     else if (a.valClass > b.valClass)
@@ -175,10 +183,30 @@ bool IRval::lessVersions(const IRval &a, const IRval &b) {
     }
 }
 
+bool IRval::ComparatorIgnoreVers::operator()(const IRval &a, const IRval &b) const {
+    return IRval::lessIgnoreVers(a, b);
+}
+
 bool IRval::Comparator::operator()(const IRval &a, const IRval &b) const {
     return IRval::less(a, b);
 }
 
-bool IRval::ComparatorVersions::operator()(const IRval &a, const IRval &b) const {
-    return IRval::lessVersions(a, b);
+bool IRval::hasVersion() const {
+    return version.has_value();
+}
+
+bool IRval::isUndefVersion() const {
+    return version.has_value() && version.value() < 0;
+}
+
+std::optional<int> IRval::getVersion() const {
+    return version;
+}
+
+void IRval::setVersion(int vers) {
+    version = vers;
+}
+
+void IRval::dropVersion() {
+    version = {};
 }

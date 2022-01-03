@@ -11,7 +11,7 @@ class CopyPropagator {
 private:
     std::shared_ptr<ControlFlowGraph> cfg;
 
-    std::map<IRval, IRval, IRval::ComparatorVersions> remlacementMap;
+    std::map<IRval, IRval, IRval::Comparator> remlacementMap;
     bool changed, globalChanged;
 
     void propagateCopies();

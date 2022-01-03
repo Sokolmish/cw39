@@ -26,7 +26,7 @@ void CfgCleaner::removeNops() {
 
 void CfgCleaner::fixVersions() {
     std::set<int> visited;
-    std::map<IRval, std::pair<bool, int>, IRval::Comparator> versionedRegs;
+    std::map<IRval, std::pair<bool, int>, IRval::ComparatorIgnoreVers> versionedRegs;
 
     visited.clear();
     for (auto const &[fId, func]: cfg->getFuncs()) {
@@ -34,9 +34,9 @@ void CfgCleaner::fixVersions() {
             auto &curBlock = cfg->block(blockId);
             for (IR_Node *node: curBlock.getAllNodes()) {
                 if (node->res) {
-                    int curVers = *node->res->version;
+                    int curVers = *node->res->getVersion();
                     auto it = versionedRegs.lower_bound(*node->res);
-                    if (it != versionedRegs.end() && it->first == *node->res) {
+                    if (it != versionedRegs.end() && it->first.equalIgnoreVers(*node->res)) {
                         if (it->second.second != curVers)
                             it->second = std::make_pair(true, 0);
                     }
@@ -57,16 +57,16 @@ void CfgCleaner::fixVersions() {
                 if (node->res) {
                     auto it = versionedRegs.find(*node->res);
                     if (it != versionedRegs.end() && !it->second.first)
-                        node->res->version = {};
+                        node->res->dropVersion();
                 }
                 for (IRval *arg : node->body->getArgs()) {
-                    if (arg->version && arg->version < 0) {
+                    if (arg->isUndefVersion()) {
                         *arg = IRval::createUndef(arg->getType());
                     }
                     else {
                         auto it = versionedRegs.find(*arg);
                         if (it != versionedRegs.end() && !it->second.first)
-                            arg->version = {};
+                            arg->dropVersion();
                     }
                 }
             }
@@ -76,7 +76,7 @@ void CfgCleaner::fixVersions() {
 
 void CfgCleaner::removeUselessNodes() {
     std::set<int> visited;
-    std::set<IRval, IRval::ComparatorVersions> usedRegs;
+    std::set<IRval, IRval::Comparator> usedRegs;
     bool changed = true;
 
     while (changed) {

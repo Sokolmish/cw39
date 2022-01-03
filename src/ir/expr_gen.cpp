@@ -603,6 +603,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return evalExpr(expr.getExpr());
             }
             else if (expr.type == AST_Primary::STR) {
+                // TODO: string literals concatenation
                 string_id_t parserStrId = expr.getString();
                 IRval str = IRval::createString(
                         cfg->putString(get_string_by_id(parserStrId)));

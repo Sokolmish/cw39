@@ -34,7 +34,7 @@ void SSA_Generator::placePhis() {
     makeVerticesDF();
 
     // For each variable find, where a value assigned to it
-    std::map<IRval, std::set<int>, IRval::Comparator> varsDefSet;
+    std::map<IRval, std::set<int>, IRval::ComparatorIgnoreVers> varsDefSet;
     for (auto const &[bId, block] : cfg->getBlocks())
         for (IRval const &def : block.getDefinitions())
             varsDefSet[def].insert(bId);
@@ -113,7 +113,7 @@ std::set<int> SSA_Generator::getSetDFP(const std::set<int> &S) const {
 void SSA_Generator::versionize() {
     // TODO: traverse blocks for functions
     // Collect variables from graph because its was not passed in CFG
-    std::set<IRval, IRval::Comparator> variables;
+    std::set<IRval, IRval::ComparatorIgnoreVers> variables;
     for (auto const &[bId, block] : cfg->getBlocks()) {
         for (const IRval& def : block.getDefinitions())
             variables.insert(def);
@@ -121,7 +121,6 @@ void SSA_Generator::versionize() {
             variables.insert(ref);
     }
 
-//    versions = std::make_unique<std::deque<int>>();
     for (const IRval& var : variables) {
         versionsCnt = 0;
         versions.clear();
@@ -139,8 +138,8 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
 
     // Phis
     for (auto &phiNode : curBlock.phis) {
-        if (phiNode.res && *phiNode.res == var) {
-            phiNode.res->version = versionsCnt;
+        if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
+            phiNode.res->setVersion(versionsCnt);
             versions.push_back(versionsCnt++);
             rollbackCnt++;
             break;
@@ -150,12 +149,12 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     // General nodes
     for (auto &node : curBlock.body) {
         for (IRval *arg : node.body->getArgs()) {
-            if (*arg == var) {
-                arg->version = versions.back();
+            if (arg->equalIgnoreVers(var)) {
+                arg->setVersion(versions.back());
             }
         }
-        if (node.res && *node.res == var) {
-            node.res->version = versionsCnt;
+        if (node.res && node.res->equalIgnoreVers(var)) {
+            node.res->setVersion(versionsCnt);
             versions.push_back(versionsCnt++);
             rollbackCnt++;
         }
@@ -164,11 +163,11 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
     // Terminator
     if (curBlock.termNode.has_value()) {
         auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
-        if (terminator.arg.has_value() && *terminator.arg == var) {
-            terminator.arg->version = versions.back();
-        }
+        if (terminator.arg.has_value() && terminator.arg->equalIgnoreVers(var))
+            terminator.arg->setVersion(versions.back());
     }
 
+    // Set phis args in next blocks
     for (int nextId : curBlock.next) {
         auto &nextBlock = cfg->block(nextId);
         int j = -1;
@@ -180,9 +179,9 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
         }
 
         for (auto &phiNode : nextBlock.phis) {
-            if (phiNode.res && *phiNode.res == var) {
+            if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
                 IRval phiArg = var;
-                phiArg.version = versions.back();
+                phiArg.setVersion(versions.back());
                 auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
                 phiExpr.args.emplace(j, phiArg);
                 break;

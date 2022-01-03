@@ -103,8 +103,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
 
     // Zero subtraction
     if (isInList(oper.op, { IR_ExprOper::SUB, IR_ExprOper::XOR })) {
-        // TODO: see note at comparsion operator
-        if (oper.args[0] == oper.args[1] && oper.args[0].version == oper.args[1].version) {
+        if (oper.args[0].equal(oper.args[1])) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ IRval::createVal(oper.args[0].getType(), 0ULL) };
         }

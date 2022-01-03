@@ -55,14 +55,14 @@ public:
 
     Function *curFunction = nullptr;
 
-    std::map<IRval, Value*, IRval::ComparatorVersions> regsMap;
+    std::map<IRval, Value*, IRval::Comparator> regsMap;
     std::map<int, BasicBlock*> blocksMap;
     std::map<int, Value*> strings;
     std::map<int, GlobalVariable*> globals;
     std::map<int, Function*> functions;
     std::map<int, Type*> structTypes;
 
-    std::map<IRval, PHINode*, IRval::ComparatorVersions> unfilledPhis;
+    std::map<IRval, PHINode*, IRval::Comparator> unfilledPhis;
 
     explicit IR2LLVM_Impl(IR2LLVM *par);
 
@@ -224,7 +224,7 @@ Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) const {
 }
 
 Value *IR2LLVM_Impl::getValue(const IRval &val) {
-    switch (val.valClass) {
+    switch (val.getValueClass()) {
         case IRval::VAL: {
             auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
             if (dirType.isInteger()) {

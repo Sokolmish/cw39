@@ -13,7 +13,7 @@ class VarsVirtualizer {
 private:
     std::shared_ptr<ControlFlowGraph> cfg;
 
-    std::map<IRval, std::optional<IRval>, IRval::Comparator> toRedudeList;
+    std::map<IRval, std::optional<IRval>, IRval::ComparatorIgnoreVers> toRedudeList;
 
     void passFunction(ControlFlowGraph::Function const &func);
     void analyzeBlock(IR_Block const &block);
