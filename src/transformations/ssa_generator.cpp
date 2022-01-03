@@ -108,7 +108,7 @@ std::set<int> SSA_Generator::getSetDFP(const std::set<int> &S) const {
 }
 
 
-// Versionizing
+// Versioning
 
 void SSA_Generator::versionize() {
     // TODO: traverse blocks for functions

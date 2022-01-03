@@ -1,322 +1,195 @@
-#include "generator.hpp"
+#include "types.hpp"
+#include "utils.hpp"
 
-std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_StructOrUsionSpec const &spec) {
-    // Lookup for existing struct type
-    auto itFound = cfg->structs.find(spec.name);
-    if (!spec.body) {
-        if (itFound == cfg->structs.end())
-            semanticError("Unknown struct name");
-        return itFound->second;
-    }
-    else if (itFound != cfg->structs.end()) {
-        semanticError("Struct with given name already has been defined");
-    }
+// IR_StorageSpecifier
 
-    // Create new struct type
-    std::vector<IR_TypeStruct::StructField> fields;
-    int curIndex = 0;
-    for (auto const &structDecl : spec.body->children) {
-        for (auto const &singleDecl : structDecl->child->children) {
-            if (singleDecl->bitwidth)
-                NOT_IMPLEMENTED("Bitwidth");
-            auto fieldType = getType(*structDecl->type, *singleDecl->declarator);
-            string_id_t fieldName = getDeclaredIdent(*singleDecl->declarator);
-            fields.emplace_back(fieldName, fieldType, curIndex);
-            curIndex++;
-        }
-    }
-    auto resType = std::make_shared<IR_TypeStruct>(spec.name, std::move(fields));
-    cfg->structs.emplace(spec.name, resType);
-    return resType;
+IR_StorageSpecifier::IR_StorageSpecifier() : spec(AUTO) {}
+
+IR_StorageSpecifier::IR_StorageSpecifier(IR_StorageSpecifier::Specs spec) : spec(spec) {}
+
+
+// IR_Type
+
+IR_Type::IR_Type(IR_Type::Type type) : type(type) {}
+
+
+// IR_TypeDirect
+
+IR_TypeDirect::IR_TypeDirect(DirType spec) : IR_Type(IR_Type::DIRECT), spec(spec) {}
+
+bool IR_TypeDirect::isInteger() const {
+    return isInList(spec, { I8, U8, I32, U32, I64, U64 });
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec) {
-    using ast_ts = AST_TypeSpecifier;
-
-    if (spec.empty()) {
-        internalError("Empty AST_DeclSpecifiers");
-    }
-
-    if (spec[0]->spec_type == ast_ts::T_UNISTRUCT) {
-        if (spec.size() != 1)
-            semanticError("Struct specifier must be the only specifier");
-        auto const &structSpec = dynamic_cast<AST_StructOrUsionSpec const &>(*spec[0]->v);
-        if (structSpec.is_union)
-            NOT_IMPLEMENTED("Unions");
-        return getStructType(structSpec);
-    }
-    else if (spec[0]->spec_type == ast_ts::T_ENUM) {
-        if (spec.size() != 1)
-            semanticError("Enum specifier must be the only specifier");
-        NOT_IMPLEMENTED("Enums");
-    }
-    else if (spec[0]->spec_type == ast_ts::T_NAMED) {
-        NOT_IMPLEMENTED("Named types");
-    }
-
-    if (spec[0]->spec_type == ast_ts::T_VOID) {
-        if (spec.size() != 1)
-            semanticError("Void type specifier cannot be combined with others");
-        return std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
-    }
-
-    int longCnt = 0;
-    ast_ts::TypeSpec sign = ast_ts::T_VOID; // T_VOID is guaranteed not to be assigned to this
-    ast_ts::TypeSpec typeSpec = ast_ts::T_VOID;
-
-    for (auto const &type : spec) {
-        switch (type->spec_type) {
-            case ast_ts::T_CHAR:
-            case ast_ts::T_INT:
-            case ast_ts::T_FLOAT:
-            case ast_ts::T_DOUBLE:
-                if (typeSpec != ast_ts::T_VOID)
-                    semanticError("Only one type specifier is allowed");
-                typeSpec = type->spec_type;
-                break;
-
-            case ast_ts::T_UNSIGNED:
-            case ast_ts::T_SIGNED:
-                if (sign != ast_ts::T_VOID)
-                    semanticError("Only one signedness specifier is allowed");
-                sign = type->spec_type;
-                break;
-
-            case ast_ts::T_SHORT:
-                semanticError("Short specifier is unsupported");
-
-            case ast_ts::T_LONG:
-                if (longCnt >= 2)
-                    semanticError("More than 2 long specifiers are not allowed");
-                longCnt++;
-                break;
-
-            default:
-                semanticError("Struct, union and enum keywords cannot be combined with others");
-        }
-    }
-
-    // TODO: refactor this function
-
-    auto resType = IR_TypeDirect::VOID;
-    if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) { // Void here because it is default value
-        if (sign == ast_ts::T_UNSIGNED) {
-            if (longCnt != 0)
-                resType = IR_TypeDirect::U64;
-            else
-                resType = IR_TypeDirect::U32;
-        }
-        else {
-           if (longCnt != 0)
-                resType = IR_TypeDirect::I64;
-           else
-                resType = IR_TypeDirect::I32;
-        }
-    }
-    else if (typeSpec == ast_ts::T_CHAR) {
-        if (longCnt != 0)
-            semanticError("Char types cannot have size modificators");
-        resType = sign == ast_ts::T_UNSIGNED ? IR_TypeDirect::U8 : IR_TypeDirect::I8;
-    }
-    else if (isInList(typeSpec, { ast_ts::T_FLOAT, ast_ts::T_DOUBLE })) {
-        if (sign != ast_ts::T_VOID)
-            semanticError("Float point types cannot have signedness");
-        if (longCnt != 0)
-            semanticError("Float point types cannot have size modificators");
-        if (typeSpec == ast_ts::T_FLOAT)
-            resType = IR_TypeDirect::F32;
-        else
-            resType = IR_TypeDirect::F64;
-    }
-    else {
-        internalError("Wrong type");
-    }
-
-    return std::make_shared<IR_TypeDirect>(resType);
+bool IR_TypeDirect::isFloat() const {
+    return isInList(spec, { F32, F64 });
 }
 
-template <typename DeclaratorType>
-std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *decl,
-                                                       std::shared_ptr<IR_Type> base) {
-
-    if (!decl) {
-        return base;
-    }
-
-    std::shared_ptr<IR_Type> lastPtr = std::move(base);
-    for (auto curAstPtr = decl->ptr.get(); curAstPtr; curAstPtr = curAstPtr->child.get()) {
-        auto newPtr = std::make_shared<IR_TypePtr>(std::move(lastPtr));
-        if (decl->ptr->qualifiers) {
-            newPtr->is_const = decl->ptr->qualifiers->is_const;
-            newPtr->is_restrict = decl->ptr->qualifiers->is_restrict;
-            newPtr->is_volatile = decl->ptr->qualifiers->is_volatile;
-        }
-        lastPtr = std::move(newPtr);
-    }
-
-    if constexpr (std::is_same<DeclaratorType, AST_Declarator>()) {
-        return getDirectType(*decl->direct.get(), std::move(lastPtr));
-    }
-    else if constexpr (std::is_same<DeclaratorType, AST_AbstractDeclarator>()) {
-        return getDirectAbstractType(decl->direct.get(), std::move(lastPtr));
-    }
-    else {
-        static_assert(! std::is_same<DeclaratorType, DeclaratorType>(),
-                      "Something went wrong with codegeneration");
-        throw; // Just in case
-    }
+bool IR_TypeDirect::isSigned() const {
+    return isInList(spec, { I8, I32, I64 });
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const &decl,
-                                                     std::shared_ptr<IR_Type> base) {
-    if (decl.type == AST_DirectDeclarator::NAME) {
-        return base; // Name is ignored there
-    }
-    else if (decl.type == AST_DirectDeclarator::NESTED) {
-        return getIndirectType(&decl.getBaseDecl(), std::move(base));
-    }
-    else if (decl.type == AST_DirectDeclarator::ARRAY) {
-        auto sizeExpr = evalConstantExpr(*decl.arr_size);
-        if (!sizeExpr.has_value())
-            semanticError("Non constant array size");
-        if (sizeExpr->getType()->type != IR_Type::DIRECT)
-            semanticError("Non constant array size (not direct value)");
-        if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
-            semanticError("Non integer array size");
-        auto size = sizeExpr->castValTo<uint64_t>();
-        auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
-        return getDirectType(decl.getBaseDirectDecl(), arr);
-    }
-    else if (decl.type == AST_DirectDeclarator::FUNC) {
-        if (decl.func_args) {
-            std::vector<std::shared_ptr<IR_Type>> params;
-            for (const auto &param: decl.func_args->v->v)
-                params.push_back(getType(*param->specifiers, *param->child));
-            bool isVararg = decl.func_args->has_ellipsis;
-            auto func = std::make_shared<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
-            return getDirectType(decl.getBaseDirectDecl(), func);
-        }
-        else {
-            auto func = std::make_shared<IR_TypeFunc>(std::move(base));
-            return getDirectType(decl.getBaseDirectDecl(), func);
-        }
-    }
-    else {
-        internalError("Unknown direct declarator type");
-    }
+bool IR_TypeDirect::isUnsigned() const {
+    return isInList(spec, { U8, U32, U64 });
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractDeclarator const *decl,
-                                                             std::shared_ptr<IR_Type> base) {
-
-    if (!decl) {
-        return base;
+int IR_TypeDirect::getBytesSize() const {
+    switch (spec) {
+        case VOID:
+            return 0;
+        case U8:
+        case I8:
+            return 1;
+        case U32:
+        case I32:
+        case F32:
+            return 4;
+        case U64:
+        case I64:
+        case F64:
+            return 8;
     }
-    else if (decl->type == AST_DirectAbstractDeclarator::NESTED) {
-        return getIndirectType(&decl->getBaseDecl(), std::move(base));
-    }
-    else if (decl->type == AST_DirectAbstractDeclarator::ARRAY) {
-        auto sizeExpr = evalConstantExpr(*decl->arr_size);
-        if (!sizeExpr.has_value())
-            semanticError("Non constant array size");
-        if (sizeExpr->getType()->type != IR_Type::DIRECT)
-            semanticError("Non constant array size (not direct value)");
-        if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
-            semanticError("Non integer array size");
-        auto size = sizeExpr->castValTo<uint64_t>();
-        auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
-        return getDirectAbstractType(&decl->getBaseDirectDecl(), arr);
-    }
-    else if (decl->type == AST_DirectAbstractDeclarator::FUNC) {
-        if (decl->func_args) {
-            std::vector<std::shared_ptr<IR_Type>> params;
-            for (const auto &param: decl->func_args->v->v)
-                params.push_back(getType(*param->specifiers, *param->child));
-            bool isVararg = decl->func_args->has_ellipsis;
-            auto func = std::make_shared<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
-            return getDirectAbstractType(&decl->getBaseDirectDecl(), func);
-        }
-        else {
-            auto func = std::make_shared<IR_TypeFunc>(std::move(base));
-            return getDirectAbstractType(&decl->getBaseDirectDecl(), func);
-        }
-    }
-    internalError("Unknown direct abstract declarator type");
+    throw;
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl) {
-    return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
+bool IR_TypeDirect::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::DIRECT)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(rhs);
+    return spec == rtype.spec;
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getType(AST_SpecifierQualifierList const &spec,
-                                               AST_Declarator const &decl) {
-    return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
+std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
+    return std::make_shared<IR_TypeDirect>(spec);
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getType(AST_TypeName const &typeName) {
-    return getIndirectType(typeName.declarator.get(), getPrimaryType(typeName.qual->type_specifiers));
+// TODO: replace with getters
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_void =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i8 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u8 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U8);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i32 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u32 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U32);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i64 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I64);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u64 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f32 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f64 =
+        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
+
+
+// IR_TypeStruct
+
+IR_TypeStruct::IR_TypeStruct(string_id_t ident, std::vector<StructField> fields)
+        : IR_Type(TSTRUCT), structId(ident), fields(std::move(fields)) {}
+
+IR_TypeStruct::StructField::StructField(string_id_t ident, std::shared_ptr<IR_Type> type, int index)
+        : fieldName(ident), irType(std::move(type)), index(index) {}
+
+bool IR_TypeStruct::equal(IR_Type const &rhs) const {
+    if (rhs.type != IR_Type::TSTRUCT)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeStruct const &>(rhs);
+    return structId == rtype.structId;
 }
 
-string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
-    if (decl.type == AST_DirectDeclarator::NAME) {
-        return decl.getIdent();
-    }
-    else if (decl.type == AST_DirectDeclarator::NESTED) {
-        return getDeclaredIdent(decl.getBaseDecl());
-    }
-    else if (decl.type == AST_DirectDeclarator::ARRAY || decl.type == AST_DirectDeclarator::FUNC) {
-        return getDeclaredIdentDirect(decl.getBaseDirectDecl());
-    }
-    else {
-        internalError("Wrong direct declarator type");
-    }
+std::shared_ptr<IR_Type> IR_TypeStruct::copy() const {
+    return std::make_shared<IR_TypeStruct>(structId, fields);
 }
 
-string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
-    return getDeclaredIdentDirect(*decl.direct);
+int IR_TypeStruct::getBytesSize() const {
+    NOT_IMPLEMENTED("Structs size");
 }
 
-std::vector<IR_FuncArgument> IR_Generator::getDeclaredFuncArguments(AST_Declarator const &decl) {
-    if (decl.direct->type != AST_DirectDeclarator::FUNC)
-        semanticError("Non function type");
-    if (!decl.direct->func_args)
-        return std::vector<IR_FuncArgument>();
-
-    std::vector<IR_FuncArgument> res;
-    for (auto const &arg : decl.direct->func_args->v->v) {
-        auto ident = getDeclaredIdent(*arg->child);
-        auto type = getType(*arg->specifiers, *arg->child);
-        res.push_back({ ident, type });
-    }
-    return  res;
+IR_TypeStruct::StructField const* IR_TypeStruct::getField(string_id_t id) const {
+    for (auto const &field : fields)
+        if (field.fieldName == id)
+            return &field;
+    return nullptr;
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
-    if (lit.type == INTEGER_LITERAL) {
-        if (lit.isUnsigned) {
-            if (lit.longCnt)
-                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
-            else
-                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::U32);
-        }
-        else { // Signed
-            if (lit.longCnt)
-                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I64);
-            else
-                return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
-        }
+
+// IR_TypePtr
+
+IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :
+        IR_Type(IR_Type::POINTER), child(std::move(child)) {}
+
+bool IR_TypePtr::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::POINTER)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypePtr const &>(rhs);
+    return is_const == rtype.is_const && is_restrict == rtype.is_restrict &&
+           is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
+}
+
+std::shared_ptr<IR_Type> IR_TypePtr::copy() const {
+    auto res = std::make_shared<IR_TypePtr>(child->copy());
+    res->is_const = is_const;
+    res->is_volatile = is_volatile;
+    res->is_restrict = is_restrict;
+    return res;
+}
+
+int IR_TypePtr::getBytesSize() const {
+    return 8;
+}
+
+// IR_TypeFunc
+
+IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
+        IR_Type(FUNCTION), ret(std::move(ret)), args(), isVariadic(false) {}
+
+IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic) :
+        IR_Type(IR_Type::FUNCTION), ret(std::move(ret)), args(std::move(args)), isVariadic(variadic) {}
+
+bool IR_TypeFunc::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::FUNCTION)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeFunc const &>(rhs);
+    if (isVariadic != rtype.isVariadic || !ret->equal(*rtype.ret) || args.size() != rtype.args.size())
+        return false;
+    for (size_t i = 0; i < args.size(); i++) {
+        if (!args[i]->equal(*rtype.args[i]))
+            return false;
     }
-    else if (lit.type == FLOAT_LITERAL) {
-        if (lit.isFloat)
-            return std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
-        else {
-            return std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
-        }
-    }
-    else if (lit.type == CHAR_LITERAL) {
-        return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
-    }
-    else {
-        internalError("Wrong literal type");
-    }
+    return true;
+}
+
+std::shared_ptr<IR_Type> IR_TypeFunc::copy() const {
+    auto retCopy = ret->copy();
+    std::vector<std::shared_ptr<IR_Type>> argsCopy;
+    for (auto &arg : args)
+        argsCopy.push_back(arg->copy());
+    return std::make_shared<IR_TypeFunc>(retCopy, argsCopy, isVariadic);
+}
+
+int IR_TypeFunc::getBytesSize() const {
+    semanticError("Cannot get size of function type");
+}
+
+
+// IR_TypeArray
+
+IR_TypeArray::IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size) :
+        IR_Type(IR_Type::ARRAY), child(std::move(child)), size(size) {}
+
+bool IR_TypeArray::equal(const IR_Type &rhs) const {
+    if (rhs.type != IR_Type::ARRAY)
+        return false;
+    auto const &rtype = dynamic_cast<IR_TypeArray const &>(rhs);
+    return size == rtype.size && child->equal(*rtype.child);
+}
+
+std::shared_ptr<IR_Type> IR_TypeArray::copy() const {
+    return std::make_shared<IR_TypeArray>(child->copy(), size);
+}
+
+int IR_TypeArray::getBytesSize() const {
+    return static_cast<int>(size) * child->getBytesSize();
 }

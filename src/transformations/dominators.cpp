@@ -34,7 +34,7 @@ void Dominators::DomNode::bake() {
 
 
 Dominators::Dominators(std::shared_ptr<ControlFlowGraph> in_cfg) : cfg(std::move(in_cfg)) {
-    std::vector<int> sortedIds;
+    std::vector<int> sortedIds; // TODO: optimize this
     for (auto const &[blockId, block] : cfg->getBlocks()) {
         data.emplace(blockId, DomNode(*this, blockId));
         sortedIds.push_back(blockId);

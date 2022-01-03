@@ -1,200 +1,6 @@
 #include "nodes.hpp"
 #include "utils.hpp"
 
-// IR_StorageSpecifier
-
-IR_StorageSpecifier::IR_StorageSpecifier() : spec(AUTO) {}
-
-IR_StorageSpecifier::IR_StorageSpecifier(IR_StorageSpecifier::Specs spec) : spec(spec) {}
-
-
-// IR_Type
-
-IR_Type::IR_Type(IR_Type::Type type) : type(type) {}
-
-
-// IR_TypeDirect
-
-IR_TypeDirect::IR_TypeDirect(DirType spec) : IR_Type(IR_Type::DIRECT), spec(spec) {}
-
-bool IR_TypeDirect::isInteger() const {
-    return isInList(spec, { I8, U8, I32, U32, I64, U64 });
-}
-
-bool IR_TypeDirect::isFloat() const {
-    return isInList(spec, { F32, F64 });
-}
-
-bool IR_TypeDirect::isSigned() const {
-    return isInList(spec, { I8, I32, I64 });
-}
-
-bool IR_TypeDirect::isUnsigned() const {
-    return isInList(spec, { U8, U32, U64 });
-}
-
-int IR_TypeDirect::getBytesSize() const {
-    switch (spec) {
-        case VOID:
-            return 0;
-        case U8:
-        case I8:
-            return 1;
-        case U32:
-        case I32:
-        case F32:
-            return 4;
-        case U64:
-        case I64:
-        case F64:
-            return 8;
-    }
-    throw;
-}
-
-bool IR_TypeDirect::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::DIRECT)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(rhs);
-    return spec == rtype.spec;
-}
-
-std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
-    return std::make_shared<IR_TypeDirect>(spec);
-}
-
-// TODO: replace with getters
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_void =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i8 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u8 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U8);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i32 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u32 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U32);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i64 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I64);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u64 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f32 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f64 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
-
-
-// IR_TypeStruct
-
-IR_TypeStruct::IR_TypeStruct(string_id_t ident, std::vector<StructField> fields)
-        : IR_Type(TSTRUCT), structId(ident), fields(std::move(fields)) {}
-
-IR_TypeStruct::StructField::StructField(string_id_t ident, std::shared_ptr<IR_Type> type, int index)
-        : fieldName(ident), irType(std::move(type)), index(index) {}
-
-bool IR_TypeStruct::equal(IR_Type const &rhs) const {
-    if (rhs.type != IR_Type::TSTRUCT)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeStruct const &>(rhs);
-    return structId == rtype.structId;
-}
-
-std::shared_ptr<IR_Type> IR_TypeStruct::copy() const {
-    return std::make_shared<IR_TypeStruct>(structId, fields);
-}
-
-int IR_TypeStruct::getBytesSize() const {
-    NOT_IMPLEMENTED("Structs size");
-}
-
-IR_TypeStruct::StructField const* IR_TypeStruct::getField(string_id_t id) const {
-    for (auto const &field : fields)
-        if (field.fieldName == id)
-            return &field;
-    return nullptr;
-}
-
-
-// IR_TypePtr
-
-IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :
-        IR_Type(IR_Type::POINTER), child(std::move(child)) {}
-
-bool IR_TypePtr::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::POINTER)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypePtr const &>(rhs);
-    return is_const == rtype.is_const && is_restrict == rtype.is_restrict &&
-           is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
-}
-
-std::shared_ptr<IR_Type> IR_TypePtr::copy() const {
-    auto res = std::make_shared<IR_TypePtr>(child->copy());
-    res->is_const = is_const;
-    res->is_volatile = is_volatile;
-    res->is_restrict = is_restrict;
-    return res;
-}
-
-int IR_TypePtr::getBytesSize() const {
-    return 8;
-}
-
-// IR_TypeFunc
-
-IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
-        IR_Type(FUNCTION), ret(std::move(ret)), args(), isVariadic(false) {}
-
-IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic) :
-        IR_Type(IR_Type::FUNCTION), ret(std::move(ret)), args(std::move(args)), isVariadic(variadic) {}
-
-bool IR_TypeFunc::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::FUNCTION)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeFunc const &>(rhs);
-    if (isVariadic != rtype.isVariadic || !ret->equal(*rtype.ret) || args.size() != rtype.args.size())
-        return false;
-    for (size_t i = 0; i < args.size(); i++) {
-        if (!args[i]->equal(*rtype.args[i]))
-            return false;
-    }
-    return true;
-}
-
-std::shared_ptr<IR_Type> IR_TypeFunc::copy() const {
-    auto retCopy = ret->copy();
-    std::vector<std::shared_ptr<IR_Type>> argsCopy;
-    for (auto &arg : args)
-        argsCopy.push_back(arg->copy());
-    return std::make_shared<IR_TypeFunc>(retCopy, argsCopy, isVariadic);
-}
-
-int IR_TypeFunc::getBytesSize() const {
-    semanticError("Cannot get size of function type");
-}
-
-
-// IR_TypeArray
-
-IR_TypeArray::IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size) :
-        IR_Type(IR_Type::ARRAY), child(std::move(child)), size(size) {}
-
-bool IR_TypeArray::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::ARRAY)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeArray const &>(rhs);
-    return size == rtype.size && child->equal(*rtype.child);
-}
-
-std::shared_ptr<IR_Type> IR_TypeArray::copy() const {
-    return std::make_shared<IR_TypeArray>(child->copy(), size);
-}
-
-int IR_TypeArray::getBytesSize() const {
-    return static_cast<int>(size) * child->getBytesSize();
-}
-
-
 // Expressions
 
 IR_Expr::IR_Expr(IR_Expr::Type type) : type(type) {}
@@ -341,7 +147,7 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
             else if (srcDir.isSigned() && dstDir.isSigned())
                 castOp = SEXT;
             else
-                castOp = ZEXT; // TODO: maybe wrong conversion here
+                castOp = ZEXT;
         }
         else if (srcDir.isFloat() && dstDir.isFloat()) {
             if (srcDir.getBytesSize() == 8 && dstDir.getBytesSize() == 4)
@@ -449,6 +255,51 @@ std::vector<IRval *> IR_ExprPhi::getArgs() {
     for (auto &[pos, arg] : args)
         resArgs.push_back(&arg);
     return resArgs;
+}
+
+
+// IR_ExprTerminator
+
+IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type)
+        : IR_Expr(TERM), termType(type), arg() {}
+
+IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type, IRval val)
+        : IR_Expr(TERM), termType(type), arg(std::move(val)) {}
+
+std::unique_ptr<IR_Expr> IR_ExprTerminator::copy() const {
+    if (arg.has_value())
+        return std::make_unique<IR_ExprTerminator>(termType, arg->copy());
+    else
+        return std::make_unique<IR_ExprTerminator>(termType);
+}
+
+std::vector<IRval *> IR_ExprTerminator::getArgs() {
+    if (arg.has_value())
+        return std::vector<IRval *>{ &(*arg) };
+    else
+        return std::vector<IRval *>();
+}
+
+
+// IR_Node
+
+IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std::move(body)) {}
+
+IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}
+
+IR_Node IR_Node::copy() const {
+    if (res.has_value()) {
+        if (body)
+            return IR_Node(res->copy(), body->copy());
+        else
+            return IR_Node(res->copy(), nullptr);
+    }
+    else {
+        if (body)
+            return IR_Node(body->copy());
+        else
+            return IR_Node(nullptr);
+    }
 }
 
 
@@ -565,48 +416,4 @@ IR_ExprTerminator const* IR_Block::getTerminator() const {
     if (!termNode)
         return nullptr;
     return dynamic_cast<IR_ExprTerminator *>(termNode->body.get());
-}
-
-// IR_Node
-
-IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std::move(body)) {}
-
-IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}
-
-IR_Node IR_Node::copy() const {
-    if (res.has_value()) {
-        if (body)
-            return IR_Node(res->copy(), body->copy());
-        else
-            return IR_Node(res->copy(), nullptr);
-    }
-    else {
-        if (body)
-            return IR_Node(body->copy());
-        else
-            return IR_Node(nullptr);
-    }
-}
-
-
-// IR_ExprTerminator
-
-IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type)
-        : IR_Expr(TERM), termType(type), arg() {}
-
-IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type, IRval val)
-        : IR_Expr(TERM), termType(type), arg(std::move(val)) {}
-
-std::unique_ptr<IR_Expr> IR_ExprTerminator::copy() const {
-    if (arg.has_value())
-        return std::make_unique<IR_ExprTerminator>(termType, arg->copy());
-    else
-        return std::make_unique<IR_ExprTerminator>(termType);
-}
-
-std::vector<IRval *> IR_ExprTerminator::getArgs() {
-    if (arg.has_value())
-        return std::vector<IRval *>{ &(*arg) };
-    else
-        return std::vector<IRval *>();
 }
