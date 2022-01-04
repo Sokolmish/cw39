@@ -31,7 +31,9 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
 
     if (isGeneralNumOp(expr.op)) {
         return std::visit([&expr](auto const &l) -> IRval {
-            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
+            // TODO: create constants with exact variant type
+//            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
+            auto const &r = expr.args[1].template castValTo<std::remove_cvref_t<decltype(l)>>();
             switch (expr.op) {
                 case IR_ExprOper::ADD:
                     return IRval::createVal(expr.args[0].getType(), l + r);
@@ -48,7 +50,8 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
     }
     else if (isComparsionOp(expr.op)) {
         return std::visit([&expr](auto const &l) -> IRval {
-            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
+//            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
+            auto const &r = expr.args[1].template castValTo<std::remove_cvref_t<decltype(l)>>();
             // TODO: i1
             switch (expr.op) {
                 case IR_ExprOper::LAND:
@@ -77,7 +80,8 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
         using intVariant_t = std::variant<uint8_t, int8_t, uint32_t, int32_t, uint64_t, int64_t>;
         intVariant_t intVariant = variant_cast(expr.args[0].getVal());
         return std::visit([&expr](auto const &l) -> IRval {
-            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
+//            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
+            auto const &r = expr.args[1].template castValTo<std::remove_cvref_t<decltype(l)>>();
             switch (expr.op) {
                 case IR_ExprOper::REM:
                     return IRval::createVal(expr.args[0].getType(), l % r);
