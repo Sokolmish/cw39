@@ -312,6 +312,27 @@ void ControlFlowGraph::printBlock(std::stringstream &ss, IR_Block const &block) 
     fmt::print(ss, "\n");
 }
 
+static inline void writeEscapified(std::stringstream &ss, std::string const &str) {
+    static const std::map<char, std::string> escapes{
+            { '\\', "\\\\" },
+            { '\a', "\\a" },
+            { '\b', "\\b" },
+            { '\f', "\\f" },
+            { '\n', "\\n" },
+            { '\r', "\\r" },
+            { '\t', "\\t" },
+            { '\v', "\\v" },
+    };
+
+    for (char ch : str) {
+        auto it = escapes.find(ch);
+        if (it != escapes.end())
+            ss << it->second;
+        else
+            ss << ch;
+    }
+}
+
 std::string ControlFlowGraph::printIR() const {
     std::stringstream ss;
     for (auto const &[id, structDecl] : structs) {
@@ -323,8 +344,9 @@ std::string ControlFlowGraph::printIR() const {
     fmt::print(ss, "\n");
 
     for (auto const &[id, str] : strings) {
-        // TODO: print escape sequences
-        fmt::print(ss, "string_{} = \"{}\"\n", id, str);
+        fmt::print(ss, "string_{} = \"", id);
+        writeEscapified(ss, str);
+        ss << "\"\n";
     }
     fmt::print(ss, "\n");
 
