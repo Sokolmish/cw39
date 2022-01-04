@@ -21,6 +21,51 @@ std::shared_ptr<ControlFlowGraph> IR_Generator::getCfg() const {
 }
 
 
+std::optional<IRval> IR_Generator::emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr) {
+    curBlock().addNode(ret, std::move(expr));
+    return ret;
+}
+
+std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr) {
+    std::optional<IRval> res = {};
+    if (ret)
+        res = cfg->createReg(ret);
+    curBlock().addNode(res, std::move(expr));
+    return res;
+}
+
+std::optional<IRval>
+IR_Generator::emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
+    return emitNode(ret, std::make_unique<IR_ExprOper>(op, std::move(args)));
+}
+
+std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
+    auto expr = std::make_unique<IR_ExprOper>(IR_ExprOper::MOV, std::vector<IRval>{ std::move(src) });
+    return emitNode(std::move(dst), std::move(expr));
+}
+
+std::optional<IRval> IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
+    return emitNode(dst, std::make_unique<IR_ExprCast>(std::move(srcVal), dst));
+}
+
+std::optional<IRval>
+IR_Generator::emitCall(std::shared_ptr<IR_Type> ret, int callee, std::vector<IRval> args) {
+    return emitNode(ret, std::make_unique<IR_ExprCall>(callee, std::move(args)));
+}
+
+std::optional<IRval>
+IR_Generator::emitIndirCall(std::shared_ptr<IR_Type> ret, IRval callee, std::vector<IRval> args) {
+    return emitNode(ret, std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
+}
+
+std::optional<IRval>
+IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap) {
+    return emitNode(ret, std::make_unique<IR_ExprAlloc>(type, onHeap));
+}
+
+
+// Generator
+
 void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
     for (const auto &top_instr: ast->children) {
         if (top_instr->node_type == AST_FUNC_DEF)
@@ -116,11 +161,10 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     int curArgNum = 0;
     for (auto const &[argIdent, argType] : declArgs) {
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
-        IRval argPtr = cfg->createReg(argPtrType);
-        curBlock().addAllocNode(argPtr, argType);
+        IRval argPtr = *emitAlloc(argPtrType, argType);
 
         auto argVal = IRval::createFunArg(argType, curArgNum);
-        curBlock().addOperNode({}, IR_ExprOper::STORE, { argPtr, argVal });
+        emitOp({}, IR_ExprOper::STORE, { argPtr, argVal });
 
         variables.put(argIdent, argPtr);
         curArgNum++;
@@ -168,19 +212,25 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         // TODO: check for void allocation (and in globals too)
         std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
 
-        IRval res = cfg->createReg(ptrType);
-        if (activeLoops.empty())
-            curBlock().addAllocNode(res, varType);
-        else // Do not create allocations inside loops
-            cfg->block(activeLoops.front().before).addAllocNode(res, varType);
+        std::optional<IRval> var;
+        if (activeLoops.empty()) {
+            var = emitAlloc(ptrType, varType);
+        }
+        else { // Do not create allocations inside loops
+//            cfg->block(activeLoops.front().before).addAllocNode(var, varType);
+            IR_Block &cur = curBlock();
+            selectBlock(cfg->block(activeLoops.front().before));
+            var = emitAlloc(ptrType, varType);
+            selectBlock(cur);
+        }
 
         if (variables.hasOnTop(ident))
             semanticError("Variable already declared");
-        variables.put(ident, res);
+        variables.put(ident, *var);
 
         if (singleDecl->initializer) {
             IRval initVal = getInitializerVal(varType, *singleDecl->initializer);
-            curBlock().addOperNode({}, IR_ExprOper::STORE, { res, initVal });
+            emitOp({}, IR_ExprOper::STORE, { *var, initVal });
         }
     }
 }

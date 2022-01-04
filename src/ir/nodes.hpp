@@ -154,12 +154,6 @@ public:
     void addNode(IR_Node node);
     void addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr);
 
-    void addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args);
-    void addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest);
-    void addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args);
-    void addIndirectCallNode(std::optional<IRval> res, IRval callee, std::vector<IRval> args);
-    void addAllocNode(IRval res, std::shared_ptr<IR_Type> type, bool isOnHeap = false);
-
     void addNewPhiNode(IRval res);
 
     void setTerminator(IR_ExprTerminator::TermType type);

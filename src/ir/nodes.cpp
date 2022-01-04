@@ -318,28 +318,6 @@ void IR_Block::addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr) 
         body.emplace_back(std::move(expr));
 }
 
-void IR_Block::addOperNode(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
-    addNode(std::move(res), std::make_unique<IR_ExprOper>(op, std::move(args)));
-}
-
-void IR_Block::addCastNode(IRval res, IRval sourceVal, std::shared_ptr<IR_Type> dest) {
-    addNode(std::move(res), make_unique<IR_ExprCast>(std::move(sourceVal), std::move(dest)));
-}
-
-void IR_Block::addCallNode(std::optional<IRval> res, int callee, std::vector<IRval> args) {
-    addNode(std::move(res), std::make_unique<IR_ExprCall>(callee, std::move(args)));
-}
-
-void IR_Block::addIndirectCallNode(std::optional<IRval> res, IRval callee, std::vector<IRval> args) {
-    addNode(std::move(res), std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
-}
-
-void IR_Block::addAllocNode(IRval res, std::shared_ptr<IR_Type> type, bool isOnHeap) {
-    if (isOnHeap)
-        NOT_IMPLEMENTED("builtin malloc");
-    addNode(res, std::make_unique<IR_ExprAlloc>(std::move(type), 1ULL));
-}
-
 void IR_Block::addNewPhiNode(IRval res) {
     phis.emplace_back(std::move(res), std::make_unique<IR_ExprPhi>());
 }
