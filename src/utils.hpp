@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <optional>
+#include <variant>
 #include <fmt/core.h>
 #include <exception>
 
@@ -27,12 +28,13 @@
 
 
 template <typename T>
-inline bool isInList(T const &val, std::initializer_list<T> const &lst) {
+constexpr inline bool isInList(T const &val, std::initializer_list<T> const &lst) {
     for (auto const &e : lst)
         if (val == e)
             return true;
     return false;
 }
+
 
 template <typename K, typename V>
 class VariablesStack {
@@ -75,5 +77,30 @@ public:
         return data.back().contains(key);
     }
 };
+
+
+// https://stackoverflow.com/questions/61046705/casting-a-variant-to-super-set-variant-or-a-subset-variant
+template <class... Args>
+struct variant_cast_proxy {
+    std::variant<Args...> v;
+
+    template <class... ToArgs>
+    operator std::variant<ToArgs...>() const {
+        return std::visit(
+                [](auto &&arg) -> std::variant<ToArgs...> {
+                    static_assert((std::is_convertible_v<Args, std::variant<ToArgs...>> || ...),
+                                  "No possible variant that could be converted exists");
+                    if constexpr (std::is_convertible_v<decltype(arg), std::variant<ToArgs...>>)
+                        return arg;
+                    else
+                        throw std::runtime_error("bad variant cast");
+                }, v);
+    }
+};
+
+template <class... Args>
+auto variant_cast(const std::variant<Args...>& v) -> variant_cast_proxy<Args...> {
+    return { v };
+}
 
 #endif /* __UTILS_HPP__ */

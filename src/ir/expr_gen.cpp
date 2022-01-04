@@ -1,5 +1,33 @@
 #include "generator.hpp"
 
+bool IR_Generator::isGeneralNumOp(AST_Binop::OpType op) {
+    using b = AST_Binop;
+    return isInList(op, { b::ADD, b::SUB, b::DIV, b::MUL });
+}
+
+bool IR_Generator::isIntegerNumOp(AST_Binop::OpType op) {
+    using b = AST_Binop;
+    return isInList(op, { b::SHL, b::SHR, b::REM, b::BIT_AND, b::BIT_OR, b::BIT_XOR });
+}
+
+bool IR_Generator::isComparsionOp(AST_Binop::OpType op) {
+    using b = AST_Binop;
+    return isInList(op, { b::LT, b::GT, b::LE, b::GE, b::EQ, b::NE, b::LOG_AND, b::LOG_OR });
+}
+
+
+std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
+    bool lastShortLogicState = isShortLogicEnabled;
+    isShortLogicEnabled = false;
+    std::optional<IRval> val = evalExpr(node);
+    isShortLogicEnabled = lastShortLogicState;
+    if (val.has_value() && val->getValueClass() == IRval::VAL)
+        return val;
+    else
+        return {};
+}
+
+
 /** Creates pointer to element with given index in array pointed to by base */
 IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index) {
     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
@@ -168,6 +196,10 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::GE, { lhs, rhs });
         else if (op == bop::LE)
             res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LE, { lhs, rhs });
+        else if (op == bop::LOG_AND)
+            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LAND, { lhs, rhs });
+        else if (op == bop::LOG_OR)
+            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LOR, { lhs, rhs });
         else
             internalError("Wrong comparsion operation");
 
@@ -324,14 +356,9 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
 
         case AST_BINOP: {
             auto const &expr = static_cast<AST_Binop const &>(node);
-            if (!isInList(expr.op, { AST_Binop::LOG_AND, AST_Binop::LOG_OR })) {
-                IRval lhs = evalExpr(*expr.lhs);
-                IRval rhs = evalExpr(*expr.rhs);
-                return doBinOp(expr.op, lhs, rhs);
-            }
-            else {
+            if (isInList(expr.op, { AST_Binop::LOG_AND, AST_Binop::LOG_OR }) && isShortLogicEnabled)
                 return doShortLogicOp(expr.op, *expr.lhs, *expr.rhs);
-            }
+            return doBinOp(expr.op, evalExpr(*expr.lhs), evalExpr(*expr.rhs));
         }
 
         case AST_CAST: {
@@ -629,23 +656,25 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_Init
             NOT_IMPLEMENTED("designators");
         }
 
-        IRval elem = *evalConstantExpr(val->getExpr()); // TODO: optional
+        auto elem = evalConstantExpr(val->getExpr());
+        if (!elem.has_value())
+            semanticError("Non-constant value in compound literal");
         if (!val->is_compound) {
             if (type->type == IR_Type::ARRAY) {
                 auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
-                if (!elem.getType()->equal(*arrType.child))
+                if (!elem->getType()->equal(*arrType.child))
                     semanticError("Wrong type of initializer element");
             }
             else if (type->type == IR_Type::TSTRUCT) {
                 auto const &structType = dynamic_cast<IR_TypeStruct const &>(*type);
-                if (!elem.getType()->equal(*structType.fields.at(elemNum).irType))
+                if (!elem->getType()->equal(*structType.fields.at(elemNum).irType))
                     semanticError("Wrong type of initializer element");
             }
             else {
                 internalError("Compound initializer for non-aggregate type");
             }
 
-            aggrVals.push_back(elem);
+            aggrVals.push_back(*elem);
         }
         else {
             NOT_IMPLEMENTED("nested compound initializers");

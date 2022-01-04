@@ -45,8 +45,8 @@ block_2:                                          ; preds = %block_1
   br label %block_3
 
 block_3:                                          ; preds = %block_2, %block_1
-  %vr155 = phi i32 [ %.arg_1, %block_1 ], [ %.arg_0, %block_2 ]
-  %vr15 = add i32 %.arg_0, %vr155
+  %vr153 = phi i32 [ %.arg_1, %block_1 ], [ %.arg_0, %block_2 ]
+  %vr15 = add i32 %.arg_0, %vr153
   ret i32 %vr15
 }
 
@@ -79,9 +79,9 @@ block_7:                                          ; preds = %block_5
   br label %block_8
 
 block_8:                                          ; preds = %block_7, %block_6
-  %vr157 = phi i32 [ %vr25, %block_6 ], [ %vr32, %block_7 ]
+  %vr155 = phi i32 [ %vr25, %block_6 ], [ %vr32, %block_7 ]
   %vr34 = load i32, i32* %vr22, align 4
-  %vr35 = call i32 @add(i32 %vr157, i32 %vr34)
+  %vr35 = call i32 @add(i32 %vr155, i32 %vr34)
   store i32 %vr35, i32* %vr22, align 4
   %vr37 = alloca [16 x i8], align 1
   %vr38 = bitcast [16 x i8]* %vr37 to i8*
@@ -119,56 +119,56 @@ block_8:                                          ; preds = %block_7, %block_6
   br label %block_9
 
 block_9:                                          ; preds = %block_10, %block_8
-  %vr163 = phi i32 [ 10, %block_8 ], [ %vr85, %block_10 ]
-  %7 = icmp ne i32 %vr163, 0
+  %vr161 = phi i32 [ 10, %block_8 ], [ %vr83, %block_10 ]
+  %7 = icmp ne i32 %vr161, 0
   br i1 %7, label %block_10, label %block_11
 
 block_10:                                         ; preds = %block_9
-  %vr85 = sub i32 %vr163, 1
+  %vr83 = sub i32 %vr161, 1
   br label %block_9
 
 block_11:                                         ; preds = %block_9
-  %vr86 = alloca [4 x i32], align 4
+  %vr84 = alloca [4 x i32], align 4
   br label %block_12
 
 block_12:                                         ; preds = %block_13, %block_11
-  %vr164.1 = phi i32 [ 0, %block_11 ], [ %vr102, %block_13 ]
-  %vr89 = icmp slt i32 %vr164.1, 4
-  %vr90 = sext i1 %vr89 to i32
-  %8 = icmp ne i32 %vr90, 0
+  %vr162.1 = phi i32 [ 0, %block_11 ], [ %vr100, %block_13 ]
+  %vr87 = icmp slt i32 %vr162.1, 4
+  %vr88 = sext i1 %vr87 to i32
+  %8 = icmp ne i32 %vr88, 0
   br i1 %8, label %block_13, label %block_14
 
 block_13:                                         ; preds = %block_12
-  %vr93 = mul i32 %vr164.1, %vr164.1
-  %vr94 = bitcast [4 x i32]* %vr86 to i32*
-  %vr96 = zext i32 %vr164.1 to i64
-  %vr97 = shl i64 %vr96, 2
-  %vr98 = ptrtoint i32* %vr94 to i64
-  %vr99 = add i64 %vr98, %vr97
-  %vr100 = inttoptr i64 %vr99 to i32*
-  store i32 %vr93, i32* %vr100, align 4
-  %vr102 = add i32 %vr164.1, 1
+  %vr91 = mul i32 %vr162.1, %vr162.1
+  %vr92 = bitcast [4 x i32]* %vr84 to i32*
+  %vr94 = zext i32 %vr162.1 to i64
+  %vr95 = shl i64 %vr94, 2
+  %vr96 = ptrtoint i32* %vr92 to i64
+  %vr97 = add i64 %vr96, %vr95
+  %vr98 = inttoptr i64 %vr97 to i32*
+  store i32 %vr91, i32* %vr98, align 4
+  %vr100 = add i32 %vr162.1, 1
   br label %block_12
 
 block_14:                                         ; preds = %block_12
   br label %block_15
 
 block_15:                                         ; preds = %block_18, %block_14
-  %vr165 = phi i32 [ 0, %block_14 ], [ %vr108, %block_18 ]
-  %vr105 = icmp slt i32 %vr165, 4
-  %vr106 = sext i1 %vr105 to i32
-  %9 = icmp ne i32 %vr106, 0
+  %vr163 = phi i32 [ 0, %block_14 ], [ %vr106, %block_18 ]
+  %vr103 = icmp slt i32 %vr163, 4
+  %vr104 = sext i1 %vr103 to i32
+  %9 = icmp ne i32 %vr104, 0
   br i1 %9, label %block_16, label %block_17
 
 block_16:                                         ; preds = %block_15
-  %vr109 = bitcast [4 x i32]* %vr86 to i32*
-  %vr111 = zext i32 %vr165 to i64
-  %vr112 = shl i64 %vr111, 2
-  %vr113 = ptrtoint i32* %vr109 to i64
-  %vr114 = add i64 %vr113, %vr112
-  %vr115 = inttoptr i64 %vr114 to i32*
-  %vr116 = load i32, i32* %vr115, align 4
-  %10 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr116)
+  %vr107 = bitcast [4 x i32]* %vr84 to i32*
+  %vr109 = zext i32 %vr163 to i64
+  %vr110 = shl i64 %vr109, 2
+  %vr111 = ptrtoint i32* %vr107 to i64
+  %vr112 = add i64 %vr111, %vr110
+  %vr113 = inttoptr i64 %vr112 to i32*
+  %vr114 = load i32, i32* %vr113, align 4
+  %10 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr114)
   br label %block_18
 
 block_17:                                         ; preds = %block_15
@@ -176,19 +176,19 @@ block_17:                                         ; preds = %block_15
   br label %block_19
 
 block_18:                                         ; preds = %block_16
-  %vr108 = add i32 %vr165, 1
+  %vr106 = add i32 %vr163, 1
   br label %block_15
 
 block_19:                                         ; preds = %block_23, %block_17
-  %vr164.4 = phi i32 [ 3, %block_17 ], [ %vr120, %block_23 ]
+  %vr162.4 = phi i32 [ 3, %block_17 ], [ %vr118, %block_23 ]
   br i1 true, label %block_20, label %block_21
 
 block_20:                                         ; preds = %block_19
-  %vr120 = sub i32 %vr164.4, 1
-  %12 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr120)
-  %vr124 = icmp eq i32 %vr120, 0
-  %vr125 = sext i1 %vr124 to i32
-  %13 = icmp ne i32 %vr125, 0
+  %vr118 = sub i32 %vr162.4, 1
+  %12 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr118)
+  %vr122 = icmp eq i32 %vr118, 0
+  %vr123 = sext i1 %vr122 to i32
+  %13 = icmp ne i32 %vr123, 0
   br i1 %13, label %block_22, label %block_23
 
 block_21:                                         ; preds = %block_22, %block_19
@@ -202,32 +202,32 @@ block_23:                                         ; preds = %block_20
   br label %block_19
 
 block_25:                                         ; preds = %block_24, %block_21
-  %vr135.0 = phi i32 [ undef, %block_21 ], [ %vr135.2, %block_24 ]
-  %vr136.0 = phi i32 [ undef, %block_21 ], [ %vr136.2, %block_24 ]
-  %vr164.8 = phi i32 [ 0, %block_21 ], [ %vr164.11, %block_24 ]
-  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr164.8)
-  %vr133 = icmp eq i32 %vr164.8, 0
-  %vr134 = sext i1 %vr133 to i32
-  %16 = icmp ne i32 %vr134, 0
+  %vr133.0 = phi i32 [ undef, %block_21 ], [ %vr133.2, %block_24 ]
+  %vr134.0 = phi i32 [ undef, %block_21 ], [ %vr134.2, %block_24 ]
+  %vr162.8 = phi i32 [ 0, %block_21 ], [ %vr162.11, %block_24 ]
+  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr162.8)
+  %vr131 = icmp eq i32 %vr162.8, 0
+  %vr132 = sext i1 %vr131 to i32
+  %16 = icmp ne i32 %vr132, 0
   br i1 %16, label %block_27, label %block_28
 
 block_27:                                         ; preds = %block_25
   br label %block_29
 
 block_28:                                         ; preds = %block_25
-  %vr136.1 = sub i32 %vr164.8, 1
+  %vr134.1 = sub i32 %vr162.8, 1
   br label %block_29
 
 block_29:                                         ; preds = %block_28, %block_27
-  %vr135.2 = phi i32 [ %vr135.0, %block_27 ], [ %vr164.8, %block_28 ]
-  %vr136.2 = phi i32 [ %vr136.0, %block_27 ], [ %vr136.1, %block_28 ]
-  %vr164.11 = phi i32 [ 2, %block_27 ], [ %vr136.1, %block_28 ]
+  %vr133.2 = phi i32 [ %vr133.0, %block_27 ], [ %vr162.8, %block_28 ]
+  %vr134.2 = phi i32 [ %vr134.0, %block_27 ], [ %vr134.1, %block_28 ]
+  %vr162.11 = phi i32 [ 2, %block_27 ], [ %vr134.1, %block_28 ]
   br label %block_24
 
 block_24:                                         ; preds = %block_29
-  %vr128 = icmp ne i32 %vr164.11, 0
-  %vr129 = sext i1 %vr128 to i32
-  %17 = icmp ne i32 %vr129, 0
+  %vr126 = icmp ne i32 %vr162.11, 0
+  %vr127 = sext i1 %vr126 to i32
+  %17 = icmp ne i32 %vr127, 0
   br i1 %17, label %block_25, label %block_26
 
 block_26:                                         ; preds = %block_24
@@ -235,20 +235,20 @@ block_26:                                         ; preds = %block_24
   br label %block_30
 
 block_30:                                         ; preds = %block_33, %block_26
-  %vr166 = phi i32 [ 0, %block_26 ], [ %vr140, %block_33 ]
+  %vr164 = phi i32 [ 0, %block_26 ], [ %vr138, %block_33 ]
   br i1 true, label %block_31, label %block_32
 
 block_31:                                         ; preds = %block_30
-  %19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr166)
-  %vr144 = icmp eq i32 %vr166, 4
-  %vr145 = sext i1 %vr144 to i32
-  %20 = icmp ne i32 %vr145, 0
+  %19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr164)
+  %vr142 = icmp eq i32 %vr164, 4
+  %vr143 = sext i1 %vr142 to i32
+  %20 = icmp ne i32 %vr143, 0
   br i1 %20, label %block_34, label %block_35
 
 block_32:                                         ; preds = %block_34, %block_30
   %21 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str5, i32 0, i32 0))
-  %vr149 = call i32 @mysqr(i32 5)
-  %22 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str6, i32 0, i32 0), i32 %vr149)
+  %vr147 = call i32 @mysqr(i32 5)
+  %22 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str6, i32 0, i32 0), i32 %vr147)
   br label %block_36
 
 block_34:                                         ; preds = %block_31
@@ -261,11 +261,11 @@ block_36:                                         ; preds = %block_32
   br i1 true, label %block_37, label %block_38
 
 block_33:                                         ; preds = %block_35
-  %vr140 = add i32 %vr166, 1
+  %vr138 = add i32 %vr164, 1
   br label %block_30
 
 block_37:                                         ; preds = %block_36
-  ret i32 %vr157
+  ret i32 %vr155
 
 block_38:                                         ; preds = %block_36
   ret i32 199

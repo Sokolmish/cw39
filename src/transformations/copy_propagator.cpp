@@ -2,6 +2,7 @@
 #include "cfg_cleaner.hpp"
 #include "utils.hpp"
 #include "ir/generator.hpp"
+#include "ir/constants_folder.hpp"
 
 
 CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> const &rawCfg)
@@ -143,50 +144,5 @@ void CopyPropagator::foldConstants() {
 }
 
 IRval CopyPropagator::doConstOperation(const IR_ExprOper &oper) {
-    using bop = AST_Binop;
-
-    switch (oper.op) {
-        case IR_ExprOper::MUL:
-            return IR_Generator::doConstBinOperation(bop::MUL, oper.args[0], oper.args[1]);
-        case IR_ExprOper::DIV:
-            return IR_Generator::doConstBinOperation(bop::DIV, oper.args[0], oper.args[1]);
-        case IR_ExprOper::REM:
-            return IR_Generator::doConstBinOperation(bop::REM, oper.args[0], oper.args[1]);
-        case IR_ExprOper::ADD:
-            return IR_Generator::doConstBinOperation(bop::ADD, oper.args[0], oper.args[1]);
-        case IR_ExprOper::SUB:
-            return IR_Generator::doConstBinOperation(bop::SUB, oper.args[0], oper.args[1]);
-        case IR_ExprOper::SHR:
-            return IR_Generator::doConstBinOperation(bop::SHR, oper.args[0], oper.args[1]);
-        case IR_ExprOper::SHL:
-            return IR_Generator::doConstBinOperation(bop::SHL, oper.args[0], oper.args[1]);
-        case IR_ExprOper::XOR:
-            return IR_Generator::doConstBinOperation(bop::BIT_XOR, oper.args[0], oper.args[1]);
-        case IR_ExprOper::AND:
-            return IR_Generator::doConstBinOperation(bop::BIT_AND, oper.args[0], oper.args[1]);
-        case IR_ExprOper::OR:
-            return IR_Generator::doConstBinOperation(bop::BIT_OR, oper.args[0], oper.args[1]);
-        case IR_ExprOper::EQ:
-            return IR_Generator::doConstBinOperation(bop::EQ, oper.args[0], oper.args[1]);
-        case IR_ExprOper::NE:
-            return IR_Generator::doConstBinOperation(bop::NE, oper.args[0], oper.args[1]);
-        case IR_ExprOper::GT:
-            return IR_Generator::doConstBinOperation(bop::GT, oper.args[0], oper.args[1]);
-        case IR_ExprOper::LT:
-            return IR_Generator::doConstBinOperation(bop::LT, oper.args[0], oper.args[1]);
-        case IR_ExprOper::GE:
-            return IR_Generator::doConstBinOperation(bop::GE, oper.args[0], oper.args[1]);
-        case IR_ExprOper::LE:
-            return IR_Generator::doConstBinOperation(bop::LE, oper.args[0], oper.args[1]);
-
-        case IR_ExprOper::MOV:
-        case IR_ExprOper::LOAD:
-        case IR_ExprOper::STORE:
-        case IR_ExprOper::EXTRACT:
-        case IR_ExprOper::INSERT:
-        case IR_ExprOper::LAND:
-        case IR_ExprOper::LOR:
-        default:
-            semanticError("Unsupported operation");
-    }
+    return *ConstantsFolder::foldExpr(oper);
 }

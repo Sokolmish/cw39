@@ -37,7 +37,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/ir/generator.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/types_gen.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/expr_gen.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir/expr_const_gen.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir/constants_folder.cpp
 
         ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/dominators.cpp

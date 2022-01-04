@@ -1,4 +1,5 @@
 #include "generator.hpp"
+#include "constants_folder.hpp"
 
 IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}
 
@@ -22,16 +23,23 @@ std::shared_ptr<ControlFlowGraph> IR_Generator::getCfg() const {
 
 
 std::optional<IRval> IR_Generator::emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr) {
+    // TODO: check if in global context
     curBlock().addNode(ret, std::move(expr));
     return ret;
 }
 
 std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr) {
-    std::optional<IRval> res = {};
-    if (ret)
-        res = cfg->createReg(ret);
-    curBlock().addNode(res, std::move(expr));
-    return res;
+    // Store and non-pure calls will never be folded
+    auto val = ConstantsFolder::foldExpr(*expr);
+    if (val.has_value()) {
+        return val;
+    }
+    else {
+        std::optional<IRval> res = {};
+        if (ret)
+            res = cfg->createReg(ret);
+        return emitNode(res, std::move(expr));
+    }
 }
 
 std::optional<IRval>

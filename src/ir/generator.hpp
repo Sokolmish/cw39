@@ -42,6 +42,9 @@ private:
 
     std::map<string_id_t, int> labels;
 
+    bool isShortLogicEnabled = true;
+
+
     std::optional<IRval> emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr);
     std::optional<IRval> emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr);
 
@@ -65,7 +68,9 @@ private:
     void insertCompoundStatement(AST_CompoundStmt const &stmt);
     void insertLabeledStatement(const AST_LabeledStmt &stmt);
 
-    std::optional<IRval> evalConstantExpr(AST_Expr const &node);
+    static bool isGeneralNumOp(AST_Binop::OpType op);
+    static bool isIntegerNumOp(AST_Binop::OpType op);
+    static bool isComparsionOp(AST_Binop::OpType op);
 
     IRval getPtrWithOffset(IRval const &base, IRval const &index);
     void doAssignment(AST_Expr const &dest, IRval const &wrValue);
@@ -76,6 +81,8 @@ private:
     IRval getLiteralIRval(AST_Literal const &lit);
     std::optional<IRval> getPtrToVariable(string_id_t ident);
     IRval getCompoundVal(std::shared_ptr<IR_Type> type, AST_InitializerList const &lst);
+
+    std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 
     std::shared_ptr<IR_Type> getStructType(AST_StructOrUsionSpec const &spec);
     typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
@@ -101,12 +108,6 @@ public:
 
     void parseAST(std::shared_ptr<AST_TranslationUnit> const &ast);
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
-
-    // Some util functions used in transformations
-    static bool isGeneralNumOp(AST_Binop::OpType op);
-    static bool isIntegerNumOp(AST_Binop::OpType op);
-    static bool isComparsionOp(AST_Binop::OpType op);
-    static IRval doConstBinOperation(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
 };
 
 #endif /* __GENERATOR_HPP__ */
