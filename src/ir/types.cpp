@@ -63,25 +63,50 @@ std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
     return std::make_shared<IR_TypeDirect>(spec);
 }
 
-// TODO: replace with getters
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_void =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i8 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u8 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U8);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i32 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u32 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U32);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_i64 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::I64);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_u64 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f32 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
-std::shared_ptr<IR_TypeDirect> IR_TypeDirect::type_f64 =
-        std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::staticTypes[9] = {};
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getStaticType(size_t index, DirType type) {
+    if (!staticTypes[index])
+        staticTypes[index] = std::make_shared<IR_TypeDirect>(type);
+    return staticTypes[index];
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getVoid() {
+    return getStaticType(0, IR_TypeDirect::VOID);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getI8() {
+    return getStaticType(1, IR_TypeDirect::I8);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getU8() {
+    return getStaticType(2, IR_TypeDirect::U8);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getI32() {
+    return getStaticType(3, IR_TypeDirect::I32);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getU32() {
+    return getStaticType(4, IR_TypeDirect::U32);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getI64() {
+    return getStaticType(5, IR_TypeDirect::I64);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getU64() {
+    return getStaticType(6, IR_TypeDirect::U64);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getF32() {
+    return getStaticType(7, IR_TypeDirect::F32);
+}
+
+std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getF64() {
+    return getStaticType(8, IR_TypeDirect::F64);
+}
 
 
 // IR_TypeStruct

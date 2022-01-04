@@ -33,18 +33,18 @@ IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index) {
     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
 
     IRval fixedIndex = index;
-    if (!fixedIndex.getType()->equal(*IR_TypeDirect::type_u64))
-        fixedIndex = *emitCast(index, IR_TypeDirect::type_u64);
+    if (!fixedIndex.getType()->equal(*IR_TypeDirect::getU64()))
+        fixedIndex = *emitCast(index, IR_TypeDirect::getU64());
 
     IRval scaledIndex = fixedIndex;
     if (ptrType->child->getBytesSize() != 1) {
-        IRval mult = IRval::createVal(IR_TypeDirect::type_u64,
+        IRval mult = IRval::createVal(IR_TypeDirect::getU64(),
                                       static_cast<uint64_t>(ptrType->child->getBytesSize()));
         scaledIndex = *emitOp(fixedIndex.getType(), IR_ExprOper::MUL, { fixedIndex, mult });
     }
 
-    IRval iptr = *emitCast(base, IR_TypeDirect::type_u64);
-    IRval wOffset = *emitOp(IR_TypeDirect::type_u64, IR_ExprOper::ADD, { iptr, scaledIndex });
+    IRval iptr = *emitCast(base, IR_TypeDirect::getU64());
+    IRval wOffset = *emitOp(IR_TypeDirect::getU64(), IR_ExprOper::ADD, { iptr, scaledIndex });
     return *emitCast(wOffset, ptrType);
 }
 
@@ -97,7 +97,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             if (!field->irType->equal(*wrValue.getType()))
                 semanticError("Cannot assign values of different types");
 
-            IRval index = IRval::createVal(IR_TypeDirect::type_u64,
+            IRval index = IRval::createVal(IR_TypeDirect::getU64(),
                                            static_cast<uint64_t>(field->index));
             IRval res = *emitOp(base.getType(), IR_ExprOper::INSERT, { base, index, wrValue });
 
@@ -185,25 +185,25 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
     else if (isComparsionOp(op)) {
         std::optional<IRval> res;
         if (op == bop::EQ) // TODO: i1
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::EQ, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::EQ, { lhs, rhs });
         else if (op == bop::NE)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::NE, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::NE, { lhs, rhs });
         else if (op == bop::GT)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::GT, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::GT, { lhs, rhs });
         else if (op == bop::LT)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LT, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LT, { lhs, rhs });
         else if (op == bop::GE)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::GE, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::GE, { lhs, rhs });
         else if (op == bop::LE)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LE, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LE, { lhs, rhs });
         else if (op == bop::LOG_AND)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LAND, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LAND, { lhs, rhs });
         else if (op == bop::LOG_OR)
-            res = emitOp(IR_TypeDirect::type_i8, IR_ExprOper::LOR, { lhs, rhs });
+            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LOR, { lhs, rhs });
         else
             internalError("Wrong comparsion operation");
 
-        return *emitCast(*res, IR_TypeDirect::type_i32);
+        return *emitCast(*res, IR_TypeDirect::getI32());
     }
     else {
         internalError("Wrong binary operation");
@@ -380,7 +380,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 if (typeName != nullptr) {
                     auto irType = getType(*typeName);
                     uint64_t bytesSize = irType->getBytesSize();
-                    return IRval::createVal(IR_TypeDirect::type_u64, bytesSize);
+                    return IRval::createVal(IR_TypeDirect::getU64(), bytesSize);
                 }
                 else {
                     NOT_IMPLEMENTED("Sizeof expression");
@@ -403,8 +403,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             else if (expr.op == uop::UN_NOT) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval zero = IRval::createVal(arg.getType(), 0U);
-                IRval res = *emitOp(IR_TypeDirect::type_i8, IR_ExprOper::EQ, { arg, zero }); // TODO: i1
-                return *emitCast(res, IR_TypeDirect::type_i32);
+                IRval res = *emitOp(IR_TypeDirect::getI8(), IR_ExprOper::EQ, { arg, zero }); // TODO: i1
+                return *emitCast(res, IR_TypeDirect::getI32());
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {
                 auto const &baseExpr = dynamic_cast<AST_Expr &>(*expr.child);
@@ -527,7 +527,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                     semanticError("Structure has no such field");
 
                 IRval index = IRval::createVal(
-                        IR_TypeDirect::type_u64,
+                        IR_TypeDirect::getU64(),
                         static_cast<uint64_t>(field->index));
                 return *emitOp(field->irType, IR_ExprOper::EXTRACT, { object, index });
             }

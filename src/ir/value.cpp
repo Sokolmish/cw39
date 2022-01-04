@@ -30,7 +30,7 @@ IRval IRval::createFunArg(std::shared_ptr<IR_Type> type, uint64_t num) {
 }
 
 IRval IRval::createString(uint64_t num) {
-    auto strType = std::make_shared<IR_TypePtr>(IR_TypeDirect::type_i8);
+    auto strType = std::make_shared<IR_TypePtr>(IR_TypeDirect::getI8());
 //    auto strPtrType = std::make_shared<IR_TypePtr>(strType);
 //    strType->is_const = true;
     return IRval(IRval::STRING, std::move(strType), num);

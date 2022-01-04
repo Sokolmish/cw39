@@ -368,7 +368,7 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     selectBlock(blockCond);
     auto const &condNode = stmt.getCond();
     // In 'for' loops condition can be absent
-    IRval cond = condNode ? evalExpr(*condNode) : IRval::createVal(IR_TypeDirect::type_i32, 1);
+    IRval cond = condNode ? evalExpr(*condNode) : IRval::createVal(IR_TypeDirect::getI32(), 1);
     curBlock().setTerminator(IR_ExprTerminator::BRANCH, cond);
     cfg->linkBlocks(curBlock(), blockLoop);
     cfg->linkBlocks(curBlock(), blockAfter);
@@ -430,7 +430,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
             curBlock().setTerminator(IR_ExprTerminator::RET, retVal);
         }
         else {
-            if (!curFunctionType->ret->equal(*IR_TypeDirect::type_void))
+            if (!curFunctionType->ret->equal(*IR_TypeDirect::getVoid()))
                 semanticError("Cannot return value in void function");
             curBlock().setTerminator(IR_ExprTerminator::RET);
         }

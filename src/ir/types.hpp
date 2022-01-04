@@ -28,7 +28,8 @@ struct IR_Type {
     virtual int getBytesSize() const = 0;
 };
 
-struct IR_TypeDirect : public IR_Type {
+class IR_TypeDirect : public IR_Type {
+public:
     enum DirType {
         VOID, I8, U8, I32, U32, I64, U64, F32, F64
     } spec;
@@ -43,15 +44,19 @@ struct IR_TypeDirect : public IR_Type {
     [[nodiscard]] bool isUnsigned() const;
     [[nodiscard]] int getBytesSize() const override;
 
-    static std::shared_ptr<IR_TypeDirect> type_void;
-    static std::shared_ptr<IR_TypeDirect> type_i8;
-    static std::shared_ptr<IR_TypeDirect> type_u8;
-    static std::shared_ptr<IR_TypeDirect> type_i32;
-    static std::shared_ptr<IR_TypeDirect> type_u32;
-    static std::shared_ptr<IR_TypeDirect> type_i64;
-    static std::shared_ptr<IR_TypeDirect> type_u64;
-    static std::shared_ptr<IR_TypeDirect> type_f32;
-    static std::shared_ptr<IR_TypeDirect> type_f64;
+    static std::shared_ptr<IR_TypeDirect> getVoid();
+    static std::shared_ptr<IR_TypeDirect> getI8();
+    static std::shared_ptr<IR_TypeDirect> getU8();
+    static std::shared_ptr<IR_TypeDirect> getI32();
+    static std::shared_ptr<IR_TypeDirect> getU32();
+    static std::shared_ptr<IR_TypeDirect> getI64();
+    static std::shared_ptr<IR_TypeDirect> getU64();
+    static std::shared_ptr<IR_TypeDirect> getF32();
+    static std::shared_ptr<IR_TypeDirect> getF64();
+
+private:
+    static std::shared_ptr<IR_TypeDirect> getStaticType(size_t index, DirType type);
+    static std::shared_ptr<IR_TypeDirect> staticTypes[9];
 };
 
 struct IR_TypeStruct : IR_Type {

@@ -52,21 +52,21 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
             // TODO: i1
             switch (expr.op) {
                 case IR_ExprOper::LAND:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l && r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l && r));
                 case IR_ExprOper::LOR:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l || r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l || r));
                 case IR_ExprOper::EQ:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l == r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l == r));
                 case IR_ExprOper::NE:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l != r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l != r));
                 case IR_ExprOper::GT:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l > r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l > r));
                 case IR_ExprOper::LT:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l < r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l < r));
                 case IR_ExprOper::GE:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l >= r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l >= r));
                 case IR_ExprOper::LE:
-                    return IRval::createVal(IR_TypeDirect::type_i8, static_cast<int8_t>(l <= r));
+                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l <= r));
                 default:
                     internalError("Wrong comparsion operation");
             }
@@ -133,21 +133,21 @@ std::optional<IRval> ConstantsFolder::foldCast(const IR_ExprCast &expr) {
     auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(expr.dest);
     switch (dirType->spec) {
         case IR_TypeDirect::I8:
-            return IRval::createVal(IR_TypeDirect::type_i8, expr.arg.castValTo<int8_t>());
+            return IRval::createVal(IR_TypeDirect::getI8(), expr.arg.castValTo<int8_t>());
         case IR_TypeDirect::U8:
-            return IRval::createVal(IR_TypeDirect::type_u8, expr.arg.castValTo<uint8_t>());
+            return IRval::createVal(IR_TypeDirect::getU8(), expr.arg.castValTo<uint8_t>());
         case IR_TypeDirect::I32:
-            return IRval::createVal(IR_TypeDirect::type_i32, expr.arg.castValTo<int32_t>());
+            return IRval::createVal(IR_TypeDirect::getI32(), expr.arg.castValTo<int32_t>());
         case IR_TypeDirect::U32:
-            return IRval::createVal(IR_TypeDirect::type_u32, expr.arg.castValTo<uint32_t>());
+            return IRval::createVal(IR_TypeDirect::getU32(), expr.arg.castValTo<uint32_t>());
         case IR_TypeDirect::I64:
-            return IRval::createVal(IR_TypeDirect::type_i64, expr.arg.castValTo<int64_t>());
+            return IRval::createVal(IR_TypeDirect::getI64(), expr.arg.castValTo<int64_t>());
         case IR_TypeDirect::U64:
-            return IRval::createVal(IR_TypeDirect::type_u64, expr.arg.castValTo<uint64_t>());
+            return IRval::createVal(IR_TypeDirect::getU64(), expr.arg.castValTo<uint64_t>());
         case IR_TypeDirect::F32:
-            return IRval::createVal(IR_TypeDirect::type_f32, expr.arg.castValTo<float>());
+            return IRval::createVal(IR_TypeDirect::getF32(), expr.arg.castValTo<float>());
         case IR_TypeDirect::F64:
-            return IRval::createVal(IR_TypeDirect::type_f64, expr.arg.castValTo<double>());
+            return IRval::createVal(IR_TypeDirect::getF64(), expr.arg.castValTo<double>());
 
         case IR_TypeDirect::VOID:
             internalError("Cast to void is prohibited");
