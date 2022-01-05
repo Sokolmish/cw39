@@ -129,7 +129,13 @@ std::shared_ptr<IR_Type> IR_TypeStruct::copy() const {
 }
 
 int IR_TypeStruct::getBytesSize() const {
-    NOT_IMPLEMENTED("Structs size");
+    int res = 0;
+    for (const auto &field : fields) {
+        int cur = field.irType->getBytesSize();
+        res += (res % cur) + cur;
+    }
+    res += res % 8;
+    return res;
 }
 
 IR_TypeStruct::StructField const* IR_TypeStruct::getField(string_id_t id) const {
