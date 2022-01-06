@@ -9,11 +9,6 @@ source_filename = "top"
 @.str5 = private unnamed_addr constant [6 x i8] c"true\0A\00", align 1
 @.str6 = private unnamed_addr constant [7 x i8] c"false\0A\00", align 1
 
-define internal void @__dummy_func() {
-dummy_block:
-  ret void
-}
-
 declare i32 @printf(i8*, ...)
 
 declare i8* @memcpy(i8*, i8*, i64)

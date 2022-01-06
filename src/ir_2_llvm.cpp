@@ -24,7 +24,8 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
-//#include "llvm/IR/Verifier.h"
+#include "llvm/IR/Verifier.h"
+
 //#include "llvm/ExecutionEngine/ExecutionEngine.h"
 //#include "llvm/Support/TargetSelect.h"
 
@@ -48,9 +49,10 @@ public:
     void createBlock(int id);
     void buildOperation(IR_Node const &node);
     void buildCast(IR_Node const &node);
+    void buildCall(IR_Node const &node);
 
-    Type* getTypeFromIR(IR_Type const &ir_type);
-    Constant* getConstantFromIR(IRval const &val);
+    Type* getType(IR_Type const &ir_type);
+    Constant* getConstant(IRval const &val);
     Value* getValue(IRval const &val);
 
     Function *curFunction = nullptr;
@@ -92,7 +94,7 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
 
     Function *dummyFunc = Function::Create(FunctionType::get(builder->getVoidTy(), false),
                                            Function::InternalLinkage, "__dummy_func", *module);
-    BasicBlock *dummyEntryBlock = BasicBlock::Create(*context, "dummy_block", dummyFunc);
+    BasicBlock *dummyEntryBlock = BasicBlock::Create(*context, "__dummy_block", dummyFunc);
     builder->SetInsertPoint(dummyEntryBlock);
     builder->CreateRet(nullptr);
 
@@ -101,12 +103,15 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
     createPrototypes();
     createFunctions();
 
+    dummyFunc->eraseFromParent();
+
     raw_string_ostream output(parent->llvmIR);
     module->print(output, nullptr);
 
     builder.reset();
     module.reset();
     context.reset();
+    doms.reset();
 }
 
 
@@ -114,33 +119,33 @@ void IR2LLVM_Impl::createTypes() {
     for (auto const &[sId, tstruct] : parent->cfg->getStructs()) {
         std::vector<Type*> elements;
         for (auto const &elem : tstruct->fields)
-            elements.push_back(getTypeFromIR(*elem.irType));
-        auto type =
-                StructType::create(*context, elements, fmt::format("struct{}", tstruct->structId));
+            elements.push_back(getType(*elem.irType));
+        std::string structName = fmt::format("struct{}", tstruct->structId);
+        auto type = StructType::create(*context, elements, structName, false);
         structTypes.emplace(tstruct->structId, type);
     }
 }
 
 void IR2LLVM_Impl::createGlobals() {
     for (auto const &[sId, str] : parent->cfg->getStrings()) {
-        auto res = builder->CreateGlobalStringPtr(StringRef(str), fmt::format(".str{}", sId));
+        Value *res = builder->CreateGlobalStringPtr(StringRef(str), fmt::format(".str{}", sId));
         strings.emplace(sId, res);
     }
     for (auto const &[gId, global] : parent->cfg->getGlobals()) {
         auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(global.type);
         auto gType = ptrType->child;
-                module->getOrInsertGlobal(global.name, getTypeFromIR(*gType));
+        module->getOrInsertGlobal(global.name, getType(*gType));
         GlobalVariable *gVar = module->getNamedGlobal(global.name);
         gVar->setLinkage(GlobalValue::InternalLinkage);
         gVar->setAlignment(Align(8));
-        gVar->setInitializer(getConstantFromIR(global.init));
+        gVar->setInitializer(getConstant(global.init));
         gVar->setConstant(false);
 
         globals.emplace(gId, gVar);
     }
 }
 
-Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
+Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
     if (ir_type.type == IR_Type::DIRECT) {
         auto const &dirType = dynamic_cast<IR_TypeDirect const &>(ir_type);
         switch (dirType.spec) {
@@ -172,11 +177,11 @@ Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
                 return PointerType::getUnqual(builder->getInt8Ty());
         }
 
-        return PointerType::getUnqual(getTypeFromIR(*ptrType.child));
+        return PointerType::getUnqual(getType(*ptrType.child));
     }
     else if (ir_type.type == IR_Type::ARRAY) {
         auto const &arrType = dynamic_cast<IR_TypeArray const &>(ir_type);
-        return ArrayType::get(getTypeFromIR(*arrType.child), arrType.size);
+        return ArrayType::get(getType(*arrType.child), arrType.size);
     }
     else if (ir_type.type == IR_Type::TSTRUCT) {
         auto const &structType = dynamic_cast<IR_TypeStruct const &>(ir_type);
@@ -186,53 +191,18 @@ Type* IR2LLVM_Impl::getTypeFromIR(const IR_Type &ir_type) {
         auto const &funType = dynamic_cast<IR_TypeFunc const &>(ir_type);
         std::vector<Type*> args;
         for (auto const &arg : funType.args)
-            args.push_back(getTypeFromIR(*arg));
-        return FunctionType::get(getTypeFromIR(*funType.ret), args, funType.isVariadic);
+            args.push_back(getType(*arg));
+        return FunctionType::get(getType(*funType.ret), args, funType.isVariadic);
     }
     else {
         semanticError("Unknown type");
     }
 }
 
-// TODO: remove code repeating
-Constant *IR2LLVM_Impl::getConstantFromIR(IRval const &val) {
+Constant *IR2LLVM_Impl::getConstant(IRval const &val) {
     if (!val.isConstant())
         semanticError("LLVM Not a constant value");
-
-    if (val.getValueClass() == IRval::ZEROINIT)
-        return ConstantAggregateZero::get(getTypeFromIR(*val.getType()));
-
-    auto valTypeClass = val.getType()->type;
-    if (valTypeClass == IR_Type::DIRECT) {
-        auto const &dirType = dynamic_cast<IR_TypeDirect const &>(*val.getType());
-        switch (dirType.spec) {
-            case IR_TypeDirect::VOID:
-                semanticError("LLVM Cannot create void constant");
-            case IR_TypeDirect::I8:
-                return builder->getInt8(val.castValTo<int8_t>());
-            case IR_TypeDirect::U8:
-                return builder->getInt8(val.castValTo<uint8_t>());
-            case IR_TypeDirect::I32:
-                return builder->getInt32(val.castValTo<int32_t>());
-            case IR_TypeDirect::U32:
-                return builder->getInt32(val.castValTo<uint32_t>());
-            case IR_TypeDirect::I64:
-                return builder->getInt64(val.castValTo<int64_t>());
-            case IR_TypeDirect::U64:
-                return builder->getInt64(val.castValTo<uint64_t>());
-            case IR_TypeDirect::F32:
-                return ConstantFP::get(builder->getFloatTy(), val.castValTo<float>());
-            case IR_TypeDirect::F64:
-                return ConstantFP::get(builder->getDoubleTy(), val.castValTo<double>());
-        }
-    }
-    else if (valTypeClass == IR_Type::TSTRUCT || valTypeClass == IR_Type::ARRAY) {
-        return dyn_cast<Constant>(getValue(val));
-    }
-    else {
-        internalError("LLVM non constant type");
-    }
-    throw;
+    return dyn_cast<Constant>(getValue(val));
 }
 
 Value* IR2LLVM_Impl::getValue(const IRval &val) {
@@ -244,9 +214,9 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
             }
             else if (dirType.isFloat()) {
                 if (dirType.getBytesSize() == 4)
-                    return ConstantFP::get(builder->getFloatTy(), val.castValTo<float>());
+                    return ConstantFP::get(builder->getFloatTy(), APFloat(val.castValTo<float>()));
                 else
-                    return ConstantFP::get(builder->getDoubleTy(), val.castValTo<double>());
+                    return ConstantFP::get(builder->getDoubleTy(), APFloat(val.castValTo<double>()));
             }
             else {
                 semanticError("Wrong constant type");
@@ -254,7 +224,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
         }
 
         case IRval::AGGREGATE: {
-            Type *aggregateType = getTypeFromIR(*val.getType());
+            Type *aggregateType = getType(*val.getType());
             std::vector<Constant *> args;
             for (auto const &elem : val.getAggregateVal())
                 args.push_back(dyn_cast<Constant>(getValue(elem)));
@@ -283,10 +253,10 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
             return curFunction->getArg(val.castValTo<int>());
 
         case IRval::UNDEF:
-            return UndefValue::get(getTypeFromIR(*val.getType()));
+            return UndefValue::get(getType(*val.getType()));
 
         case IRval::ZEROINIT:
-            return ConstantAggregateZero::get(getTypeFromIR(*val.getType()));
+            return ConstantAggregateZero::get(getType(*val.getType()));
     }
     throw;
 }
@@ -295,10 +265,10 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
 void IR2LLVM_Impl::createPrototypes() {
     for (auto const &[fId, func] : parent->cfg->getPrototypes()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
-        Type *retType = getTypeFromIR(*irFuncType->ret);
+        Type *retType = getType(*irFuncType->ret);
         std::vector<Type*> args;
         for (auto const &arg : irFuncType->args)
-            args.push_back(getTypeFromIR(*arg));
+            args.push_back(getType(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
         auto prototype = Function::Create(ftype, Function::ExternalLinkage, func.getName(), *module);
         functions.emplace(fId, prototype);
@@ -306,19 +276,19 @@ void IR2LLVM_Impl::createPrototypes() {
 }
 
 void IR2LLVM_Impl::createFunctions() {
-    for (auto const &[fId, func]: parent->cfg->getFuncs()) {
+    for (auto const &[fId, func] : parent->cfg->getFuncs()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
-        Type *retType = getTypeFromIR(*irFuncType->ret);
+        Type *retType = getType(*irFuncType->ret);
         std::vector<Type *> args;
-        for (auto const &arg: irFuncType->args)
-            args.push_back(getTypeFromIR(*arg));
+        for (auto const &arg : irFuncType->args)
+            args.push_back(getType(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
 
         curFunction = Function::Create(ftype, Function::ExternalLinkage, func.getName(), *module);
         functions.emplace(fId, curFunction);
 
         int argsCntr = 0;
-        for (auto &arg: curFunction->args()) {
+        for (auto &arg : curFunction->args()) {
             arg.setName(fmt::format(".arg_{}", argsCntr));
             argsCntr++;
         }
@@ -330,14 +300,14 @@ void IR2LLVM_Impl::createFunctions() {
             int cur = queue.front();
             queue.pop_front();
             visited.insert(cur);
-            for (int next: doms->getChildren(cur))
+            for (int next : doms->getChildren(cur))
                 queue.push_back(next);
 
             createBlock(cur);
         }
 
         // Link blocks
-        for (int blockId: visited) {
+        for (int blockId : visited) {
             auto const &cfgBlock = parent->cfg->block(blockId);
             IR_ExprTerminator const *term = cfgBlock.getTerminator();
             if (term->termType == IR_ExprTerminator::JUMP) {
@@ -346,33 +316,31 @@ void IR2LLVM_Impl::createFunctions() {
             }
             else if (term->termType == IR_ExprTerminator::BRANCH) {
                 builder->SetInsertPoint(blocksMap.at(blockId));
-
                 Value *cond = getValue(*term->arg);
                 if (cond->getType()->getIntegerBitWidth() != 1) {
-                    cond = builder->CreateICmpNE(
-                            cond,
-                            builder->getIntN(term->arg->getType()->getBytesSize() * 8, 0ULL));
+                    Constant *zero = ConstantInt::get(getType(*term->arg->getType()), 0ULL);
+                    cond = builder->CreateICmpNE(cond, zero);
                 }
-
-                builder->CreateCondBr(
-                        cond,
-                        blocksMap.at(cfgBlock.next.at(0)),
-                        blocksMap.at(cfgBlock.next.at(1)));
+                builder->CreateCondBr(cond, blocksMap.at(cfgBlock.next.at(0)),
+                                      blocksMap.at(cfgBlock.next.at(1)));
             }
         }
 
         // Link phis
-        for (int blockId: visited) {
+        for (int blockId : visited) {
             auto const &cfgBlock = parent->cfg->block(blockId);
-            for (auto const &phiNode: cfgBlock.phis) {
+            for (auto const &phiNode : cfgBlock.phis) {
                 auto cfgPhiFunc = phiNode.body->getPhi();
-                auto ph = unfilledPhis.at(*phiNode.res);
-                for (auto const &[pos, arg]: cfgPhiFunc.args) {
+                PHINode *ph = unfilledPhis.at(*phiNode.res);
+                for (auto const &[pos, arg] : cfgPhiFunc.args) {
                     ph->addIncoming(getValue(arg), blocksMap.at(cfgBlock.prev.at(pos)));
                 }
             }
         }
         unfilledPhis.clear();
+
+        if (verifyFunction(*curFunction))
+            fmt::print(stderr, "Verification failed: {}\n", func.getName());
     }
 }
 
@@ -385,7 +353,7 @@ void IR2LLVM_Impl::createBlock(int id) {
 
     for (auto const &phiNode : cfgBlock.phis) {
         PHINode *phiFunc = builder->CreatePHI(
-                getTypeFromIR(*phiNode.res->getType()),
+                getType(*phiNode.res->getType()),
                 phiNode.body->getPhi().args.size(),
                 phiNode.res->to_reg_name());
         unfilledPhis.emplace(*phiNode.res, phiFunc);
@@ -401,9 +369,8 @@ void IR2LLVM_Impl::createBlock(int id) {
 
             case IR_Expr::ALLOCATION: {
                 auto allocExpr = node.body->getAlloc();
-                Value *res = builder->CreateAlloca(getTypeFromIR(*allocExpr.type),
-                                                   nullptr,
-                                                   node.res->to_reg_name());
+                std::string resName = node.res->to_reg_name();
+                Value *res = builder->CreateAlloca(getType(*allocExpr.type), nullptr, resName);
                 regsMap.emplace(*node.res, res);
                 break;
             }
@@ -414,55 +381,23 @@ void IR2LLVM_Impl::createBlock(int id) {
             }
 
             case IR_Expr::CALL: {
-                auto const &callExpr = node.body->getCall();
-
-                std::vector<Value *> args;
-                for (auto const &arg: callExpr.args)
-                    args.push_back(getValue(arg));
-
-                if (callExpr.isIndirect()) {
-                    auto ptrVal = callExpr.getFuncPtr();
-                    auto irPtrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
-                    auto irFuncType = irPtrType->child;
-                    auto funcTy = dyn_cast<FunctionType>(getTypeFromIR(*irFuncType));
-                    if (node.res.has_value()) {
-                        auto res = builder->CreateCall(
-                                funcTy, getValue(ptrVal), args, node.res->to_reg_name());
-                        regsMap.emplace(*node.res, res);
-                    }
-                    else {
-                        builder->CreateCall(funcTy, getValue(ptrVal), args);
-                    }
-                }
-                else {
-                    auto func = functions.at(callExpr.getFuncId());
-                    if (node.res.has_value()) {
-                        auto res = builder->CreateCall(func, args, node.res->to_reg_name());
-                        regsMap.emplace(*node.res, res);
-                    }
-                    else {
-                        builder->CreateCall(func, args);
-                    }
-                }
+                buildCall(node);
                 break;
             }
 
-            case IR_Expr::TERM: {
+            case IR_Expr::TERM:
                 semanticError("LLVM Term node in general list");
-            }
-            case IR_Expr::PHI: {
-                semanticError("LLVM Phi node in general list");
-            }
-            default: {
+            case IR_Expr::PHI:
+                semanticError("LLVM phi node in general list");
+            default:
                 semanticError("Wrong node type");
-            }
         }
     }
 
     if (!cfgBlock.termNode.has_value())
         semanticError("Unterminated block");
     IR_ExprTerminator const *termNode = cfgBlock.getTerminator();
-    // Branches and jumps are handled when blocks linked
+    // Branches and jumps are handled when blocks linking
     if (termNode->termType == IR_ExprTerminator::RET) {
         if (termNode->arg.has_value())
             builder->CreateRet(getValue(*termNode->arg));
@@ -601,7 +536,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
 
         case IR_ExprOper::LOAD: {
             auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.args[0].getType());
-            res = builder->CreateLoad(getTypeFromIR(*ptrTp.child), getValue(oper.args[0]), name);
+            res = builder->CreateLoad(getType(*ptrTp.child), getValue(oper.args[0]), name);
             break;
         }
 
@@ -624,77 +559,88 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             break;
 
         case IR_ExprOper::MOV:
-            NOT_IMPLEMENTED("mov");
+            res = getValue(oper.args[0]);
+            break;
 
         default:
             semanticError("Wrong op value");
     }
-    if (res) {
+    if (res)
         regsMap.emplace(*node.res, res);
+}
+
+static auto getCastOp(IR_ExprCast::CastType op) {
+    switch (op) {
+        case IR_ExprCast::BITCAST:
+            return &IRBuilder<>::CreateBitCast;
+        case IR_ExprCast::SEXT:
+            return &IRBuilder<>::CreateSExt;
+        case IR_ExprCast::ZEXT:
+            return &IRBuilder<>::CreateZExt;
+        case IR_ExprCast::TRUNC:
+            return &IRBuilder<>::CreateTrunc;
+        case IR_ExprCast::FPTOUI:
+            return &IRBuilder<>::CreateFPToUI;
+        case IR_ExprCast::FPTOSI:
+            return &IRBuilder<>::CreateFPToSI;
+        case IR_ExprCast::UITOFP:
+            return &IRBuilder<>::CreateUIToFP;
+        case IR_ExprCast::SITOFP:
+            return &IRBuilder<>::CreateSIToFP;
+        case IR_ExprCast::PTRTOI:
+            return &IRBuilder<>::CreatePtrToInt;
+        case IR_ExprCast::ITOPTR:
+            return &IRBuilder<>::CreateIntToPtr;
+        case IR_ExprCast::FPTRUNC:
+            return &IRBuilder<>::CreateFPTrunc;
+        case IR_ExprCast::FPEXT:
+            return &IRBuilder<>::CreateFPExt;
+        default:
+            semanticError("Wrong cast type");
     }
 }
 
 void IR2LLVM_Impl::buildCast(IR_Node const &node) {
     auto const &castExpr = node.body->getCast();
 
-    auto argVal = getValue(castExpr.arg);
-    auto destType = getTypeFromIR(*castExpr.dest);
+    Value *argVal = getValue(castExpr.arg);
+    Type *destType = getType(*castExpr.dest);
     std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
-    Value *res = nullptr;
 
-    switch (castExpr.castOp) {
-        case IR_ExprCast::BITCAST:
-            res = builder->CreateBitCast(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::SEXT:
-            res = builder->CreateSExt(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::ZEXT:
-            res = builder->CreateZExt(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::TRUNC:
-            res = builder->CreateTrunc(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::FPTOUI:
-            res = builder->CreateFPToUI(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::FPTOSI:
-            res = builder->CreateFPToSI(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::UITOFP:
-            res = builder->CreateUIToFP(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::SITOFP:
-            res = builder->CreateSIToFP(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::PTRTOI:
-            res = builder->CreatePtrToInt(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::ITOPTR:
-            res = builder->CreateIntToPtr(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::FPTRUNC:
-            res = builder->CreateFPTrunc(argVal, destType, name);
-            break;
-
-        case IR_ExprCast::FPEXT:
-            res = builder->CreateFPExt(argVal, destType, name);
-            break;
-
-        default:
-            semanticError("Wrong cast type");
-    }
-    if (res) {
+    Value *res = ((*builder).*getCastOp(castExpr.castOp))(argVal, destType, name);
+    if (res)
         regsMap.emplace(*node.res, res);
+}
+
+void IR2LLVM::IR2LLVM_Impl::buildCall(const IR_Node &node) {
+    auto const &callExpr = node.body->getCall();
+
+    std::vector<Value *> args;
+    for (IRval const &arg: callExpr.args)
+        args.push_back(getValue(arg));
+
+    if (callExpr.isIndirect()) {
+        IRval ptrVal = callExpr.getFuncPtr();
+        auto irPtrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
+        auto irFuncType = irPtrType->child;
+        auto funcTy = dyn_cast<FunctionType>(getType(*irFuncType));
+        if (node.res.has_value()) {
+            Value *res = builder->CreateCall(
+                    funcTy, getValue(ptrVal), args, node.res->to_reg_name());
+            regsMap.emplace(*node.res, res);
+        }
+        else {
+            builder->CreateCall(funcTy, getValue(ptrVal), args);
+        }
+    }
+    else {
+        Function *func = functions.at(callExpr.getFuncId());
+        if (node.res.has_value()) {
+            Value *res = builder->CreateCall(func, args, node.res->to_reg_name());
+            regsMap.emplace(*node.res, res);
+        }
+        else {
+            builder->CreateCall(func, args);
+        }
     }
 }
