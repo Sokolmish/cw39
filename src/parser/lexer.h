@@ -50,7 +50,6 @@ void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra);
 void destroy_scanner(yyscan_t scanner);
 
 string_id_t get_ident_id(const char *ident, int *type);
-string_id_t get_string_id(const char *str);
 
 AST_Literal_t get_integer(const char *str);
 AST_Literal_t get_float(const char *str);

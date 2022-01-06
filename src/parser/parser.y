@@ -48,6 +48,8 @@
 	struct AST_Expr *expr;
 
 	struct AST_ArgumentsList *args_list;
+	struct AST_StringsSeq *str_seq;
+
 	struct AST_DeclSpecifiers *decl_specifiers;
 	struct AST_TypeSpecifier *type_specifier;
 	struct AST_StructDeclarationList *struct_decl_lst;
@@ -96,6 +98,7 @@
 %token <num_literal> CONSTANT
 %token <str> STRING_LITERAL
 
+%type <str_seq> strings_seq
 %type <expr> primary_expr
 %type <expr> postfix_expr
 %type <args_list> arg_expr_lst
@@ -171,11 +174,16 @@
 primary_expr
 	: IDENTIFIER							    { $$ = AST_Primary::makeIdent($1); }
 	| CONSTANT								    { $$ = AST_Primary::makeConst($1); }
-	| STRING_LITERAL						    { $$ = AST_Primary::makeStr($1); }
+	| strings_seq						        { $$ = AST_Primary::makeStr($1); }
 	| '(' expr ')'							    { $$ = AST_Primary::makeExpr($2); }
     | '(' type_name ')' '{' init_lst '}'        { $$ = AST_Primary::makeCompound($2, $5); }
     | '(' type_name ')' '{' init_lst ',' '}'    { $$ = AST_Primary::makeCompound($2, $5); }
 	;
+
+strings_seq
+    : STRING_LITERAL                            { $$ = (new AST_StringsSeq())->append($1); }
+    | strings_seq STRING_LITERAL                { $$ = $1->append($2); }
+    ;
 
 postfix_expr
 	: primary_expr							{ $$ = $1; }

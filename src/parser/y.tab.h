@@ -190,6 +190,8 @@ union YYSTYPE
 	struct AST_Expr *expr;
 
 	struct AST_ArgumentsList *args_list;
+	struct AST_StringsSeq *str_seq;
+
 	struct AST_DeclSpecifiers *decl_specifiers;
 	struct AST_TypeSpecifier *type_specifier;
 	struct AST_StructDeclarationList *struct_decl_lst;
@@ -232,7 +234,7 @@ union YYSTYPE
 	struct AST_FunctionDef *func_def;
 	struct AST_TranslationUnit *trans_unit;
 
-#line 236 "y.tab.h"
+#line 238 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

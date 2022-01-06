@@ -144,8 +144,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
     using bop = AST_Binop;
 
     if (lhs.getType()->type != IR_Type::DIRECT)
-        NOT_IMPLEMENTED("Pointers arithmetics");
-
+        semanticError("Wrong arithmetic type");
     if (!lhs.getType()->equal(*rhs.getType()))
         semanticError("Cannot do binary operation on different types");
 
@@ -576,15 +575,13 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 return evalExpr(expr.getExpr());
             }
             else if (expr.type == AST_Primary::STR) {
-                // TODO: string literals concatenation
-                string_id_t parserStrId = expr.getString();
-                auto it = strings.lower_bound(parserStrId);
-                if (it->first == parserStrId)
+                auto [strId, fullStr] = getStringLiteral(expr.getString());
+                auto it = strings.lower_bound(strId);
+                if (it->first == strId)
                     return it->second;
 
-                IRval str = IRval::createString(
-                        cfg->putString(get_string_by_id(parserStrId)));
-                strings.emplace_hint(it, parserStrId, str);
+                IRval str = IRval::createString(cfg->putString(fullStr));
+                strings.emplace_hint(it, strId, str);
                 return str;
             }
             else if (expr.type == AST_Primary::COMPOUND) {
@@ -719,4 +716,19 @@ std::optional<IRval> IR_Generator::getPtrToVariable(string_id_t ident) {
         return globalIt->second;
 
     return {};
+}
+
+std::pair<string_id_t, std::string> IR_Generator::getStringLiteral(AST_StringsSeq const &scat) {
+    string_id_t parserStrId;
+    std::string fullStr = "";
+    if (scat.v.size() == 1) {
+        parserStrId = scat.v[0];
+        fullStr = get_string_by_id(parserStrId);
+    }
+    else {
+        for (string_id_t sId : scat.v)
+            fullStr += get_string_by_id(sId);
+        parserStrId = get_string_id(fullStr.c_str());
+    }
+    return std::make_pair(parserStrId, fullStr);
 }

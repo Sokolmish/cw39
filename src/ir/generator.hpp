@@ -80,6 +80,7 @@ private:
     IRval evalExpr(AST_Expr const &node);
     IRval getLiteralIRval(AST_Literal const &lit);
     std::optional<IRval> getPtrToVariable(string_id_t ident);
+    std::pair<string_id_t, std::string> getStringLiteral(const AST_StringsSeq &scat);
     IRval getCompoundVal(std::shared_ptr<IR_Type> type, AST_InitializerList const &lst);
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);

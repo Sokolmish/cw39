@@ -28,9 +28,9 @@ AST_Primary* AST_Primary::makeExpr(AST_Expr *expr) {
     return res;
 }
 
-AST_Primary* AST_Primary::makeStr(string_id_t str) {
+AST_Primary* AST_Primary::makeStr(AST_StringsSeq *str) {
     auto res = new AST_Primary(AST_Primary::STR);
-    res->v = str;
+    res->v = uniqify(str);
     return res;
 }
 
@@ -53,8 +53,8 @@ string_id_t AST_Primary::getIdent() const {
     return std::get<string_id_t>(v);
 }
 
-string_id_t AST_Primary::getString() const {
-    return std::get<string_id_t>(v);
+AST_StringsSeq const& AST_Primary::getString() const {
+    return *std::get<std::unique_ptr<AST_StringsSeq>>(v);
 }
 
 AST_Literal AST_Primary::getLiteral() const {
@@ -75,7 +75,6 @@ TreeNodeRef AST_Primary::getTreeNode() const {
         if (type == AST_Primary::IDENT)
             str = get_ident_by_id(std::get<string_id_t>(v));
         else if (type == AST_Primary::CONST)
-//            str = "val="s + std::to_string(std::get<uint64_t>(v));
             str = "LITERAL"; // TODO
         else if (type == AST_Primary::STR)
             str = "str["s + std::to_string(std::get<string_id_t>(v)) + "]"s;
@@ -84,6 +83,25 @@ TreeNodeRef AST_Primary::getTreeNode() const {
     else {
         return std::get<uniq<AST_Expr>>(v)->getTreeNode();
     }
+}
+
+
+// AST_StringsSeq
+
+AST_StringsSeq::AST_StringsSeq() : AST_Node(AST_STR_SEQ) {}
+
+AST_StringsSeq *AST_StringsSeq::append(string_id_t str) {
+    v.emplace_back(str);
+    return this;
+}
+
+TreeNodeRef AST_StringsSeq::getTreeNode() const {
+    if (v.size() == 1)
+        return TreeNode::create("str["s + std::to_string(v.at(0)) + "]"s);
+    auto node = TreeNode::create("concat");
+    for (auto const &str : v)
+        node->addChild(TreeNode::create("str["s + std::to_string(str) + "]"s));
+    return node;
 }
 
 

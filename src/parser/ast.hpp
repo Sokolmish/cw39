@@ -22,7 +22,7 @@ enum : ast_enum_t {
     AST_DIR_DECLARATOR, AST_POINTER, AST_PARAM_DECL, AST_PARAM_TYPE_LST, AST_PARAM_LST,
     AST_TYPE_NAME, AST_DESIGNATOR, AST_INITIALIZER_LST, AST_INITIALIZER,
     AST_STATEMENT, AST_BLOCK_ITEM_LST, AST_FUNC_DEF, AST_TRANS_UNIT,
-    AST_DIR_ABSTRACT_DECL, AST_ABSTRACT_DECL,
+    AST_DIR_ABSTRACT_DECL, AST_ABSTRACT_DECL, AST_STR_SEQ,
 };
 
 struct AST_Node {
@@ -64,6 +64,14 @@ struct AST_Expr : public AST_Node {
     explicit AST_Expr(int type) : AST_Node(type) {}
 };
 
+struct AST_StringsSeq : public AST_Node {
+    std::vector<string_id_t> v;
+
+    AST_StringsSeq();
+    AST_StringsSeq* append(string_id_t str);
+    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+};
+
 struct AST_Primary : public AST_Expr {
     struct CompoundLiteral {
         std::unique_ptr<AST_TypeName> compType = nullptr;
@@ -71,17 +79,19 @@ struct AST_Primary : public AST_Expr {
     };
 
     enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST, COMPOUND } type;
-    std::variant<uniq<AST_Expr>, string_id_t, AST_Literal, CompoundLiteral> v;
+    std::variant<
+        uniq<AST_Expr>, uniq<AST_StringsSeq>, string_id_t, AST_Literal, CompoundLiteral
+    > v;
 
     string_id_t getIdent() const;
-    string_id_t getString() const;
+    AST_StringsSeq const& getString() const;
     AST_Literal getLiteral() const;
     AST_Expr const& getExpr() const;
     CompoundLiteral const& getCompound() const;
 
     static AST_Primary* makeIdent(string_id_t id);
     static AST_Primary* makeExpr(AST_Expr *expr);
-    static AST_Primary* makeStr(string_id_t str);
+    static AST_Primary* makeStr(AST_StringsSeq *str);
     static AST_Primary* makeConst(AST_Literal val);
     static AST_Primary* makeCompound(AST_TypeName *compType, AST_InitializerList *init_lst);
 
