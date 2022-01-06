@@ -9,6 +9,10 @@ IR_ExprOper const &IR_Expr::getOper() const {
     return dynamic_cast<IR_ExprOper const&>(*this);
 }
 
+IR_ExprMem const &IR_Expr::getMem() const {
+    return dynamic_cast<IR_ExprMem const&>(*this);
+}
+
 IR_ExprAlloc const &IR_Expr::getAlloc() const {
     return dynamic_cast<IR_ExprAlloc const&>(*this);
 }
@@ -69,12 +73,44 @@ std::string IR_ExprOper::opToString() const {
         case LT:         return "lt";
         case GE:         return "ge";
         case LE:         return "le";
-        case LOAD:       return "load";
-        case STORE:      return "store";
         case EXTRACT:    return "extract";
         case INSERT:     return "insert";
         case MOV:        return "mov";
-//        case IR_GEP:        return "gep";
+    }
+    throw;
+}
+
+
+// IR_ExprMem
+
+IR_ExprMem::IR_ExprMem(IR_ExprMem::MemOps op, IRval ptr)
+        : IR_Expr(MEMORY), op(op), addr(std::move(ptr)), val() {}
+
+IR_ExprMem::IR_ExprMem(IR_ExprMem::MemOps op, IRval ptr, IRval val)
+        : IR_Expr(MEMORY), op(op), addr(std::move(ptr)), val(std::move(val)) {}
+
+std::unique_ptr<IR_Expr> IR_ExprMem::copy() const {
+    if (op == LOAD)
+        return std::make_unique<IR_ExprMem>(op, addr.copy());
+    else if (op == STORE)
+        return std::make_unique<IR_ExprMem>(op, addr.copy(), val->copy());
+    else
+        internalError("Wrong memory operation");
+}
+
+std::vector<IRval *> IR_ExprMem::getArgs() {
+    if (val.has_value())
+        return { &addr, &val.value() };
+    else
+        return { &addr };
+}
+
+std::string IR_ExprMem::to_string() const {
+    switch (op) {
+        case LOAD:
+            return fmt::format("load {}", addr.to_string());
+        case STORE:
+            return fmt::format("store {} {}", addr.to_string(), val->to_string());
     }
     throw;
 }

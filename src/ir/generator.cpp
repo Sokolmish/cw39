@@ -42,9 +42,8 @@ std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::u
     }
 }
 
-std::optional<IRval>
-IR_Generator::emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
-    return emitNode(ret, std::make_unique<IR_ExprOper>(op, std::move(args)));
+IRval IR_Generator::emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
+    return *emitNode(ret, std::make_unique<IR_ExprOper>(op, std::move(args)));
 }
 
 std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
@@ -52,8 +51,18 @@ std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
     return emitNode(std::move(dst), std::move(expr));
 }
 
-std::optional<IRval> IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
-    return emitNode(dst, std::make_unique<IR_ExprCast>(std::move(srcVal), dst));
+void IR_Generator::emitStore(IRval addr, IRval val) {
+    auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::STORE, std::move(addr), std::move(val));
+    emitNode(std::nullopt, std::move(expr));
+}
+
+IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr) {
+    auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::LOAD, std::move(addr));
+    return *emitNode(ret, std::move(expr));
+}
+
+IRval IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
+    return *emitNode(dst, std::make_unique<IR_ExprCast>(std::move(srcVal), dst));
 }
 
 std::optional<IRval>
@@ -66,9 +75,8 @@ IR_Generator::emitIndirCall(std::shared_ptr<IR_Type> ret, IRval callee, std::vec
     return emitNode(ret, std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
 }
 
-std::optional<IRval>
-IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap) {
-    return emitNode(ret, std::make_unique<IR_ExprAlloc>(type, onHeap));
+IRval IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap) {
+    return *emitNode(ret, std::make_unique<IR_ExprAlloc>(type, onHeap));
 }
 
 
@@ -169,10 +177,10 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     int curArgNum = 0;
     for (auto const &[argIdent, argType] : declArgs) {
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
-        IRval argPtr = *emitAlloc(argPtrType, argType);
+        IRval argPtr = emitAlloc(argPtrType, argType);
 
         auto argVal = IRval::createFunArg(argType, curArgNum);
-        emitOp({}, IR_ExprOper::STORE, { argPtr, argVal });
+        emitStore(argPtr, argVal);
 
         variables.put(argIdent, argPtr);
         curArgNum++;
@@ -238,7 +246,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
 
         if (singleDecl->initializer) {
             IRval initVal = getInitializerVal(varType, *singleDecl->initializer);
-            emitOp({}, IR_ExprOper::STORE, { *var, initVal });
+            emitStore(*var, initVal);
         }
     }
 }

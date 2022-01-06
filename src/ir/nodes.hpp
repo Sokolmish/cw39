@@ -16,6 +16,7 @@
 // Expressions
 
 struct IR_ExprOper;
+struct IR_ExprMem;
 struct IR_ExprAlloc;
 struct IR_ExprCast;
 struct IR_ExprCall;
@@ -23,7 +24,7 @@ struct IR_ExprTerminator;
 struct IR_ExprPhi;
 
 struct IR_Expr {
-    enum Type { OPERATION, ALLOCATION, CAST, CALL, TERM, PHI } type;
+    enum Type { OPERATION, MEMORY, ALLOCATION, CAST, CALL, TERM, PHI } type;
 
     explicit IR_Expr(Type type);
     virtual ~IR_Expr() = default;
@@ -31,6 +32,7 @@ struct IR_Expr {
     virtual std::vector<IRval*> getArgs() = 0;
 
     IR_ExprOper const& getOper() const;
+    IR_ExprMem const& getMem() const;
     IR_ExprAlloc const& getAlloc() const;
     IR_ExprCast const& getCast() const;
     IR_ExprCall const& getCall() const;
@@ -39,12 +41,11 @@ struct IR_Expr {
 };
 
 struct IR_ExprOper : public IR_Expr {
-    // TODO: move memory operations into separate category
     enum IR_Ops {
         MUL, DIV, REM, ADD, SUB, SHR, SHL,
         XOR, AND, OR, LAND, LOR,
         EQ, NE, GT, LT, GE, LE,
-        LOAD, STORE, EXTRACT, INSERT, MOV // GEP
+        EXTRACT, INSERT, MOV,
     };
 
     IR_Ops op;
@@ -55,6 +56,21 @@ struct IR_ExprOper : public IR_Expr {
     std::vector<IRval*> getArgs() override;
 
     std::string opToString() const;
+};
+
+struct IR_ExprMem : public IR_Expr {
+    enum MemOps { LOAD, STORE };
+
+    MemOps op;
+    IRval addr;
+    std::optional<IRval> val;
+
+    IR_ExprMem(MemOps op, IRval ptr);
+    IR_ExprMem(MemOps op, IRval ptr, IRval val);
+    std::unique_ptr<IR_Expr> copy() const override;
+    std::vector<IRval*> getArgs() override;
+
+    std::string to_string() const;
 };
 
 struct IR_ExprAlloc : public IR_Expr {

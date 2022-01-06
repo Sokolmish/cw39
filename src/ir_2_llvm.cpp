@@ -47,7 +47,9 @@ public:
 
     void createFunctions();
     void createBlock(int id);
+
     void buildOperation(IR_Node const &node);
+    void buildMemOp(const IR_Node &node);
     void buildCast(IR_Node const &node);
     void buildCall(IR_Node const &node);
 
@@ -70,6 +72,7 @@ public:
 
     IR2LLVM_Impl(IR2LLVM_Impl const&) = delete;
     IR2LLVM_Impl& operator=(IR2LLVM_Impl const&) = delete;
+
 };
 
 using IR2LLVM_Impl = IR2LLVM::IR2LLVM_Impl;
@@ -366,7 +369,10 @@ void IR2LLVM_Impl::createBlock(int id) {
                 buildOperation(node);
                 break;
             }
-
+            case IR_Expr::MEMORY: {
+                buildMemOp(node);
+                break;
+            }
             case IR_Expr::ALLOCATION: {
                 auto allocExpr = node.body->getAlloc();
                 std::string resName = node.res->to_reg_name();
@@ -374,17 +380,14 @@ void IR2LLVM_Impl::createBlock(int id) {
                 regsMap.emplace(*node.res, res);
                 break;
             }
-
             case IR_Expr::CAST: {
                 buildCast(node);
                 break;
             }
-
             case IR_Expr::CALL: {
                 buildCall(node);
                 break;
             }
-
             case IR_Expr::TERM:
                 semanticError("LLVM Term node in general list");
             case IR_Expr::PHI:
@@ -534,16 +537,6 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 res = builder->CreateICmpULE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_ExprOper::LOAD: {
-            auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.args[0].getType());
-            res = builder->CreateLoad(getType(*ptrTp.child), getValue(oper.args[0]), name);
-            break;
-        }
-
-        case IR_ExprOper::STORE:
-            builder->CreateStore(getValue(oper.args[1]), getValue(oper.args[0]));
-            break;
-
         case IR_ExprOper::EXTRACT:
             res = builder->CreateExtractValue(
                     getValue(oper.args[0]),
@@ -567,6 +560,25 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
     }
     if (res)
         regsMap.emplace(*node.res, res);
+}
+
+void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
+    const IR_ExprMem &oper = node.body->getMem();
+    switch (oper.op) {
+        case IR_ExprMem::LOAD: {
+            auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.addr.getType());
+            std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
+            Value *res = builder->CreateLoad(getType(*ptrTp.child), getValue(oper.addr), name);
+            regsMap.emplace(*node.res, res);
+            break;
+        }
+        case IR_ExprMem::STORE: {
+            builder->CreateStore(getValue(*oper.val), getValue(oper.addr));
+            break;
+        }
+        default:
+            semanticError("Wrong op value");
+    }
 }
 
 static auto getCastOp(IR_ExprCast::CastType op) {

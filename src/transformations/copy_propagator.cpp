@@ -35,12 +35,15 @@ void CopyPropagator::propagateCopies() {
         changed = false;
         visited.clear();
 
-        for (auto const &[fId, func]: cfg->getFuncs()) {
+        for (auto const &[fId, func] : cfg->getFuncs()) {
             cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
                 auto &curBlock = cfg->block(blockId);
 
-                for (auto *node: curBlock.getAllNodes()) {
-                    if (node->res && node->res->isVReg() && node->body && node->body->type == IR_Expr::OPERATION) {
+                for (auto *node : curBlock.getAllNodes()) {
+                    if (!node->body)
+                        continue;
+
+                    if (node->res && node->res->isVReg() && node->body->type == IR_Expr::OPERATION) {
                         auto oper = dynamic_cast<IR_ExprOper &>(*node->body);
                         if (oper.op == IR_ExprOper::MOV) {
                             changed = true;
@@ -51,7 +54,7 @@ void CopyPropagator::propagateCopies() {
                     }
 
                     if (node->body) {
-                        for (auto *arg: node->body->getArgs()) {
+                        for (auto *arg : node->body->getArgs()) {
                             auto it = remlacementMap.find(*arg);
                             if (it != remlacementMap.end()) {
                                 changed = true;
@@ -74,24 +77,23 @@ void CopyPropagator::foldConstants() {
         changed = false;
         visited.clear();
 
-        for (auto const &[fId, func]: cfg->getFuncs()) {
+        for (auto const &[fId, func] : cfg->getFuncs()) {
             cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
                 auto &curBlock = cfg->block(blockId);
-                for (auto *node: curBlock.getAllNodes()) {
+                for (auto *node : curBlock.getAllNodes()) {
                     if (!node->body)
                         continue;
 
                     if (node->body->type == IR_Expr::OPERATION) {
                         auto &operExpr = dynamic_cast<IR_ExprOper &>(*node->body);
 
-                        if (isInList(operExpr.op, { IR_ExprOper::MOV, IR_ExprOper::STORE,
-                                                    IR_ExprOper::LOAD, IR_ExprOper::INSERT,
+                        if (isInList(operExpr.op, { IR_ExprOper::MOV, IR_ExprOper::INSERT,
                                                     IR_ExprOper::EXTRACT })) {
                             continue;
                         }
 
                         bool isConst = true;
-                        for (auto const &arg: operExpr.args) {
+                        for (auto const &arg : operExpr.args) {
                             if (!arg.isConstant()) {
                                 isConst = false;
                                 break;

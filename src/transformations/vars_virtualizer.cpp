@@ -60,13 +60,13 @@ void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
             toRedudeList.emplace(*instr.res, std::optional<IRval>());
         }
         else {
-            auto oper = dynamic_cast<IR_ExprOper const *>(instr.body.get());
+            auto oper = dynamic_cast<IR_ExprMem const *>(instr.body.get());
             if (oper) {
-                if (oper->op == IR_ExprOper::LOAD) {
+                if (oper->op == IR_ExprMem::LOAD) {
                     continue;
                 }
-                else if (oper->op == IR_ExprOper::STORE) {
-                    auto it = toRedudeList.find(oper->args[1]);
+                else if (oper->op == IR_ExprMem::STORE) {
+                    auto it = toRedudeList.find(*oper->val);
                     if (it != toRedudeList.end())
                         toRedudeList.erase(it);
                     continue;
@@ -99,20 +99,20 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
             }
         }
 
-        // Replace store instructions
-        if (instr.body->type == IR_Expr::OPERATION) {
-            auto oper = dynamic_cast<IR_ExprOper const *>(instr.body.get());
+        // Replace memory instructions
+        if (instr.body->type == IR_Expr::MEMORY) {
+            auto oper = dynamic_cast<IR_ExprMem const *>(instr.body.get());
             if (oper) {
-                if (oper->op == IR_ExprOper::STORE) {
-                    auto it = toRedudeList.find(oper->args[0]);
+                if (oper->op == IR_ExprMem::STORE) {
+                    auto it = toRedudeList.find(oper->addr);
                     if (it != toRedudeList.end()) {
                         instr.res = it->second;
                         instr.body = std::make_unique<IR_ExprOper>(
-                                IR_ExprOper::MOV, std::vector<IRval>{ oper->args[1] });
+                                IR_ExprOper::MOV, std::vector<IRval>{ *oper->val });
                     }
                 }
-                else if (oper->op == IR_ExprOper::LOAD) {
-                    auto it = toRedudeList.find(oper->args[0]);
+                else if (oper->op == IR_ExprMem::LOAD) {
+                    auto it = toRedudeList.find(oper->addr);
                     if (it != toRedudeList.end()) {
                         instr.body = std::make_unique<IR_ExprOper>(
                                 IR_ExprOper::MOV, std::vector<IRval>{ *it->second });

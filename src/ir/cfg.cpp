@@ -270,6 +270,10 @@ void ControlFlowGraph::printBlock(std::stringstream &ss, IR_Block const &block) 
             auto const &expr = dynamic_cast<IR_ExprAlloc const &>(*node.body);
             fmt::print(ss, "{} {} x {}\n", expr.opToString(), printType(*expr.type), expr.size);
         }
+        else if (node.body->type == IR_Expr::MEMORY) {
+            auto const &expr = dynamic_cast<IR_ExprMem const &>(*node.body);
+            fmt::print(ss, "{}\n", expr.to_string());
+        }
         else if (node.body->type == IR_Expr::CAST) {
             auto const &expr = dynamic_cast<IR_ExprCast const &>(*node.body);
             fmt::print(ss, "{} {} : {} -> {}\n", expr.opToString(), expr.arg.to_string(),
@@ -439,6 +443,10 @@ void ControlFlowGraph::drawBlock(std::stringstream &ss, IR_Block const &block) c
             for (auto const &arg: expr.args)
                 fmt::print(ssb, " {}", arg.to_string());
             fmt::print(ssb, "\\l");
+        }
+        else if (node.body->type == IR_Expr::MEMORY) {
+            auto const &expr = dynamic_cast<IR_ExprMem const &>(*node.body);
+            fmt::print(ss, "{}\\l", expr.to_string());
         }
         else if (node.body->type == IR_Expr::ALLOCATION) {
             auto const &expr = dynamic_cast<IR_ExprAlloc const &>(*node.body);

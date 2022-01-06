@@ -100,12 +100,12 @@ void CfgCleaner::removeUselessNodes() {
                     if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
                         changed = true;
                         node->res = {};
-                        if (node->body->type == IR_Expr::CALL)
+
+                        auto const &body = node->body;
+                        if (body->type == IR_Expr::CALL)
                             continue;
-                        else if (node->body->type == IR_Expr::OPERATION) {
-                            if (isInList(node->body->getOper().op, { IR_ExprOper::STORE, IR_ExprOper::INSERT }))
-                                continue;
-                        }
+                        else if (body->type == IR_Expr::MEMORY && body->getMem().op == IR_ExprMem::STORE)
+                            continue;
                         node->body = nullptr;
                     }
                 }

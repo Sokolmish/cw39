@@ -11,6 +11,7 @@ std::optional<IRval> ConstantsFolder::foldExpr(const IR_Expr &expr) {
             return foldPhi(dynamic_cast<IR_ExprPhi const &>(expr));
 
         case IR_Expr::CALL: // TODO: pure functions
+        case IR_Expr::MEMORY:
         case IR_Expr::ALLOCATION:
         case IR_Expr::TERM:
             return {};
@@ -21,9 +22,6 @@ std::optional<IRval> ConstantsFolder::foldExpr(const IR_Expr &expr) {
 }
 
 std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
-    if (isInList(expr.op, { IR_ExprOper::LOAD, IR_ExprOper::STORE }))
-        return {};
-
     // TODO: extract from aggregate?
     for (auto const &arg : expr.args)
         if (arg.getValueClass() != IRval::VAL)
@@ -33,7 +31,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
         return std::visit([&expr](auto const &l) -> IRval {
             // TODO: create constants with exact variant type
 //            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
-            auto const &r = expr.args[1].template castValTo<std::remove_cvref_t<decltype(l)>>();
+            auto const &r = expr.args[1].castValTo<std::remove_cvref_t<decltype(l)>>();
             switch (expr.op) {
                 case IR_ExprOper::ADD:
                     return IRval::createVal(expr.args[0].getType(), l + r);
@@ -51,7 +49,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
     else if (isComparsionOp(expr.op)) {
         return std::visit([&expr](auto const &l) -> IRval {
 //            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
-            auto const &r = expr.args[1].template castValTo<std::remove_cvref_t<decltype(l)>>();
+            auto const &r = expr.args[1].castValTo<std::remove_cvref_t<decltype(l)>>();
             // TODO: i1
             switch (expr.op) {
                 case IR_ExprOper::LAND:
@@ -81,7 +79,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
         intVariant_t intVariant = variant_cast(expr.args[0].getVal());
         return std::visit([&expr](auto const &l) -> IRval {
 //            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
-            auto const &r = expr.args[1].template castValTo<std::remove_cvref_t<decltype(l)>>();
+            auto const &r = expr.args[1].castValTo<std::remove_cvref_t<decltype(l)>>();
             switch (expr.op) {
                 case IR_ExprOper::REM:
                     return IRval::createVal(expr.args[0].getType(), l % r);
