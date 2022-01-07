@@ -26,6 +26,7 @@ struct IR_Type {
     virtual bool equal(IR_Type const &rhs) const = 0;
     virtual std::shared_ptr<IR_Type> copy() const = 0;
     virtual int getBytesSize() const = 0;
+    virtual std::string to_string() const = 0;
 };
 
 class IR_TypeDirect : public IR_Type {
@@ -37,6 +38,7 @@ public:
     explicit IR_TypeDirect(DirType spec);
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
+    std::string to_string() const override;
 
     [[nodiscard]] bool isInteger() const;
     [[nodiscard]] bool isFloat() const;
@@ -75,6 +77,8 @@ struct IR_TypeStruct : IR_Type {
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
     int getBytesSize() const override;
+    std::string to_string() const override;
+
     StructField const* getField(string_id_t id) const;
 };
 
@@ -88,6 +92,7 @@ struct IR_TypePtr : public IR_Type {
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
     int getBytesSize() const override;
+    std::string to_string() const override;
 };
 
 struct IR_TypeArray : public IR_Type {
@@ -98,6 +103,7 @@ struct IR_TypeArray : public IR_Type {
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
     int getBytesSize() const override;
+    std::string to_string() const override;
 };
 
 struct IR_TypeFunc : public IR_Type {
@@ -110,6 +116,7 @@ struct IR_TypeFunc : public IR_Type {
     bool equal(IR_Type const &rhs) const override;
     std::shared_ptr<IR_Type> copy() const override;
     int getBytesSize() const override;
+    std::string to_string() const override;
 };
 
 #endif /* __IR_TYPES_HPP__ */

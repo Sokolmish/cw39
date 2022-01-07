@@ -1,5 +1,6 @@
 #include "types.hpp"
 #include "utils.hpp"
+#include <sstream>
 
 // IR_StorageSpecifier
 
@@ -61,6 +62,30 @@ bool IR_TypeDirect::equal(const IR_Type &rhs) const {
 
 std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
     return std::make_shared<IR_TypeDirect>(spec);
+}
+
+std::string IR_TypeDirect::to_string() const {
+    switch (spec) {
+        case IR_TypeDirect::U8:
+            return "u8";
+        case IR_TypeDirect::I8:
+            return "i8";
+        case IR_TypeDirect::U32:
+            return "u32";
+        case IR_TypeDirect::I32:
+            return "i32";
+        case IR_TypeDirect::U64:
+            return "u64";
+        case IR_TypeDirect::I64:
+            return "i64";
+        case IR_TypeDirect::F32:
+            return "f32";
+        case IR_TypeDirect::F64:
+            return "f64";
+        case IR_TypeDirect::VOID:
+            return "void";
+    }
+    throw;
 }
 
 
@@ -145,6 +170,10 @@ IR_TypeStruct::StructField const* IR_TypeStruct::getField(string_id_t id) const 
     return nullptr;
 }
 
+std::string IR_TypeStruct::to_string() const {
+    return fmt::format("struct({})", structId);
+}
+
 
 // IR_TypePtr
 
@@ -169,6 +198,10 @@ std::shared_ptr<IR_Type> IR_TypePtr::copy() const {
 
 int IR_TypePtr::getBytesSize() const {
     return 8;
+}
+
+std::string IR_TypePtr::to_string() const {
+    return fmt::format("ptr< {} >", child->to_string());
 }
 
 // IR_TypeFunc
@@ -204,6 +237,17 @@ int IR_TypeFunc::getBytesSize() const {
     semanticError("Cannot get size of function type");
 }
 
+std::string IR_TypeFunc::to_string() const {
+    std::stringstream ss;
+    ss << "fun< " << ret->to_string() << " : ";
+    for (auto const &arg : args)
+        ss << arg->to_string() << " ";
+    if (isVariadic)
+        ss << "... ";
+    ss << ">";
+    return ss.str();
+}
+
 
 // IR_TypeArray
 
@@ -223,4 +267,8 @@ std::shared_ptr<IR_Type> IR_TypeArray::copy() const {
 
 int IR_TypeArray::getBytesSize() const {
     return static_cast<int>(size) * child->getBytesSize();
+}
+
+std::string IR_TypeArray::to_string() const {
+    return fmt::format("array< {} * {} >", size, child->to_string());
 }

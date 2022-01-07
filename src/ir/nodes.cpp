@@ -1,5 +1,7 @@
 #include "nodes.hpp"
 #include "utils.hpp"
+#include <sstream>
+#include <fmt/ostream.h>
 
 // Expressions
 
@@ -53,31 +55,39 @@ std::vector<IRval*> IR_ExprOper::getArgs() {
     return resArgs;
 }
 
-std::string IR_ExprOper::opToString() const {
+static std::string operOpToStr(IR_ExprOper::IR_Ops op) {
     switch (op) {
-        case MUL:        return "mul";
-        case DIV:        return "div";
-        case REM:        return "rem";
-        case ADD:        return "add";
-        case SUB:        return "sub";
-        case SHR:        return "shr";
-        case SHL:        return "shl";
-        case XOR:        return "xor";
-        case AND:        return "and";
-        case OR:         return "or";
-        case LAND:       return "land";
-        case LOR:        return "lor";
-        case EQ:         return "eq";
-        case NE:         return "ne";
-        case GT:         return "gt";
-        case LT:         return "lt";
-        case GE:         return "ge";
-        case LE:         return "le";
-        case EXTRACT:    return "extract";
-        case INSERT:     return "insert";
-        case MOV:        return "mov";
+        case IR_ExprOper::MUL:        return "mul";
+        case IR_ExprOper::DIV:        return "div";
+        case IR_ExprOper::REM:        return "rem";
+        case IR_ExprOper::ADD:        return "add";
+        case IR_ExprOper::SUB:        return "sub";
+        case IR_ExprOper::SHR:        return "shr";
+        case IR_ExprOper::SHL:        return "shl";
+        case IR_ExprOper::XOR:        return "xor";
+        case IR_ExprOper::AND:        return "and";
+        case IR_ExprOper::OR:         return "or";
+        case IR_ExprOper::LAND:       return "land";
+        case IR_ExprOper::LOR:        return "lor";
+        case IR_ExprOper::EQ:         return "eq";
+        case IR_ExprOper::NE:         return "ne";
+        case IR_ExprOper::GT:         return "gt";
+        case IR_ExprOper::LT:         return "lt";
+        case IR_ExprOper::GE:         return "ge";
+        case IR_ExprOper::LE:         return "le";
+        case IR_ExprOper::EXTRACT:    return "extract";
+        case IR_ExprOper::INSERT:     return "insert";
+        case IR_ExprOper::MOV:        return "mov";
     }
     throw;
+}
+
+std::string IR_ExprOper::to_string() const {
+    std::stringstream ss;
+    ss << operOpToStr(op) << " ";
+    for (const auto &arg : args)
+        ss << arg.to_string() << " ";
+    return ss.str();
 }
 
 
@@ -128,8 +138,9 @@ std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
     return std::make_unique<IR_ExprAlloc>(type->copy(), size, isOnHeap);
 }
 
-std::string IR_ExprAlloc::opToString() const {
-    return isOnHeap ? "malloc" : "alloca";
+std::string IR_ExprAlloc::to_string() const {
+    std::string opStr = isOnHeap ? "malloc" : "alloca";
+    return fmt::format("{} {} x {}", opStr, type->to_string(), size);
 }
 
 std::vector<IRval*> IR_ExprAlloc::getArgs() {
@@ -216,22 +227,26 @@ std::vector<IRval*> IR_ExprCast::getArgs() {
     return std::vector<IRval*>{ &arg };
 }
 
-std::string IR_ExprCast::opToString() const {
-    switch (castOp) {
-        case BITCAST:   return "bitcast";
-        case SEXT:      return "sext";
-        case ZEXT:      return "zext";
-        case TRUNC:     return "trunc";
-        case FPTOUI:    return "fp_to_ui";
-        case FPTOSI:    return "fp_to_si";
-        case UITOFP:    return "ui_to_fp";
-        case SITOFP:    return "si_to_fp";
-        case PTRTOI:    return "ptrtoi";
-        case ITOPTR:    return "itoptr";
-        case FPEXT:     return "fpext";
-        case FPTRUNC:   return "fptrunc";
+std::string castOpToStr(IR_ExprCast::CastType op)  {
+    switch (op) {
+        case IR_ExprCast::BITCAST:   return "bitcast";
+        case IR_ExprCast::SEXT:      return "sext";
+        case IR_ExprCast::ZEXT:      return "zext";
+        case IR_ExprCast::TRUNC:     return "trunc";
+        case IR_ExprCast::FPTOUI:    return "fp_to_ui";
+        case IR_ExprCast::FPTOSI:    return "fp_to_si";
+        case IR_ExprCast::UITOFP:    return "ui_to_fp";
+        case IR_ExprCast::SITOFP:    return "si_to_fp";
+        case IR_ExprCast::PTRTOI:    return "ptrtoi";
+        case IR_ExprCast::ITOPTR:    return "itoptr";
+        case IR_ExprCast::FPEXT:     return "fpext";
+        case IR_ExprCast::FPTRUNC:   return "fptrunc";
     }
     throw;
+}
+
+std::string IR_ExprCast::to_string() const {
+    return fmt::format("{} {} : {}", castOpToStr(castOp), arg.to_string(), dest->to_string());
 }
 
 

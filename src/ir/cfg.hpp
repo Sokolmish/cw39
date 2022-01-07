@@ -37,23 +37,6 @@ public:
         IRval init;
     };
 
-private:
-    int blocksCounter = 0;
-    uint64_t regs_counter = 0;
-    int funcsCounter = 0;
-    uint64_t stringsCounter = 0;
-    int globalsCounter = 0;
-
-    std::map<int, IR_Block> blocks;
-    std::map<int, Function> funcs;
-    std::map<int, Function> prototypes;
-    std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
-    std::map<uint64_t, std::string> strings;
-    std::map<int, GlobalVar> globals;
-
-    friend class IR_Generator;
-
-public:
     ControlFlowGraph() = default;
     ControlFlowGraph(ControlFlowGraph const &oth);
 
@@ -62,7 +45,7 @@ public:
     Function& createFunction(std::string name, IR_StorageSpecifier stor, bool isInline,
                              std::shared_ptr<IR_Type> fullType);
     Function& createPrototype(std::string name, IR_StorageSpecifier stor,
-                             std::shared_ptr<IR_Type> fullType);
+                              std::shared_ptr<IR_Type> fullType);
     IRval createReg(std::shared_ptr<IR_Type> type);
     IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init);
 
@@ -80,13 +63,30 @@ public:
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& getStructs() const;
     std::map<uint64_t, std::string> const& getStrings() const;
 
-
     void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action);
 
-    void printBlock(std::stringstream &ss, IR_Block const &block) const;
     std::string printIR() const;
-    void drawBlock(std::stringstream &ss, IR_Block const &block) const;
     std::string drawCFG() const;
+
+private:
+    int blocksCounter = 0;
+    uint64_t regs_counter = 0;
+    int funcsCounter = 0;
+    uint64_t stringsCounter = 0;
+    int globalsCounter = 0;
+
+    std::map<int, IR_Block> blocks;
+    std::map<int, Function> funcs;
+    std::map<int, Function> prototypes;
+    std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
+    std::map<uint64_t, std::string> strings;
+    std::map<int, GlobalVar> globals;
+
+    friend class IR_Generator;
+
+    void printExpr(std::stringstream &ss, IR_Expr const &rawExpr) const;
+    void printBlock(std::stringstream &ss, IR_Block const &block) const;
+    void drawBlock(std::stringstream &ss, IR_Block const &block) const;
 };
 
 #endif /* __CFG_HPP__ */

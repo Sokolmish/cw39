@@ -54,8 +54,7 @@ struct IR_ExprOper : public IR_Expr {
     IR_ExprOper(IR_Ops op, std::vector<IRval> args);
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
-
-    std::string opToString() const;
+    std::string to_string() const;
 };
 
 struct IR_ExprMem : public IR_Expr {
@@ -69,7 +68,6 @@ struct IR_ExprMem : public IR_Expr {
     IR_ExprMem(MemOps op, IRval ptr, IRval val);
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
-
     std::string to_string() const;
 };
 
@@ -82,8 +80,7 @@ struct IR_ExprAlloc : public IR_Expr {
     IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap);
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
-
-    std::string opToString() const;
+    std::string to_string() const;
 };
 
 struct IR_ExprCast : public IR_Expr {
@@ -100,8 +97,7 @@ struct IR_ExprCast : public IR_Expr {
     IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest);
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
-
-    std::string opToString() const;
+    std::string to_string() const;
 };
 
 struct IR_ExprCall : public IR_Expr {
