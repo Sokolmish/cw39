@@ -12,6 +12,7 @@ std::optional<IRval> ConstantsFolder::foldExpr(const IR_Expr &expr) {
 
         case IR_Expr::CALL: // TODO: pure functions
         case IR_Expr::MEMORY:
+        case IR_Expr::ACCESS:
         case IR_Expr::ALLOCATION:
         case IR_Expr::TERM:
             return {};

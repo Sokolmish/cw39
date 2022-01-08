@@ -99,7 +99,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
 
             IRval index = IRval::createVal(IR_TypeDirect::getU64(),
                                            static_cast<uint64_t>(field->index));
-            IRval res = emitOp(base.getType(), IR_ExprOper::INSERT, { base, index, wrValue });
+            IRval res = emitInsert(base.getType(), base, wrValue, { index }); // TODO: GEP
 
             doAssignment(*assignee.base, res);
         }
@@ -280,8 +280,7 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
         return emitCast(base, std::make_shared<IR_TypePtr>(getType(*subject.type_name)));
     }
     else if (expr.node_type == AST_POSTFIX) { // Index, access
-        NOT_IMPLEMENTED("Address of aggregate's element");
-//        auto const &subject = dynamic_cast<AST_Postfix const &>(*expr.child);
+        auto const &subject = dynamic_cast<AST_Postfix const &>(expr);
 //        if (subject.op == AST_Postfix::INDEXATION) {
 //            IRval array = evalExpr(*subject.base);
 //            IRval index = evalExpr(subject.getExpr());
@@ -312,12 +311,28 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
 //                    IR_GEP, std::vector<IRval>{ object, index }))); // addOperNode
 //            return res;
 //        }
-//        else if (subject.op == AST_Postfix::DIR_ACCESS) {
-//            NOT_IMPLEMENTED("pointer access (->)");
-//        }
-//        else {
-//            semanticError("Cannot take address");
-//        }
+//        else
+        if (subject.op == AST_Postfix::PTR_ACCESS) {
+            IRval object = evalExpr(*subject.base);
+            if (object.getType()->type != IR_Type::POINTER)
+                semanticError("Pointer access cannot be performed on non-pointer type");
+            auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
+            if (structPtrType->child->type != IR_Type::TSTRUCT)
+                semanticError("Element access cannot be performed on non-struct type");
+            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
+            auto field = structType->getField(subject.getIdent());
+            if (field == nullptr)
+                semanticError("Structure has no such field");
+
+            IRval index = IRval::createVal(IR_TypeDirect::getI32(),
+                                           static_cast<int32_t>(field->index));
+            auto fieldPtrType = std::make_shared<IR_TypePtr>(field->irType);
+            return emitGEP(fieldPtrType, std::move(object),
+                           { IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
+        }
+        else {
+            semanticError("Cannot take address");
+        }
     }
     else {
         semanticError("Cannot take address");
@@ -504,12 +519,13 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval index = evalExpr(expr.getExpr());
 
                 if (array.getType()->type == IR_Type::ARRAY) {
-                    auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
-                    return emitOp(arrayType.child, IR_ExprOper::EXTRACT, { array, index });
+                    semanticError("Something went wrong"); // TODO
+//                    auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
+//                    return emitExtract(arrayType.child, std::move(array), { std::move(index) });
                 }
                 else if (array.getType()->type == IR_Type::POINTER) {
                     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
-                    IRval finPtr = getPtrWithOffset(array, index);
+                    IRval finPtr = getPtrWithOffset(array, index); // TODO: GEP
                     return emitLoad(ptrType->child, finPtr);
                 }
                 else {
@@ -528,7 +544,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval index = IRval::createVal(
                         IR_TypeDirect::getU64(),
                         static_cast<uint64_t>(field->index));
-                return emitOp(field->irType, IR_ExprOper::EXTRACT, { object, index });
+                return emitExtract(field->irType, std::move(object), { std::move(index) }); // TODO: GEP
             }
             else if (expr.op == AST_Postfix::PTR_ACCESS) {
                 NOT_IMPLEMENTED("pointer access (->)");

@@ -8,31 +8,35 @@
 IR_Expr::IR_Expr(IR_Expr::Type type) : type(type) {}
 
 IR_ExprOper const &IR_Expr::getOper() const {
-    return dynamic_cast<IR_ExprOper const&>(*this);
+    return dynamic_cast<IR_ExprOper const &>(*this);
 }
 
 IR_ExprMem const &IR_Expr::getMem() const {
-    return dynamic_cast<IR_ExprMem const&>(*this);
+    return dynamic_cast<IR_ExprMem const &>(*this);
+}
+
+IR_ExprAccess const &IR_Expr::getAccess() const {
+    return dynamic_cast<IR_ExprAccess const &>(*this);
 }
 
 IR_ExprAlloc const &IR_Expr::getAlloc() const {
-    return dynamic_cast<IR_ExprAlloc const&>(*this);
+    return dynamic_cast<IR_ExprAlloc const &>(*this);
 }
 
 IR_ExprCast const &IR_Expr::getCast() const {
-    return dynamic_cast<IR_ExprCast const&>(*this);
+    return dynamic_cast<IR_ExprCast const &>(*this);
 }
 
 IR_ExprCall const &IR_Expr::getCall() const {
-    return dynamic_cast<IR_ExprCall const&>(*this);
+    return dynamic_cast<IR_ExprCall const &>(*this);
 }
 
 IR_ExprTerminator const &IR_Expr::getTerm() const {
-    return dynamic_cast<IR_ExprTerminator const&>(*this);
+    return dynamic_cast<IR_ExprTerminator const &>(*this);
 }
 
 IR_ExprPhi const& IR_Expr::getPhi() const {
-    return dynamic_cast<IR_ExprPhi const&>(*this);
+    return dynamic_cast<IR_ExprPhi const &>(*this);
 }
 
 
@@ -75,8 +79,6 @@ static std::string operOpToStr(IR_ExprOper::IR_Ops op) {
         case IR_ExprOper::LT:         return "lt";
         case IR_ExprOper::GE:         return "ge";
         case IR_ExprOper::LE:         return "le";
-        case IR_ExprOper::EXTRACT:    return "extract";
-        case IR_ExprOper::INSERT:     return "insert";
         case IR_ExprOper::MOV:        return "mov";
     }
     throw;
@@ -123,6 +125,59 @@ std::string IR_ExprMem::to_string() const {
             return fmt::format("store {} {}", addr.to_string(), val->to_string());
     }
     throw;
+}
+
+
+// IR_ExprAccess
+
+// TODO: check op
+IR_ExprAccess::IR_ExprAccess(IR_ExprAccess::AccessOps op, IRval base, std::vector<IRval> ind)
+        : IR_Expr(ACCESS), op(op), base(std::move(base)), indices(std::move(ind)) {}
+
+IR_ExprAccess::IR_ExprAccess(IR_ExprAccess::AccessOps op, IRval base, IRval val, std::vector<IRval> ind)
+        : IR_Expr(ACCESS), op(op), base(std::move(base)), indices(std::move(ind)), val(std::move(val)) {}
+
+std::unique_ptr<IR_Expr> IR_ExprAccess::copy() const {
+    std::vector<IRval> newIndices;
+    for (auto const &ind : indices)
+        newIndices.push_back(ind.copy());
+    if (val.has_value())
+        return std::make_unique<IR_ExprAccess>(op, base.copy(), val->copy(), std::move(newIndices));
+    else
+        return std::make_unique<IR_ExprAccess>(op, base.copy(), std::move(newIndices));
+}
+
+std::vector<IRval *> IR_ExprAccess::getArgs() {
+    std::vector<IRval *> res;
+    res.push_back(&base);
+    if (val.has_value())
+        res.push_back(&val.value());
+    for (auto &ind : indices)
+        res.push_back(&ind);
+    return res;
+}
+
+std::string IR_ExprAccess::to_string() const {
+    std::stringstream ss;
+    switch (op) {
+        case EXTRACT:
+            ss << "extract ";
+            break;
+        case INSERT:
+            ss << "insert ";
+            break;
+        case GEP:
+            ss << "gep ";
+            break;
+        default:
+            throw;
+    }
+    ss << base.to_string() << " ";
+    if (val.has_value())
+        ss << val->to_string() << " ";
+    for (auto const &ind : indices)
+        ss << ind.to_string() << " ";
+    return ss.str();
 }
 
 

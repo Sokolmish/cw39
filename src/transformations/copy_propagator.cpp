@@ -84,13 +84,12 @@ void CopyPropagator::foldConstants() {
                     if (!node->body)
                         continue;
 
+                    // TODO: access operations
                     if (node->body->type == IR_Expr::OPERATION) {
                         auto &operExpr = dynamic_cast<IR_ExprOper &>(*node->body);
 
-                        if (isInList(operExpr.op, { IR_ExprOper::MOV, IR_ExprOper::INSERT,
-                                                    IR_ExprOper::EXTRACT })) {
+                        if (operExpr.op == IR_ExprOper::MOV)
                             continue;
-                        }
 
                         bool isConst = true;
                         for (auto const &arg : operExpr.args) {

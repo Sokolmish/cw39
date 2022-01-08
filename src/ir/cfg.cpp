@@ -184,6 +184,9 @@ void ControlFlowGraph::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) 
     else if (rawExpr.type == IR_Expr::MEMORY) {
         ss << dynamic_cast<IR_ExprMem const &>(rawExpr).to_string();
     }
+    else if (rawExpr.type == IR_Expr::ACCESS) {
+        ss << dynamic_cast<IR_ExprAccess const &>(rawExpr).to_string();
+    }
     else if (rawExpr.type == IR_Expr::CAST) {
         ss << dynamic_cast<IR_ExprCast const &>(rawExpr).to_string();
     }

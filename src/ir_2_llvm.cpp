@@ -49,7 +49,8 @@ public:
     void createBlock(int id);
 
     void buildOperation(IR_Node const &node);
-    void buildMemOp(const IR_Node &node);
+    void buildMemOp(IR_Node const &node);
+    void buildAccessOp(IR_Node const &node);
     void buildCast(IR_Node const &node);
     void buildCall(IR_Node const &node);
 
@@ -342,8 +343,9 @@ void IR2LLVM_Impl::createFunctions() {
         }
         unfilledPhis.clear();
 
-        if (verifyFunction(*curFunction))
-            fmt::print(stderr, "Verification failed: {}\n", func.getName());
+        if (verifyFunction(*curFunction, &errs())) {
+            errs() << fmt::format("\nVerification failed: {}\n\n\n", func.getName());
+        }
     }
 }
 
@@ -371,6 +373,10 @@ void IR2LLVM_Impl::createBlock(int id) {
             }
             case IR_Expr::MEMORY: {
                 buildMemOp(node);
+                break;
+            }
+            case IR_Expr::ACCESS: {
+                buildAccessOp(node);
                 break;
             }
             case IR_Expr::ALLOCATION: {
@@ -537,20 +543,6 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
                 res = builder->CreateICmpULE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
-        case IR_ExprOper::EXTRACT:
-            res = builder->CreateExtractValue(
-                    getValue(oper.args[0]),
-                    { oper.args[1].castValTo<uint32_t>() },
-                    name);
-            break;
-
-        case IR_ExprOper::INSERT:
-            res = builder->CreateInsertValue(
-                    getValue(oper.args[0]), getValue(oper.args[2]),
-                    { oper.args[1].castValTo<uint32_t>() },
-                    name);
-            break;
-
         case IR_ExprOper::MOV:
             res = getValue(oper.args[0]);
             break;
@@ -558,8 +550,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
         default:
             semanticError("Wrong op value");
     }
-    if (res)
-        regsMap.emplace(*node.res, res);
+    regsMap.emplace(*node.res, res);
 }
 
 void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
@@ -578,6 +569,42 @@ void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
         }
         default:
             semanticError("Wrong op value");
+    }
+}
+
+void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
+    const IR_ExprAccess &acc = node.body->getAccess();
+    std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
+
+    if (acc.op == IR_ExprAccess::GEP) {
+        std::vector<Value *> indices;
+        indices.reserve(acc.indices.size());
+        for (auto const &ind : acc.indices)
+            indices.push_back(getValue(ind));
+
+        Value *res = builder->CreateInBoundsGEP( // TODO: inbounds?
+                getType(*dynamic_cast<IR_TypePtr const &>(*acc.base.getType()).child),
+                getValue(acc.base), indices, name);
+        regsMap.emplace(*node.res, res);
+    }
+    else if (isInList(acc.op, { IR_ExprAccess::EXTRACT, IR_ExprAccess::INSERT })) {
+        std::vector<uint32_t> indices;
+        indices.reserve(acc.indices.size());
+        for (auto const &ind : acc.indices) {
+            if (ind.getValueClass() != IRval::VAL)
+                semanticError("Non constant argument of EXTRACT/INSERT");
+            indices.push_back(ind.castValTo<uint32_t>());
+        }
+
+        Value *res;
+        if (acc.op == IR_ExprAccess::EXTRACT)
+            res = builder->CreateExtractValue(getValue(acc.base), indices, name);
+        else
+            res = builder->CreateInsertValue(getValue(acc.base), getValue(*acc.val), indices, name);
+        regsMap.emplace(*node.res, res);
+    }
+    else {
+        semanticError("Wrong access op type");
     }
 }
 
@@ -607,9 +634,8 @@ static auto getCastOp(IR_ExprCast::CastType op) {
             return &IRBuilder<>::CreateFPTrunc;
         case IR_ExprCast::FPEXT:
             return &IRBuilder<>::CreateFPExt;
-        default:
-            semanticError("Wrong cast type");
     }
+    semanticError("Wrong cast type");
 }
 
 void IR2LLVM_Impl::buildCast(IR_Node const &node) {

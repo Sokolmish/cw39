@@ -79,6 +79,21 @@ IRval IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_T
     return *emitNode(ret, std::make_unique<IR_ExprAlloc>(type, onHeap));
 }
 
+IRval IR_Generator::emitExtract(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
+    return *emitNode(ret, std::make_unique<IR_ExprAccess>(
+            IR_ExprAccess::EXTRACT, std::move(base), std::move(indices)));
+}
+
+IRval IR_Generator::emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> ind) {
+    return *emitNode(ret, std::make_unique<IR_ExprAccess>(
+            IR_ExprAccess::INSERT, std::move(base), std::move(val), std::move(ind)));
+}
+
+IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
+    return *emitNode(ret, std::make_unique<IR_ExprAccess>(
+            IR_ExprAccess::GEP, std::move(base), std::move(indices)));
+}
+
 
 // Generator
 

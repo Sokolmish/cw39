@@ -56,6 +56,9 @@ private:
     std::optional<IRval> emitCall(std::shared_ptr<IR_Type> ret, int callee, std::vector<IRval> args);
     std::optional<IRval> emitIndirCall(std::shared_ptr<IR_Type> ret, IRval callee, std::vector<IRval> args);
     IRval emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap = false);
+    IRval emitExtract(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices);
+    IRval emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> indices);
+    IRval emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices);
 
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
