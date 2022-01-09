@@ -1,5 +1,7 @@
 #include "cfg_cleaner.hpp"
 #include "utils.hpp"
+#include "dominators.hpp"
+#include <stack>
 
 CfgCleaner::CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {}
@@ -117,6 +119,7 @@ void CfgCleaner::removeUselessNodes() {
 // TODO: transit blocks with brach and non-empty transit blocks
 void CfgCleaner::removeTransitBlocks() {
     std::vector<int> toRemoveList;
+
     for (auto &[bId, block] : cfg->getBlocksData()) {
         if (block.body.empty() && block.phis.empty()) {
             if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
@@ -167,4 +170,52 @@ void CfgCleaner::removeTransitBlocks() {
 
     for (int id : toRemoveList)
         cfg->getBlocksData().erase(id);
+}
+
+void CfgCleaner::removeUnreachableBlocks() {
+    std::vector<int> toRemoveList;
+
+    for (auto &[bId, block] : cfg->getBlocksData()) {
+        if (block.getTerminator()->termType == IR_ExprTerminator::BRANCH) {
+            if (block.getTerminator()->arg->getValueClass() == IRval::VAL) {
+                int toRemoveId;
+                if (block.getTerminator()->arg->castValTo<uint64_t>() != 0) {
+                    toRemoveId = block.next[1];
+                    block.next = { block.next[0] };
+                }
+                else {
+                    toRemoveId = block.next[0];
+                    block.next = { block.next[1] };
+                }
+
+                std::set<int> unreached = getDominatedByGiven(toRemoveId);
+                toRemoveList.insert(toRemoveList.end(), unreached.begin(), unreached.end());
+                block.setTerminator(IR_ExprTerminator::JUMP);
+            }
+        }
+    }
+
+    for (int id : toRemoveList)
+        cfg->getBlocksData().erase(id);
+}
+
+std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
+    if (cfg->block(startId).prev.size() != 1)
+        return {};
+    Dominators doms(cfg); // TODO: dominators for subgraph (at least function)
+    std::set<int> res { startId };
+    std::stack<int> stack;
+    stack.push(startId);
+    while (!stack.empty()) {
+        IR_Block const &curBlock = cfg->block(stack.top());
+        stack.pop();
+
+        for (int next : curBlock.next) {
+            if (!res.contains(next) && doms.isDom(startId, next)) {
+                stack.push(next);
+                res.insert(next);
+            }
+        }
+    }
+    return res;
 }

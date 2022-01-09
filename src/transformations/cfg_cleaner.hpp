@@ -10,6 +10,9 @@ class CfgCleaner {
 private:
     std::shared_ptr<ControlFlowGraph> cfg;
 
+    /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
+    std::set<int> getDominatedByGiven(int startId);
+
 public:
     CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg);
 
@@ -17,6 +20,7 @@ public:
     void fixVersions();
     void removeUselessNodes();
     void removeTransitBlocks();
+    void removeUnreachableBlocks();
 
     std::shared_ptr<ControlFlowGraph> getCfg();
 };

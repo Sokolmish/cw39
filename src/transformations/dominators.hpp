@@ -50,18 +50,19 @@ private:
 public:
     explicit Dominators(std::shared_ptr<ControlFlowGraph> in_cfg);
 
-    /** Is immediate dominator */
+    /** Is x immediate dominator of y */
     bool isIdom(int x, int y) const;
 
-    /** Is weak dominator */
+    /** Is x weak dominator of y */
     bool isDom(int x, int y) const;
 
-    /** Is strong dominator (not semidominator) */
+    /** Is x strong dominator of y (not semidominator) */
     bool isSdom(int x, int y) const;
 
     /** Get immediate dominator */
     int getIdom(int x) const;
 
+    /** Get nodes immediate dominated by x */
     std::vector<int> getChildren(int x) const;
 
     std::string drawGraph() const;

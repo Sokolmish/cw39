@@ -20,6 +20,7 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> const &rawCfg)
     cleaner.removeNops();
     cleaner.fixVersions();
     cleaner.removeUselessNodes();
+    cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
     cfg = cleaner.getCfg();
 }
