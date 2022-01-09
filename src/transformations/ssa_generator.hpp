@@ -1,7 +1,6 @@
 #ifndef __SSA_GENERATOR_HPP__
 #define __SSA_GENERATOR_HPP__
 
-#include <vector>
 #include <map>
 #include <set>
 #include <deque>
@@ -22,7 +21,7 @@ private:
     std::deque<int> versions;
 
     void placePhis();
-    void makePostOrder(std::vector<bool> &visited, int &counter, int cur);
+    void makePostOrder(std::set<int> &visited, int &counter, int cur);
     /** Get dominance frontier for each single variable */
     void makeVerticesDF();
     std::set<int> getSetDF(const std::set<int> &S) const;

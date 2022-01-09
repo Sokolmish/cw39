@@ -13,6 +13,7 @@ VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg)
 
     CfgCleaner cleaner(cfg);
     cleaner.removeNops();
+    cleaner.removeTransitBlocks();
     cfg = cleaner.getCfg();
 }
 

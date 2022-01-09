@@ -113,3 +113,58 @@ void CfgCleaner::removeUselessNodes() {
         }
     }
 }
+
+// TODO: transit blocks with brach and non-empty transit blocks
+void CfgCleaner::removeTransitBlocks() {
+    std::vector<int> toRemoveList;
+    for (auto &[bId, block] : cfg->getBlocksData()) {
+        if (block.body.empty() && block.phis.empty()) {
+            if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
+                if (block.next.size() != 1)
+                    internalError("JUMP node with more than 1 successors");
+
+                // TODO: complex relink with changing `prev` size
+                if (block.prev.size() != 1) // Concentrating block
+                    continue;
+
+                IR_Block &prevBlock = cfg->block(block.prev[0]);
+                IR_Block &nextBlock = cfg->block(block.next[0]);
+
+                // TODO: select op and phis folding
+                if (!nextBlock.phis.empty()) {
+                    bool phiDependent = false;
+                    for (int prevId : nextBlock.prev) {
+                        if (prevId == block.prev[0]) {
+                            phiDependent = true;
+                            break;
+                        }
+                    }
+                    if (phiDependent)
+                        continue;
+                }
+
+                // Relink previous blocks
+                for (int &refId : prevBlock.next) {
+                    if (refId == bId) {
+                        refId = block.next[0];
+                        break;
+                    }
+                }
+
+                // Relink next
+                for (int &refId : nextBlock.prev) {
+                    if (refId == bId) {
+                        refId = block.prev[0];
+                        break;
+                    }
+                }
+
+                // Remove block
+                toRemoveList.push_back(bId); // TODO: iterators?
+            }
+        }
+    }
+
+    for (int id : toRemoveList)
+        cfg->getBlocksData().erase(id);
+}

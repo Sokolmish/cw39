@@ -147,6 +147,10 @@ std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
     return blocks;
 }
 
+std::map<int, IR_Block> &ControlFlowGraph::getBlocksData() {
+    return blocks;
+}
+
 const std::map<int, ControlFlowGraph::GlobalVar>& ControlFlowGraph::getGlobals() const {
     return globals;
 }

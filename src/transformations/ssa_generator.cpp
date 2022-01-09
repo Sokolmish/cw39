@@ -1,5 +1,6 @@
 #include "ssa_generator.hpp"
 #include "cfg_cleaner.hpp"
+#include <vector>
 
 SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
         : origCfg(std::move(in_cfg)) {
@@ -26,7 +27,7 @@ std::shared_ptr<ControlFlowGraph> SSA_Generator::getCfg() {
 
 void SSA_Generator::placePhis() {
     int counter = 0;
-    std::vector<bool> visited(cfg->getBlocks().size());
+    std::set<int> visited;
     for (auto const &[fId, func] : cfg->getFuncs()) {
         makePostOrder(visited, counter, func.getEntryBlockId());
     }
@@ -47,10 +48,10 @@ void SSA_Generator::placePhis() {
     }
 }
 
-void SSA_Generator::makePostOrder(std::vector<bool> &visited, int &counter, int cur) {
-    visited.at(cur) = true;
+void SSA_Generator::makePostOrder(std::set<int> &visited, int &counter, int cur) {
+    visited.insert(cur);
     for (int nextId : cfg->block(cur).next)
-        if (!visited.at(nextId))
+        if (!visited.contains(nextId))
             makePostOrder(visited, counter, nextId);
     postOrder.insert({ cur, counter++ });
 }

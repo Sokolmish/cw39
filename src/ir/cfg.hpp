@@ -59,6 +59,7 @@ public:
     std::map<int, Function> const& getFuncs() const;
     std::map<int, Function> const& getPrototypes() const;
     std::map<int, IR_Block> const& getBlocks() const;
+    std::map<int, IR_Block>& getBlocksData();
     std::map<int, GlobalVar> const& getGlobals() const;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& getStructs() const;
     std::map<uint64_t, std::string> const& getStrings() const;
