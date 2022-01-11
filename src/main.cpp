@@ -17,6 +17,10 @@
 
 static std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
+    if (!t.is_open()) {
+        fmt::print(stderr, "Cannot read file '{}'\n", path);
+        exit(EXIT_FAILURE);
+    }
     t.seekg(0, std::ios::end);
     auto size = t.tellg();
     std::string buffer(size, ' ');
