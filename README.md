@@ -13,15 +13,17 @@ C99 compiler with optimizations.
 
 ## Building with docker
 
-Docker container can be built using the [`setup.sh`](https://github.com/Sokolmish/coursework_3/blob/master/setup.sh) script. After the first usage, this command should be executed if [Dockerfile](https://github.com/Sokolmish/coursework_3/blob/master/Dockerfile) is changed.
+Docker container can be built using the [`setup.sh`](https://github.com/Sokolmish/coursework_3/blob/master/setup.sh) script. After the first usage, this command should be executed if [Dockerfile](https://github.com/Sokolmish/coursework_3/blob/master/Dockerfile) was changed.
 
 Project can be built using the [`build.sh`](https://github.com/Sokolmish/coursework_3/blob/master/build.sh) script. This script will store final binary and building files in the `docker_build` directory created by previous script.
 
-Both scripts don't expect arguments and should be executed from project root (where Dockerfile is located). Optionally, one can specify number of threads used by Make in build script (default is 3).
+Both scripts don't expect arguments and should be executed from project root (where Dockerfile is located). Optionally, one can specify number of threads used by make in build script (default is 3).
 
 ## Usage
 
-```cw39 [options] <input_file>```
+```
+cw39 [options] <input_file>
+```
 
 ### Options:
 
@@ -33,3 +35,25 @@ Each of following options can accept optional argument with path (e.g. `--llvm=.
 - `--ir-raw` - print IR before optimizations (i.e. right after generation)
 - `--cfg-raw` - print CFG representation before optimizations in the [dot](https://graphviz.org/) language
 - `--llvm` - print final LLVM assembler code
+
+## Examples
+
+Print LLVM code into terminal:
+```
+cw39 --llvm ./test.c
+```
+
+Print LLVM code into the `out.ll` file:
+```
+cw39 --llvm=out.ll ./test.c
+```
+
+Execute generated code immediately (also `lli-13` and others can be used):
+```
+cw39 --llvm ./test.c | lli
+```
+
+Draw CFG into the `graph.svg` file:
+```
+cw39 --cfg ./test.c | dot -Tsvg -o graph.svg
+```
