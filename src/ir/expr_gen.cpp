@@ -106,7 +106,24 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             doAssignment(*assignee.base, res);
         }
         else if (assignee.op == AST_Postfix::PTR_ACCESS) {
-            NOT_IMPLEMENTED("Indirect struct access");
+            // TODO: common code for PTR_ACCESS
+            IRval object = evalExpr(*assignee.base);
+            if (object.getType()->type != IR_Type::POINTER)
+                semanticError("Pointer access cannot be performed on non-pointer type");
+            auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
+            if (structPtrType->child->type != IR_Type::TSTRUCT)
+                semanticError("Element access cannot be performed on non-struct type");
+            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
+            auto field = structType->getField(assignee.getIdent());
+            if (field == nullptr)
+                semanticError("Structure has no such field");
+
+            IRval index = IRval::createVal(IR_TypeDirect::getI32(),
+                                           static_cast<int32_t>(field->index));
+            auto fieldPtrType = std::make_shared<IR_TypePtr>(field->irType);
+            IRval elemPtr = emitGEP(fieldPtrType, std::move(object), {
+                    IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
+            emitStore(std::move(elemPtr), wrValue);
         }
         else if (assignee.op == AST_Postfix::INDEXATION) {
             IRval base = evalExpr(*assignee.base);
