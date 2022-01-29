@@ -2,6 +2,10 @@
 #include "utils.hpp"
 #include "dominators.hpp"
 #include <stack>
+#include <algorithm>
+#include <ranges>
+
+namespace rng = std::ranges;
 
 CfgCleaner::CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {}
@@ -135,16 +139,11 @@ void CfgCleaner::removeTransitBlocks() {
 
                 // TODO: select op and phis folding
                 if (!nextBlock.phis.empty()) {
-                    bool phiDependent = false;
-                    for (int prevId : nextBlock.prev) {
-                        if (prevId == block.prev[0]) {
-                            phiDependent = true;
-                            break;
-                        }
-                    }
-                    if (phiDependent)
+                    if (rng::find(nextBlock.prev, block.prev[0]) != nextBlock.next.end())
                         continue;
                 }
+
+                // TODO: check if prev block already linked with next
 
                 // Relink previous blocks
                 for (int &refId : prevBlock.next) {
