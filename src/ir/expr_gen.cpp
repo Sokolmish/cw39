@@ -32,6 +32,8 @@ std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
 IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index) {
     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
 
+    // TODO: use GEP
+
     IRval fixedIndex = index;
     if (!fixedIndex.getType()->equal(*IR_TypeDirect::getU64()))
         fixedIndex = emitCast(index, IR_TypeDirect::getU64());
@@ -327,8 +329,8 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
             IRval index = IRval::createVal(IR_TypeDirect::getI32(),
                                            static_cast<int32_t>(field->index));
             auto fieldPtrType = std::make_shared<IR_TypePtr>(field->irType);
-            return emitGEP(fieldPtrType, std::move(object),
-                           { IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
+            return emitGEP(fieldPtrType, std::move(object), {
+                    IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
         }
         else {
             semanticError("Cannot take address");
@@ -518,15 +520,15 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 IRval array = evalExpr(*expr.base);
                 IRval index = evalExpr(expr.getExpr());
 
-                if (array.getType()->type == IR_Type::ARRAY) {
-                    semanticError("Something went wrong"); // TODO
-//                    auto const &arrayType = dynamic_cast<IR_TypeArray const &>(*array.getType());
-//                    return emitExtract(arrayType.child, std::move(array), { std::move(index) });
-                }
-                else if (array.getType()->type == IR_Type::POINTER) {
+                if (array.getType()->type == IR_Type::POINTER) {
                     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
-                    IRval finPtr = getPtrWithOffset(array, index); // TODO: GEP
+                    IRval finPtr = getPtrWithOffset(array, index);
                     return emitLoad(ptrType->child, finPtr);
+                }
+                else if (array.getType()->type == IR_Type::ARRAY) {
+                    // At generation stage one can't get array value directly
+                    // Pointers to first array's element can be eleminated at opt stage
+                    internalError("Something went wrong");
                 }
                 else {
                     semanticError("Indexation cannot be performed on non-array type");
@@ -541,13 +543,29 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
                 if (field == nullptr)
                     semanticError("Structure has no such field");
 
-                IRval index = IRval::createVal(
-                        IR_TypeDirect::getU64(),
-                        static_cast<uint64_t>(field->index));
-                return emitExtract(field->irType, std::move(object), { std::move(index) }); // TODO: GEP
+                IRval index = IRval::createVal(IR_TypeDirect::getU64(),
+                                               static_cast<uint64_t>(field->index));
+                // TODO: GEP or optimize later
+                return emitExtract(field->irType, std::move(object), { std::move(index) });
             }
             else if (expr.op == AST_Postfix::PTR_ACCESS) {
-                NOT_IMPLEMENTED("pointer access (->)");
+                IRval object = evalExpr(*expr.base);
+                if (object.getType()->type != IR_Type::POINTER)
+                    semanticError("Pointer access cannot be performed on non-pointer type");
+                auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
+                if (structPtrType->child->type != IR_Type::TSTRUCT)
+                    semanticError("Element access cannot be performed on non-struct type");
+                auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
+                auto field = structType->getField(expr.getIdent());
+                if (field == nullptr)
+                    semanticError("Structure has no such field");
+
+                IRval index = IRval::createVal(IR_TypeDirect::getI32(),
+                                               static_cast<int32_t>(field->index));
+                auto fieldPtrType = std::make_shared<IR_TypePtr>(field->irType);
+                IRval elemPtr = emitGEP(fieldPtrType, std::move(object), {
+                        IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
+                return emitLoad(field->irType, std::move(elemPtr));
             }
             else {
                 internalError("Wrong postfix expression");
@@ -659,8 +677,10 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_Init
         if (structType.fields.size() < lst.children.size())
             semanticError("Too many values in initializer");
     }
-    else
-        semanticError("Compound initializer for non-aggregate type");
+    else {
+        // TODO: Compound with single value
+        NOT_IMPLEMENTED("Compound initializer for non-aggregate type");
+    }
 
     std::vector<IRval> aggrVals;
     size_t elemNum = 0;
