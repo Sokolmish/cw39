@@ -73,9 +73,10 @@ int main(int argc, char **argv) {
     if (args.count("cfg"))
         writeOut(args.getString("cfg"), cfg5->drawCFG());
 
-    IR2LLVM materializer(cfg5);
-    if (args.count("llvm"))
+    if (args.count("llvm")) {
+        IR2LLVM materializer(cfg5);
         writeOut(args.getString("llvm"), materializer.getRes());
+    }
 
     return 0;
 }
