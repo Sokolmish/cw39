@@ -121,6 +121,7 @@ void CfgCleaner::removeUselessNodes() {
 }
 
 // TODO: transit blocks with brach and non-empty transit blocks
+// TODO: condition with equal destinations
 void CfgCleaner::removeTransitBlocks() {
     std::vector<int> toRemoveList;
 
@@ -171,8 +172,33 @@ void CfgCleaner::removeTransitBlocks() {
         cfg->getBlocksData().erase(id);
 }
 
+// tODO: refactor this
 void CfgCleaner::removeUnreachableBlocks() {
-    std::vector<int> toRemoveList;
+    std::set<int> visited;
+    for (auto const &[fId, func]: cfg->getFuncs())
+        cfg->traverseBlocks(func.getEntryBlockId(), visited, [](int blockId) {});
+
+    std::set<int> toRemoveList;
+    for (auto &[bId, block] : cfg->getBlocksData())
+        if (!visited.contains(bId))
+            toRemoveList.insert(bId);
+
+    for (int id : toRemoveList)
+        cfg->getBlocksData().erase(id);
+    for (auto &[bId, block] : cfg->getBlocksData()) {
+        std::vector<int> newPrev;
+        bool changed = false;
+        for (int prev : block.prev) {
+            if (!toRemoveList.contains(prev))
+                newPrev.push_back(prev);
+            else
+                changed = true;
+        }
+        if (changed)
+            block.prev = std::move(newPrev);
+    }
+
+    toRemoveList.clear();
 
     for (auto &[bId, block] : cfg->getBlocksData()) {
         if (block.getTerminator()->termType == IR_ExprTerminator::BRANCH) {
@@ -188,7 +214,7 @@ void CfgCleaner::removeUnreachableBlocks() {
                 }
 
                 std::set<int> unreached = getDominatedByGiven(toRemoveId);
-                toRemoveList.insert(toRemoveList.end(), unreached.begin(), unreached.end());
+                toRemoveList.insert(unreached.begin(), unreached.end());
                 block.setTerminator(IR_ExprTerminator::JUMP);
             }
         }
@@ -196,6 +222,18 @@ void CfgCleaner::removeUnreachableBlocks() {
 
     for (int id : toRemoveList)
         cfg->getBlocksData().erase(id);
+    for (auto &[bId, block] : cfg->getBlocksData()) { // TODO: duplicate
+        std::vector<int> newPrev;
+        bool changed = false;
+        for (int prev : block.prev) {
+            if (!toRemoveList.contains(prev))
+                newPrev.push_back(prev);
+            else
+                changed = true;
+        }
+        if (changed)
+            block.prev = std::move(newPrev);
+    }
 }
 
 std::set<int> CfgCleaner::getDominatedByGiven(int startId) {

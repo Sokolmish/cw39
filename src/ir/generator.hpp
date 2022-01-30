@@ -35,10 +35,44 @@ private:
 
     std::shared_ptr<IR_TypeFunc> curFunctionType = nullptr;
 
-    struct LoopBlocks {
-        int skip, exit, before;
+    /** Loop or switch entry */
+    class ControlStructData {
+    public:
+        class LoopBlocks {
+        public:
+            int skip, exit, before;
+        };
+
+        class SwitchBlocks {
+        public:
+            struct CaseBlock {
+                IRval val;
+                int block;
+            };
+            int exit;
+            std::vector<CaseBlock> labels;
+            std::optional<int> defaultBlock;
+
+            void addCase(IRval val, int block);
+            void setDefault(int block);
+        };
+
+        ControlStructData(LoopBlocks loop);
+        ControlStructData(SwitchBlocks sw);
+
+        int getExit() const;
+        bool isLoop() const;
+        LoopBlocks& getLoop();
+        SwitchBlocks& getSwitch();
+
+    private:
+        std::variant<LoopBlocks, SwitchBlocks> data;
     };
-    std::deque<LoopBlocks> activeLoops; // One also need to get the topmost loop, so it is deque
+
+    std::deque<ControlStructData> activeControls;
+    std::optional<ControlStructData::LoopBlocks> getTopmostLoop();
+    std::optional<ControlStructData::LoopBlocks> getNearestLoop();
+    ControlStructData::SwitchBlocks* getNearestSwitch();
 
     std::map<string_id_t, int> labels;
 
@@ -68,6 +102,7 @@ private:
 
     void insertStatement(AST_Statement const &stmt);
     void insertIfStatement(AST_SelectionStmt const &stmt);
+    void insertSwitchStatement(const AST_SelectionStmt &stmt);
     void insertLoopStatement(AST_IterationStmt const &stmt);
     void insertJumpStatement(AST_JumpStmt const &stmt);
     void insertCompoundStatement(AST_CompoundStmt const &stmt);
@@ -103,11 +138,11 @@ private:
     std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl);
     std::shared_ptr<IR_Type> getType(AST_SpecifierQualifierList const &spec, AST_Declarator const &decl);
     std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
+    std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
 
     string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
-    std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
 
 public:
     IR_Generator();

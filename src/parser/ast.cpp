@@ -1021,9 +1021,9 @@ AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Statement *stmt, LabelType
 {
     if (type == AST_LabeledStmt::SIMPL)
         throw std::runtime_error("Wrong type for simple label");
-    else if (type == AST_LabeledStmt::SW_CASE && !child)
+    else if (type == AST_LabeledStmt::SW_CASE && !label)
         throw std::runtime_error("'case' label without argument");
-    else if (type == AST_LabeledStmt::SW_DEFAULT && child)
+    else if (type == AST_LabeledStmt::SW_DEFAULT && label)
         throw std::runtime_error("'default' label with argument");
 }
 

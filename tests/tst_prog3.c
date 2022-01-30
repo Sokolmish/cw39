@@ -20,6 +20,22 @@ int main(int argc, char **argv) {
     int sz = 6;
 
     for (int i = 0; i < sz; i++) {
+        switch (i) {
+            case 1:
+                printf("one  :  ");
+                break;
+            case 3:
+                printf("three:");
+            case 9:
+                printf("f ");
+                break;
+            case 5:
+                printf("five :  ");
+                break;
+            default:
+                printf("even :  ");
+                break;
+        }
         for (int j = 0; j < sz; j++) {
             printf("%d ", arr[i]);
             if (j == i)

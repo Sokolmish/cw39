@@ -22,6 +22,66 @@ std::shared_ptr<ControlFlowGraph> IR_Generator::getCfg() const {
 }
 
 
+IR_Generator::ControlStructData::ControlStructData(IR_Generator::ControlStructData::LoopBlocks loop)
+        : data(std::move(loop)) {}
+
+IR_Generator::ControlStructData::ControlStructData(IR_Generator::ControlStructData::SwitchBlocks sw)
+        : data(std::move(sw)) {}
+
+bool IR_Generator::ControlStructData::isLoop() const {
+    return std::holds_alternative<LoopBlocks>(data);
+}
+
+int IR_Generator::ControlStructData::getExit() const {
+    return std::visit([](auto const &e){ return e.exit; }, data);
+}
+
+IR_Generator::ControlStructData::LoopBlocks &IR_Generator::ControlStructData::getLoop() {
+    return std::get<LoopBlocks>(data);
+}
+
+IR_Generator::ControlStructData::SwitchBlocks &IR_Generator::ControlStructData::getSwitch() {
+    return std::get<SwitchBlocks>(data);
+}
+
+std::optional<IR_Generator::ControlStructData::LoopBlocks> IR_Generator::getTopmostLoop() {
+    auto it = std::find_if(activeControls.begin(), activeControls.end(),
+                           [](ControlStructData const &a) { return a.isLoop(); });
+    if (it == activeControls.end())
+        return {};
+    else
+        return it->getLoop();
+}
+
+void IR_Generator::ControlStructData::SwitchBlocks::addCase(IRval val, int block) {
+    labels.push_back(CaseBlock{ .val = val, .block = block });
+}
+
+void IR_Generator::ControlStructData::SwitchBlocks::setDefault(int block) {
+    if (defaultBlock.has_value())
+        semanticError("Default velue for switch was already set");
+    defaultBlock = block;
+}
+
+std::optional<IR_Generator::ControlStructData::LoopBlocks> IR_Generator::getNearestLoop() {
+    auto it = std::find_if(activeControls.rbegin(), activeControls.rend(),
+                           [](ControlStructData const &a) { return a.isLoop(); });
+    if (it == activeControls.rend())
+        return {};
+    else
+        return it->getLoop();
+}
+
+IR_Generator::ControlStructData::SwitchBlocks *IR_Generator::getNearestSwitch() {
+    auto it = std::find_if(activeControls.rbegin(), activeControls.rend(),
+                           [](ControlStructData const &a) { return !a.isLoop(); });
+    if (it == activeControls.rend())
+        return nullptr;
+    else
+        return &it->getSwitch();
+}
+
+
 std::optional<IRval> IR_Generator::emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr) {
     // TODO: check if in global context
     curBlock().addNode(ret, std::move(expr));
@@ -218,9 +278,11 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         else
             internalError("Wrong node in compound statement");
 
-        // TODO: Unreachable code doesn't even validating
-        if (selectedBlock == nullptr || curBlock().termNode.has_value())
-            break;
+        // Ureachable code
+        if (selectedBlock == nullptr) {
+            IR_Block &unreachBlock = cfg->createBlock();
+            selectBlock(unreachBlock);
+        }
     }
     variables.decreaseLevel();
 }
@@ -243,14 +305,14 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         // TODO: check for void allocation (and in globals too)
         std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
 
+        auto topmostLoop = getTopmostLoop();
         std::optional<IRval> var;
-        if (activeLoops.empty()) {
+        if (!topmostLoop.has_value()) {
             var = emitAlloc(ptrType, varType);
         }
         else { // Do not create allocations inside loops
-//            cfg->block(activeLoops.front().before).addAllocNode(var, varType);
             IR_Block &cur = curBlock();
-            selectBlock(cfg->block(activeLoops.front().before));
+            selectBlock(cfg->block(topmostLoop->before));
             var = emitAlloc(ptrType, varType);
             selectBlock(cur);
         }
@@ -300,8 +362,10 @@ void IR_Generator::insertStatement(const AST_Statement &stmt) {
 }
 
 void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
-    if (stmt.is_switch)
-        NOT_IMPLEMENTED("switch");
+    if (stmt.is_switch) {
+        insertSwitchStatement(stmt);
+        return;
+    }
 
     IRval cond = evalExpr(*stmt.condition);
     curBlock().setTerminator(IR_ExprTerminator::BRANCH, cond);
@@ -359,6 +423,60 @@ void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
         deselectBlock();
 }
 
+void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
+    IRval condVal = evalExpr(*stmt.condition);
+
+    IR_Block &entryBlock = curBlock();
+    IR_Block &switchedBlock = cfg->createBlock();
+    IR_Block &blockAfter = cfg->createBlock();
+
+    if (stmt.body->type != AST_Statement::COMPOUND)
+        semanticError("Switch statement can only has compound statement child");
+
+    activeControls.push_back(ControlStructData::SwitchBlocks{
+        .exit = blockAfter.id,
+        .labels = {},
+        .defaultBlock = {},
+    });
+    selectBlock(switchedBlock);
+    fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
+    if (selectedBlock != nullptr)
+        cfg->linkBlocks(curBlock(), blockAfter);
+
+    // TODO: use corresponding LLVM instruction instead or use binsearch
+    auto nearestSwitch = getNearestSwitch();
+    std::set<IRval, IRval::Comparator> usedCases;
+    selectBlock(entryBlock);
+    for (auto const &label : nearestSwitch->labels) {
+        if (usedCases.contains(label.val))
+            semanticError("Switch statement has two identical labels");
+        usedCases.insert(label.val);
+
+        IRval eqCond = emitOp(IR_TypeDirect::getI1(), IR_ExprOper::EQ, { condVal, label.val });
+        curBlock().setTerminator(IR_ExprTerminator::BRANCH, eqCond);
+        cfg->linkBlocks(curBlock(), cfg->block(label.block));
+        IR_Block &nextCaseBlock = cfg->createBlock();
+        cfg->linkBlocks(curBlock(), nextCaseBlock);
+        selectBlock(nextCaseBlock);
+    }
+
+    curBlock().setTerminator(IR_ExprTerminator::JUMP);
+    if (nearestSwitch->defaultBlock.has_value()) {
+        IR_Block &defaultBlock = cfg->block(nearestSwitch->defaultBlock.value());
+        cfg->linkBlocks(curBlock(), defaultBlock);
+    }
+    else {
+        cfg->linkBlocks(curBlock(), blockAfter);
+    }
+
+    activeControls.pop_back();
+
+    if (!blockAfter.prev.empty())
+        selectBlock(blockAfter);
+    else
+        deselectBlock();
+}
+
 void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     IR_Block &blockCond = cfg->createBlock();
     IR_Block &blockLoop = cfg->createBlock();
@@ -405,20 +523,20 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
             selectBlock(blockLastAct);
             evalExpr(*stmt.getForLoopControls().action);
 
-            activeLoops.push_back(LoopBlocks{
+            activeControls.push_back(ControlStructData::LoopBlocks{
                     .skip = blockLastAct.id,
                     .exit = blockAfter.id,
                     .before = blockBefore.id });
         }
         else { // No last action
-            activeLoops.push_back(LoopBlocks{
+            activeControls.push_back(ControlStructData::LoopBlocks{
                     .skip = blockCond.id,
                     .exit = blockAfter.id,
                     .before = blockBefore.id });
         }
     }
     else { // WHILE_LOOP, DO_LOOP
-        activeLoops.push_back(LoopBlocks{
+        activeControls.push_back(ControlStructData::LoopBlocks{
                 .skip = blockCond.id,
                 .exit = blockAfter.id,
                 .before = blockBefore.id });
@@ -434,11 +552,11 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     // Terminate body
     if (selectedBlock != nullptr) {
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.back().skip));
+        cfg->linkBlocks(curBlock(), cfg->block(activeControls.back().getLoop().skip));
     }
     selectBlock(blockAfter);
 
-    activeLoops.pop_back();
+    activeControls.pop_back();
     if (stmt.type == AST_IterationStmt::FOR_LOOP)
         variables.decreaseLevel();
 }
@@ -460,13 +578,18 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_BREAK) {
+        if (activeControls.empty())
+            semanticError("Break keyword outside of loop or switch");
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.back().exit));
+        cfg->linkBlocks(curBlock(), cfg->block(activeControls.back().getExit()));
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
+        auto nearestLoop = getNearestLoop();
+        if (!nearestLoop.has_value())
+            semanticError("Continue keyword outside of loop");
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeLoops.back().skip));
+        cfg->linkBlocks(curBlock(), cfg->block(nearestLoop->skip));
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_GOTO) {
@@ -497,27 +620,39 @@ void IR_Generator::insertCompoundStatement(const AST_CompoundStmt &stmt) {
 }
 
 void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
-    if (stmt.type == AST_LabeledStmt::SIMPL) {
-        // Do not create new block if current one doesn't contain nodes
-        if (!curBlock().getAllNodes().empty()) {
-            IR_Block &nextBlock = cfg->createBlock();
-            cfg->linkBlocks(curBlock(), nextBlock);
-            curBlock().setTerminator(IR_ExprTerminator::JUMP);
-            selectBlock(nextBlock);
-        }
+    // Create new block
+    if (!curBlock().getAllNodes().empty()) {
+        IR_Block &nextBlock = cfg->createBlock();
+        cfg->linkBlocks(curBlock(), nextBlock);
+        curBlock().setTerminator(IR_ExprTerminator::JUMP);
+        selectBlock(nextBlock);
+    }
 
+    if (stmt.type == AST_LabeledStmt::SIMPL) {
         string_id_t ident = stmt.getIdent();
         auto lIt = labels.lower_bound(ident);
         if (lIt->first == ident)
             semanticError("Such label already exists");
         labels.emplace_hint(lIt, ident, curBlock().id);
-
-        insertStatement(*stmt.child);
     }
-    else if (isInList(stmt.type, { AST_LabeledStmt::SW_CASE, AST_LabeledStmt::SW_DEFAULT })) {
-        NOT_IMPLEMENTED("switch labels");
+    else if (stmt.type == AST_LabeledStmt::SW_CASE) {
+        auto *nearestSwitch = getNearestSwitch();
+        if (nearestSwitch == nullptr)
+            semanticError("Case label outside of switch statement");
+        IRval caseVal = evalExpr(stmt.getExpr());
+        if (caseVal.getValueClass() != IRval::VAL)
+            semanticError("Only constants can be used in case labels");
+        nearestSwitch->addCase(caseVal, curBlock().id);
+    }
+    else if (stmt.type == AST_LabeledStmt::SW_DEFAULT) {
+        auto *nearestSwitch = getNearestSwitch();
+        if (nearestSwitch == nullptr)
+            semanticError("Default label outside of switch statement");
+        nearestSwitch->setDefault(curBlock().id);
     }
     else {
         internalError("Wrong label type");
     }
+
+    insertStatement(*stmt.child);
 }
