@@ -1,11 +1,33 @@
 int printf(const char *format, ...);
-char *memcpy(char *dest, char const *src, unsigned long n); // Void pointers are not allowed
+void* memcpy(void *dest, const void *src, unsigned long n);
 unsigned long strlen(const char *s);
 int atoi(const char *nptr);
 
-int main() {
-    int x = 2;
-    int y = x + 12;
-    int z = (y + atoi("32")) * 16;
-    return z;
+int g;
+
+struct MStruct {
+    int x, y, z;
+} ms2 = { 11, 22, 33 + 7 };
+
+struct ms {
+    int x;
+    long y;
+    int z;
+};
+
+int main(int argc, char **argv) {
+    int arr[6] = { 10, 11, 12, 13, 14, 15 };
+    int sz = 6;
+
+    for (int i = 0; i < sz; i++) {
+        for (int j = 0; j < sz; j++) {
+            printf("%d ", arr[i]);
+            if (j == i)
+                break;
+        }
+
+        printf("\n");
+    }
+
+    return 0;
 }

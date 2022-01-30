@@ -65,6 +65,8 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
     auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(type);
 
     switch (dirType->spec) {
+        case IR_TypeDirect::BOOL:
+            return IRval(IRval::VAL, type, static_cast<int8_t>(0));
         case IR_TypeDirect::I8:
             return IRval(IRval::VAL, type, static_cast<int8_t>(0));
         case IR_TypeDirect::U8:

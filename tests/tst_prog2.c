@@ -15,7 +15,7 @@ int fl(int x) {
 
 int main(int argc, char **argv) {
     if (argc != 4) {
-        printf("Wrong arguments count");
+        printf("Wrong arguments count\n");
         return 1;
     }
 

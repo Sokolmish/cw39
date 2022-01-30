@@ -155,6 +155,8 @@ Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
         switch (dirType.spec) {
             case IR_TypeDirect::VOID:
                 return builder->getVoidTy();
+            case IR_TypeDirect::BOOL:
+                return builder->getInt1Ty();
             case IR_TypeDirect::I8:
             case IR_TypeDirect::U8:
                 return builder->getInt8Ty();

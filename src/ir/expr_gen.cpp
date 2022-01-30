@@ -201,27 +201,24 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             internalError("Wrong general arithmetic operation");
     }
     else if (isComparsionOp(op)) {
-        std::optional<IRval> res;
-        if (op == bop::EQ) // TODO: i1
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::EQ, { lhs, rhs });
+        if (op == bop::EQ)
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::EQ, { lhs, rhs });
         else if (op == bop::NE)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::NE, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::NE, { lhs, rhs });
         else if (op == bop::GT)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::GT, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::GT, { lhs, rhs });
         else if (op == bop::LT)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LT, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::LT, { lhs, rhs });
         else if (op == bop::GE)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::GE, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::GE, { lhs, rhs });
         else if (op == bop::LE)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LE, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::LE, { lhs, rhs });
         else if (op == bop::LOG_AND)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LAND, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::LAND, { lhs, rhs });
         else if (op == bop::LOG_OR)
-            res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::LOR, { lhs, rhs });
+            return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::LOR, { lhs, rhs });
         else
             internalError("Wrong comparsion operation");
-
-        return emitCast(*res, IR_TypeDirect::getI32());
     }
     else {
         internalError("Wrong binary operation");
@@ -436,7 +433,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             else if (expr.op == uop::UN_NOT) {
                 IRval arg = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
                 IRval zero = IRval::createVal(arg.getType(), 0U);
-                IRval res = emitOp(IR_TypeDirect::getI8(), IR_ExprOper::EQ, { arg, zero }); // TODO: i1
+                IRval res = emitOp(IR_TypeDirect::getI1(), IR_ExprOper::EQ, { arg, zero });
                 return emitCast(res, IR_TypeDirect::getI32());
             }
             else if (expr.op == uop::PRE_INC || expr.op == uop::PRE_DEC) {

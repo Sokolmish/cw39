@@ -51,24 +51,23 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
         return std::visit([&expr](auto const &l) -> IRval {
 //            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
             auto const &r = expr.args[1].castValTo<std::remove_cvref_t<decltype(l)>>();
-            // TODO: i1
             switch (expr.op) {
                 case IR_ExprOper::LAND:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l && r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l && r));
                 case IR_ExprOper::LOR:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l || r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l || r));
                 case IR_ExprOper::EQ:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l == r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l == r));
                 case IR_ExprOper::NE:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l != r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l != r));
                 case IR_ExprOper::GT:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l > r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l > r));
                 case IR_ExprOper::LT:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l < r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l < r));
                 case IR_ExprOper::GE:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l >= r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l >= r));
                 case IR_ExprOper::LE:
-                    return IRval::createVal(IR_TypeDirect::getI8(), static_cast<int8_t>(l <= r));
+                    return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l <= r));
                 default:
                     internalError("Wrong comparsion operation");
             }

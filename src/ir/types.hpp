@@ -32,7 +32,7 @@ struct IR_Type {
 class IR_TypeDirect : public IR_Type {
 public:
     enum DirType {
-        VOID, I8, U8, I32, U32, I64, U64, F32, F64
+        VOID, BOOL, I8, U8, I32, U32, I64, U64, F32, F64
     } spec;
 
     explicit IR_TypeDirect(DirType spec);
@@ -47,6 +47,7 @@ public:
     [[nodiscard]] int getBytesSize() const override;
 
     static std::shared_ptr<IR_TypeDirect> getVoid();
+    static std::shared_ptr<IR_TypeDirect> getI1();
     static std::shared_ptr<IR_TypeDirect> getI8();
     static std::shared_ptr<IR_TypeDirect> getU8();
     static std::shared_ptr<IR_TypeDirect> getI32();
@@ -58,7 +59,7 @@ public:
 
 private:
     static std::shared_ptr<IR_TypeDirect> getStaticType(size_t index, DirType type);
-    static std::shared_ptr<IR_TypeDirect> staticTypes[9];
+    static std::shared_ptr<IR_TypeDirect> staticTypes[10];
 };
 
 struct IR_TypeStruct : IR_Type {
