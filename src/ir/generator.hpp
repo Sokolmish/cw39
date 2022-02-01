@@ -74,7 +74,8 @@ private:
     std::optional<ControlStructData::LoopBlocks> getNearestLoop();
     ControlStructData::SwitchBlocks* getNearestSwitch();
 
-    std::map<string_id_t, int> labels;
+    std::map<string_id_t, int> labels;                      // label_id -> block_id
+    std::vector<std::pair<int, string_id_t>> danglingGotos; // block_id -> label_id
 
     bool isShortLogicEnabled = true;
 

@@ -264,7 +264,15 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     fillBlock(*def.body);
     curFunctionType = nullptr;
     variables.decreaseLevel();
+
+    for (auto const &[block, label] : danglingGotos) {
+        auto it = labels.find(label);
+        if (it == labels.end())
+            semanticError("Unknown label");
+        cfg->linkBlocks(cfg->block(block), cfg->block(it->second));
+    }
     labels.clear();
+    danglingGotos.clear();
 }
 
 /** Process compound statement */
@@ -593,7 +601,13 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_GOTO) {
-        NOT_IMPLEMENTED("goto");
+        curBlock().setTerminator(IR_ExprTerminator::JUMP);
+        string_id_t label = stmt.getIdent();
+        if (auto it = labels.find(label); it != labels.end())
+            cfg->linkBlocks(curBlock(), cfg->block(it->second));
+        else
+            danglingGotos.push_back({ curBlock().id, label });
+        deselectBlock();
     }
     else {
         internalError("Wrong jump statement");
