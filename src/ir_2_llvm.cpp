@@ -6,7 +6,7 @@
 #include <fmt/core.h>
 
 #include "utils.hpp"
-#include "transformations/dominators.hpp"
+#include "transformations/graph_info.hpp"
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
@@ -35,7 +35,7 @@ class IR2LLVM::IR2LLVM_Impl {
 public:
     IR2LLVM *parent;
 
-    std::unique_ptr<Dominators> doms;
+    std::unique_ptr<GraphInfo> gInfo;
 
     std::unique_ptr<LLVMContext> context;
     std::unique_ptr<Module> module;
@@ -90,7 +90,7 @@ IR2LLVM::~IR2LLVM() = default;
 
 
 IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
-    doms = std::make_unique<Dominators>(parent->cfg);
+    gInfo = std::make_unique<GraphInfo>(parent->cfg);
 
     context = std::make_unique<LLVMContext>();
     module = std::make_unique<Module>("top", *context);
@@ -115,7 +115,7 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
     builder.reset();
     module.reset();
     context.reset();
-    doms.reset();
+    gInfo.reset();
 }
 
 
@@ -306,7 +306,7 @@ void IR2LLVM_Impl::createFunctions() {
             int cur = queue.front();
             queue.pop_front();
             visited.insert(cur);
-            for (int next : doms->getChildren(cur))
+            for (int next : gInfo->getChildren(cur))
                 queue.push_back(next);
 
             createBlock(cur);

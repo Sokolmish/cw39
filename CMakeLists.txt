@@ -30,13 +30,12 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/ir/expr_gen.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/constants_folder.cpp
 
+        ${PROJECT_SOURCE_DIR}/src/transformations/graph_info.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp
-        ${PROJECT_SOURCE_DIR}/src/transformations/dominators.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/ssa_generator.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/cfg_cleaner.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/copy_propagator.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/algebraic_transformer.cpp
-        ${PROJECT_SOURCE_DIR}/src/transformations/arcs_classifier.cpp
 
         ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
         )

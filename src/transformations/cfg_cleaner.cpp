@@ -1,6 +1,6 @@
 #include "cfg_cleaner.hpp"
 #include "utils.hpp"
-#include "dominators.hpp"
+#include "graph_info.hpp"
 #include <stack>
 #include <algorithm>
 #include <ranges>
@@ -80,6 +80,7 @@ void CfgCleaner::fixVersions() {
     }
 }
 
+// TODO: PHI loop dependencies
 void CfgCleaner::removeUselessNodes() {
     std::set<int> visited;
     std::set<IRval, IRval::Comparator> usedRegs;
@@ -239,7 +240,7 @@ void CfgCleaner::removeUnreachableBlocks() {
 std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
     if (cfg->block(startId).prev.size() != 1)
         return {};
-    Dominators doms(cfg); // TODO: dominators for subgraph (at least function)
+    GraphInfo gInfo(cfg); // TODO: dominators for subgraph (at least function)
     std::set<int> res { startId };
     std::stack<int> stack;
     stack.push(startId);
@@ -248,7 +249,7 @@ std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
         stack.pop();
 
         for (int next : curBlock.next) {
-            if (!res.contains(next) && doms.isDom(startId, next)) {
+            if (!res.contains(next) && gInfo.isDom(startId, next)) {
                 stack.push(next);
                 res.insert(next);
             }

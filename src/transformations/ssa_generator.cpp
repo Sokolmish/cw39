@@ -5,7 +5,7 @@
 SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
         : origCfg(std::move(in_cfg)) {
     cfg = std::make_shared<ControlFlowGraph>(*origCfg);
-    doms = std::make_unique<Dominators>(cfg);
+    gInfo = std::make_unique<GraphInfo>(cfg);
 
     placePhis();
     versionize();
@@ -70,13 +70,13 @@ void SSA_Generator::makeVerticesDF() {
         auto it = verticesDF.emplace(xId, std::set<int>());
         auto &curSet = it.first->second;
         for (int yId : cfg->block(xId).next) {
-            if (doms->getIdom(yId) != xId) {
+            if (gInfo->getIdom(yId) != xId) {
                 curSet.insert(yId);
             }
         }
-        for (int z : doms->getChildren(xId)) {
+        for (int z : gInfo->getChildren(xId)) {
             for (int y : verticesDF.at(z)) {
-                if (doms->getIdom(y) != xId) {
+                if (gInfo->getIdom(y) != xId) {
                     curSet.insert(y);
                 }
             }
@@ -190,7 +190,7 @@ void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
         }
     }
 
-    for (int domChild : doms->getChildren(blockId))
+    for (int domChild : gInfo->getChildren(blockId))
         traverseForVar(domChild, var);
 
     while (rollbackCnt--)

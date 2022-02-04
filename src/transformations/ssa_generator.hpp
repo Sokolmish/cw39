@@ -6,14 +6,14 @@
 #include <deque>
 #include <memory>
 #include "ir/cfg.hpp"
-#include "transformations/dominators.hpp"
+#include "graph_info.hpp"
 
 class SSA_Generator {
 private:
     std::shared_ptr<ControlFlowGraph> origCfg;
     std::shared_ptr<ControlFlowGraph> cfg;
 
-    std::unique_ptr<Dominators> doms;
+    std::unique_ptr<GraphInfo> gInfo;
     std::map<int, int> postOrder;
     std::map<int, std::set<int>> verticesDF;
 
