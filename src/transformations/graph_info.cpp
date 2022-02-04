@@ -51,7 +51,6 @@ void GraphInfo::dfs(UtilNode &node) {
 
             newNode.parent = &node;
             dfs(newNode);
-            // NOTE: attemt to replace recursion with loop can be painful...
         }
         else {
             unprocArcs.push_back(std::make_pair(&node, &it->second));
@@ -62,18 +61,12 @@ void GraphInfo::dfs(UtilNode &node) {
 
 void GraphInfo::classifyArcs() {
     for (auto &[from, to] : unprocArcs) {
-        int fromId = from->id;
-        int toId = to->id;
-
         if (from->timeIn < to->timeIn && to->timeOut < from->timeOut)
-            arcsClasses.emplace(std::make_pair(fromId, toId), GraphInfo::FORWARD);
+            arcsClasses.emplace(std::make_pair(from->id, to->id), GraphInfo::FORWARD);
         else if (to->timeIn < from->timeIn && from->timeOut < to->timeOut)
-            arcsClasses.emplace(std::make_pair(fromId, toId), GraphInfo::BACK);
-        else if (to->timeOut < from->timeIn)
-            arcsClasses.emplace(std::make_pair(fromId, toId), GraphInfo::CROSS);
-        else
-            internalError("Smth went wrong on arcs classification");
-//            arcsClasses.emplace(std::make_pair(fromId, toId), GraphInfo::NONE);
+            arcsClasses.emplace(std::make_pair(from->id, to->id), GraphInfo::BACK);
+        else // ? to->timeOut < from->timeIn
+            arcsClasses.emplace(std::make_pair(from->id, to->id), GraphInfo::CROSS);
     }
     unprocArcs.clear();
 }
