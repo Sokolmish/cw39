@@ -62,7 +62,7 @@ void GraphInfo::dfs(UtilNode &node) {
 void GraphInfo::classifyArcs() {
     for (auto &[from, to] : unprocArcs) {
         if (from->timeIn < to->timeIn && to->timeOut < from->timeOut)
-            arcsClasses.emplace(std::make_pair(from->id, to->id), GraphInfo::FORWARD);
+            arcsClasses.emplace(std::make_pair(from->id, to->id), GraphInfo::FWD);
         else if (to->timeIn < from->timeIn && from->timeOut < to->timeOut)
             arcsClasses.emplace(std::make_pair(from->id, to->id), GraphInfo::BACK);
         else // ? to->timeOut < from->timeIn
@@ -148,6 +148,14 @@ GraphInfo::ArcClass GraphInfo::getArcClass(int from, int to) {
     return it == arcsClasses.end() ? GraphInfo::NONE : it->second;
 }
 
+std::vector<std::pair<int, int>> GraphInfo::getArcs(GraphInfo::ArcClass cl) {
+    std::vector<std::pair<int, int>> res;
+    for (auto const &[arc, aCl] : arcsClasses)
+        if (aCl == cl)
+            res.push_back(arc);
+    return res;
+}
+
 bool GraphInfo::isIdom(int x, int y) const {
     return domData.at(y).dominatorId == x;
 }
@@ -208,7 +216,7 @@ std::string GraphInfo::drawArcsClasses() const {
             case GraphInfo::CROSS:
                 fstr = "{}->{}[style=\"dashed\",color=darkblue,constraint=false]; ";
                 break;
-            case GraphInfo::FORWARD:
+            case GraphInfo::FWD:
                 fstr = "{}->{}[style=\"dashed,bold\",color=darkgreen,constraint=false]; ";
                 break;
             default:

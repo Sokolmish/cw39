@@ -11,8 +11,10 @@ class GraphInfo {
 public:
     explicit GraphInfo(std::shared_ptr<ControlFlowGraph> graph);
 
-    enum ArcClass { NONE, TREE, BACK, FORWARD, CROSS };
+    enum ArcClass { NONE, TREE, BACK, FWD, CROSS };
     ArcClass getArcClass(int from, int to);
+
+    std::vector<std::pair<int, int>> getArcs(ArcClass cl);
 
     /** Is x immediate dominator of y */
     bool isIdom(int x, int y) const;
