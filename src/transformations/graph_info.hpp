@@ -53,8 +53,8 @@ private:
 
         UtilNode *parent = nullptr;
         UtilNode *ancestor = nullptr;
-        UtilNode *sdom;
-        UtilNode *label;
+        UtilNode *sdom = nullptr;
+        UtilNode *label = nullptr;
 
         std::vector<UtilNode*> bucket;
 

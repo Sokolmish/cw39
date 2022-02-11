@@ -1,6 +1,7 @@
 #include "ssa_generator.hpp"
 #include "cfg_cleaner.hpp"
 #include <vector>
+#include <stack>
 
 SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
         : origCfg(std::move(in_cfg)) {
@@ -133,66 +134,81 @@ void SSA_Generator::versionize() {
     }
 }
 
-void SSA_Generator::traverseForVar(int blockId, const IRval &var) {
-    auto &curBlock = cfg->block(blockId);
-    int rollbackCnt = 0;
+void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
+    enum { SSAV_REC_CALL = false, SSAV_ROLLBACK = true };
+    std::stack<std::pair<int, bool>> stack;
+    stack.push(std::make_pair(startBlockId, SSAV_REC_CALL));
 
-    // Phis
-    for (auto &phiNode : curBlock.phis) {
-        if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
-            phiNode.res->setVersion(versionsCnt);
-            versions.push_back(versionsCnt++);
-            rollbackCnt++;
-            break;
-        }
-    }
-
-    // General nodes
-    for (auto &node : curBlock.body) {
-        for (IRval *arg : node.body->getArgs()) {
-            if (arg->equalIgnoreVers(var)) {
-                arg->setVersion(versions.back());
-            }
-        }
-        if (node.res && node.res->equalIgnoreVers(var)) {
-            node.res->setVersion(versionsCnt);
-            versions.push_back(versionsCnt++);
-            rollbackCnt++;
-        }
-    }
-
-    // Terminator
-    if (curBlock.termNode.has_value()) {
-        auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
-        if (terminator.arg.has_value() && terminator.arg->equalIgnoreVers(var))
-            terminator.arg->setVersion(versions.back());
-    }
-
-    // Set phis args in next blocks
-    for (int nextId : curBlock.next) {
-        auto &nextBlock = cfg->block(nextId);
-        int j = -1;
-        for (size_t k = 0; k < nextBlock.prev.size(); k++) {
-            if (nextBlock.prev.at(k) == blockId) {
-                j = static_cast<int>(k);
-                break;
-            }
+    while (!stack.empty()) {
+        if (stack.top().second == SSAV_ROLLBACK) {
+            int rollback = stack.top().first;
+            while (rollback--)
+                versions.pop_back();
+            stack.pop();
+            continue;
         }
 
-        for (auto &phiNode : nextBlock.phis) {
+        int blockId = stack.top().first;
+        stack.pop();
+
+        auto &curBlock = cfg->block(blockId);
+        int rollbackCnt = 0;
+
+        // Phis
+        for (auto &phiNode : curBlock.phis) {
             if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
-                IRval phiArg = var;
-                phiArg.setVersion(versions.back());
-                auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
-                phiExpr.args.emplace(j, phiArg);
+                phiNode.res->setVersion(versionsCnt);
+                versions.push_back(versionsCnt++);
+                rollbackCnt++;
                 break;
             }
         }
+
+        // General nodes
+        for (auto &node : curBlock.body) {
+            for (IRval *arg : node.body->getArgs()) {
+                if (arg->equalIgnoreVers(var)) {
+                    arg->setVersion(versions.back());
+                }
+            }
+            if (node.res && node.res->equalIgnoreVers(var)) {
+                node.res->setVersion(versionsCnt);
+                versions.push_back(versionsCnt++);
+                rollbackCnt++;
+            }
+        }
+
+        // Terminator
+        if (curBlock.termNode.has_value()) {
+            auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
+            if (terminator.arg.has_value() && terminator.arg->equalIgnoreVers(var))
+                terminator.arg->setVersion(versions.back());
+        }
+
+        // Set phis args in next blocks
+        for (int nextId : curBlock.next) {
+            auto &nextBlock = cfg->block(nextId);
+            int j = -1;
+            for (size_t k = 0; k < nextBlock.prev.size(); k++) {
+                if (nextBlock.prev.at(k) == blockId) {
+                    j = static_cast<int>(k);
+                    break;
+                }
+            }
+
+            for (auto &phiNode : nextBlock.phis) {
+                if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
+                    IRval phiArg = var;
+                    phiArg.setVersion(versions.back());
+                    auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
+                    phiExpr.args.emplace(j, phiArg);
+                    break;
+                }
+            }
+        }
+
+        stack.push({ rollbackCnt, SSAV_ROLLBACK });
+        for (int domChild : gInfo->getChildren(blockId))
+            stack.push({ domChild, SSAV_REC_CALL });
     }
-
-    for (int domChild : gInfo->getChildren(blockId))
-        traverseForVar(domChild, var);
-
-    while (rollbackCnt--)
-        versions.pop_back();
 }
