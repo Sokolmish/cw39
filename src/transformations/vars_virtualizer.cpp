@@ -4,8 +4,8 @@
 #include <deque>
 #include <set>
 
-VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg)
-        : cfg(std::make_shared<ControlFlowGraph>(std::move(rawCfg))) {
+VarsVirtualizer::VarsVirtualizer(ControlFlowGraph const &rawCfg)
+        : cfg(std::make_shared<ControlFlowGraph>(rawCfg)) {
     for (auto const &[id, func] : cfg->getFuncs()) {
         toRedudeList.clear();
         passFunction(func);

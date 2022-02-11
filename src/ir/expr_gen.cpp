@@ -679,7 +679,7 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
 }
 
 /** Get aggreagate value of given type from initializer list */
-IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> type, const AST_InitializerList &lst) {
+IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const AST_InitializerList &lst) {
     // TODO: template and constexpr
     if (type->type == IR_Type::ARRAY) {
         auto const &arrType = dynamic_cast<IR_TypeArray const &>(*type);
@@ -770,7 +770,7 @@ std::optional<IRval> IR_Generator::getPtrToVariable(string_id_t ident) {
 
 std::pair<string_id_t, std::string> IR_Generator::getStringLiteral(AST_StringsSeq const &scat) {
     string_id_t parserStrId;
-    std::string fullStr = "";
+    std::string fullStr;
     if (scat.v.size() == 1) {
         parserStrId = scat.v[0];
         fullStr = get_string_by_id(parserStrId);

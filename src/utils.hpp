@@ -60,7 +60,7 @@ public:
     }
 
     std::optional<V> get(K const &key) const {
-        for (auto lay = data.rbegin(); lay != data.rend(); lay++) {
+        for (auto lay = data.rbegin(); lay != data.rend(); ++lay) {
             auto it = lay->find(key);
             if (it != lay->end())
                 return it->second;

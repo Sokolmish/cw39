@@ -53,9 +53,9 @@ std::unique_ptr<IR_Expr> IR_ExprOper::copy() const {
 }
 
 std::vector<IRval*> IR_ExprOper::getArgs() {
-    std::vector<IRval*> resArgs;
-    for (auto &arg : args)
-        resArgs.push_back(&arg);
+    std::vector<IRval*> resArgs(args.size());
+    for (size_t i = 0; auto &arg : args)
+        resArgs.at(i++) = &arg;
     return resArgs;
 }
 
@@ -357,9 +357,9 @@ std::unique_ptr<IR_Expr> IR_ExprPhi::copy() const {
 }
 
 std::vector<IRval *> IR_ExprPhi::getArgs() {
-    std::vector<IRval*> resArgs;
-    for (auto &[pos, arg] : args)
-        resArgs.push_back(&arg);
+    std::vector<IRval*> resArgs(args.size());
+    for (size_t i = 0; auto &[pos, arg] : args)
+        resArgs.at(i++) = &arg;
     return resArgs;
 }
 

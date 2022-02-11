@@ -90,14 +90,18 @@ ControlFlowGraph::Function const& ControlFlowGraph::getFunction(int id) const {
 }
 
 IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
-    return IRval::createReg(type, regs_counter++);
+    return IRval::createReg(std::move(type), regs_counter++);
 }
 
 /** Expects ptr type */
 IRval ControlFlowGraph::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init) {
     auto newId = globalsCounter++;
-    IRval newGlobal = IRval::createGlobal(type, newId);
-    globals.insert({ newId, GlobalVar{ newId, name, type, init } });
+    IRval newGlobal = IRval::createGlobal(std::move(type), newId);
+    globals.insert({ newId, GlobalVar{
+            .id = newId,
+            .name = std::move(name),
+            .type = newGlobal.getType(),
+            .init = std::move(init) }});
     return newGlobal;
 }
 
@@ -111,7 +115,7 @@ ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
     func.entryBlockId = newBlock.id;
     func.storage = stor;
     func.isInline = isInline;
-    func.fullType = fullType;
+    func.fullType = std::move(fullType);
     auto it = funcs.emplace_hint(funcs.end(), func.id, std::move(func));
     return it->second;
 }
@@ -124,7 +128,7 @@ ControlFlowGraph::Function& ControlFlowGraph::createPrototype(std::string name,
     func.entryBlockId = -1;
     func.storage = stor;
     func.isInline = false;
-    func.fullType = fullType;
+    func.fullType = std::move(fullType);
     auto it = prototypes.emplace_hint(prototypes.end(), func.id, std::move(func));
     return it->second;
 }
@@ -163,7 +167,8 @@ std::map<uint64_t, std::string> const& ControlFlowGraph::getStrings() const {
     return strings;
 }
 
-void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> action) {
+void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited,
+                                      std::function<void(int)> const &action) {
     if (visited.contains(blockId))
         return;
     visited.insert(blockId);

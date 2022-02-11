@@ -14,7 +14,7 @@ private:
     std::set<int> getDominatedByGiven(int startId);
 
 public:
-    CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg);
+    explicit CfgCleaner(std::shared_ptr<ControlFlowGraph> const &rawCfg);
 
     void removeNops();
     void fixVersions();

@@ -53,7 +53,7 @@ void GraphInfo::dfs(UtilNode &node) {
             dfs(newNode);
         }
         else {
-            unprocArcs.push_back(std::make_pair(&node, &it->second));
+            unprocArcs.emplace_back(&node, &it->second);
         }
     }
     node.timeOut = globalTime++;
@@ -104,7 +104,7 @@ void GraphInfo::dominators(std::vector<int> &nodes) {
         node.sdom = &node;
     }
 
-    for (auto it = nodes.rbegin(); it != nodes.rend(); it++) {
+    for (auto it = nodes.rbegin(); it != nodes.rend(); ++it) {
         auto &wNode = utilNodes.at(*it);
         if (wNode.parent == nullptr || wNode.timeIn == -1)
             continue;
@@ -131,7 +131,7 @@ void GraphInfo::dominators(std::vector<int> &nodes) {
         bucket.clear();
     }
 
-    for (auto it = nodes.begin(); it != nodes.end(); it++) { // ascending order
+    for (auto it = nodes.begin(); it != nodes.end(); ++it) { // ascending order
         auto &wNode = utilNodes.at(*it);
         if (wNode.parent == nullptr || wNode.timeIn == -1)
             continue;

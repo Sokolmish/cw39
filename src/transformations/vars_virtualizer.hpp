@@ -20,7 +20,7 @@ private:
     void optimizeBlock(IR_Block &block);
 
 public:
-    explicit VarsVirtualizer(ControlFlowGraph rawCfg);
+    explicit VarsVirtualizer(ControlFlowGraph const &rawCfg);
     std::shared_ptr<ControlFlowGraph> getCfg();
 };
 

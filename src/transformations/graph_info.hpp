@@ -27,8 +27,8 @@ public:
     /** Get nodes immediate dominated by x */
     std::vector<int> getChildren(int x) const;
 
-    std::string drawArcsClasses() const;
-    std::string drawDominators() const;
+    [[nodiscard]] std::string drawArcsClasses() const;
+    [[nodiscard]] std::string drawDominators() const;
 
 private:
     // Graph arcs

@@ -7,7 +7,7 @@
 
 namespace rng = std::ranges;
 
-CfgCleaner::CfgCleaner(std::shared_ptr<ControlFlowGraph> rawCfg)
+CfgCleaner::CfgCleaner(std::shared_ptr<ControlFlowGraph> const &rawCfg)
         : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {}
 
 std::shared_ptr<ControlFlowGraph> CfgCleaner::getCfg() {

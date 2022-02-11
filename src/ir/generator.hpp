@@ -57,8 +57,8 @@ private:
             void setDefault(int block);
         };
 
-        ControlStructData(LoopBlocks loop);
-        ControlStructData(SwitchBlocks sw);
+        explicit ControlStructData(LoopBlocks loop);
+        explicit ControlStructData(SwitchBlocks sw);
 
         int getExit() const;
         bool isLoop() const;
@@ -99,7 +99,7 @@ private:
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertGlobalDeclaration(AST_Declaration const &decl);
     void insertDeclaration(AST_Declaration const &decl);
-    IRval getInitializerVal(std::shared_ptr<IR_Type> type, AST_Initializer const &init);
+    IRval getInitializerVal(std::shared_ptr<IR_Type> const &type, AST_Initializer const &init);
 
     void insertStatement(AST_Statement const &stmt);
     void insertIfStatement(AST_SelectionStmt const &stmt);
@@ -122,7 +122,7 @@ private:
     IRval getLiteralIRval(AST_Literal const &lit);
     std::optional<IRval> getPtrToVariable(string_id_t ident);
     std::pair<string_id_t, std::string> getStringLiteral(const AST_StringsSeq &scat);
-    IRval getCompoundVal(std::shared_ptr<IR_Type> type, AST_InitializerList const &lst);
+    IRval getCompoundVal(std::shared_ptr<IR_Type> const &type, AST_InitializerList const &lst);
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 

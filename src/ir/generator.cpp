@@ -23,7 +23,7 @@ std::shared_ptr<ControlFlowGraph> IR_Generator::getCfg() const {
 
 
 IR_Generator::ControlStructData::ControlStructData(IR_Generator::ControlStructData::LoopBlocks loop)
-        : data(std::move(loop)) {}
+        : data(loop) {}
 
 IR_Generator::ControlStructData::ControlStructData(IR_Generator::ControlStructData::SwitchBlocks sw)
         : data(std::move(sw)) {}
@@ -54,7 +54,7 @@ std::optional<IR_Generator::ControlStructData::LoopBlocks> IR_Generator::getTopm
 }
 
 void IR_Generator::ControlStructData::SwitchBlocks::addCase(IRval val, int block) {
-    labels.push_back(CaseBlock{ .val = val, .block = block });
+    labels.push_back(CaseBlock{ .val = std::move(val), .block = block });
 }
 
 void IR_Generator::ControlStructData::SwitchBlocks::setDefault(int block) {
@@ -97,13 +97,13 @@ std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::u
     else {
         std::optional<IRval> res = {};
         if (ret)
-            res = cfg->createReg(ret);
+            res = cfg->createReg(std::move(ret));
         return emitNode(res, std::move(expr));
     }
 }
 
 IRval IR_Generator::emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
-    return *emitNode(ret, std::make_unique<IR_ExprOper>(op, std::move(args)));
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprOper>(op, std::move(args)));
 }
 
 std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
@@ -118,39 +118,41 @@ void IR_Generator::emitStore(IRval addr, IRval val) {
 
 IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr) {
     auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::LOAD, std::move(addr));
-    return *emitNode(ret, std::move(expr));
+    return *emitNode(std::move(ret), std::move(expr));
 }
 
 IRval IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
-    return *emitNode(dst, std::make_unique<IR_ExprCast>(std::move(srcVal), dst));
+    auto dstCopy = dst;
+    auto expr = std::make_unique<IR_ExprCast>(std::move(srcVal), std::move(dst));
+    return *emitNode(std::move(dstCopy), std::move(expr));
 }
 
 std::optional<IRval>
 IR_Generator::emitCall(std::shared_ptr<IR_Type> ret, int callee, std::vector<IRval> args) {
-    return emitNode(ret, std::make_unique<IR_ExprCall>(callee, std::move(args)));
+    return emitNode(std::move(ret), std::make_unique<IR_ExprCall>(callee, std::move(args)));
 }
 
 std::optional<IRval>
 IR_Generator::emitIndirCall(std::shared_ptr<IR_Type> ret, IRval callee, std::vector<IRval> args) {
-    return emitNode(ret, std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
+    return emitNode(std::move(ret), std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
 }
 
 IRval IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap) {
-    return *emitNode(ret, std::make_unique<IR_ExprAlloc>(type, onHeap));
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAlloc>(std::move(type), onHeap));
 }
 
 IRval IR_Generator::emitExtract(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
-    return *emitNode(ret, std::make_unique<IR_ExprAccess>(
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
             IR_ExprAccess::EXTRACT, std::move(base), std::move(indices)));
 }
 
 IRval IR_Generator::emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> ind) {
-    return *emitNode(ret, std::make_unique<IR_ExprAccess>(
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
             IR_ExprAccess::INSERT, std::move(base), std::move(val), std::move(ind)));
 }
 
 IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
-    return *emitNode(ret, std::make_unique<IR_ExprAccess>(
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
             IR_ExprAccess::GEP, std::move(base), std::move(indices)));
 }
 
@@ -336,7 +338,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
     }
 }
 
-IRval IR_Generator::getInitializerVal(std::shared_ptr<IR_Type> type, const AST_Initializer &init) {
+IRval IR_Generator::getInitializerVal(std::shared_ptr<IR_Type> const &type, const AST_Initializer &init) {
     if (init.is_compound) {
         auto const &initLst = dynamic_cast<AST_InitializerList const &>(*init.val);
         return getCompoundVal(type, initLst);
@@ -441,7 +443,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     if (stmt.body->type != AST_Statement::COMPOUND)
         semanticError("Switch statement can only has compound statement child");
 
-    activeControls.push_back(ControlStructData::SwitchBlocks{
+    activeControls.emplace_back(ControlStructData::SwitchBlocks{
         .exit = blockAfter.id,
         .labels = {},
         .defaultBlock = {},
@@ -531,20 +533,20 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
             selectBlock(blockLastAct);
             evalExpr(*stmt.getForLoopControls().action);
 
-            activeControls.push_back(ControlStructData::LoopBlocks{
+            activeControls.emplace_back(ControlStructData::LoopBlocks{
                     .skip = blockLastAct.id,
                     .exit = blockAfter.id,
                     .before = blockBefore.id });
         }
         else { // No last action
-            activeControls.push_back(ControlStructData::LoopBlocks{
+            activeControls.emplace_back(ControlStructData::LoopBlocks{
                     .skip = blockCond.id,
                     .exit = blockAfter.id,
                     .before = blockBefore.id });
         }
     }
     else { // WHILE_LOOP, DO_LOOP
-        activeControls.push_back(ControlStructData::LoopBlocks{
+        activeControls.emplace_back(ControlStructData::LoopBlocks{
                 .skip = blockCond.id,
                 .exit = blockAfter.id,
                 .before = blockBefore.id });
@@ -606,7 +608,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         if (auto it = labels.find(label); it != labels.end())
             cfg->linkBlocks(curBlock(), cfg->block(it->second));
         else
-            danglingGotos.push_back({ curBlock().id, label });
+            danglingGotos.emplace_back(curBlock().id, label);
         deselectBlock();
     }
     else {

@@ -236,9 +236,9 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
                 args.push_back(dyn_cast<Constant>(getValue(elem)));
 
             if (val.getType()->type == IR_Type::TSTRUCT)
-                return ConstantStruct::get(dyn_cast<StructType>(aggregateType), std::move(args));
+                return ConstantStruct::get(dyn_cast<StructType>(aggregateType), args);
             else if (val.getType()->type == IR_Type::ARRAY)
-                return ConstantArray::get(dyn_cast<ArrayType>(aggregateType), std::move(args));
+                return ConstantArray::get(dyn_cast<ArrayType>(aggregateType), args);
             else
                 semanticError("Wrong aggregate initializer type");
         }

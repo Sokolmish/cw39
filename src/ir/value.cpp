@@ -3,10 +3,10 @@
 #include <sstream>
 
 IRval::IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type v) :
-        valClass(vclass), type(type), val(v) {}
+        valClass(vclass), type(std::move(type)), val(v) {}
 
 IRval::IRval(IRval::ValueClass vclass, std::shared_ptr<IR_Type> type, std::vector<IRval> vals) :
-        valClass(vclass), type(type), aggregateVals(std::move(vals)) {}
+        valClass(vclass), type(std::move(type)), aggregateVals(std::move(vals)) {}
 
 
 IRval::ValueClass IRval::getValueClass() const {
@@ -49,40 +49,40 @@ IRval IRval::createUndef(std::shared_ptr<IR_Type> type) {
 }
 
 IRval IRval::createAggregate(std::shared_ptr<IR_Type> type, std::vector<IRval> vals) {
-    return IRval(IRval::AGGREGATE, type, std::move(vals));
+    return IRval(IRval::AGGREGATE, std::move(type), std::move(vals));
 }
 
 IRval IRval::createZeroinit(std::shared_ptr<IR_Type> type) {
-    return IRval(IRval::ZEROINIT, type, 0ULL);
+    return IRval(IRval::ZEROINIT, std::move(type), 0ULL);
 }
 
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
     if (type->type == IR_Type::POINTER)
-        return IRval(IRval::VAL, type, static_cast<uint64_t>(0));
+        return IRval(IRval::VAL, std::move(type), static_cast<uint64_t>(0));
 
     if (type->type != IR_Type::DIRECT)
         semanticError("Cannot create default value for such type");
-    auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(type);
+    auto spec = dynamic_cast<IR_TypeDirect &>(*type).spec;
 
-    switch (dirType->spec) {
+    switch (spec) {
         case IR_TypeDirect::BOOL:
-            return IRval(IRval::VAL, type, static_cast<int8_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<int8_t>(0));
         case IR_TypeDirect::I8:
-            return IRval(IRval::VAL, type, static_cast<int8_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<int8_t>(0));
         case IR_TypeDirect::U8:
-            return IRval(IRval::VAL, type, static_cast<uint8_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<uint8_t>(0));
         case IR_TypeDirect::I32:
-            return IRval(IRval::VAL, type, static_cast<int32_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<int32_t>(0));
         case IR_TypeDirect::U32:
-            return IRval(IRval::VAL, type, static_cast<uint32_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<uint32_t>(0));
         case IR_TypeDirect::I64:
-            return IRval(IRval::VAL, type, static_cast<int64_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<int64_t>(0));
         case IR_TypeDirect::U64:
-            return IRval(IRval::VAL, type, static_cast<uint64_t>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<uint64_t>(0));
         case IR_TypeDirect::F32:
-            return IRval(IRval::VAL, type, static_cast<float>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<float>(0));
         case IR_TypeDirect::F64:
-            return IRval(IRval::VAL, type, static_cast<double>(0));
+            return IRval(IRval::VAL, std::move(type), static_cast<double>(0));
         case IR_TypeDirect::VOID:
             semanticError("Cannot create value of type VOID");
     }
@@ -203,7 +203,7 @@ bool IRval::lessIgnoreVers(const IRval &a, const IRval &b) {
         return true;
     else if (a.valClass > b.valClass)
         return false;
-    else
+    else [[likely]]
         return a.val < b.val;
 }
 
@@ -212,10 +212,11 @@ bool IRval::less(const IRval &a, const IRval &b) {
         return true;
     else if (a.valClass > b.valClass)
         return false;
-    else {
-        if (a.val < b.val)
+    else [[likely]] {
+        auto valOrd = a.val <=> b.val;
+        if (is_lt(valOrd)) // a.val < b.val
             return true;
-        else if (a.val > b.val)
+        else if (is_gt(valOrd)) // a.val > b.val
             return false;
         else if (a.version.has_value() && b.version.has_value())
             return a.version < b.version;
