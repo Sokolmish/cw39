@@ -8,7 +8,7 @@
 
 %{
 	#include "lexer.h"
-	#include "ast.hpp"
+	#include "parser.hpp"
 
 	#ifdef __cplusplus
 	extern "C" {
@@ -603,13 +603,16 @@ void yyerror(void *loc, yyscan_t, AST_TranslationUnit **root, const char *str) {
     fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
 }
 
-AST_TranslationUnit* parse_program(std::string const &str) {
+AST_TranslationUnit* CoreParser::parse_program(std::string const &str, CoreParserState *state) {
 	yyscan_t scanner;
 	lex_extra_t extra;
+	extra.state = state;
 	init_scanner(str.c_str(), &scanner, &extra);
+	ast_set_pstate_ptr(state);
 	AST_TranslationUnit *res;
 	int isFailure = yyparse(scanner, &res);
 	destroy_scanner(scanner);
+	ast_set_pstate_ptr(nullptr);
 	if (isFailure) {
 		fprintf(stderr, "Parsing failed\n");
 		exit(EXIT_FAILURE);

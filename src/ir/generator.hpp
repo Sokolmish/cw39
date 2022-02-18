@@ -3,7 +3,7 @@
 
 #include "nodes.hpp"
 #include "cfg.hpp"
-#include "parser/ast.hpp"
+#include "parser/parser.hpp"
 #include "utils.hpp"
 
 #include <vector>
@@ -21,6 +21,8 @@ struct IR_FuncArgument {
 
 class IR_Generator {
 private:
+    CoreParserState *pstate;
+
     VariablesStack<string_id_t, IRval> variables;
     std::map<string_id_t, IRval> globals;
     std::map<string_id_t, int> functions; // ident -> func_id
@@ -147,8 +149,7 @@ private:
 
 public:
     IR_Generator();
-
-    void parseAST(std::shared_ptr<AST_TranslationUnit> const &ast);
+    void parse(CoreParser &parser);
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 };
 

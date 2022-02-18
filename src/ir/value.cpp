@@ -1,6 +1,7 @@
 #include "value.hpp"
 #include "utils.hpp"
 #include <sstream>
+#include <cassert>
 
 IRval::IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type v) :
         valClass(vclass), type(std::move(type)), val(v) {}
@@ -164,7 +165,7 @@ std::string IRval::to_string() const {
             return ss.str();
         }
     }
-    throw;
+    assert(false);
 }
 
 std::string IRval::to_reg_name() const {

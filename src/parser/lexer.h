@@ -15,13 +15,15 @@ extern "C" {
 typedef void* yyscan_t;
 #endif
 
+#define YY_NO_UNPUT
+
 typedef struct lex_extra {
     int continued;
     int cur_line;
     int cur_column;
-} lex_extra_t;
 
-#define YY_NO_UNPUT
+    struct CoreParserState *state;
+} lex_extra_t;
 
 #define YY_USER_ACTION                              \
 {                                                   \
@@ -48,8 +50,6 @@ typedef struct lex_extra {
 
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra);
 void destroy_scanner(yyscan_t scanner);
-
-string_id_t get_ident_id(const char *ident, int *type);
 
 AST_Literal_t get_integer(const char *str);
 AST_Literal_t get_float(const char *str);

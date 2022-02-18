@@ -17,7 +17,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/cli_args.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
-        ${PROJECT_SOURCE_DIR}/src/parser/utils.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/y.tab.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/lex.yy.c
 

@@ -30,7 +30,10 @@ typedef struct AST_Literal {
 typedef int string_id_t;
 #define NO_IDENT_ID 0
 
-string_id_t get_string_id(const char *str);
+struct CoreParserState;
+
+string_id_t get_string_id(struct CoreParserState *rpstate, const char *str);
+string_id_t get_ident_id(struct CoreParserState *rpstate, const char *ident, int *type);
 
 #ifdef __cplusplus
 }

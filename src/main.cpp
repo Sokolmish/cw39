@@ -50,13 +50,14 @@ int main(int argc, char **argv) {
         path = args.unmatched().at(0);
 
     auto text = readFile(path);
-    auto ast = std::shared_ptr<AST_TranslationUnit>(parse_program(text));
+    auto parser = std::make_unique<CoreParser>(text);
+    auto ast = parser->getTransUnit();
 
     if (args.count("ast"))
         writeOut(args.getString("ast"), ast->getTreeNode()->printHor());
 
     auto gen = std::make_unique<IR_Generator>();
-    gen->parseAST(ast);
+    gen->parse(*parser);
 
     if (args.count("ir-raw"))
         writeOut(args.getString("ir-raw"), gen->getCfg()->printIR());

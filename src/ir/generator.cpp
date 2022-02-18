@@ -159,8 +159,10 @@ IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vecto
 
 // Generator
 
-void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
-    for (const auto &top_instr: ast->children) {
+void IR_Generator::parse(CoreParser &parser) {
+    pstate = parser.getPState();
+
+    for (const auto &top_instr: parser.getTransUnit()->children) {
         if (top_instr->node_type == AST_FUNC_DEF)
             createFunction(dynamic_cast<AST_FunctionDef &>(*top_instr));
         else if (top_instr->node_type == AST_DECLARATION)
@@ -168,6 +170,8 @@ void IR_Generator::parseAST(const std::shared_ptr<AST_TranslationUnit> &ast) {
         else
             internalError("Wrong top-level instruction");
     }
+
+    pstate = nullptr;
 }
 
 /** Insert global variable declaration, new struct type or function prototype */
@@ -190,7 +194,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
 
             // TODO
             auto funcIdent = getDeclaredIdent(*singleDecl->declarator);
-            auto fun = cfg->createPrototype(get_ident_by_id(funcIdent),
+            auto fun = cfg->createPrototype(get_ident_by_id(pstate, funcIdent),
                                             IR_StorageSpecifier::EXTERN, varType);
             functions.emplace(funcIdent, fun.getId());
             continue; // break?
@@ -208,7 +212,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             semanticError("Global variable should be initialized with constant value");
 
         auto ptrType = std::make_shared<IR_TypePtr>(varType);
-        IRval res = cfg->createGlobal(get_ident_by_id(ident), ptrType, initVal);
+        IRval res = cfg->createGlobal(get_ident_by_id(pstate, ident), ptrType, initVal);
         globals.emplace(ident, res);
     }
 }
@@ -245,7 +249,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     fullType = getType(*def.specifiers, *def.decl);
 
     auto funcIdent = getDeclaredIdent(*def.decl);
-    auto fun = cfg->createFunction(get_ident_by_id(funcIdent), storage, isInline, fullType);
+    auto fun = cfg->createFunction(get_ident_by_id(pstate, funcIdent), storage, isInline, fullType);
     functions.emplace(funcIdent, fun.getId());
     selectBlock(cfg->block(fun.getEntryBlockId()));
     curFunctionType = std::dynamic_pointer_cast<IR_TypeFunc>(fun.fullType);

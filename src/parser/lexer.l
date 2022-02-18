@@ -55,7 +55,11 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "volatile"      { return VOLATILE;  }
 "while"         { return WHILE;     }
 
-{L}({L}|{D})*		        { int type; yylval->ident_id = get_ident_id(yytext, &type); return type; }
+{L}({L}|{D})*		        {
+                                int type;
+                                yylval->ident_id = get_ident_id(yyextra->state, yytext, &type);
+                                return type;
+                            }
 
 0[xX]{H}+{ISF}?             { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
 0[0-7]*{ISF}?               { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
@@ -65,9 +69,9 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 {D}*"."{D}+{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 {D}+"."{D}*{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 
-'(\\.|[^\\'\n])'           { yylval->num_literal = get_charval(yytext); return(CONSTANT); }
+'(\\.|[^\\'\n])'            { yylval->num_literal = get_charval(yytext); return(CONSTANT); }
 
-\"(\\.|[^\\"\n])*\"         { yylval->str = get_string_id(yytext); return(STRING_LITERAL); }
+\"(\\.|[^\\"\n])*\"         { yylval->str = get_string_id(yyextra->state, yytext); return(STRING_LITERAL); }
 
 "..."           { return ELLIPSIS;      }
 ">>="           { return RIGHT_ASSIGN;  }

@@ -6,6 +6,12 @@
 
 using namespace std::string_literals;
 
+static CoreParserState *ast_pstate;
+
+void ast_set_pstate_ptr(CoreParserState *state) {
+    ast_pstate = state;
+}
+
 
 // =================================================
 //                    Expressions
@@ -73,7 +79,7 @@ TreeNodeRef AST_Primary::getTreeNode() const {
     if (type != AST_Primary::EXPR) {
         std::string str;
         if (type == AST_Primary::IDENT)
-            str = get_ident_by_id(std::get<string_id_t>(v));
+            str = get_ident_by_id(ast_pstate, std::get<string_id_t>(v));
         else if (type == AST_Primary::CONST)
             str = "LITERAL"; // TODO
         else if (type == AST_Primary::STR)
@@ -156,9 +162,9 @@ TreeNodeRef AST_Postfix::getTreeNode() const {
 
     std::string str;
     if (op == AST_Postfix::DIR_ACCESS)
-        str = "."s + get_ident_by_id(std::get<string_id_t>(arg));
+        str = "."s + get_ident_by_id(ast_pstate, std::get<string_id_t>(arg));
     else if (op == AST_Postfix::PTR_ACCESS)
-        str = "->"s + get_ident_by_id(std::get<string_id_t>(arg));
+        str = "->"s + get_ident_by_id(ast_pstate, std::get<string_id_t>(arg));
     else if (op == AST_Postfix::POST_INC)
         str = "()++"s;
     else if (op == AST_Postfix::POST_DEC)
@@ -561,7 +567,7 @@ AST_StructOrUsionSpec::AST_StructOrUsionSpec(bool is_uni, string_id_t name, AST_
 TreeNodeRef AST_StructOrUsionSpec::getTreeNode() const {
     std::string str(is_union ? "union"s : "struct"s);
     if (name != 0)
-        str += "  "s + get_ident_by_id(name);
+        str += "  "s + get_ident_by_id(ast_pstate, name);
     auto node = TreeNode::create(str);
     if (body)
         node->addChild(body->getTreeNode());
@@ -575,7 +581,7 @@ AST_Enumerator::AST_Enumerator(string_id_t name, AST_Expr *val)
     : AST_Node(AST_ENUMER), name(name), val(val) {}
 
 TreeNodeRef AST_Enumerator::getTreeNode() const {
-    auto node = TreeNode::create(get_ident_by_id(name));
+    auto node = TreeNode::create(get_ident_by_id(ast_pstate, name));
     if (val)
         node->addChild(val->getTreeNode());
     return node;
@@ -610,7 +616,7 @@ AST_EnumSpecifier::AST_EnumSpecifier(string_id_t name, AST_EnumeratorList *body)
 TreeNodeRef AST_EnumSpecifier::getTreeNode() const {
     std::string str = "enum";
     if (name != 0)
-        str += " "s + get_ident_by_id(name);
+        str += " "s + get_ident_by_id(ast_pstate, name);
     auto node = TreeNode::create(str);
     node->addChild(body->getTreeNode());
     return node;
@@ -706,7 +712,7 @@ AST_DirectDeclarator* AST_DirectDeclarator::makeFunc(AST_DirectDeclarator *base,
 
 TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
     if (type == AST_DirectDeclarator::NAME) {
-        return TreeNode::create(get_ident_by_id(std::get<string_id_t>(base)));
+        return TreeNode::create(get_ident_by_id(ast_pstate, std::get<string_id_t>(base)));
     }
     else if (type == AST_DirectDeclarator::NESTED) {
         return std::get<uniq<AST_Node>>(base)->getTreeNode();
@@ -940,7 +946,7 @@ TreeNodeRef AST_Designator::getTreeNode() const {
     }
     else {
         auto node = TreeNode::create(
-                "designator."s + get_ident_by_id(std::get<string_id_t>(val)));
+                "designator."s + get_ident_by_id(ast_pstate, std::get<string_id_t>(val)));
         return node;
     }
 }
@@ -1037,7 +1043,7 @@ AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelTy
 TreeNodeRef AST_LabeledStmt::getTreeNode() const {
     std::string str;
     if (type == AST_LabeledStmt::SIMPL)
-        str = "label "s + get_ident_by_id(getIdent());
+        str = "label "s + get_ident_by_id(ast_pstate, getIdent());
     else if (type == AST_LabeledStmt::SW_CASE)
         str = "case"s;
     else if (type == AST_LabeledStmt::SW_DEFAULT)
@@ -1213,7 +1219,7 @@ AST_JumpStmt::AST_JumpStmt(JumpType jtype, string_id_t arg)
 TreeNodeRef AST_JumpStmt::getTreeNode() const {
     std::string str;
     if (type == AST_JumpStmt::J_GOTO)
-        str = "goto " + get_ident_by_id(std::get<string_id_t>(arg));
+        str = "goto " + get_ident_by_id(ast_pstate, std::get<string_id_t>(arg));
     else if (type == AST_JumpStmt::J_BREAK)
         str = "break"s;
     else if (type == AST_JumpStmt::J_CONTINUE)

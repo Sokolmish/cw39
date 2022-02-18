@@ -1,4 +1,3 @@
-#include "common.h"
 #include "common.hpp"
 #include "lexer.h"
 #include "parser.hpp"
@@ -8,26 +7,31 @@
 
 #include "y.tab.h"
 
-std::map<std::string, IdentInfo, std::less<>> identifiers_map;
-std::map<std::string, StringInfo, std::less<>> strings_map;
+CoreParser::CoreParser(const std::string &str) {
+    pstate = std::make_unique<CoreParserState>();
+    AST_TranslationUnit *rawUnit = CoreParser::parse_program(str, pstate.get());
+    unit = std::shared_ptr<AST_TranslationUnit>(rawUnit);
+}
 
-static std::map<string_id_t, std::string> inv_idents_map;
-static std::map<string_id_t, std::string> inv_strings_map;
+std::shared_ptr<AST_TranslationUnit> CoreParser::getTransUnit() {
+    return unit;
+}
 
-static string_id_t ident_cntr = 1;
-static string_id_t str_cntr = 1;
+CoreParserState *CoreParser::getPState() {
+    return pstate.get();
+}
 
-string_id_t get_ident_id(const char *ident, int *type) {
-    auto it = identifiers_map.lower_bound(ident);
-    if (it == identifiers_map.end() || it->first != ident) {
-        auto ins = identifiers_map.emplace_hint(it, ident, IdentInfo(ident_cntr));
-        inv_idents_map.emplace_hint(inv_idents_map.end(), ident_cntr, ins->first);
-        ident_cntr++;
+string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, int *type) {
+    auto it = pstate->identsMap.lower_bound(ident);
+    if (it == pstate->identsMap.end() || it->first != ident) {
+        auto ins = pstate->identsMap.emplace_hint(it, ident, CoreParserState::IdentInfo(pstate->idCnt));
+        pstate->invIdentsMap.emplace_hint(pstate->invIdentsMap.end(), pstate->idCnt, ins->first);
+        pstate->idCnt++;
         *type = IDENTIFIER;
         return ins->second.id;
     }
     else { // If already exists
-        *type = it->second.type == IdentInfo::IDENT ? IDENTIFIER : TYPE_NAME;
+        *type = it->second.type == CoreParserState::IdentInfo::IDENT ? IDENTIFIER : TYPE_NAME;
         return it->second.id;
     }
 }
@@ -62,7 +66,7 @@ static char unescapeChar(char ch) {
     }
 }
 
-string_id_t get_string_id(const char *str) {
+string_id_t get_string_id(struct CoreParserState *pstate, const char *str) {
     size_t len = strlen(str);
     std::string newStr;
     newStr.reserve(len);
@@ -78,11 +82,11 @@ string_id_t get_string_id(const char *str) {
         }
     }
 
-    auto it = strings_map.lower_bound(newStr);
-    if (it == strings_map.end() || it->first != newStr) {
-        auto ins = strings_map.emplace_hint(it, newStr, StringInfo(str_cntr));
-        inv_strings_map.emplace_hint(inv_strings_map.end(), str_cntr, ins->first);
-        str_cntr++;
+    auto it = pstate->stringsMap.lower_bound(newStr);
+    if (it == pstate->stringsMap.end() || it->first != newStr) {
+        auto ins = pstate->stringsMap.emplace_hint(it, newStr, CoreParserState::StringInfo(pstate->strCnt));
+        pstate->invStringsMap.emplace_hint(pstate->invStringsMap.end(), pstate->strCnt, ins->first);
+        pstate->strCnt++;
         return ins->second.id;
     }
     else { // If already exists
@@ -90,12 +94,12 @@ string_id_t get_string_id(const char *str) {
     }
 }
 
-std::string get_ident_by_id(string_id_t id) {
-    return std::string(inv_idents_map.find(id)->second);
+std::string get_ident_by_id(CoreParserState *pstate, string_id_t id) {
+    return std::string(pstate->invIdentsMap.find(id)->second);
 }
 
-std::string get_string_by_id(string_id_t id) {
-    return std::string(inv_strings_map.find(id)->second);
+std::string get_string_by_id(CoreParserState *pstate, string_id_t id) {
+    return std::string(pstate->invStringsMap.find(id)->second);
 }
 
 void check_typedef(AST_Declaration *decl) {

@@ -9,6 +9,8 @@
 #include "common.h"
 #include "print_tree.hpp"
 
+void ast_set_pstate_ptr(CoreParserState *pstate);
+
 typedef int ast_enum_t;
 
 enum : ast_enum_t {
