@@ -1,5 +1,5 @@
-#ifndef __SSA_GENERATOR_HPP__
-#define __SSA_GENERATOR_HPP__
+#ifndef SSA_GENERATOR_HPP_INCLUDED__
+#define SSA_GENERATOR_HPP_INCLUDED__
 
 #include <map>
 #include <set>
@@ -37,4 +37,4 @@ public:
 };
 
 
-#endif /* __SSA_GENERATOR_HPP__ */
+#endif /* SSA_GENERATOR_HPP_INCLUDED__ */

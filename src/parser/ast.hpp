@@ -1,5 +1,5 @@
-#ifndef __PARSER_AST_H__
-#define __PARSER_AST_H__
+#ifndef PARSER_AST_H_INCLUDED__
+#define PARSER_AST_H_INCLUDED__
 
 #include <cstdint>
 #include <string>
@@ -640,4 +640,4 @@ struct AST_TranslationUnit : public AST_Node {
 void check_typedef(AST_Declaration *decl);
 AST_TypeName* get_def_type(string_id_t id);
 
-#endif /* __PARSER_AST_H__ */
+#endif /* PARSER_AST_H_INCLUDED__ */

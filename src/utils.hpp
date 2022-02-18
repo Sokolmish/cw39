@@ -1,5 +1,5 @@
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
+#ifndef UTILS_HPP_INCLUDED__
+#define UTILS_HPP_INCLUDED__
 
 #include <initializer_list>
 #include <list>
@@ -103,4 +103,4 @@ auto variant_cast(const std::variant<Args...>& v) -> variant_cast_proxy<Args...>
     return { v };
 }
 
-#endif /* __UTILS_HPP__ */
+#endif /* UTILS_HPP_INCLUDED__ */

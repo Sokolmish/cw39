@@ -1,5 +1,5 @@
-#ifndef __IR_ELEM_HPP__
-#define __IR_ELEM_HPP__
+#ifndef IR_NODES_HPP_INCLUDED__
+#define IR_NODES_HPP_INCLUDED__
 
 #include <vector>
 #include <map>
@@ -199,4 +199,4 @@ public:
     std::vector<IR_Node*> getAllNodes();
 };
 
-#endif /* __IR_ELEM_HPP__ */
+#endif /* IR_NODES_HPP_INCLUDED__ */

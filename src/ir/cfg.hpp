@@ -1,5 +1,5 @@
-#ifndef __CFG_HPP__
-#define __CFG_HPP__
+#ifndef CFG_HPP_INCLUDED__
+#define CFG_HPP_INCLUDED__
 
 #include <vector>
 #include <memory>
@@ -90,4 +90,4 @@ private:
     void drawBlock(std::stringstream &ss, IR_Block const &block) const;
 };
 
-#endif /* __CFG_HPP__ */
+#endif /* CFG_HPP_INCLUDED__ */

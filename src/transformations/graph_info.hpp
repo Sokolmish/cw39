@@ -1,5 +1,5 @@
-#ifndef __GRAPH_INFO_HPP__
-#define __GRAPH_INFO_HPP__
+#ifndef GRAPH_INFO_HPP_INCLUDED__
+#define GRAPH_INFO_HPP_INCLUDED__
 
 #include <string>
 #include <memory>
@@ -76,4 +76,4 @@ private:
     void dominators(std::vector<int> &nodes);
 };
 
-#endif /* __GRAPH_INFO_HPP__ */
+#endif /* GRAPH_INFO_HPP_INCLUDED__ */

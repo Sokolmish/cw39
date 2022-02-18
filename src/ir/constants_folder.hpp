@@ -1,5 +1,5 @@
-#ifndef __CONSTANTS_FOLDER_HPP__
-#define __CONSTANTS_FOLDER_HPP__
+#ifndef CONSTANTS_FOLDER_HPP_INCLUDED__
+#define CONSTANTS_FOLDER_HPP_INCLUDED__
 
 #include "value.hpp"
 #include "nodes.hpp"
@@ -21,4 +21,4 @@ private:
 
 };
 
-#endif /* __CONSTANTS_FOLDER_HPP__ */
+#endif /* CONSTANTS_FOLDER_HPP_INCLUDED__ */

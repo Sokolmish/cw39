@@ -1,5 +1,5 @@
-#ifndef __VARS_VIRTUALIZER_HPP__
-#define __VARS_VIRTUALIZER_HPP__
+#ifndef VARS_VIRTUALIZER_HPP_INCLUDED__
+#define VARS_VIRTUALIZER_HPP_INCLUDED__
 
 #include <memory>
 #include <map>
@@ -24,4 +24,4 @@ public:
     std::shared_ptr<ControlFlowGraph> getCfg();
 };
 
-#endif /* __VARS_VIRTUALIZER_HPP__ */
+#endif /* VARS_VIRTUALIZER_HPP_INCLUDED__ */

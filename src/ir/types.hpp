@@ -1,5 +1,5 @@
-#ifndef __IR_TYPES_HPP__
-#define __IR_TYPES_HPP__
+#ifndef IR_TYPES_HPP_INCLUDED__
+#define IR_TYPES_HPP_INCLUDED__
 
 #include <vector>
 #include <memory>
@@ -120,4 +120,4 @@ struct IR_TypeFunc : public IR_Type {
     std::string to_string() const override;
 };
 
-#endif /* __IR_TYPES_HPP__ */
+#endif /* IR_TYPES_HPP_INCLUDED__ */

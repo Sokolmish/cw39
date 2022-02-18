@@ -1,5 +1,5 @@
-#ifndef __CFG_CLEANER_HPP__
-#define __CFG_CLEANER_HPP__
+#ifndef CFG_CLEANER_HPP_INCLUDED__
+#define CFG_CLEANER_HPP_INCLUDED__
 
 #include "ir/cfg.hpp"
 #include <map>
@@ -26,4 +26,4 @@ public:
 };
 
 
-#endif /* __CFG_CLEANER_HPP__ */
+#endif /* CFG_CLEANER_HPP_INCLUDED__ */

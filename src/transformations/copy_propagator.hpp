@@ -1,5 +1,5 @@
-#ifndef __COPY_PROPAGATOR_HPP__
-#define __COPY_PROPAGATOR_HPP__
+#ifndef COPY_PROPAGATOR_HPP_INCLUDED__
+#define COPY_PROPAGATOR_HPP_INCLUDED__
 
 #include <memory>
 #include <map>
@@ -25,4 +25,4 @@ public:
 };
 
 
-#endif /* __COPY_PROPAGATOR_HPP__ */
+#endif /* COPY_PROPAGATOR_HPP_INCLUDED__ */

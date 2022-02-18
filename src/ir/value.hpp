@@ -1,5 +1,5 @@
-#ifndef __IR_VALUE_HPP__
-#define __IR_VALUE_HPP__
+#ifndef IR_VALUE_HPP_INCLUDED__
+#define IR_VALUE_HPP_INCLUDED__
 
 #include <memory>
 #include <variant>
@@ -91,4 +91,4 @@ private:
     IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, std::vector<IRval> vals);
 };
 
-#endif /* __IR_VALUE_HPP__ */
+#endif /* IR_VALUE_HPP_INCLUDED__ */

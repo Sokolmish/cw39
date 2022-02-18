@@ -1,5 +1,5 @@
-#ifndef __PRINT_TREE_HPP__
-#define __PRINT_TREE_HPP__
+#ifndef PRINT_TREE_HPP_INCLUDED__
+#define PRINT_TREE_HPP_INCLUDED__
 
 #include <string>
 #include <sstream>
@@ -30,4 +30,4 @@ public:
 
 typedef std::shared_ptr<TreeNode> TreeNodeRef;
 
-#endif /* __PRINT_TREE_HPP__ */
+#endif /* PRINT_TREE_HPP_INCLUDED__ */

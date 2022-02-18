@@ -1,5 +1,5 @@
-#ifndef __LEXER_H__
-#define __LEXER_H__
+#ifndef LEXER_H_INCLUDED__
+#define LEXER_H_INCLUDED__
 
 #include <stdio.h>
 #include <string.h>
@@ -59,4 +59,4 @@ AST_Literal_t get_charval(const char *str);
 }
 #endif
 
-#endif /* __LEXER_H__ */
+#endif /* LEXER_H_INCLUDED__ */

@@ -1,5 +1,5 @@
-#ifndef __GENERATOR_HPP__
-#define __GENERATOR_HPP__
+#ifndef GENERATOR_HPP_INCLUDED__
+#define GENERATOR_HPP_INCLUDED__
 
 #include "nodes.hpp"
 #include "cfg.hpp"
@@ -153,4 +153,4 @@ public:
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 };
 
-#endif /* __GENERATOR_HPP__ */
+#endif /* GENERATOR_HPP_INCLUDED__ */

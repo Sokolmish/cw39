@@ -1,5 +1,5 @@
-#ifndef __IR_2_LLVM_HPP__
-#define __IR_2_LLVM_HPP__
+#ifndef IR_2_LLVM_HPP_INCLUDED__
+#define IR_2_LLVM_HPP_INCLUDED__
 
 #include <memory>
 #include "ir/cfg.hpp"
@@ -27,4 +27,4 @@ private:
 };
 
 
-#endif /* __IR_2_LLVM_HPP__ */
+#endif /* IR_2_LLVM_HPP_INCLUDED__ */

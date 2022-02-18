@@ -1,5 +1,5 @@
-#ifndef __PARSER_COMMON_H__
-#define __PARSER_COMMON_H__
+#ifndef PARSER_COMMON_H_INCLUDED__
+#define PARSER_COMMON_H_INCLUDED__
 
 #include <stdint.h>
 
@@ -39,4 +39,4 @@ string_id_t get_ident_id(struct CoreParserState *rpstate, const char *ident, int
 }
 #endif
 
-#endif /* __PARSER_COMMON_H__ */
+#endif /* PARSER_COMMON_H_INCLUDED__ */

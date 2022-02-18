@@ -1,5 +1,5 @@
-#ifndef __CLI_ARGS_HPP__
-#define __CLI_ARGS_HPP__
+#ifndef CLI_ARGS_HPP_INCLUDED__
+#define CLI_ARGS_HPP_INCLUDED__
 
 #include <string>
 #include <vector>
@@ -21,5 +21,4 @@ private:
     std::unique_ptr<CLIArgs_Impl> impl;
 };
 
-
-#endif /* __CLI_ARGS_HPP__ */
+#endif /* CLI_ARGS_HPP_INCLUDED__ */

@@ -1,5 +1,5 @@
-#ifndef __PARSER_HPP__
-#define __PARSER_HPP__
+#ifndef PARSER_HPP_INCLUDED__
+#define PARSER_HPP_INCLUDED__
 
 #include "ast.hpp"
 #include "common.hpp"
@@ -42,4 +42,4 @@ private:
     AST_TranslationUnit* parse_program(std::string const &str, CoreParserState *state);
 };
 
-#endif /* __PARSER_HPP__ */
+#endif /* PARSER_HPP_INCLUDED__ */

@@ -1,5 +1,5 @@
-#ifndef __LOOPS_HPP__
-#define __LOOPS_HPP__
+#ifndef LOOPS_HPP_INCLUDED__
+#define LOOPS_HPP_INCLUDED__
 
 #include <vector>
 #include <set>
@@ -41,4 +41,4 @@ private:
     bool isLoopNested(const LoopNode *parent, const LoopNode *child) const;
 };
 
-#endif /* __LOOPS_HPP__ */
+#endif /* LOOPS_HPP_INCLUDED__ */
