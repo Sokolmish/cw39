@@ -165,7 +165,7 @@ std::string IRval::to_string() const {
             return ss.str();
         }
     }
-    assert(false);
+    internalError("Invalid type of IRval");
 }
 
 std::string IRval::to_reg_name() const {

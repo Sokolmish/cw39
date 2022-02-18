@@ -54,7 +54,7 @@ public:
 
     void decreaseLevel() {
         if (level == 0)
-            throw;
+            internalError("Attemt to decrease level of empty VariablesStack");
         data.pop_back();
         level--;
     }
@@ -69,8 +69,7 @@ public:
     }
 
     void put(K const &key, V const &val) {
-        data.back().template emplace(key, val);
-//        data.back().insert({ key, val });
+        data.back().emplace(key, val);
     }
 
     bool hasOnTop(K const &key) {

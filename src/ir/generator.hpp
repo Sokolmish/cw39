@@ -13,13 +13,12 @@
 #include <optional>
 #include <fmt/core.h>
 
-
-struct IR_FuncArgument {
-    string_id_t ident;
-    std::shared_ptr<IR_Type> type;
-};
-
 class IR_Generator {
+public:
+    IR_Generator();
+    void parse(CoreParser &parser);
+    [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
+
 private:
     CoreParserState *pstate;
 
@@ -36,6 +35,11 @@ private:
     void deselectBlock();
 
     std::shared_ptr<IR_TypeFunc> curFunctionType = nullptr;
+
+    struct IR_FuncArgument {
+        string_id_t ident;
+        std::shared_ptr<IR_Type> type;
+    };
 
     /** Loop or switch entry */
     class ControlStructData {
@@ -146,11 +150,6 @@ private:
     string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
-
-public:
-    IR_Generator();
-    void parse(CoreParser &parser);
-    [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 };
 
 #endif /* GENERATOR_HPP_INCLUDED__ */

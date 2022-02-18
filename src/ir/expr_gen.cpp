@@ -227,7 +227,8 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
 
 /** Create nodes and blocks for logical operation with short evaluation */
 IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right) {
-    // TODO: assert operation
+    if (op != AST_Binop::LOG_AND && op != AST_Binop::LOG_OR)
+        internalError("Wrong short-logic operation");
 
     IRval lhs = evalExpr(left);
 
@@ -248,7 +249,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
         cfg->linkBlocks(curBlock(), blockLong);
         cfg->linkBlocks(curBlock(), blockAfter);
     }
-    else {
+    else { // op == AST_Binop::LOG_OR
         cfg->linkBlocks(curBlock(), blockAfter);
         cfg->linkBlocks(curBlock(), blockLong);
     }

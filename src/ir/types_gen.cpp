@@ -276,7 +276,8 @@ string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
 }
 
-std::vector<IR_FuncArgument> IR_Generator::getDeclaredFuncArguments(AST_Declarator const &decl) {
+std::vector<IR_Generator::IR_FuncArgument>
+IR_Generator::getDeclaredFuncArguments(AST_Declarator const &decl) {
     if (decl.direct->type != AST_DirectDeclarator::FUNC)
         semanticError("Non function type");
     if (!decl.direct->func_args)
