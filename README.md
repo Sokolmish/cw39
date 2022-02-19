@@ -6,7 +6,7 @@ C99 compiler with optimizations.
 
 ## Requirements
 
-- **gcc11** and above (because not all features of C++20 are suppoted by early versions)
+- **gcc10** and above
 - **LLVM-13** and above (because early versions cannot be compiled with C++20)
 - **[fmtlib](https://fmt.dev/latest/index.html)**
 - \[optionally\] **Flex** and **Bison** to generate lexer and parser (invoking manually with [Makefile](https://github.com/Sokolmish/coursework_3/blob/master/src/parser/Makefile))
