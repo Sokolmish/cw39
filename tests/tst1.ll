@@ -167,11 +167,11 @@ block_21:                                         ; preds = %block_19
   br label %block_18
 
 block_22:                                         ; preds = %block_23, %block_20
-  %vr154.4 = phi i32 [ 3, %block_20 ], [ %vr114, %block_23 ]
+  %vr154.3 = phi i32 [ 3, %block_20 ], [ %vr114, %block_23 ]
   br label %block_23
 
 block_23:                                         ; preds = %block_22
-  %vr114 = sub i32 %vr154.4, 1
+  %vr114 = sub i32 %vr154.3, 1
   %9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr114)
   %vr118 = icmp eq i32 %vr114, 0
   br i1 %vr118, label %block_24, label %block_22
@@ -181,28 +181,28 @@ block_24:                                         ; preds = %block_23
   br label %block_28
 
 block_28:                                         ; preds = %block_27, %block_24
-  %vr126.0 = phi i32 [ undef, %block_24 ], [ %vr126.2, %block_27 ]
-  %vr127.0 = phi i32 [ undef, %block_24 ], [ %vr127.2, %block_27 ]
-  %vr154.8 = phi i32 [ 0, %block_24 ], [ %vr154.11, %block_27 ]
-  %11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr154.8)
-  %vr125 = icmp eq i32 %vr154.8, 0
+  %vr126.0 = phi i32 [ undef, %block_24 ], [ %vr126.1, %block_27 ]
+  %vr127.0 = phi i32 [ undef, %block_24 ], [ %vr127.1, %block_27 ]
+  %vr154.6 = phi i32 [ 0, %block_24 ], [ %vr154.7, %block_27 ]
+  %11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str4, i32 0, i32 0), i32 %vr154.6)
+  %vr125 = icmp eq i32 %vr154.6, 0
   br i1 %vr125, label %block_30, label %block_31
 
 block_30:                                         ; preds = %block_28
   br label %block_32
 
 block_31:                                         ; preds = %block_28
-  %vr127.1 = sub i32 %vr154.8, 1
+  %vr127.2 = sub i32 %vr154.6, 1
   br label %block_32
 
 block_32:                                         ; preds = %block_31, %block_30
-  %vr126.2 = phi i32 [ %vr126.0, %block_30 ], [ %vr154.8, %block_31 ]
-  %vr127.2 = phi i32 [ %vr127.0, %block_30 ], [ %vr127.1, %block_31 ]
-  %vr154.11 = phi i32 [ 2, %block_30 ], [ %vr127.1, %block_31 ]
+  %vr126.1 = phi i32 [ %vr126.0, %block_30 ], [ %vr154.6, %block_31 ]
+  %vr127.1 = phi i32 [ %vr127.0, %block_30 ], [ %vr127.2, %block_31 ]
+  %vr154.7 = phi i32 [ 2, %block_30 ], [ %vr127.2, %block_31 ]
   br label %block_27
 
 block_27:                                         ; preds = %block_32
-  %vr121 = icmp ne i32 %vr154.11, 0
+  %vr121 = icmp ne i32 %vr154.7, 0
   br i1 %vr121, label %block_28, label %block_29
 
 block_29:                                         ; preds = %block_27

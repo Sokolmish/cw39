@@ -5,6 +5,7 @@
 
 #include "cli_args.hpp"
 
+#include "parser/preprocessor.hpp"
 #include "parser/parser.hpp"
 #include "ir/generator.hpp"
 
@@ -49,7 +50,9 @@ int main(int argc, char **argv) {
     if (!args.unmatched().empty())
         path = args.unmatched().at(0);
 
-    auto text = readFile(path);
+    auto preproc = Preprocessor(path);
+    std::string text = preproc.process();
+
     auto parser = std::make_unique<CoreParser>(text);
     auto ast = parser->getTransUnit();
 

@@ -45,5 +45,18 @@ int main(int argc, char **argv) {
         printf("\n");
     }
 
+    int tst = 0;
+
+    skip:
+    if (tst)
+        goto exit;
+
+    while (1) {
+        printf("%d\n", tst++);
+        if (tst == 5)
+            goto skip;
+    }
+
+    exit:
     return 0;
 }

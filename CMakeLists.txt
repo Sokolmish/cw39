@@ -20,6 +20,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/y.tab.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/lex.yy.c
+        ${PROJECT_SOURCE_DIR}/src/parser/preprocessor.cpp
 
         ${PROJECT_SOURCE_DIR}/src/ir/types.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/value.cpp
