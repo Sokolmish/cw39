@@ -1,7 +1,6 @@
 #include "nodes.hpp"
 #include "utils.hpp"
 #include <sstream>
-#include <fmt/ostream.h>
 
 // Expressions
 

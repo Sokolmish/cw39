@@ -1,8 +1,8 @@
 #include "graph_info.hpp"
 #include <stack>
 #include <sstream>
-#include "utils.hpp"
 #include <fmt/ostream.h>
+#include "utils.hpp"
 
 GraphInfo::UtilNode::UtilNode(int id, DomNode *dom) : id(id), dom(dom) {}
 
