@@ -3,6 +3,13 @@
 #include <sstream>
 #include <fmt/core.h>
 
+static inline bool is_alphachar(char ch) {
+    return std::isalpha(ch) || ch == '_';
+}
+
+static inline bool is_alphanum(char ch) {
+    return std::isalnum(ch) || ch == '_';
+}
 
 static std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
@@ -49,7 +56,7 @@ std::string Preprocessor::process() {
 
         if (isLineStart && ch == '#') {
             it++;
-            std::string directive = std::isalpha(*it) ? get_ident(it) : "WRONG_DIRECTIVE";
+            std::string directive = is_alphachar(*it) ? get_ident(it) : "WRONG_DIRECTIVE";
             process_directive(directive, it);
             continue;
         }
@@ -128,6 +135,29 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
         cond_statuses.pop();
         cond_statuses.push(PC_ELSE);
     }
+    else if (dir == "error") {
+        std::stringstream ss;
+        while (it != raw.cend() && *it != '\n') {
+            ss << *it;
+            it++;
+        }
+        if (isSkip)
+            return;
+
+        fmt::print(stderr, "Error directive: '{}'\n", ss.str());
+        exit(EXIT_FAILURE);
+    }
+    else if (dir == "warning") {
+        std::stringstream ss;
+        while (it != raw.cend() && *it != '\n') {
+            ss << *it;
+            it++;
+        }
+        if (isSkip)
+            return;
+
+        fmt::print(stderr, "Warning directive: '{}'\n", ss.str());
+    }
     else {
         fmt::print(stderr, "Unknown preprocessor directive: '{}'\n", dir);
         exit(EXIT_FAILURE);
@@ -150,13 +180,13 @@ void Preprocessor::assert_no_directive_arg(Preprocessor::string_constit_t &it) {
 }
 
 std::string Preprocessor::get_ident(Preprocessor::string_constit_t &it) {
-//    if (it == raw.cend() || !std::isalpha(*it))
+//    if (it == raw.cend() || !is_alphachar(*it))
 //        throw;
 
     std::stringstream ss;
     ss << *it;
     it++;
-    while (it != raw.cend() && std::isalnum(*it)) {
+    while (it != raw.cend() && is_alphanum(*it)) {
         ss << *it;
         it++;
     }

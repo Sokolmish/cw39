@@ -4,6 +4,17 @@
 
 #define PHRASE
 
+//#define DO_WARN
+//#define DO_ERR
+
+#ifdef DO_WARN
+#warning This is warning
+#endif
+
+#ifdef DO_ERR
+#error This is error
+#endif
+
 int printf(const char *format, ...);
 void* memcpy(void *dest, const void *src, unsigned long n);
 unsigned long strlen(const char *s);

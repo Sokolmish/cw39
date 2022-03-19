@@ -16,20 +16,6 @@
 
 #include "ir_2_llvm.hpp"
 
-static std::string readFile(std::string const &path) {
-    std::ifstream t(path.c_str());
-    if (!t.is_open()) {
-        fmt::print(stderr, "Cannot read file '{}'\n", path);
-        exit(EXIT_FAILURE);
-    }
-    t.seekg(0, std::ios::end);
-    auto size = t.tellg();
-    std::string buffer(size, ' ');
-    t.seekg(0);
-    t.read(&buffer[0], size);
-    return buffer;
-}
-
 /** If path is not empty then write to it, else write to stdout */
 static void writeOut(std::string const &path, std::string const &data) {
     if (path.empty()) {
