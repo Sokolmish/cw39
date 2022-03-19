@@ -55,26 +55,28 @@ std::string Preprocessor::process() {
 
     curLine = 1;
 
-    for (auto it = raw.cbegin(); it != raw.cend(); ) { // it++
-        char ch = *it;
+    auto it = raw.cbegin();
+    while (it != raw.cend()) {
+        char ch = *(it++);
         if (ch == '\n') {
             isLineStart = true;
             ss << ch;
             curLine++;
-            it++;
         }
         else if (isLineStart && ch == '#') {
-            it++;
-            std::string directive = is_alphachar(*it) ? get_ident(it) : "WRONG_DIRECTIVE";
+            skip_spaces(it);
+            if (!is_alphachar(*it)) {
+                printError("Expected directive name");
+                exit(EXIT_FAILURE);
+            }
+            std::string directive = get_ident(it);
             process_directive(directive, it);
-            // No iterator update here
         }
         else {
             if (!isSkip)
                 ss << ch;
             if (isLineStart && !std::isspace(ch))
                 isLineStart = false;
-            it++;
         }
     }
 
@@ -90,8 +92,8 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             printError("Directive expects argument");
             exit(EXIT_FAILURE);
         }
-        addDefine(name, ""); // TODO
         assert_no_directive_arg(it);
+        addDefine(name, ""); // TODO
     }
     else if (dir == "undef") {
         std::string name = get_directive_arg(it);
@@ -101,8 +103,8 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             printError("Directive expects argument");
             exit(EXIT_FAILURE);
         }
-        removeDefine(name);
         assert_no_directive_arg(it);
+        removeDefine(name);
     }
     else if (dir == "ifdef") {
         std::string arg = get_directive_arg(it);
@@ -110,13 +112,11 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             nestCntr++;
             return;
         }
-
         if (arg.empty()) {
             printError("Directive expects argument");
             exit(EXIT_FAILURE);
         }
         assert_no_directive_arg(it);
-
         if (defines.contains(arg)) {
             cond_statuses.push(PC_IF_TRUE);
         }
@@ -130,18 +130,14 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             nestCntr--;
             return;
         }
-
         assert_no_directive_arg(it);
-
         cond_statuses.pop();
         isSkip = false;
     }
     else if (dir == "else") {
         if (isSkip && nestCntr > 0)
             return;
-
         assert_no_directive_arg(it);
-
         if (cond_statuses.top() == PC_IF_FALSE) {
             isSkip = false;
         }
@@ -167,15 +163,12 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             printError(fmt::format("Wrong line number format: {}", arg));
             exit(EXIT_FAILURE);
         }
-
         curLine = line;
     }
     else if (dir == "error") {
         std::stringstream ss;
-        while (it != raw.cend() && *it != '\n') {
-            ss << *it;
-            it++;
-        }
+        while (it != raw.cend() && *it != '\n')
+            ss << *(it++);
         if (isSkip)
             return;
         printError(fmt::format("#error {}", ss.str()));
@@ -183,10 +176,8 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
     }
     else if (dir == "warning") {
         std::stringstream ss;
-        while (it != raw.cend() && *it != '\n') {
-            ss << *it;
-            it++;
-        }
+        while (it != raw.cend() && *it != '\n')
+            ss << *(it++);
         if (isSkip)
             return;
         printWarn(fmt::format("#warning {}", ss.str()));
@@ -217,19 +208,14 @@ void Preprocessor::assert_no_directive_arg(Preprocessor::string_constit_t &it) {
 std::string Preprocessor::get_ident(Preprocessor::string_constit_t &it) {
 //    if (it == raw.cend() || !is_alphachar(*it))
 //        throw;
-
     std::stringstream ss;
-    ss << *it;
-    it++;
-    while (it != raw.cend() && is_alphanum(*it)) {
-        ss << *it;
-        it++;
-    }
+    ss << *(it++);
+    while (it != raw.cend() && is_alphanum(*it))
+        ss << *(it++);
     return ss.str();
 }
 
 void Preprocessor::skip_spaces(string_constit_t &it) {
-    while (it != raw.cend() && std::isspace(*it) && *it != '\n') {
+    while (it != raw.cend() && std::isspace(*it) && *it != '\n')
         it++;
-    }
 }
