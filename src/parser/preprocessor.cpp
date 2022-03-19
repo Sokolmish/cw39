@@ -37,6 +37,14 @@ void Preprocessor::removeDefine(std::string const &name) {
     defines.erase(name);
 }
 
+void Preprocessor::printError(std::string const &msg) {
+    fmt::print(stderr, "Error in line {}: {}\n", curLine, msg);
+}
+
+void Preprocessor::printWarn(std::string const &msg) {
+    fmt::print(stderr, "Warning in line {}: {}\n", curLine, msg);
+}
+
 std::string Preprocessor::process() {
     std::stringstream ss;
 
@@ -45,27 +53,28 @@ std::string Preprocessor::process() {
     nestCntr = 0;
     cond_statuses = std::stack<LastCondState>();
 
-    for (auto it = raw.cbegin(); it != raw.cend(); it++) {
-        char ch = *it;
+    curLine = 1;
 
+    for (auto it = raw.cbegin(); it != raw.cend(); ) { // it++
+        char ch = *it;
         if (ch == '\n') {
             isLineStart = true;
             ss << ch;
-            continue;
+            curLine++;
+            it++;
         }
-
-        if (isLineStart && ch == '#') {
+        else if (isLineStart && ch == '#') {
             it++;
             std::string directive = is_alphachar(*it) ? get_ident(it) : "WRONG_DIRECTIVE";
             process_directive(directive, it);
-            continue;
+            // No iterator update here
         }
-
-        if (!isSkip) {
-            ss << ch;
-        }
-        if (isLineStart && !std::isspace(ch)) {
-            isLineStart = false;
+        else {
+            if (!isSkip)
+                ss << ch;
+            if (isLineStart && !std::isspace(ch))
+                isLineStart = false;
+            it++;
         }
     }
 
@@ -77,6 +86,10 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
         std::string name = get_directive_arg(it);
         if (isSkip)
             return;
+        if (name.empty()) {
+            printError("Directive expects argument");
+            exit(EXIT_FAILURE);
+        }
         addDefine(name, ""); // TODO
         assert_no_directive_arg(it);
     }
@@ -84,6 +97,10 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
         std::string name = get_directive_arg(it);
         if (isSkip)
             return;
+        if (name.empty()) {
+            printError("Directive expects argument");
+            exit(EXIT_FAILURE);
+        }
         removeDefine(name);
         assert_no_directive_arg(it);
     }
@@ -94,6 +111,10 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             return;
         }
 
+        if (arg.empty()) {
+            printError("Directive expects argument");
+            exit(EXIT_FAILURE);
+        }
         assert_no_directive_arg(it);
 
         if (defines.contains(arg)) {
@@ -116,9 +137,8 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
         isSkip = false;
     }
     else if (dir == "else") {
-        if (isSkip && nestCntr > 0) {
+        if (isSkip && nestCntr > 0)
             return;
-        }
 
         assert_no_directive_arg(it);
 
@@ -129,11 +149,26 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
             isSkip = true;
         }
         else {
-            fmt::print(stderr, "Unexpected #else directive\n");
+            printError("Unexpected #else directive");
             exit(EXIT_FAILURE);
         }
         cond_statuses.pop();
         cond_statuses.push(PC_ELSE);
+    }
+    else if (dir == "line") {
+        std::string arg = get_directive_arg(it);
+        if (isSkip)
+            return;
+        assert_no_directive_arg(it);
+
+        char *endptr;
+        uint64_t line = std::strtoul(arg.c_str(), &endptr, 10);
+        if (*endptr != '\0' || line > INT32_MAX) {
+            printError(fmt::format("Wrong line number format: {}", arg));
+            exit(EXIT_FAILURE);
+        }
+
+        curLine = line;
     }
     else if (dir == "error") {
         std::stringstream ss;
@@ -143,8 +178,7 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
         }
         if (isSkip)
             return;
-
-        fmt::print(stderr, "Error directive: '{}'\n", ss.str());
+        printError(fmt::format("#error {}", ss.str()));
         exit(EXIT_FAILURE);
     }
     else if (dir == "warning") {
@@ -155,17 +189,18 @@ void Preprocessor::process_directive(std::string const &dir, string_constit_t &i
         }
         if (isSkip)
             return;
-
-        fmt::print(stderr, "Warning directive: '{}'\n", ss.str());
+        printWarn(fmt::format("#warning {}", ss.str()));
     }
     else {
-        fmt::print(stderr, "Unknown preprocessor directive: '{}'\n", dir);
+        printError(fmt::format("Unknown preprocessor directive ({})", dir));
         exit(EXIT_FAILURE);
     }
 }
 
 std::string Preprocessor::get_directive_arg(Preprocessor::string_constit_t &it) {
     skip_spaces(it);
+    if (it == raw.cend() || *it == '\n')
+        return "";
     std::string res = get_ident(it);
     skip_spaces(it);
     return res;
@@ -174,7 +209,7 @@ std::string Preprocessor::get_directive_arg(Preprocessor::string_constit_t &it) 
 void Preprocessor::assert_no_directive_arg(Preprocessor::string_constit_t &it) {
     skip_spaces(it);
     if (it != raw.cend() && *it != '\n') {
-        fmt::print(stderr, "Too many arguments for directive\n");
+        printError("Too many arguments for directive");
         exit(EXIT_FAILURE);
     }
 }

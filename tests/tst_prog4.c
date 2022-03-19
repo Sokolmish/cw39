@@ -2,6 +2,9 @@
 #define WORLD
 #undef HELLO
 
+
+#line 666
+
 #define PHRASE
 
 //#define DO_WARN
