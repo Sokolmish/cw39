@@ -25,9 +25,8 @@ static std::string readFile(std::string const &path) {
     return buffer;
 }
 
-Preprocessor::Preprocessor(const std::string &path) {
-    raw = readFile(path);
-}
+
+Preprocessor::Preprocessor() = default;
 
 void Preprocessor::addDefine(std::string name, std::string value) {
     defines.emplace(std::move(name), std::move(value));
@@ -37,31 +36,39 @@ void Preprocessor::removeDefine(std::string const &name) {
     defines.erase(name);
 }
 
+std::string Preprocessor::process(std::string const &path) {
+    processFile(path);
+    return globalSS.str();
+}
+
+
 void Preprocessor::printError(std::string const &msg) {
-    fmt::print(stderr, "Error in line {}: {}\n", curLine, msg);
+    auto const &loc = locations.top();
+    fmt::print(stderr, "Error ({}:{}): {}\n", loc.file, loc.line, msg);
 }
 
 void Preprocessor::printWarn(std::string const &msg) {
-    fmt::print(stderr, "Warning in line {}: {}\n", curLine, msg);
+    auto const &loc = locations.top();
+    fmt::print(stderr, "Warning ({}:{}): {}\n", loc.file, loc.line, msg);
 }
 
-std::string Preprocessor::process() {
-    std::stringstream ss;
+
+void Preprocessor::processFile(const std::string &path) {
+    raw.push(readFile(path));
+    locations.push({ path, 1 });
 
     isLineStart = true;
     isSkip = false;
     nestCntr = 0;
     condStatuses = std::stack<LastCondState>();
 
-    curLine = 1;
-
-    auto it = raw.cbegin();
-    while (it != raw.cend()) {
+    auto it = raw.top().cbegin();
+    while (it != raw.top().cend()) {
         char ch = *(it++);
         if (ch == '\n') {
             isLineStart = true;
-            ss << ch;
-            curLine++;
+            globalSS << ch;
+            locations.top().line++;
         }
         else if (isLineStart && ch == '#') {
             skipSpaces(it);
@@ -75,23 +82,29 @@ std::string Preprocessor::process() {
         }
         else {
             if (!isSkip)
-                ss << ch;
+                globalSS << ch;
             if (isLineStart && !std::isspace(ch))
                 isLineStart = false;
         }
     }
 
-    return ss.str();
+    raw.pop();
+    locations.pop();
 }
 
 void Preprocessor::processDirective(std::string const &dir, string_constit_t &it) {
     if (dir == "include") {
+        if (isSkip)
+            return;
         std::string filename = getStringArg(it, *it == '<');
         assertNoArg(it);
 
-        static_cast<void>(filename);
-        printError("Not implemented (#include)\n");
-        exit(EXIT_FAILURE);
+        if (raw.size() > MAX_INCLUDES_DEPTH) {
+            printError(fmt::format("Too many recursive includes (depth {})",
+                                   MAX_INCLUDES_DEPTH));
+            exit(EXIT_FAILURE);
+        }
+        processFile(filename);
     }
     else if (dir == "define") {
         if (isSkip)
@@ -166,11 +179,11 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
         uint32_t arg = getU32Arg(it);
         skipSpaces(it);
         std::string filename;
-        if (it != raw.cend() && *it == '"')
+        if (it != raw.top().cend() && *it == '"')
             filename = getStringArg(it, false);
         assertNoArg(it);
         static_cast<void>(filename);
-        curLine = arg;
+        locations.top().line = arg;
     }
     else if (dir == "error") {
         if (isSkip)
@@ -204,10 +217,10 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
 
     std::stringstream ss;
     char qclose = angleBrackets ? '>' : '"';
-    while (it != raw.cend() && *it != qclose)
+    while (it != raw.top().cend() && *it != qclose)
         ss << *(it++);
 
-    if (it == raw.cend() || *it != qclose) {
+    if (it == raw.top().cend() || *it != qclose) {
         printError(fmt::format("Expected closing quote ('{}')", qclose));
         exit(EXIT_FAILURE);
     }
@@ -218,7 +231,7 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
 
 uint32_t Preprocessor::getU32Arg(Preprocessor::string_constit_t &it) {
     std::stringstream ss;
-    while (it != raw.cend() && std::isdigit(*it))
+    while (it != raw.top().cend() && std::isdigit(*it))
         ss << *(it++);
 
     std::string snum = ss.str();
@@ -232,25 +245,25 @@ uint32_t Preprocessor::getU32Arg(Preprocessor::string_constit_t &it) {
 }
 
 std::string Preprocessor::getIdentArg(string_constit_t &it) {
-    if (it == raw.cend() || !is_alphachar(*it)) {
+    if (it == raw.top().cend() || !is_alphachar(*it)) {
         printError(fmt::format("Wrong identifier format"));
         exit(EXIT_FAILURE);
     }
     std::stringstream ss;
     ss << *(it++);
-    while (it != raw.cend() && is_alphanum(*it))
+    while (it != raw.top().cend() && is_alphanum(*it))
         ss << *(it++);
     return ss.str();
 }
 
 void Preprocessor::skipSpaces(string_constit_t &it) {
-    while (it != raw.cend() && std::isspace(*it) && *it != '\n')
+    while (it != raw.top().cend() && std::isspace(*it) && *it != '\n')
         it++;
 }
 
 void Preprocessor::assertNoArg(string_constit_t &it) {
     skipSpaces(it);
-    if (it != raw.cend() && *it != '\n') {
+    if (it != raw.top().cend() && *it != '\n') {
         printError("Too many arguments for directive");
         exit(EXIT_FAILURE);
     }

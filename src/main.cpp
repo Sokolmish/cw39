@@ -36,8 +36,8 @@ int main(int argc, char **argv) {
     if (!args.unmatched().empty())
         path = args.unmatched().at(0);
 
-    auto preproc = Preprocessor(path);
-    std::string text = preproc.process();
+    auto preproc = Preprocessor();
+    std::string text = preproc.process(path);
 
     auto parser = std::make_unique<CoreParser>(text);
     auto ast = parser->getTransUnit();

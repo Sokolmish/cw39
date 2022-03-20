@@ -5,7 +5,8 @@
 
 #line 666
 
-#define PHRASE
+#include "incl_file.h"
+
 
 //#define DO_WARN
 //#define DO_ERR
