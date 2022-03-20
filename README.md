@@ -1,23 +1,35 @@
 # Diploma
 
-C99 compiler with optimizations.
+C99 optimizing compiler producing LLVM assembler.
 
-[Test program](https://github.com/Sokolmish/coursework_3/blob/master/tests/tst_prog1.c)
+[One of test programs](https://github.com/Sokolmish/coursework_3/blob/master/tests/tst_prog1.c)
 
 ## Requirements
 
-- **gcc10** and above
+- **CMake**
+- **gcc-10** and above
 - **LLVM-13** and above (because early versions cannot be compiled with C++20)
-- **[fmtlib](https://fmt.dev/latest/index.html)**
-- \[optionally\] **Flex** and **Bison** to generate lexer and parser (invoking manually with [Makefile](https://github.com/Sokolmish/coursework_3/blob/master/src/parser/Makefile))
+- **[fmtlib](https://fmt.dev/latest/index.html)** (tested with versions 6 and 8)
+- \[optionally\] **Flex** and **Bison** to generate lexer and parser (invoking manually with [Makefile](/src/parser/Makefile))
 
-## Building with docker
+## Building
 
-Docker container can be built using the [`setup.sh`](https://github.com/Sokolmish/coursework_3/blob/master/setup.sh) script. After the first usage, this command should be executed if [Dockerfile](https://github.com/Sokolmish/coursework_3/blob/master/Dockerfile) was changed.
+To build this compiler one should execute following commands, which are common for most CMake projects. Executable binary (`cw39`) will be placed in the `build` directory.
 
-Project can be built using the [`build.sh`](https://github.com/Sokolmish/coursework_3/blob/master/build.sh) script. This script will store final binary and building files in the `docker_build` directory created by previous script.
+```
+mkdir build
+cd build
+cmake ..
+make
+```
 
-Both scripts don't expect arguments and should be executed from project root (where Dockerfile is located). Optionally, one can specify number of threads used by make in build script (default is 3).
+### Building using Docker
+
+Docker container can be built using the [`setup.sh`](/setup.sh) script. After the first usage, this command should be executed if [Dockerfile](/Dockerfile) was changed.
+
+Project can be built using the [`build.sh`](/build.sh) script. This script will store final binary and building files in the `docker_build` directory created by previous script.
+
+Both scripts don't expect arguments and should be executed from project root (where Dockerfile is located). Optionally, one can specify number of threads used by make in the build script (default is 3).
 
 ## Usage
 
