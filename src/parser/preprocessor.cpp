@@ -128,7 +128,7 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
         assertNoArg(it);
         removeDefine(name);
     }
-    else if (dir == "ifdef") {
+    else if (dir == "ifdef" || dir == "ifndef") {
         if (isSkip) {
             nestCntr++;
             return;
@@ -139,7 +139,8 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
             exit(EXIT_FAILURE);
         }
         assertNoArg(it);
-        if (defines.contains(arg)) {
+
+        if (defines.contains(arg) || dir == "ifndef") {
             condStatuses.push(PC_IF_TRUE);
         }
         else {

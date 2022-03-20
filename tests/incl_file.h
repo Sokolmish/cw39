@@ -1,5 +1,4 @@
-#ifdef INCL_FILE_H__
-#else
+#ifndef INCL_FILE_H__
 #define INCL_FILE_H__
 
 //#warning "Hello"
