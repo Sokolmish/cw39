@@ -3627,7 +3627,7 @@ void yyerror(void *loc, yyscan_t scan, AST_TranslationUnit **root, const LinesWa
     //fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
     auto fixLoc = warps->getLoc(mloc->first_line);
     std::string filename = warps->getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Syntax error ({}:{}:{}): {}\n",
+    fmt::print(stderr, "Error ({}:{}:{}): {}\n",
                filename, fixLoc.line, mloc->first_column, str);
 }
 
@@ -3637,6 +3637,7 @@ AST_TranslationUnit* CoreParser::parse_program(std::string const &str,
 	yyscan_t scanner;
 	lex_extra_t extra;
 	extra.state = state;
+	extra.warps = warps;
 	init_scanner(str.c_str(), &scanner, &extra);
 	ast_set_pstate_ptr(state);
 	AST_TranslationUnit *res;

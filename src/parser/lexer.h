@@ -15,13 +15,18 @@ extern "C" {
 typedef void* yyscan_t;
 #endif
 
+struct YYLTYPE;
+
 #define YY_NO_UNPUT
+
+struct LinesWarpMap;
 
 typedef struct lex_extra {
     int cur_line;
     int cur_column;
 
     struct CoreParserState *state;
+    const struct LinesWarpMap *warps;
 } lex_extra_t;
 
 #define YY_USER_ACTION                              \
@@ -46,6 +51,9 @@ typedef struct lex_extra {
 
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra);
 void destroy_scanner(yyscan_t scanner);
+
+void lexer_error(struct YYLTYPE *loc, lex_extra_t *extra, const char *msg);
+
 
 AST_Literal_t get_integer(const char *str);
 AST_Literal_t get_float(const char *str);

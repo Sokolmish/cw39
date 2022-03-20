@@ -5,7 +5,7 @@
     #include "lexer.h"
     #include "y.tab.h"
 
-    void comment(yyscan_t yyscanner);
+    void comment(yyscan_t yyscanner, struct YYLTYPE *loc, lex_extra_t *extra);
 %}
 
 D           [0-9]
@@ -17,7 +17,7 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 
 %%
 
-"/*"            { comment(yyscanner); }
+"/*"            { comment(yyscanner, yylloc, yyextra); }
 "//"[^\n]*      { }
 
 "auto"          { return AUTO;      }
@@ -120,12 +120,20 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "|"			    { return '|';   }
 "?"             { return '?';   }
 
-[ \t\v\n\f]     { }
-.               { fprintf(stderr, "unexpected symbol\n"); exit(EXIT_FAILURE); }
+[ \t\v\n\f]+    { }
+.               {
+                    char msg[64];
+                    snprintf(msg, sizeof(msg),
+                        "Unexpected symbol '%c' (0x%02hhX)\n",
+                        yytext[0], yytext[0]);
+                    msg[sizeof(msg) - 1] = 0;
+                    lexer_error(yylloc, yyextra, msg);
+                    exit(EXIT_FAILURE);
+                }
 
 %%
 
-void comment(yyscan_t yyscanner) {
+void comment(yyscan_t yyscanner, struct YYLTYPE *loc, lex_extra_t *extra) {
     char c, prev = 0;
 
     while ((c = input(yyscanner)) != 0) {
@@ -133,7 +141,7 @@ void comment(yyscan_t yyscanner) {
             return;
         prev = c;
     }
-    fprintf(stderr, "unterminated comment\n");
+    lexer_error(loc, extra, "Unterminated multiline comment");
     exit(EXIT_FAILURE);
 }
 

@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "lexer.h"
 #include "parser.hpp"
+#include <fmt/core.h>
 
 #include <cstdlib>
 #include <cctype>
@@ -20,6 +21,15 @@ std::shared_ptr<AST_TranslationUnit> CoreParser::getTransUnit() {
 CoreParserState *CoreParser::getPState() {
     return pstate.get();
 }
+
+
+void lexer_error(YYLTYPE *loc, lex_extra_t *extra, const char *msg) {
+    auto fixLoc = extra->warps->getLoc(loc->first_line);
+    std::string filename = extra->warps->getFilename(fixLoc.filenum);
+    fmt::print(stderr, "Error ({}:{}:{}): {}\n",
+               filename, fixLoc.line, loc->first_column, msg);
+}
+
 
 string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, int *type) {
     auto it = pstate->identsMap.lower_bound(ident);

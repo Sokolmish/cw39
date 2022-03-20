@@ -618,6 +618,7 @@ AST_TranslationUnit* CoreParser::parse_program(std::string const &str,
 	yyscan_t scanner;
 	lex_extra_t extra;
 	extra.state = state;
+	extra.warps = warps;
 	init_scanner(str.c_str(), &scanner, &extra);
 	ast_set_pstate_ptr(state);
 	AST_TranslationUnit *res;
