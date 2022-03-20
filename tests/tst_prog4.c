@@ -11,11 +11,11 @@
 //#define DO_ERR
 
 #ifdef DO_WARN
-#warning This is warning
+#   warning "This is warning"
 #endif
 
 #ifdef DO_ERR
-#error This is error
+#   error "This is error"
 #endif
 
 int printf(const char *format, ...);
