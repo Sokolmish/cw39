@@ -5,17 +5,23 @@
 %lex-param {yyscan_t scanner}
 %parse-param {yyscan_t scanner}
 %parse-param {struct AST_TranslationUnit **parser_result}
+%parse-param {const struct LinesWarpMap *warps}
+
+%code requires {
+    struct LinesWarpMap;
+}
 
 %{
 	#include "lexer.h"
 	#include "parser.hpp"
+	#include "preprocessor.hpp"
 
 	#ifdef __cplusplus
 	extern "C" {
 	#endif
 
 	int yylex(void*, void*, yyscan_t);
-	void yyerror(void*, yyscan_t, AST_TranslationUnit**, const char *str);
+	void yyerror(void*, yyscan_t, AST_TranslationUnit**, const LinesWarpMap *warps, const char *str);
 
 	#ifdef __cplusplus
 	}
@@ -594,23 +600,28 @@ func_def
 
 %%
 
-void yyerror(void *loc, yyscan_t, AST_TranslationUnit **root, const char *str) {
-    // fprintf(stderr, "error: %s\n",str);
-    // printf("%s\n", (*root)->getTreeNode()->printHor().c_str());
+#include <fmt/core.h>
 
+void yyerror(void *loc, yyscan_t scan, AST_TranslationUnit **root, const LinesWarpMap *warps, const char *str) {
     (void)root;
     YYLTYPE *mloc = reinterpret_cast<YYLTYPE*>(loc);
-    fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
+    //fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
+    auto fixLoc = warps->getLoc(mloc->first_line);
+    std::string filename = warps->getFilename(fixLoc.filenum);
+    fmt::print(stderr, "Error ({}:{}:{}): {}\n",
+               filename, fixLoc.line, mloc->first_column, str);
 }
 
-AST_TranslationUnit* CoreParser::parse_program(std::string const &str, CoreParserState *state) {
+AST_TranslationUnit* CoreParser::parse_program(std::string const &str,
+                                               CoreParserState *state,
+                                               const LinesWarpMap *warps) {
 	yyscan_t scanner;
 	lex_extra_t extra;
 	extra.state = state;
 	init_scanner(str.c_str(), &scanner, &extra);
 	ast_set_pstate_ptr(state);
 	AST_TranslationUnit *res;
-	int isFailure = yyparse(scanner, &res);
+	int isFailure = yyparse(scanner, &res, warps);
 	destroy_scanner(scanner);
 	ast_set_pstate_ptr(nullptr);
 	if (isFailure) {

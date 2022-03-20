@@ -139,8 +139,7 @@ void comment(yyscan_t yyscanner) {
 
 
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra) {
-    extra->continued = 0;
-    extra->cur_line = 0;
+    extra->cur_line = 1;
     extra->cur_column = 0;
     yylex_init_extra(extra, scanner);
     yy_scan_string(program, *scanner);

@@ -7,9 +7,9 @@
 
 #include "y.tab.h"
 
-CoreParser::CoreParser(const std::string &str) {
+CoreParser::CoreParser(const std::string &str, LinesWarpMap &warps) {
     pstate = std::make_unique<CoreParserState>();
-    AST_TranslationUnit *rawUnit = CoreParser::parse_program(str, pstate.get());
+    AST_TranslationUnit *rawUnit = CoreParser::parse_program(str, pstate.get(), &warps);
     unit = std::shared_ptr<AST_TranslationUnit>(rawUnit);
 }
 

@@ -3,17 +3,46 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <stack>
 #include <sstream>
 
+class LinesWarpMap {
+public:
+    explicit LinesWarpMap(std::string const newFile);
+
+    struct Location {
+        int filenum, line;
+    };
+
+    void appendWarpLoc(int oldLine, int newLine, std::string const newFile);
+    Location getLoc(int line) const;
+
+    std::string getFilename(int num) const;
+
+private:
+    struct LineWarp {
+        int oldLine, newLine, newFile;
+    };
+
+    std::vector<LineWarp> ldata;
+    std::map<std::string, int> filenames;
+
+    mutable size_t hint = 0;
+
+    int getFilenum(std::string const &file);
+    Location getLocHard(int line) const;
+};
+
 class Preprocessor {
 public:
-    Preprocessor();
+    Preprocessor(std::string const &path);
 
     void addDefine(std::string name, std::string value);
     void removeDefine(std::string const &name);
 
-    std::string process(std::string const &path);
+    std::string getText() const;
+    LinesWarpMap getWarps() const;
 
     static const constexpr size_t MAX_INCLUDES_DEPTH = 64;
 
@@ -21,7 +50,12 @@ private:
     std::stack<std::string> raw;
     std::map<std::string, std::string> defines;
 
+    size_t globalLine = 0;
+
     std::stringstream globalSS;
+    std::string finalText;
+
+    LinesWarpMap warps;
 
     bool isLineStart;
     bool isSkip;
@@ -49,7 +83,6 @@ private:
 
     void printError(std::string const &msg);
     void printWarn(std::string const &msg);
-
 };
 
 #endif /* __PREPROCESSOR_HPP__ */

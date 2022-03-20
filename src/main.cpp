@@ -36,10 +36,11 @@ int main(int argc, char **argv) {
     if (!args.unmatched().empty())
         path = args.unmatched().at(0);
 
-    auto preproc = Preprocessor();
-    std::string text = preproc.process(path);
+    auto preproc = Preprocessor(path);
+    std::string text = preproc.getText();
+    auto warps = preproc.getWarps();
 
-    auto parser = std::make_unique<CoreParser>(text);
+    auto parser = std::make_unique<CoreParser>(text, warps);
     auto ast = parser->getTransUnit();
 
     if (args.count("ast"))

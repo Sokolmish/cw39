@@ -3,14 +3,6 @@
 #include <sstream>
 #include <fmt/core.h>
 
-static inline bool is_alphachar(char ch) {
-    return std::isalpha(ch) || ch == '_';
-}
-
-static inline bool is_alphanum(char ch) {
-    return std::isalnum(ch) || ch == '_';
-}
-
 static std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
     if (!t.is_open()) {
@@ -26,7 +18,10 @@ static std::string readFile(std::string const &path) {
 }
 
 
-Preprocessor::Preprocessor() = default;
+Preprocessor::Preprocessor(std::string const &path) : warps(path) {
+    processFile(path);
+    finalText = globalSS.str();
+}
 
 void Preprocessor::addDefine(std::string name, std::string value) {
     defines.emplace(std::move(name), std::move(value));
@@ -36,9 +31,12 @@ void Preprocessor::removeDefine(std::string const &name) {
     defines.erase(name);
 }
 
-std::string Preprocessor::process(std::string const &path) {
-    processFile(path);
-    return globalSS.str();
+std::string Preprocessor::getText() const {
+    return finalText;
+}
+
+LinesWarpMap Preprocessor::getWarps() const {
+    return warps;
 }
 
 
@@ -69,10 +67,11 @@ void Preprocessor::processFile(const std::string &path) {
             isLineStart = true;
             globalSS << ch;
             locations.top().line++;
+            globalLine++;
         }
         else if (isLineStart && ch == '#') {
             skipSpaces(it);
-            if (!is_alphachar(*it)) {
+            if (!std::isalpha(*it)) {
                 printError("Expected directive name");
                 exit(EXIT_FAILURE);
             }
@@ -104,7 +103,10 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
                                    MAX_INCLUDES_DEPTH));
             exit(EXIT_FAILURE);
         }
+
+        warps.appendWarpLoc(globalLine, 0, filename);
         processFile(filename);
+        warps.appendWarpLoc(globalLine, locations.top().line - 1, locations.top().file);
     }
     else if (dir == "define") {
         if (isSkip)
@@ -183,8 +185,11 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
         if (it != raw.top().cend() && *it == '"')
             filename = getStringArg(it, false);
         assertNoArg(it);
-        static_cast<void>(filename);
+
         locations.top().line = arg;
+        if (!filename.empty())
+            locations.top().file = filename;
+        warps.appendWarpLoc(globalLine, locations.top().line, locations.top().file);
     }
     else if (dir == "error") {
         if (isSkip)
@@ -214,7 +219,7 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
         printError(fmt::format("Wrong quote symbol ({})", *it));
         exit(EXIT_FAILURE);
     }
-    it++;
+    ++it;
 
     std::stringstream ss;
     char qclose = angleBrackets ? '>' : '"';
@@ -225,7 +230,7 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
         printError(fmt::format("Expected closing quote ('{}')", qclose));
         exit(EXIT_FAILURE);
     }
-    it++;
+    ++it;
 
     return ss.str();
 }
@@ -246,20 +251,20 @@ uint32_t Preprocessor::getU32Arg(Preprocessor::string_constit_t &it) {
 }
 
 std::string Preprocessor::getIdentArg(string_constit_t &it) {
-    if (it == raw.top().cend() || !is_alphachar(*it)) {
+    if (it == raw.top().cend() || !(std::isalpha(*it) || *it == '_')) {
         printError(fmt::format("Wrong identifier format"));
         exit(EXIT_FAILURE);
     }
     std::stringstream ss;
     ss << *(it++);
-    while (it != raw.top().cend() && is_alphanum(*it))
+    while (it != raw.top().cend() && (std::isalnum(*it) || *it == '_'))
         ss << *(it++);
     return ss.str();
 }
 
 void Preprocessor::skipSpaces(string_constit_t &it) {
     while (it != raw.top().cend() && std::isspace(*it) && *it != '\n')
-        it++;
+        ++it;
 }
 
 void Preprocessor::assertNoArg(string_constit_t &it) {
@@ -269,3 +274,70 @@ void Preprocessor::assertNoArg(string_constit_t &it) {
         exit(EXIT_FAILURE);
     }
 }
+
+
+LinesWarpMap::LinesWarpMap(std::string const newFile) {
+    ldata.reserve(16);
+    ldata.push_back(LineWarp{
+            .oldLine = 0,
+            .newLine = 0,
+            .newFile = getFilenum(newFile),
+    });
+}
+
+void LinesWarpMap::appendWarpLoc(int oldLine, int newLine, std::string const newFile) {
+    if (!ldata.empty() && oldLine <= ldata.back().oldLine)
+        throw;
+    ldata.push_back(LineWarp{
+        .oldLine = oldLine,
+        .newLine = newLine,
+        .newFile = getFilenum(newFile),
+    });
+}
+
+LinesWarpMap::Location LinesWarpMap::getLoc(int line) const {
+    if (hint == ldata.size() - 1) {
+        if (line < ldata.back().oldLine)
+            return getLocHard(line);
+        else
+            return Location{
+                    .filenum = ldata.back().newFile,
+                    .line = ldata.back().newLine + line - ldata.back().oldLine };
+    }
+    else if (ldata[hint].oldLine < line && line < ldata[hint + 1].oldLine) {
+        return Location{
+                .filenum = ldata[hint].newFile,
+                .line = ldata[hint].newLine + line - ldata[hint].oldLine };
+    }
+    else if (ldata[hint + 1].oldLine <= line) {
+        while (hint < ldata.size() - 1 && ldata[hint + 1].oldLine <= line)
+            hint++;
+        return Location{
+                .filenum = ldata[hint].newFile,
+                .line = ldata[hint].newLine + line - ldata[hint].oldLine };
+    }
+    else {
+        return getLocHard(line);
+    }
+}
+
+LinesWarpMap::Location LinesWarpMap::getLocHard(int line) const {
+    throw; // TODO
+}
+
+std::string LinesWarpMap::getFilename(int num) const {
+    for (auto &[file, filenum] : filenames)
+        if (filenum == num)
+            return file;
+    return "<unknown_file>";
+}
+
+int LinesWarpMap::getFilenum(const std::string &file) {
+    auto it = filenames.lower_bound(file);
+    if (it->first == file)
+        return it->second;
+    int newNum = filenames.size();
+    filenames.emplace_hint(it, file, newNum);
+    return newNum;
+}
+

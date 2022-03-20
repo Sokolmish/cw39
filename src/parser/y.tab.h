@@ -43,6 +43,12 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 10 "parser.y"
+
+    struct LinesWarpMap;
+
+#line 52 "y.tab.h"
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -179,7 +185,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 41 "parser.y"
+#line 47 "parser.y"
 
     int boolean;
 	int enum_val;
@@ -234,7 +240,7 @@ union YYSTYPE
 	struct AST_FunctionDef *func_def;
 	struct AST_TranslationUnit *trans_unit;
 
-#line 238 "y.tab.h"
+#line 244 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -258,6 +264,6 @@ struct YYLTYPE
 
 
 
-int yyparse (yyscan_t scanner, struct AST_TranslationUnit **parser_result);
+int yyparse (yyscan_t scanner, struct AST_TranslationUnit **parser_result, const struct LinesWarpMap *warps);
 
 #endif /* !YY_YY_Y_TAB_H_INCLUDED  */

@@ -18,7 +18,6 @@ typedef void* yyscan_t;
 #define YY_NO_UNPUT
 
 typedef struct lex_extra {
-    int continued;
     int cur_line;
     int cur_column;
 
@@ -29,11 +28,8 @@ typedef struct lex_extra {
 {                                                   \
     int i;                                          \
     struct lex_extra *extra = yyextra;              \
-    if (! extra->continued) {                       \
-        yylloc->first_line = extra->cur_line;       \
-        yylloc->first_column = extra->cur_column;   \
-    }                                               \
-    extra->continued = 0;                           \
+    yylloc->first_line = extra->cur_line;           \
+    yylloc->first_column = extra->cur_column;       \
     for (i = 0; i < yyleng; i++) {                  \
         if (yytext[i] == '\n') {                    \
             extra->cur_line++;                      \
