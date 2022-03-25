@@ -208,14 +208,14 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
         : IR_Expr(CAST), arg(std::move(sourceVal)), dest(std::move(cdest)) {
     const auto &source = arg.getType();
     if (source->equal(*dest))
-        semanticError("Casting equal types"); // TODO
+        generalError("Casting equal types"); // TODO
 
     if (source->type == IR_Type::FUNCTION || dest->type == IR_Type::FUNCTION) {
-        semanticError("Function type cannot be cast"); // TODO
+        generalError("Function type cannot be cast"); // TODO
     }
     else if (source->type == IR_Type::ARRAY) {
         if (dest->type != IR_Type::POINTER)
-            semanticError("Array type can be cast only to pointer");
+            generalError("Array type can be cast only to pointer");
         castOp = BITCAST;
     }
     else if (source->type == IR_Type::POINTER && dest->type == IR_Type::POINTER) {
@@ -224,13 +224,13 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
     else if (source->type == IR_Type::POINTER && dest->type == IR_Type::DIRECT) {
         auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
         if (!dstDir.isInteger() || dstDir.spec != IR_TypeDirect::U64)
-            semanticError("Pointer can be cast only to u64 number");
+            generalError("Pointer can be cast only to u64 number");
         castOp = PTRTOI;
     }
     else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::POINTER) {
         auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
         if (!srcDir.isInteger() || srcDir.spec != IR_TypeDirect::U64)
-            semanticError("Pointer can be created only from u64 number");
+            generalError("Pointer can be created only from u64 number");
         castOp = ITOPTR;
     }
     else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::DIRECT) {
@@ -238,7 +238,7 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
         auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
 
         if (dstDir.spec == IR_TypeDirect::VOID)
-            semanticError("Casts to void are not allowed");
+            generalError("Casts to void are not allowed");
 
         if (srcDir.isInteger() && dstDir.isInteger()) {
             if (srcDir.getBytesSize() == dstDir.getBytesSize())
@@ -429,13 +429,13 @@ void IR_Block::addNewPhiNode(IRval res) {
 
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type) {
     if (type == IR_ExprTerminator::BRANCH)
-        semanticError("Branck term statement needs argument");
+        internalError("Branck term statement needs argument");
     termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type));
 }
 
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type, IRval arg) {
     if (type == IR_ExprTerminator::JUMP)
-        semanticError("Jump term statement doesn't have arguments");
+        internalError("Jump term statement doesn't have arguments");
     termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type, std::move(arg)));
 }
 

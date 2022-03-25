@@ -48,6 +48,10 @@ typedef struct lex_extra {
     yylloc->last_column = extra->cur_column;        \
 }
 
+struct AST_TranslationUnit;
+struct LinesWarpMap;
+
+void yyerror(void*, yyscan_t, struct AST_TranslationUnit**, const struct LinesWarpMap *warps, const char *str);
 
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra);
 void destroy_scanner(yyscan_t scanner);
@@ -58,6 +62,11 @@ void lexer_error(struct YYLTYPE *loc, lex_extra_t *extra, const char *msg);
 AST_Literal_t get_integer(const char *str);
 AST_Literal_t get_float(const char *str);
 AST_Literal_t get_charval(const char *str);
+
+
+// Parser internals
+
+#define SL(node, loc) do { (node)->setLoc(loc.first_line, loc.first_column); } while (0)
 
 #ifdef __cplusplus
 }

@@ -178,42 +178,42 @@
 	/* Expressions */
 
 primary_expr
-	: IDENTIFIER							    { $$ = AST_Primary::makeIdent($1); }
-	| CONSTANT								    { $$ = AST_Primary::makeConst($1); }
-	| strings_seq						        { $$ = AST_Primary::makeStr($1); }
-	| '(' expr ')'							    { $$ = AST_Primary::makeExpr($2); }
-    | '(' type_name ')' '{' init_lst '}'        { $$ = AST_Primary::makeCompound($2, $5); }
-    | '(' type_name ')' '{' init_lst ',' '}'    { $$ = AST_Primary::makeCompound($2, $5); }
+	: IDENTIFIER							    { $$ = AST_Primary::makeIdent($1); SL($$, @$); }
+	| CONSTANT								    { $$ = AST_Primary::makeConst($1); SL($$, @$); }
+	| strings_seq						        { $$ = AST_Primary::makeStr($1); SL($$, @$); }
+	| '(' expr ')'							    { $$ = AST_Primary::makeExpr($2); SL($$, @$); }
+    | '(' type_name ')' '{' init_lst '}'        { $$ = AST_Primary::makeCompound($2, $5); SL($$, @$); }
+    | '(' type_name ')' '{' init_lst ',' '}'    { $$ = AST_Primary::makeCompound($2, $5); SL($$, @$); }
 	;
 
 strings_seq
-    : STRING_LITERAL                            { $$ = (new AST_StringsSeq())->append($1); }
+    : STRING_LITERAL                            { $$ = (new AST_StringsSeq())->append($1); SL($$, @$); }
     | strings_seq STRING_LITERAL                { $$ = $1->append($2); }
     ;
 
 postfix_expr
 	: primary_expr							{ $$ = $1; }
-	| postfix_expr '[' expr ']'				{ $$ = AST_Postfix::makeArr($1, $3); }
-	| postfix_expr '(' ')'					{ $$ = AST_Postfix::makeCall($1, nullptr); }
-	| postfix_expr '(' arg_expr_lst ')'		{ $$ = AST_Postfix::makeCall($1, $3); }
-	| postfix_expr '.' IDENTIFIER			{ $$ = AST_Postfix::makeAccesor($1, $3, false); }
-	| postfix_expr PTR_OP IDENTIFIER		{ $$ = AST_Postfix::makeAccesor($1, $3, true); }
-	| postfix_expr INC_OP					{ $$ = AST_Postfix::makeIncdec($1, false); }
-	| postfix_expr DEC_OP					{ $$ = AST_Postfix::makeIncdec($1, true); }
+	| postfix_expr '[' expr ']'				{ $$ = AST_Postfix::makeArr($1, $3); SL($$, @$); }
+	| postfix_expr '(' ')'					{ $$ = AST_Postfix::makeCall($1, nullptr); SL($$, @$); }
+	| postfix_expr '(' arg_expr_lst ')'		{ $$ = AST_Postfix::makeCall($1, $3); SL($$, @$); }
+	| postfix_expr '.' IDENTIFIER			{ $$ = AST_Postfix::makeAccesor($1, $3, false); SL($$, @$); }
+	| postfix_expr PTR_OP IDENTIFIER		{ $$ = AST_Postfix::makeAccesor($1, $3, true); SL($$, @$); }
+	| postfix_expr INC_OP					{ $$ = AST_Postfix::makeIncdec($1, false); SL($$, @$); }
+	| postfix_expr DEC_OP					{ $$ = AST_Postfix::makeIncdec($1, true); SL($$, @$); }
 	;
 
 arg_expr_lst
-	: assign_expr							{ $$ = (new AST_ArgumentsList())->append($1); }
+	: assign_expr							{ $$ = (new AST_ArgumentsList())->append($1); SL($$, @$); }
 	| arg_expr_lst ',' assign_expr			{ $$ = $1->append($3); };
 	;
 
 unary_expr
 	: postfix_expr							{ $$ = $1; }
-	| INC_OP unary_expr						{ $$ = new AST_Unop(AST_Unop::PRE_INC, $2); }
-	| DEC_OP unary_expr						{ $$ = new AST_Unop(AST_Unop::PRE_DEC, $2); }
-	| unary_operator cast_expr				{ $$ = new AST_Unop(AST_Unop::OpType($1), $2); }
-	| SIZEOF unary_expr						{ $$ = new AST_Unop(AST_Unop::SIZEOF_OP, $2); }
-	| SIZEOF '(' type_name ')'				{ $$ = new AST_Unop(AST_Unop::SIZEOF_OP, $3); }
+	| INC_OP unary_expr						{ $$ = new AST_Unop(AST_Unop::PRE_INC, $2); SL($$, @$); }
+	| DEC_OP unary_expr						{ $$ = new AST_Unop(AST_Unop::PRE_DEC, $2); SL($$, @$); }
+	| unary_operator cast_expr				{ $$ = new AST_Unop(AST_Unop::OpType($1), $2); SL($$, @$); }
+	| SIZEOF unary_expr						{ $$ = new AST_Unop(AST_Unop::SIZEOF_OP, $2); SL($$, @$); }
+	| SIZEOF '(' type_name ')'				{ $$ = new AST_Unop(AST_Unop::SIZEOF_OP, $3); SL($$, @$); }
 	;
 
 unary_operator
@@ -227,75 +227,75 @@ unary_operator
 
 cast_expr
 	: unary_expr							{ $$ = $1; }
-	| '(' type_name ')' cast_expr			{ $$ = new AST_Cast($2, $4); }
+	| '(' type_name ')' cast_expr			{ $$ = new AST_Cast($2, $4); SL($$, @$); }
 	;
 
 mult_expr
 	: cast_expr								{ $$ = $1; }
-	| mult_expr '*' cast_expr				{ $$ = new AST_Binop(AST_Binop::MUL, $1, $3); }
-	| mult_expr '/' cast_expr				{ $$ = new AST_Binop(AST_Binop::DIV, $1, $3); }
-	| mult_expr '%' cast_expr				{ $$ = new AST_Binop(AST_Binop::REM, $1, $3); }
+	| mult_expr '*' cast_expr				{ $$ = new AST_Binop(AST_Binop::MUL, $1, $3); SL($$, @$); }
+	| mult_expr '/' cast_expr				{ $$ = new AST_Binop(AST_Binop::DIV, $1, $3); SL($$, @$); }
+	| mult_expr '%' cast_expr				{ $$ = new AST_Binop(AST_Binop::REM, $1, $3); SL($$, @$); }
 	;
 
 add_expr
 	: mult_expr								{ $$ = $1; }
-	| add_expr '+' mult_expr				{ $$ = new AST_Binop(AST_Binop::ADD, $1, $3); }
-	| add_expr '-' mult_expr				{ $$ = new AST_Binop(AST_Binop::SUB, $1, $3); }
+	| add_expr '+' mult_expr				{ $$ = new AST_Binop(AST_Binop::ADD, $1, $3); SL($$, @$); }
+	| add_expr '-' mult_expr				{ $$ = new AST_Binop(AST_Binop::SUB, $1, $3); SL($$, @$); }
 	;
 
 shift_expr
 	: add_expr								{ $$ = $1; }
-	| shift_expr LEFT_OP add_expr			{ $$ = new AST_Binop(AST_Binop::SHL, $1, $3); }
-	| shift_expr RIGHT_OP add_expr			{ $$ = new AST_Binop(AST_Binop::SHR, $1, $3); }
+	| shift_expr LEFT_OP add_expr			{ $$ = new AST_Binop(AST_Binop::SHL, $1, $3); SL($$, @$); }
+	| shift_expr RIGHT_OP add_expr			{ $$ = new AST_Binop(AST_Binop::SHR, $1, $3); SL($$, @$); }
 	;
 
 rel_expr
 	: shift_expr							{ $$ = $1; }
-	| rel_expr '<' shift_expr				{ $$ = new AST_Binop(AST_Binop::LT, $1, $3); }
-	| rel_expr '>' shift_expr				{ $$ = new AST_Binop(AST_Binop::GT, $1, $3); }
-	| rel_expr LE_OP shift_expr				{ $$ = new AST_Binop(AST_Binop::LE, $1, $3); }
-	| rel_expr GE_OP shift_expr				{ $$ = new AST_Binop(AST_Binop::GE, $1, $3); }
+	| rel_expr '<' shift_expr				{ $$ = new AST_Binop(AST_Binop::LT, $1, $3); SL($$, @$); }
+	| rel_expr '>' shift_expr				{ $$ = new AST_Binop(AST_Binop::GT, $1, $3); SL($$, @$); }
+	| rel_expr LE_OP shift_expr				{ $$ = new AST_Binop(AST_Binop::LE, $1, $3); SL($$, @$); }
+	| rel_expr GE_OP shift_expr				{ $$ = new AST_Binop(AST_Binop::GE, $1, $3); SL($$, @$); }
 	;
 
 eq_expr
 	: rel_expr								{ $$ = $1; }
-	| eq_expr EQ_OP rel_expr				{ $$ = new AST_Binop(AST_Binop::EQ, $1, $3); }
-	| eq_expr NE_OP rel_expr				{ $$ = new AST_Binop(AST_Binop::NE, $1, $3); }
+	| eq_expr EQ_OP rel_expr				{ $$ = new AST_Binop(AST_Binop::EQ, $1, $3); SL($$, @$); }
+	| eq_expr NE_OP rel_expr				{ $$ = new AST_Binop(AST_Binop::NE, $1, $3); SL($$, @$); }
 	;
 
 and_expr
 	: eq_expr								{ $$ = $1; }
-	| and_expr '&' eq_expr					{ $$ = new AST_Binop(AST_Binop::BIT_AND, $1, $3); }
+	| and_expr '&' eq_expr					{ $$ = new AST_Binop(AST_Binop::BIT_AND, $1, $3); SL($$, @$); }
 	;
 
 xor_expr
 	: and_expr								{ $$ = $1; }
-	| xor_expr '^' and_expr					{ $$ = new AST_Binop(AST_Binop::BIT_XOR, $1, $3); }
+	| xor_expr '^' and_expr					{ $$ = new AST_Binop(AST_Binop::BIT_XOR, $1, $3); SL($$, @$); }
 	;
 
 or_expr
 	: xor_expr								{ $$ = $1; }
-	| or_expr '|' xor_expr					{ $$ = new AST_Binop(AST_Binop::BIT_OR, $1, $3); }
+	| or_expr '|' xor_expr					{ $$ = new AST_Binop(AST_Binop::BIT_OR, $1, $3); SL($$, @$); }
 	;
 
 log_and_expr
 	: or_expr								{ $$ = $1; }
-	| log_and_expr AND_OP or_expr			{ $$ = new AST_Binop(AST_Binop::LOG_AND, $1, $3); }
+	| log_and_expr AND_OP or_expr			{ $$ = new AST_Binop(AST_Binop::LOG_AND, $1, $3); SL($$, @$); }
 	;
 
 log_or_expr
 	: log_and_expr							{ $$ = $1; }
-	| log_or_expr OR_OP log_and_expr		{ $$ = new AST_Binop(AST_Binop::LOG_OR, $1, $3); }
+	| log_or_expr OR_OP log_and_expr		{ $$ = new AST_Binop(AST_Binop::LOG_OR, $1, $3); SL($$, @$); }
 	;
 
 ternary_expr
 	: log_or_expr								{ $$ = $1; }
-	| log_or_expr '?' expr ':' ternary_expr		{ $$ = new AST_Ternary($1, $3, $5); }
+	| log_or_expr '?' expr ':' ternary_expr		{ $$ = new AST_Ternary($1, $3, $5); SL($$, @$); }
 	;
 
 assign_expr
 	: ternary_expr								{ $$ = $1; }
-	| unary_expr assign_op assign_expr			{ $$ = new AST_Assignment(AST_Assignment::OpType($2), $1, $3); }
+	| unary_expr assign_op assign_expr			{ $$ = new AST_Assignment(AST_Assignment::OpType($2), $1, $3); SL($$, @$); }
 	;
 
 assign_op
@@ -313,7 +313,7 @@ assign_op
 	;
 
 expr
-	: assign_expr								{ $$ = $1; }
+	: assign_expr								{ $$ = $1; /* TODO: fixme */ }
 	| expr ',' assign_expr						{ $$ = dynamic_cast<AST_CommaExpression*>($1)->append($3); }
 	;
 
@@ -324,13 +324,13 @@ const_expr
 	/* Specifiers */
 
 decl_specs
-	: storage_class_specifier				{ $$ = (new AST_DeclSpecifiers())->update_storage($1); }
+	: storage_class_specifier				{ $$ = (new AST_DeclSpecifiers())->update_storage($1); SL($$, @$); }
 	| storage_class_specifier decl_specs	{ $$ = $2->update_storage($1); }
-	| type_specifier						{ $$ = (new AST_DeclSpecifiers())->update_type_spec($1); }
+	| type_specifier						{ $$ = (new AST_DeclSpecifiers())->update_type_spec($1); SL($$, @$); }
 	| type_specifier decl_specs				{ $$ = $2->update_type_spec($1); }
-	| type_qualifier						{ $$ = (new AST_DeclSpecifiers())->update_type_qual($1); }
+	| type_qualifier						{ $$ = (new AST_DeclSpecifiers())->update_type_qual($1); SL($$, @$); }
 	| type_qualifier decl_specs				{ $$ = $2->update_type_qual($1); }
-	| function_specifier					{ $$ = (new AST_DeclSpecifiers())->update_func_qual($1); }
+	| function_specifier					{ $$ = (new AST_DeclSpecifiers())->update_func_qual($1); SL($$, @$); }
 	| function_specifier decl_specs			{ $$ = $2->update_func_qual($1); }
 	;
 
@@ -368,9 +368,9 @@ function_specifier
 	;
 
 unistruct_spec
-	: unistruct IDENTIFIER '{' struct_declaration_list '}'	{ $$ = new AST_StructOrUsionSpec($1, $2, $4); }
-	| unistruct '{' struct_declaration_list '}'				{ $$ = new AST_StructOrUsionSpec($1, NO_IDENT_ID, $3); }
-	| unistruct IDENTIFIER									{ $$ = new AST_StructOrUsionSpec($1, $2, nullptr); }
+	: unistruct IDENTIFIER '{' struct_declaration_list '}'	{ $$ = new AST_StructOrUsionSpec($1, $2, $4); SL($$, @$); }
+	| unistruct '{' struct_declaration_list '}'				{ $$ = new AST_StructOrUsionSpec($1, NO_IDENT_ID, $3); SL($$, @$); }
+	| unistruct IDENTIFIER									{ $$ = new AST_StructOrUsionSpec($1, $2, nullptr); SL($$, @$); }
 	;
 
 unistruct
@@ -379,150 +379,150 @@ unistruct
 	;
 
 struct_declaration_list
-	: struct_declaration								{ $$ = new AST_StructDeclarationList($1); }
+	: struct_declaration								{ $$ = new AST_StructDeclarationList($1); SL($$, @$); }
 	| struct_declaration_list struct_declaration		{ $$ = $1->append($2); }
 	;
 
 struct_declaration
-	: spec_qual_lst struct_declarator_list ';'			{ $$ = new AST_StructDeclaration($1, $2); }
+	: spec_qual_lst struct_declarator_list ';'			{ $$ = new AST_StructDeclaration($1, $2); SL($$, @$); }
 	;
 
 spec_qual_lst
 	: type_specifier spec_qual_lst				{ $$ = $2->append_spec($1); }
-	| type_specifier							{ $$ = (new AST_SpecifierQualifierList($1)); }
+	| type_specifier							{ $$ = new AST_SpecifierQualifierList($1); SL($$, @$); }
 	| type_qualifier spec_qual_lst				{ $$ = $2->append_qual(AST_TypeQualifiers::QualType($1)); }
-	| type_qualifier							{ $$ = new AST_SpecifierQualifierList(AST_TypeQualifiers::QualType($1)); }
+	| type_qualifier							{ $$ = new AST_SpecifierQualifierList(AST_TypeQualifiers::QualType($1)); SL($$, @$); }
 	;
 
 struct_declarator_list
-	: struct_declarator									{ $$ = new AST_StructDeclaratorList($1); }
+	: struct_declarator									{ $$ = new AST_StructDeclaratorList($1); SL($$, @$); }
 	| struct_declarator_list ',' struct_declarator		{ $$ = $1->append($3); }
 	;
 
 struct_declarator
-	: declarator										{ $$ = new AST_StructDeclarator($1, nullptr); }
-	| ':' const_expr									{ $$ = new AST_StructDeclarator(nullptr, $2); }
-	| declarator ':' const_expr							{ $$ = new AST_StructDeclarator($1, $3); }
+	: declarator										{ $$ = new AST_StructDeclarator($1, nullptr); SL($$, @$); }
+	| ':' const_expr									{ $$ = new AST_StructDeclarator(nullptr, $2); SL($$, @$); }
+	| declarator ':' const_expr							{ $$ = new AST_StructDeclarator($1, $3); SL($$, @$); }
 	;
 
 enum_specifier
-	: ENUM '{' enumerator_list '}'						{ $$ = new AST_EnumSpecifier(NO_IDENT_ID, $3); }
-	| ENUM IDENTIFIER '{' enumerator_list '}'			{ $$ = new AST_EnumSpecifier($2, $4); }
-	| ENUM '{' enumerator_list ',' '}'					{ $$ = new AST_EnumSpecifier(NO_IDENT_ID, $3); }
-	| ENUM IDENTIFIER '{' enumerator_list ',' '}'		{ $$ = new AST_EnumSpecifier($2, $4); }
-	| ENUM IDENTIFIER									{ $$ = new AST_EnumSpecifier($2, nullptr); }
+	: ENUM '{' enumerator_list '}'						{ $$ = new AST_EnumSpecifier(NO_IDENT_ID, $3); SL($$, @$); }
+	| ENUM IDENTIFIER '{' enumerator_list '}'			{ $$ = new AST_EnumSpecifier($2, $4); SL($$, @$); }
+	| ENUM '{' enumerator_list ',' '}'					{ $$ = new AST_EnumSpecifier(NO_IDENT_ID, $3); SL($$, @$); }
+	| ENUM IDENTIFIER '{' enumerator_list ',' '}'		{ $$ = new AST_EnumSpecifier($2, $4); SL($$, @$); }
+	| ENUM IDENTIFIER									{ $$ = new AST_EnumSpecifier($2, nullptr); SL($$, @$); }
 	;
 
 enumerator_list
-	: enumerator										{ $$ = new AST_EnumeratorList($1); }
+	: enumerator										{ $$ = new AST_EnumeratorList($1); SL($$, @$); }
 	| enumerator_list ',' enumerator					{ $$ = $1->append($3); }
 	;
 
 enumerator
-	: IDENTIFIER										{ $$ = new AST_Enumerator($1, nullptr); }
-	| IDENTIFIER '=' const_expr							{ $$ = new AST_Enumerator($1, $3); }
+	: IDENTIFIER										{ $$ = new AST_Enumerator($1, nullptr); SL($$, @$); }
+	| IDENTIFIER '=' const_expr							{ $$ = new AST_Enumerator($1, $3); SL($$, @$); }
 	;
 
 
 	/* Declarations */
 
 declaration
-	: decl_specs ';'									{ $$ = new AST_Declaration($1, nullptr); }
-	| decl_specs init_declarator_list ';'				{ $$ = new AST_Declaration($1, $2); }
+	: decl_specs ';'									{ $$ = new AST_Declaration($1, nullptr); SL($$, @$); }
+	| decl_specs init_declarator_list ';'				{ $$ = new AST_Declaration($1, $2); SL($$, @$); }
 	;
 
 init_declarator_list
-	: init_declarator									{ $$ = new AST_InitDeclaratorList($1); }
+	: init_declarator									{ $$ = new AST_InitDeclaratorList($1); SL($$, @$); }
 	| init_declarator_list ',' init_declarator			{ $$ = $1->append($3); }
 	;
 
 init_declarator
-	: declarator										{ $$ = new AST_InitDeclarator($1, nullptr); }
-	| declarator '=' initializer						{ $$ = new AST_InitDeclarator($1, $3); }
+	: declarator										{ $$ = new AST_InitDeclarator($1, nullptr); SL($$, @$); }
+	| declarator '=' initializer						{ $$ = new AST_InitDeclarator($1, $3); SL($$, @$); }
 	;
 
 declarator
-	: pointer dir_declarator							{ $$ = new AST_Declarator($2, $1); }
-	| dir_declarator									{ $$ = new AST_Declarator($1, nullptr); }
+	: pointer dir_declarator							{ $$ = new AST_Declarator($2, $1); SL($$, @$); }
+	| dir_declarator									{ $$ = new AST_Declarator($1, nullptr); SL($$, @$); }
 	;
 
 pointer
-	: '*'							{ $$ = new AST_Pointer(nullptr, nullptr); }
-	| '*' type_qual_lst				{ $$ = new AST_Pointer($2, nullptr); }
-	| '*' pointer					{ $$ = new AST_Pointer(nullptr, $2); }
-	| '*' type_qual_lst pointer		{ $$ = new AST_Pointer($2, $3); }
+	: '*'							{ $$ = new AST_Pointer(nullptr, nullptr); SL($$, @$); }
+	| '*' type_qual_lst				{ $$ = new AST_Pointer($2, nullptr); SL($$, @$); }
+	| '*' pointer					{ $$ = new AST_Pointer(nullptr, $2); SL($$, @$); }
+	| '*' type_qual_lst pointer		{ $$ = new AST_Pointer($2, $3); SL($$, @$); }
 	;
 
 dir_declarator
-	: IDENTIFIER											{ $$ = AST_DirectDeclarator::makeIdent($1); }
-	| '(' declarator ')'									{ $$ = AST_DirectDeclarator::makeNested($2); }
-	| dir_declarator '[' type_qual_lst assign_expr ']'		{ $$ = AST_DirectDeclarator::makeArr($1, $3, $4); }
-	| dir_declarator '[' type_qual_lst ']'					{ $$ = AST_DirectDeclarator::makeArr($1, $3, nullptr); }
-	| dir_declarator '[' assign_expr ']'					{ $$ = AST_DirectDeclarator::makeArr($1, nullptr, $3); }
-	| dir_declarator '[' ']'								{ $$ = AST_DirectDeclarator::makeArr($1, nullptr, nullptr); }
-	| dir_declarator '(' param_type_lst ')'					{ $$ = AST_DirectDeclarator::makeFunc($1, $3); }
-	| dir_declarator '(' ')'								{ $$ = AST_DirectDeclarator::makeFunc($1, nullptr); }
+	: IDENTIFIER											{ $$ = AST_DirectDeclarator::makeIdent($1); SL($$, @$); }
+	| '(' declarator ')'									{ $$ = AST_DirectDeclarator::makeNested($2); SL($$, @$); }
+	| dir_declarator '[' type_qual_lst assign_expr ']'		{ $$ = AST_DirectDeclarator::makeArr($1, $3, $4); SL($$, @$); }
+	| dir_declarator '[' type_qual_lst ']'					{ $$ = AST_DirectDeclarator::makeArr($1, $3, nullptr); SL($$, @$); }
+	| dir_declarator '[' assign_expr ']'					{ $$ = AST_DirectDeclarator::makeArr($1, nullptr, $3); SL($$, @$); }
+	| dir_declarator '[' ']'								{ $$ = AST_DirectDeclarator::makeArr($1, nullptr, nullptr); SL($$, @$); }
+	| dir_declarator '(' param_type_lst ')'					{ $$ = AST_DirectDeclarator::makeFunc($1, $3); SL($$, @$); }
+	| dir_declarator '(' ')'								{ $$ = AST_DirectDeclarator::makeFunc($1, nullptr); SL($$, @$); }
 	;
 
 type_qual_lst
-	: type_qualifier								{ $$ = new AST_TypeQualifiers(AST_TypeQualifiers::QualType($1)); }
+	: type_qualifier								{ $$ = new AST_TypeQualifiers(AST_TypeQualifiers::QualType($1)); SL($$, @$); }
 	| type_qual_lst type_qualifier					{ $$ = $1->update(AST_TypeQualifiers::QualType($2)); }
 	;
 
 param_type_lst
-	: param_lst										{ $$ = new AST_ParameterTypeList($1, false); }
-	| param_lst ',' ELLIPSIS						{ $$ = new AST_ParameterTypeList($1, true); }
+	: param_lst										{ $$ = new AST_ParameterTypeList($1, false); SL($$, @$); }
+	| param_lst ',' ELLIPSIS						{ $$ = new AST_ParameterTypeList($1, true); SL($$, @$); }
 	;
 
 param_lst
-	: parameter_declaration							{ $$ = new AST_ParameterList($1); }
+	: parameter_declaration							{ $$ = new AST_ParameterList($1); SL($$, @$); }
 	| param_lst ',' parameter_declaration			{ $$ = $1->append($3); }
 	;
 
 parameter_declaration
-	: decl_specs declarator							{ $$ = new AST_ParameterDeclaration($1, $2); }
-	| decl_specs									{ $$ = new AST_ParameterDeclaration($1, nullptr); }
+	: decl_specs declarator							{ $$ = new AST_ParameterDeclaration($1, $2); SL($$, @$); }
+	| decl_specs									{ $$ = new AST_ParameterDeclaration($1, nullptr); SL($$, @$); }
 	;
 
 type_name
-	: spec_qual_lst									{ $$ = new AST_TypeName($1, nullptr); }
-	| spec_qual_lst abstr_declarator				{ $$ = new AST_TypeName($1, $2); }
+	: spec_qual_lst									{ $$ = new AST_TypeName($1, nullptr); SL($$, @$); }
+	| spec_qual_lst abstr_declarator				{ $$ = new AST_TypeName($1, $2); SL($$, @$); }
 	;
 
 abstr_declarator
-	: dir_abstr_declarator							{  $$ = new AST_AbstractDeclarator($1, nullptr); }
-	| pointer dir_abstr_declarator					{  $$ = new AST_AbstractDeclarator($2, $1); }
-	| pointer					                    {  $$ = new AST_AbstractDeclarator(nullptr, $1); }
+	: dir_abstr_declarator							{  $$ = new AST_AbstractDeclarator($1, nullptr); SL($$, @$); }
+	| pointer dir_abstr_declarator					{  $$ = new AST_AbstractDeclarator($2, $1); SL($$, @$); }
+	| pointer					                    {  $$ = new AST_AbstractDeclarator(nullptr, $1); SL($$, @$); }
 	;
 	/* 	pointer   {  $$ = new AST_AbstractDeclarator(nullptr, $1); } */
 
 dir_abstr_declarator
-	: '(' abstr_declarator ')'						{ $$ = AST_DirectAbstractDeclarator::makeNested($2); }
-	| dir_abstr_declarator '[' ']'					{ $$ = AST_DirectAbstractDeclarator::makeArr($1, nullptr); }
-	| dir_abstr_declarator '[' assign_expr ']'		{ $$ = AST_DirectAbstractDeclarator::makeArr($1, $3); }
-	| dir_abstr_declarator '(' ')'					{ $$ = AST_DirectAbstractDeclarator::makeFunc($1, nullptr); }
-	| dir_abstr_declarator '(' param_type_lst ')'	{ $$ = AST_DirectAbstractDeclarator::makeFunc($1, $3); }
+	: '(' abstr_declarator ')'						{ $$ = AST_DirectAbstractDeclarator::makeNested($2); SL($$, @$); }
+	| dir_abstr_declarator '[' ']'					{ $$ = AST_DirectAbstractDeclarator::makeArr($1, nullptr); SL($$, @$); }
+	| dir_abstr_declarator '[' assign_expr ']'		{ $$ = AST_DirectAbstractDeclarator::makeArr($1, $3); SL($$, @$); }
+	| dir_abstr_declarator '(' ')'					{ $$ = AST_DirectAbstractDeclarator::makeFunc($1, nullptr); SL($$, @$); }
+	| dir_abstr_declarator '(' param_type_lst ')'	{ $$ = AST_DirectAbstractDeclarator::makeFunc($1, $3); SL($$, @$); }
 	;
 
 
 	/* Initializers */
 
 initializer
-	: assign_expr									{ $$ = new AST_Initializer($1); }
-	| '{' init_lst '}'								{ $$ = new AST_Initializer($2); }
-	| '{' init_lst ',' '}'							{ $$ = new AST_Initializer($2); }
+	: assign_expr									{ $$ = new AST_Initializer($1); SL($$, @$); }
+	| '{' init_lst '}'								{ $$ = new AST_Initializer($2); SL($$, @$); }
+	| '{' init_lst ',' '}'							{ $$ = new AST_Initializer($2); SL($$, @$); }
 	;
 
 init_lst
-	: initializer									{ $$ = new AST_InitializerList($1, nullptr); }
-	| designator '=' initializer					{ $$ = new AST_InitializerList($3, $1); }
+	: initializer									{ $$ = new AST_InitializerList($1, nullptr); SL($$, @$); }
+	| designator '=' initializer					{ $$ = new AST_InitializerList($3, $1); SL($$, @$); }
 	| init_lst ',' initializer						{ $$ = $1->append($3, nullptr); }
 	| init_lst ',' designator '=' initializer		{ $$ = $1->append($5, $3); }
 	;
 
 designator
-	: '[' const_expr ']'							{ $$ = new AST_Designator($2); }
-	| '.' IDENTIFIER								{ $$ = new AST_Designator($2); }
+	: '[' const_expr ']'							{ $$ = new AST_Designator($2); SL($$, @$); }
+	| '.' IDENTIFIER								{ $$ = new AST_Designator($2); SL($$, @$); }
 	;
 
 
@@ -538,79 +538,67 @@ stmt
 	;
 
 label_stmt
-	: IDENTIFIER ':' stmt					{ $$ = new AST_LabeledStmt($1, $3, AST_LabeledStmt::SIMPL); }
-	| CASE const_expr ':' stmt				{ $$ = new AST_LabeledStmt($2, $4, AST_LabeledStmt::SW_CASE); }
-	| DEFAULT ':' stmt						{ $$ = new AST_LabeledStmt(nullptr, $3, AST_LabeledStmt::SW_DEFAULT); }
+	: IDENTIFIER ':' stmt					{ $$ = new AST_LabeledStmt($1, $3, AST_LabeledStmt::SIMPL); SL($$, @$); }
+	| CASE const_expr ':' stmt				{ $$ = new AST_LabeledStmt($2, $4, AST_LabeledStmt::SW_CASE); SL($$, @$); }
+	| DEFAULT ':' stmt						{ $$ = new AST_LabeledStmt(nullptr, $3, AST_LabeledStmt::SW_DEFAULT); SL($$, @$); }
 	;
 
 compound_stmt
-	: '{' '}'								{ $$ = new AST_CompoundStmt(new AST_BlockItemList()); }
-	| '{' block_item_list '}'				{ $$ = new AST_CompoundStmt($2); }
+	: '{' '}'								{ $$ = new AST_CompoundStmt(new AST_BlockItemList()); SL($$, @$); }
+	| '{' block_item_list '}'				{ $$ = new AST_CompoundStmt($2); SL($$, @$); }
 	;
 
 block_item_list
-	: declaration							{ $$ = (new AST_BlockItemList())->append($1); }
-	| stmt									{ $$ = (new AST_BlockItemList())->append($1); }
+	: declaration							{ $$ = (new AST_BlockItemList())->append($1); SL($$, @$); }
+	| stmt									{ $$ = (new AST_BlockItemList())->append($1); SL($$, @$); }
 	| block_item_list declaration			{ $$ = $1->append($2); }
 	| block_item_list stmt					{ $$ = $1->append($2); }
 	;
 
 expr_stmt
-	: ';'									{ $$ = new AST_ExprStmt(nullptr); }
-	| expr ';'								{ $$ = new AST_ExprStmt($1); }
+	: ';'									{ $$ = new AST_ExprStmt(nullptr); SL($$, @$); }
+	| expr ';'								{ $$ = new AST_ExprStmt($1); SL($$, @$); }
 	;
 
 select_stmt
-	: IF '(' expr ')' stmt %prec IFX		{ $$ = AST_SelectionStmt::get_if($3, $5, nullptr); }
-	| IF '(' expr ')' stmt ELSE stmt		{ $$ = AST_SelectionStmt::get_if($3, $5, $7); }
-	| SWITCH '(' expr ')' stmt				{ $$ = AST_SelectionStmt::get_switch($3, $5); }
+	: IF '(' expr ')' stmt %prec IFX		{ $$ = AST_SelectionStmt::get_if($3, $5, nullptr); SL($$, @$); }
+	| IF '(' expr ')' stmt ELSE stmt		{ $$ = AST_SelectionStmt::get_if($3, $5, $7); SL($$, @$); }
+	| SWITCH '(' expr ')' stmt				{ $$ = AST_SelectionStmt::get_switch($3, $5); SL($$, @$); }
 	;
 
 loop_stmt
-	: WHILE '(' expr ')' stmt							{ $$ = AST_IterationStmt::makeWhileLoop($5, $3, false); }
-	| DO stmt WHILE '(' expr ')' ';'					{ $$ = AST_IterationStmt::makeWhileLoop($2, $5, true); }
-	| FOR '(' expr_stmt expr_stmt ')' stmt				{ $$ = AST_IterationStmt::makeForLoop($6, $3, $4, nullptr); }
-	| FOR '(' expr_stmt expr_stmt expr ')' stmt			{ $$ = AST_IterationStmt::makeForLoop($7, $3, $4, $5); }
-	| FOR '(' declaration expr_stmt ')' stmt			{ $$ = AST_IterationStmt::makeForLoop($6, $3, $4, nullptr); }
-	| FOR '(' declaration expr_stmt expr ')' stmt		{ $$ = AST_IterationStmt::makeForLoop($7, $3, $4, $5); }
+	: WHILE '(' expr ')' stmt							{ $$ = AST_IterationStmt::makeWhileLoop($5, $3, false); SL($$, @$); }
+	| DO stmt WHILE '(' expr ')' ';'					{ $$ = AST_IterationStmt::makeWhileLoop($2, $5, true); SL($$, @$); }
+	| FOR '(' expr_stmt expr_stmt ')' stmt				{ $$ = AST_IterationStmt::makeForLoop($6, $3, $4, nullptr); SL($$, @$); }
+	| FOR '(' expr_stmt expr_stmt expr ')' stmt			{ $$ = AST_IterationStmt::makeForLoop($7, $3, $4, $5); SL($$, @$); }
+	| FOR '(' declaration expr_stmt ')' stmt			{ $$ = AST_IterationStmt::makeForLoop($6, $3, $4, nullptr); SL($$, @$); }
+	| FOR '(' declaration expr_stmt expr ')' stmt		{ $$ = AST_IterationStmt::makeForLoop($7, $3, $4, $5); SL($$, @$); }
 	;
 
 jmp_stmt
-	: GOTO IDENTIFIER ';'								{ $$ = new AST_JumpStmt(AST_JumpStmt::J_GOTO, $2); }
-	| CONTINUE ';'										{ $$ = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); }
-	| BREAK ';'											{ $$ = new AST_JumpStmt(AST_JumpStmt::J_BREAK); }
-	| RETURN ';'										{ $$ = new AST_JumpStmt(AST_JumpStmt::J_RET); }
-	| RETURN expr ';'									{ $$ = new AST_JumpStmt(AST_JumpStmt::J_RET, $2); }
+	: GOTO IDENTIFIER ';'								{ $$ = new AST_JumpStmt(AST_JumpStmt::J_GOTO, $2); SL($$, @$); }
+	| CONTINUE ';'										{ $$ = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); SL($$, @$); }
+	| BREAK ';'											{ $$ = new AST_JumpStmt(AST_JumpStmt::J_BREAK); SL($$, @$); }
+	| RETURN ';'										{ $$ = new AST_JumpStmt(AST_JumpStmt::J_RET); SL($$, @$); }
+	| RETURN expr ';'									{ $$ = new AST_JumpStmt(AST_JumpStmt::J_RET, $2); SL($$, @$); }
 	;
 
 
 	/* Top-level elements */
 
 translation_unit
-	: func_def							{ $$ = *parser_result = (new AST_TranslationUnit())->append($1); }
-	| declaration						{ $$ = *parser_result = (new AST_TranslationUnit())->append($1); check_typedef($1); }
+	: func_def							{ $$ = *parser_result = (new AST_TranslationUnit())->append($1); SL($$, @$); }
+	| declaration						{ $$ = *parser_result = (new AST_TranslationUnit())->append($1); check_typedef($1); SL($$, @$); }
 	| translation_unit func_def			{ $$ = $1->append($2); }
 	| translation_unit declaration		{ $$ = $1->append($2); check_typedef($2); }
 	;
 
 func_def
-	: decl_specs declarator compound_stmt				{ $$ = new AST_FunctionDef($1, $2, $3); }
+	: decl_specs declarator compound_stmt				{ $$ = new AST_FunctionDef($1, $2, $3); SL($$, @$); }
 	;
 
 
 %%
-
-#include <fmt/core.h>
-
-void yyerror(void *loc, yyscan_t scan, AST_TranslationUnit **root, const LinesWarpMap *warps, const char *str) {
-    (void)root;
-    YYLTYPE *mloc = reinterpret_cast<YYLTYPE*>(loc);
-    //fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
-    auto fixLoc = warps->getLoc(mloc->first_line);
-    std::string filename = warps->getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Error ({}:{}:{}): {}\n",
-               filename, fixLoc.line, mloc->first_column, str);
-}
 
 AST_TranslationUnit* CoreParser::parse_program(std::string const &str,
                                                CoreParserState *state,

@@ -65,7 +65,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
             oper.args = std::vector<IRval>{ oper.args[0] };
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
-            semanticError("Division by zero");
+            generalError("Division by zero");
         }
     }
 

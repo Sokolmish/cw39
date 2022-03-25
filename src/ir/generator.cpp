@@ -3,6 +3,16 @@
 
 IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}
 
+
+void IR_Generator::semanticError(AST_Node::AST_Location loc, const std::string &msg) {
+    auto true_loc = warps->getLoc(loc.line);
+    std::string filename = warps->getFilename(true_loc.filenum);
+    fmt::print(stderr, "Semantic error ({}:{}:{}):\n\t{}\n", filename, true_loc.line, loc.col, msg);
+    exit(EXIT_FAILURE);
+}
+
+
+
 IR_Block &IR_Generator::curBlock() {
     return *selectedBlock;
 }
@@ -51,16 +61,6 @@ std::optional<IR_Generator::ControlStructData::LoopBlocks> IR_Generator::getTopm
         return {};
     else
         return it->getLoop();
-}
-
-void IR_Generator::ControlStructData::SwitchBlocks::addCase(IRval val, int block) {
-    labels.push_back(CaseBlock{ .val = std::move(val), .block = block });
-}
-
-void IR_Generator::ControlStructData::SwitchBlocks::setDefault(int block) {
-    if (defaultBlock.has_value())
-        semanticError("Default velue for switch was already set");
-    defaultBlock = block;
 }
 
 std::optional<IR_Generator::ControlStructData::LoopBlocks> IR_Generator::getNearestLoop() {
@@ -159,8 +159,9 @@ IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vecto
 
 // Generator
 
-void IR_Generator::parse(CoreParser &parser) {
+void IR_Generator::parse(CoreParser &parser, LinesWarpMap &xwarps) {
     pstate = parser.getPState();
+    warps = &xwarps;
 
     for (const auto &top_instr: parser.getTransUnit()->children) {
         if (top_instr->node_type == AST_FUNC_DEF)
@@ -188,9 +189,9 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
         // Function prototype
         if (varType->type == IR_Type::FUNCTION) {
             if (decl.child->v.size() > 1)
-                semanticError("Only one function can be declared per one declaration");
+                semanticError(decl.loc, "Only one function can be declared per one declaration");
             if (singleDecl->initializer)
-                semanticError("Prototypes cannot be initialized");
+                semanticError(singleDecl->initializer->loc, "Prototypes cannot be initialized");
 
             // TODO
             auto funcIdent = getDeclaredIdent(*singleDecl->declarator);
@@ -202,14 +203,14 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
 
         auto ident = getDeclaredIdent(*singleDecl->declarator);
         if (globals.contains(ident)) // TODO: check in functions (not only there)
-            semanticError("Global variable already declared");
+            semanticError(singleDecl->loc, "Global variable already declared");
 
         IRval initVal = singleDecl->initializer ?
                         getInitializerVal(varType, *singleDecl->initializer) :
                         IRval::createZeroinit(varType);
 
         if (!initVal.isConstant())
-            semanticError("Global variable should be initialized with constant value");
+            semanticError(singleDecl->loc, "Global variable should be initialized with constant value");
 
         auto ptrType = std::make_shared<IR_TypePtr>(varType);
         IRval res = cfg->createGlobal(get_ident_by_id(pstate, ident), ptrType, initVal);
@@ -271,10 +272,10 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     curFunctionType = nullptr;
     variables.decreaseLevel();
 
-    for (auto const &[block, label] : danglingGotos) {
+    for (auto const &[block, label, loc] : danglingGotos) {
         auto it = labels.find(label);
         if (it == labels.end())
-            semanticError("Unknown label");
+            semanticError(loc, "Unknown label");
         cfg->linkBlocks(cfg->block(block), cfg->block(it->second));
     }
     labels.clear();
@@ -314,7 +315,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         string_id_t ident = getDeclaredIdent(*singleDecl->declarator);
 
         if (varType->type == IR_Type::FUNCTION)
-            semanticError("Functions are not allowed inside compound statements");
+            semanticError(singleDecl->declarator->loc, "Functions are not allowed inside compound statements");
 
         // TODO: check for void allocation (and in globals too)
         std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
@@ -332,7 +333,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         }
 
         if (variables.hasOnTop(ident))
-            semanticError("Variable already declared");
+            semanticError(singleDecl->loc, "Variable already declared");
         variables.put(ident, *var);
 
         if (singleDecl->initializer) {
@@ -349,8 +350,9 @@ IRval IR_Generator::getInitializerVal(std::shared_ptr<IR_Type> const &type, cons
     }
     else {
         IRval res = evalExpr(init.getExpr());
-        if (!res.getType()->equal(*type))
-            semanticError("Cannot initialize variable with different type");
+        if (!res.getType()->equal(*type)) {
+            semanticError(init.loc, "Cannot initialize variable with different type");
+        }
         return res;
     }
 }
@@ -445,7 +447,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     IR_Block &blockAfter = cfg->createBlock();
 
     if (stmt.body->type != AST_Statement::COMPOUND)
-        semanticError("Switch statement can only has compound statement child");
+        semanticError(stmt.body->loc, "Switch statement can only has compound statement child");
 
     activeControls.emplace_back(ControlStructData::SwitchBlocks{
         .exit = blockAfter.id,
@@ -463,7 +465,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     selectBlock(entryBlock);
     for (auto const &label : nearestSwitch->labels) {
         if (usedCases.contains(label.val))
-            semanticError("Switch statement has two identical labels");
+            semanticError(stmt.loc, "Switch statement has two identical labels");
         usedCases.insert(label.val);
 
         IRval eqCond = emitOp(IR_TypeDirect::getI1(), IR_ExprOper::EQ, { condVal, label.val });
@@ -581,19 +583,19 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         if (arg) {
             auto retVal = evalExpr(*arg);
             if (!curFunctionType->ret->equal(*retVal.getType()))
-                semanticError("Wrong return value type");
+                semanticError(stmt.loc, "Wrong return value type");
             curBlock().setTerminator(IR_ExprTerminator::RET, retVal);
         }
         else {
             if (!curFunctionType->ret->equal(*IR_TypeDirect::getVoid()))
-                semanticError("Cannot return value in void function");
+                semanticError(stmt.loc, "Cannot return value in void function");
             curBlock().setTerminator(IR_ExprTerminator::RET);
         }
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_BREAK) {
         if (activeControls.empty())
-            semanticError("Break keyword outside of loop or switch");
+            semanticError(stmt.loc, "Break keyword outside of loop or switch");
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         cfg->linkBlocks(curBlock(), cfg->block(activeControls.back().getExit()));
         deselectBlock();
@@ -601,7 +603,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
     else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
         auto nearestLoop = getNearestLoop();
         if (!nearestLoop.has_value())
-            semanticError("Continue keyword outside of loop");
+            semanticError(stmt.loc, "Continue keyword outside of loop");
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         cfg->linkBlocks(curBlock(), cfg->block(nearestLoop->skip));
         deselectBlock();
@@ -612,7 +614,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         if (auto it = labels.find(label); it != labels.end())
             cfg->linkBlocks(curBlock(), cfg->block(it->second));
         else
-            danglingGotos.emplace_back(curBlock().id, label);
+            danglingGotos.emplace_back(curBlock().id, label, stmt.loc);
         deselectBlock();
     }
     else {
@@ -652,23 +654,27 @@ void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
         string_id_t ident = stmt.getIdent();
         auto lIt = labels.lower_bound(ident);
         if (lIt->first == ident)
-            semanticError("Such label already exists");
+            semanticError(stmt.loc, "Such label already exists");
         labels.emplace_hint(lIt, ident, curBlock().id);
     }
     else if (stmt.type == AST_LabeledStmt::SW_CASE) {
         auto *nearestSwitch = getNearestSwitch();
         if (nearestSwitch == nullptr)
-            semanticError("Case label outside of switch statement");
+            semanticError(stmt.loc, "Case label outside of switch statement");
         IRval caseVal = evalExpr(stmt.getExpr());
         if (caseVal.getValueClass() != IRval::VAL)
-            semanticError("Only constants can be used in case labels");
-        nearestSwitch->addCase(caseVal, curBlock().id);
+            semanticError(stmt.loc, "Only constants can be used in case labels");
+
+        nearestSwitch->labels.push_back({ .val = std::move(caseVal), .block = curBlock().id });
     }
     else if (stmt.type == AST_LabeledStmt::SW_DEFAULT) {
         auto *nearestSwitch = getNearestSwitch();
         if (nearestSwitch == nullptr)
-            semanticError("Default label outside of switch statement");
-        nearestSwitch->setDefault(curBlock().id);
+            semanticError(stmt.loc, "Default label outside of switch statement");
+
+        if (nearestSwitch->defaultBlock.has_value())
+            semanticError(stmt.loc, "Default velue for switch was already set");
+        nearestSwitch->defaultBlock = curBlock().id;
     }
     else {
         internalError("Wrong label type");

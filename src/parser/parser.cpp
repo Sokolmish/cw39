@@ -26,8 +26,18 @@ CoreParserState *CoreParser::getPState() {
 void lexer_error(YYLTYPE *loc, lex_extra_t *extra, const char *msg) {
     auto fixLoc = extra->warps->getLoc(loc->first_line);
     std::string filename = extra->warps->getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Error ({}:{}:{}): {}\n",
+    fmt::print(stderr, "Lexer error ({}:{}:{}):\n\t{}\n",
                filename, fixLoc.line, loc->first_column, msg);
+}
+
+void yyerror(void *loc, yyscan_t scan, AST_TranslationUnit **root, const LinesWarpMap *warps, const char *str) {
+    (void)root;
+    YYLTYPE *mloc = reinterpret_cast<YYLTYPE*>(loc);
+    //fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
+    auto fixLoc = warps->getLoc(mloc->first_line);
+    std::string filename = warps->getFilename(fixLoc.filenum);
+    fmt::print(stderr, "Parser error ({}:{}:{}):\n\t{}\n",
+               filename, fixLoc.line, mloc->first_column, str);
 }
 
 

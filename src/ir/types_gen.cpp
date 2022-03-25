@@ -5,11 +5,11 @@ std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_StructOrUsionSpec const
     auto itFound = cfg->structs.find(spec.name);
     if (!spec.body) {
         if (itFound == cfg->structs.end())
-            semanticError("Unknown struct name");
+            semanticError(spec.loc, "Unknown struct name");
         return itFound->second;
     }
     else if (itFound != cfg->structs.end()) {
-        semanticError("Struct with given name already has been defined");
+        semanticError(spec.loc, "Struct with given name already has been defined");
     }
 
     // Create new struct type
@@ -39,7 +39,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
 
     if (spec[0]->spec_type == ast_ts::T_UNISTRUCT) {
         if (spec.size() != 1)
-            semanticError("Struct specifier must be the only specifier");
+            semanticError(spec[0]->loc, "Struct specifier must be the only specifier");
         auto const &structSpec = dynamic_cast<AST_StructOrUsionSpec const &>(*spec[0]->v);
         if (structSpec.is_union)
             NOT_IMPLEMENTED("Unions");
@@ -47,7 +47,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     }
     else if (spec[0]->spec_type == ast_ts::T_ENUM) {
         if (spec.size() != 1)
-            semanticError("Enum specifier must be the only specifier");
+            semanticError(spec[0]->loc, "Enum specifier must be the only specifier");
         NOT_IMPLEMENTED("Enums");
     }
     else if (spec[0]->spec_type == ast_ts::T_NAMED) {
@@ -56,7 +56,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
 
     if (spec[0]->spec_type == ast_ts::T_VOID) {
         if (spec.size() != 1)
-            semanticError("Void type specifier cannot be combined with others");
+            semanticError(spec[0]->loc, "Void type specifier cannot be combined with others");
         return std::make_shared<IR_TypeDirect>(IR_TypeDirect::VOID);
     }
 
@@ -71,28 +71,28 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
             case ast_ts::T_FLOAT:
             case ast_ts::T_DOUBLE:
                 if (typeSpec != ast_ts::T_VOID)
-                    semanticError("Only one type specifier is allowed");
+                    semanticError(type->loc, "Only one type specifier is allowed");
                 typeSpec = type->spec_type;
                 break;
 
             case ast_ts::T_UNSIGNED:
             case ast_ts::T_SIGNED:
                 if (sign != ast_ts::T_VOID)
-                    semanticError("Only one signedness specifier is allowed");
+                    semanticError(type->loc, "Only one signedness specifier is allowed");
                 sign = type->spec_type;
                 break;
 
             case ast_ts::T_SHORT:
-                semanticError("Short specifier is unsupported");
+                semanticError(type->loc, "Short specifier is not supported");
 
             case ast_ts::T_LONG:
                 if (longCnt >= 2)
-                    semanticError("More than 2 long specifiers are not allowed");
+                    semanticError(type->loc, "More than 2 long specifiers are not allowed");
                 longCnt++;
                 break;
 
             default:
-                semanticError("Struct, union and enum keywords cannot be combined with others");
+                semanticError(type->loc, "Struct, union and enum keywords cannot be combined with others");
         }
     }
 
@@ -115,14 +115,14 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     }
     else if (typeSpec == ast_ts::T_CHAR) {
         if (longCnt != 0)
-            semanticError("Char types cannot have size modificators");
+            semanticError(spec[0]->loc, "Char types cannot have size modificators");
         resType = sign == ast_ts::T_UNSIGNED ? IR_TypeDirect::U8 : IR_TypeDirect::I8;
     }
     else if (isInList(typeSpec, { ast_ts::T_FLOAT, ast_ts::T_DOUBLE })) {
         if (sign != ast_ts::T_VOID)
-            semanticError("Float point types cannot have signedness");
+            semanticError(spec[0]->loc, "Float point types cannot have signedness");
         if (longCnt != 0)
-            semanticError("Float point types cannot have size modificators");
+            semanticError(spec[0]->loc, "Float point types cannot have size modificators");
         if (typeSpec == ast_ts::T_FLOAT)
             resType = IR_TypeDirect::F32;
         else
@@ -178,11 +178,11 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
     else if (decl.type == AST_DirectDeclarator::ARRAY) {
         auto sizeExpr = evalConstantExpr(*decl.arr_size);
         if (!sizeExpr.has_value())
-            semanticError("Non constant array size");
+            semanticError(decl.arr_size->loc, "Non constant array size");
         if (sizeExpr->getType()->type != IR_Type::DIRECT)
-            semanticError("Non constant array size (not direct value)");
+            semanticError(decl.arr_size->loc, "Non constant array size (not direct value)");
         if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
-            semanticError("Non integer array size");
+            semanticError(decl.arr_size->loc, "Non integer array size");
         auto size = sizeExpr->castValTo<uint64_t>();
         auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
         return getDirectType(decl.getBaseDirectDecl(), arr);
@@ -218,11 +218,11 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractD
     else if (decl->type == AST_DirectAbstractDeclarator::ARRAY) {
         auto sizeExpr = evalConstantExpr(*decl->arr_size);
         if (!sizeExpr.has_value())
-            semanticError("Non constant array size");
+            semanticError(decl->arr_size->loc, "Non constant array size");
         if (sizeExpr->getType()->type != IR_Type::DIRECT)
-            semanticError("Non constant array size (not direct value)");
+            semanticError(decl->arr_size->loc, "Non constant array size (not direct value)");
         if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
-            semanticError("Non integer array size");
+            semanticError(decl->arr_size->loc, "Non integer array size");
         auto size = sizeExpr->castValTo<uint64_t>();
         auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
         return getDirectAbstractType(&decl->getBaseDirectDecl(), arr);
@@ -279,7 +279,7 @@ string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
 std::vector<IR_Generator::IR_FuncArgument>
 IR_Generator::getDeclaredFuncArguments(AST_Declarator const &decl) {
     if (decl.direct->type != AST_DirectDeclarator::FUNC)
-        semanticError("Non function type");
+        semanticError(decl.direct->loc, "Non function type");
     if (!decl.direct->func_args)
         return std::vector<IR_FuncArgument>();
 

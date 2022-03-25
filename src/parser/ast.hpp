@@ -31,10 +31,18 @@ struct AST_Node {
     AST_Node(AST_Node const &) = delete;
     AST_Node& operator=(AST_Node const &) = delete;
 
-    int node_type;
+    struct AST_Location {
+        int line, col; // NOTE: Raw location
+    };
 
-    explicit AST_Node(int type) : node_type(type) {}
-    virtual ~AST_Node() = default;
+    int node_type;
+    AST_Location loc;
+
+    explicit AST_Node(int type);
+    virtual ~AST_Node();
+
+    void setLoc(int line, int col);
+
     [[nodiscard]] virtual TreeNodeRef getTreeNode() const = 0;
 
 protected:
@@ -63,7 +71,7 @@ struct AST_Statement;
 // =================================================
 
 struct AST_Expr : public AST_Node {
-    explicit AST_Expr(int type) : AST_Node(type) {}
+    explicit AST_Expr(int type);
 };
 
 struct AST_StringsSeq : public AST_Node {

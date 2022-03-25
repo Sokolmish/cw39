@@ -242,7 +242,7 @@ std::shared_ptr<IR_Type> IR_TypeFunc::copy() const {
 }
 
 int IR_TypeFunc::getBytesSize() const {
-    semanticError("Cannot get size of function type");
+    return 8; // This is bad
 }
 
 std::string IR_TypeFunc::to_string() const {

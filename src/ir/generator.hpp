@@ -3,6 +3,7 @@
 
 #include "nodes.hpp"
 #include "cfg.hpp"
+#include "parser/preprocessor.hpp"
 #include "parser/parser.hpp"
 #include "utils.hpp"
 
@@ -16,11 +17,12 @@
 class IR_Generator {
 public:
     IR_Generator();
-    void parse(CoreParser &parser);
+    void parse(CoreParser &parser, LinesWarpMap &xwarps);
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 
 private:
     CoreParserState *pstate;
+    LinesWarpMap *warps;
 
     VariablesStack<string_id_t, IRval> variables;
     std::map<string_id_t, IRval> globals;
@@ -58,9 +60,6 @@ private:
             int exit;
             std::vector<CaseBlock> labels;
             std::optional<int> defaultBlock;
-
-            void addCase(IRval val, int block);
-            void setDefault(int block);
         };
 
         explicit ControlStructData(LoopBlocks loop);
@@ -81,7 +80,7 @@ private:
     ControlStructData::SwitchBlocks* getNearestSwitch();
 
     std::map<string_id_t, int> labels;                      // label_id -> block_id
-    std::vector<std::pair<int, string_id_t>> danglingGotos; // block_id -> label_id
+    std::vector<std::tuple<int, string_id_t, AST_Node::AST_Location>> danglingGotos; // block_id, label_id, loc
 
     bool isShortLogicEnabled = true;
 
@@ -121,8 +120,9 @@ private:
 
     IRval getPtrWithOffset(IRval const &base, IRval const &index);
     void doAssignment(AST_Expr const &dest, IRval const &wrValue);
-    IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs);
-    IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &lhs, AST_Expr const &rhs);
+    IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, AST_Node::AST_Location loc);
+    IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right,
+                         AST_Node::AST_Location loc);
     IRval doAddrOf(const AST_Expr &expr);
     IRval evalExpr(AST_Expr const &node);
     IRval getLiteralIRval(AST_Literal const &lit);
@@ -150,6 +150,8 @@ private:
     string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
+
+    [[noreturn]] void semanticError(AST_Node::AST_Location loc, std::string const &msg);
 };
 
 #endif /* GENERATOR_HPP_INCLUDED__ */

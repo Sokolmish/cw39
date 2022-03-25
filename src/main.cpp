@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     }
 
     auto gen = std::make_unique<IR_Generator>();
-    gen->parse(*parser);
+    gen->parse(*parser, warps);
 
     if (args.count("ir-raw"))
         writeOut(args.getString("ir-raw"), gen->getCfg()->printIR());

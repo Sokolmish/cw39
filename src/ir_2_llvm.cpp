@@ -201,13 +201,13 @@ Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
         return FunctionType::get(getType(*funType.ret), args, funType.isVariadic);
     }
     else {
-        semanticError("Unknown type");
+        generalError("Unknown type");
     }
 }
 
 Constant *IR2LLVM_Impl::getConstant(IRval const &val) {
     if (!val.isConstant())
-        semanticError("LLVM Not a constant value");
+        generalError("LLVM Not a constant value");
     return dyn_cast<Constant>(getValue(val));
 }
 
@@ -225,7 +225,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
                     return ConstantFP::get(builder->getDoubleTy(), APFloat(val.castValTo<double>()));
             }
             else {
-                semanticError("Wrong constant type");
+                generalError("Wrong constant type");
             }
         }
 
@@ -240,7 +240,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
             else if (val.getType()->type == IR_Type::ARRAY)
                 return ConstantArray::get(dyn_cast<ArrayType>(aggregateType), args);
             else
-                semanticError("Wrong aggregate initializer type");
+                generalError("Wrong aggregate initializer type");
         }
 
         case IRval::FUN_PTR:
@@ -397,16 +397,16 @@ void IR2LLVM_Impl::createBlock(int id) {
                 break;
             }
             case IR_Expr::TERM:
-                semanticError("LLVM Term node in general list");
+                generalError("LLVM Term node in general list");
             case IR_Expr::PHI:
-                semanticError("LLVM phi node in general list");
+                generalError("LLVM phi node in general list");
             default:
-                semanticError("Wrong node type");
+                generalError("Wrong node type");
         }
     }
 
     if (!cfgBlock.termNode.has_value())
-        semanticError("Unterminated block");
+        generalError("Unterminated block");
     IR_ExprTerminator const *termNode = cfgBlock.getTerminator();
     // Branches and jumps are handled when blocks linking
     if (termNode->termType == IR_ExprTerminator::RET) {
@@ -431,7 +431,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFMul(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                semanticError("Wrong mul types");
+                generalError("Wrong mul types");
             break;
 
         case IR_ExprOper::DIV:
@@ -444,7 +444,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFDiv(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                semanticError("Wrong div types");
+                generalError("Wrong div types");
             break;
 
         case IR_ExprOper::REM:
@@ -457,7 +457,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFRem(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                semanticError("Wrong div types");
+                generalError("Wrong div types");
             break;
 
         case IR_ExprOper::ADD:
@@ -466,7 +466,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFAdd(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                semanticError("Wrong add types");
+                generalError("Wrong add types");
             break;
 
         case IR_ExprOper::SUB:
@@ -475,7 +475,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFSub(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                semanticError("Wrong sub types");
+                generalError("Wrong sub types");
             break;
 
         case IR_ExprOper::SHR:
@@ -550,7 +550,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             break;
 
         default:
-            semanticError("Wrong op value");
+            generalError("Wrong op value");
     }
     regsMap.emplace(*node.res, res);
 }
@@ -570,7 +570,7 @@ void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
             break;
         }
         default:
-            semanticError("Wrong op value");
+            generalError("Wrong op value");
     }
 }
 
@@ -594,7 +594,7 @@ void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
         indices.reserve(acc.indices.size());
         for (auto const &ind : acc.indices) {
             if (ind.getValueClass() != IRval::VAL)
-                semanticError("Non constant argument of EXTRACT/INSERT");
+                generalError("Non constant argument of EXTRACT/INSERT");
             indices.push_back(ind.castValTo<uint32_t>());
         }
 
@@ -606,7 +606,7 @@ void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
         regsMap.emplace(*node.res, res);
     }
     else {
-        semanticError("Wrong access op type");
+        generalError("Wrong access op type");
     }
 }
 
@@ -637,7 +637,7 @@ static auto getCastOp(IR_ExprCast::CastType op) {
         case IR_ExprCast::FPEXT:
             return &IRBuilder<>::CreateFPExt;
     }
-    semanticError("Wrong cast type");
+    generalError("Wrong cast type");
 }
 
 void IR2LLVM_Impl::buildCast(IR_Node const &node) {

@@ -16,8 +16,8 @@
     throw std::runtime_error(fmt::format("[INTERNAL] {}\n", msg));
 }
 
-[[noreturn]] inline void semanticError(const std::string &msg) {
-    throw std::runtime_error(fmt::format("{}\n", msg));
+[[noreturn]] inline void generalError(const std::string &msg) {
+    throw std::runtime_error(fmt::format("Error: {}\n", msg));
 }
 
 [[noreturn]] inline void notImplemented(int line, const std::string &msg = "") {

@@ -12,10 +12,19 @@ void ast_set_pstate_ptr(CoreParserState *state) {
     ast_pstate = state;
 }
 
+AST_Node::AST_Node(int type) : node_type(type) {}
+
+AST_Node::~AST_Node() = default;
+
+void AST_Node::setLoc(int line, int col) {
+    this->loc = AST_Location{ line, col };
+}
 
 // =================================================
 //                    Expressions
 // =================================================
+
+AST_Expr::AST_Expr(int type) : AST_Node(type) {}
 
 // AST_Primary
 
@@ -81,6 +90,9 @@ TreeNodeRef AST_Primary::getTreeNode() const {
     }
     else if (type == AST_Primary::STR) {
         return std::get<std::unique_ptr<AST_StringsSeq>>(v)->getTreeNode();
+    }
+    else if (type == AST_Primary::COMPOUND) {
+        throw; // TODO: NOT IMPLEMENTED
     }
     else {
         std::string str;
