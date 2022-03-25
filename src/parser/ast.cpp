@@ -76,18 +76,19 @@ const AST_Primary::CompoundLiteral &AST_Primary::getCompound() const {
 }
 
 TreeNodeRef AST_Primary::getTreeNode() const {
-    if (type != AST_Primary::EXPR) {
+    if (type == AST_Primary::EXPR) {
+        return std::get<uniq<AST_Expr>>(v)->getTreeNode();
+    }
+    else if (type == AST_Primary::STR) {
+        return std::get<std::unique_ptr<AST_StringsSeq>>(v)->getTreeNode();
+    }
+    else {
         std::string str;
         if (type == AST_Primary::IDENT)
             str = get_ident_by_id(ast_pstate, std::get<string_id_t>(v));
         else if (type == AST_Primary::CONST)
             str = "LITERAL"; // TODO
-        else if (type == AST_Primary::STR)
-            str = "str["s + std::to_string(std::get<string_id_t>(v)) + "]"s;
         return TreeNode::create(str);
-    }
-    else {
-        return std::get<uniq<AST_Expr>>(v)->getTreeNode();
     }
 }
 

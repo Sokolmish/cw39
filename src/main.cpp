@@ -43,8 +43,11 @@ int main(int argc, char **argv) {
     auto parser = std::make_unique<CoreParser>(text, warps);
     auto ast = parser->getTransUnit();
 
-    if (args.count("ast"))
+    if (args.count("ast")) {
+        ast_set_pstate_ptr(parser->getPState());
         writeOut(args.getString("ast"), ast->getTreeNode()->printHor());
+        ast_set_pstate_ptr(nullptr);
+    }
 
     auto gen = std::make_unique<IR_Generator>();
     gen->parse(*parser);
