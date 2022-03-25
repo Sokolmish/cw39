@@ -34,8 +34,8 @@
 /* Undocumented macros, especially those whose name start with YY_,
    are private implementation details.  Do not rely on them.  */
 
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+#ifndef YY_YY_MNT_HDD_PROJECTS_STUDING_CWORK_3_PROJECT_SRC_PARSER_Y_TAB_H_INCLUDED
+# define YY_YY_MNT_HDD_PROJECTS_STUDING_CWORK_3_PROJECT_SRC_PARSER_Y_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -44,11 +44,11 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 10 "parser.y"
+#line 10 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
 
     struct LinesWarpMap;
 
-#line 52 "y.tab.h"
+#line 52 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.h"
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -118,74 +118,12 @@ extern int yydebug;
     STRING_LITERAL = 318
   };
 #endif
-/* Tokens.  */
-#define PTR_OP 258
-#define INC_OP 259
-#define DEC_OP 260
-#define LEFT_OP 261
-#define RIGHT_OP 262
-#define LE_OP 263
-#define GE_OP 264
-#define EQ_OP 265
-#define NE_OP 266
-#define AND_OP 267
-#define OR_OP 268
-#define MUL_ASSIGN 269
-#define DIV_ASSIGN 270
-#define MOD_ASSIGN 271
-#define ADD_ASSIGN 272
-#define SUB_ASSIGN 273
-#define LEFT_ASSIGN 274
-#define RIGHT_ASSIGN 275
-#define AND_ASSIGN 276
-#define XOR_ASSIGN 277
-#define OR_ASSIGN 278
-#define SIZEOF 279
-#define TYPEDEF 280
-#define EXTERN 281
-#define STATIC 282
-#define AUTO 283
-#define REGISTER 284
-#define INLINE 285
-#define RESTRICT 286
-#define CHAR 287
-#define SHORT 288
-#define INT 289
-#define LONG 290
-#define SIGNED 291
-#define UNSIGNED 292
-#define FLOAT 293
-#define DOUBLE 294
-#define CONST 295
-#define VOLATILE 296
-#define VOID 297
-#define STRUCT 298
-#define UNION 299
-#define ENUM 300
-#define ELLIPSIS 301
-#define CASE 302
-#define DEFAULT 303
-#define IF 304
-#define SWITCH 305
-#define WHILE 306
-#define DO 307
-#define FOR 308
-#define GOTO 309
-#define CONTINUE 310
-#define BREAK 311
-#define RETURN 312
-#define IFX 313
-#define ELSE 314
-#define IDENTIFIER 315
-#define TYPE_NAME 316
-#define CONSTANT 317
-#define STRING_LITERAL 318
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 47 "parser.y"
+#line 47 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
 
     int boolean;
 	int enum_val;
@@ -240,7 +178,7 @@ union YYSTYPE
 	struct AST_FunctionDef *func_def;
 	struct AST_TranslationUnit *trans_unit;
 
-#line 244 "y.tab.h"
+#line 182 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -266,4 +204,4 @@ struct YYLTYPE
 
 int yyparse (yyscan_t scanner, struct AST_TranslationUnit **parser_result, const struct LinesWarpMap *warps);
 
-#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_MNT_HDD_PROJECTS_STUDING_CWORK_3_PROJECT_SRC_PARSER_Y_TAB_H_INCLUDED  */

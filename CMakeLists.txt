@@ -11,6 +11,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 add_compile_options(-Wall -Wextra)
 add_compile_options("-Wno-unused-parameter") # Because of warnings in LLVM headers
 
+set(BISON_PARSER_RES ${PROJECT_SOURCE_DIR}/src/parser/y.tab.cpp)
+set(BISON_HEADER_RES ${PROJECT_SOURCE_DIR}/src/parser/y.tab.h)
+set(FLEX_LEXER_RES   ${PROJECT_SOURCE_DIR}/src/parser/lex.yy.c)
+set(BISON_PARSER_SRC ${PROJECT_SOURCE_DIR}/src/parser/parser.y)
+set(FLEX_LEXER_SRC   ${PROJECT_SOURCE_DIR}/src/parser/lexer.l)
+
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp
         ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
@@ -18,9 +24,10 @@ set(PROJ_SRCS
 
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
-        ${PROJECT_SOURCE_DIR}/src/parser/y.tab.cpp
-        ${PROJECT_SOURCE_DIR}/src/parser/lex.yy.c
         ${PROJECT_SOURCE_DIR}/src/parser/preprocessor.cpp
+
+        ${BISON_PARSER_RES}
+        ${FLEX_LEXER_RES}
 
         ${PROJECT_SOURCE_DIR}/src/ir/types.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/value.cpp
@@ -66,3 +73,34 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 target_link_libraries(cw39 ${llvm_libs})
+
+# Flex and Bison
+
+IF(NOT CW39_NO_GENERATE_PARSERS)
+    find_package(BISON REQUIRED)
+    find_package(FLEX REQUIRED)
+
+#    IF(NOT (FLEX_FOUND AND BISON_FOUND))
+#        message(FATAL_ERROR
+#                "Flex or Bison are not found. Try to configure without CW39_GENERATE_PARSERS.")
+#    ENDIF()
+
+    add_custom_command(
+            OUTPUT ${BISON_PARSER_RES} ${BISON_HEADER_RES}
+            COMMAND ${BISON_EXECUTABLE} -Wall -Wno-yacc
+                    --defines=${BISON_HEADER_RES}
+                    -o ${BISON_PARSER_RES}
+                    ${BISON_PARSER_SRC}
+            DEPENDS ${BISON_PARSER_SRC}
+            COMMENT "Generating core parser with bison"
+    )
+
+    add_custom_command(
+            OUTPUT ${FLEX_LEXER_RES}
+            COMMAND ${FLEX_EXECUTABLE}
+                    -o ${FLEX_LEXER_RES}
+            ${FLEX_LEXER_SRC}
+            DEPENDS ${FLEX_LEXER_SRC} ${BISON_HEADER_RES}
+            COMMENT "Generating core lexer with flex"
+    )
+ENDIF() # CW39_NO_GENERATE_PARSERS

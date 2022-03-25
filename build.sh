@@ -7,6 +7,8 @@ BUILD_COMMAND="cd build \
     && cmake ../project \
     && make -j 3"
 
+mkdir -p docker_build
+
 docker run -it --rm \
     -v "$(pwd):/root/project" \
     -v "$(pwd)/docker_build:/root/build" \

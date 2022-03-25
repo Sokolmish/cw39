@@ -1,6 +1,6 @@
-#line 2 "lex.yy.c"
+#line 2 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lex.yy.c"
 
-#line 4 "lex.yy.c"
+#line 4 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -640,14 +640,14 @@ static const flex_int16_t yy_chk[491] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "lexer.l"
-#line 5 "lexer.l"
+#line 1 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
+#line 5 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
     #include "lexer.h"
     #include "y.tab.h"
 
     void comment(yyscan_t yyscanner, struct YYLTYPE *loc, lex_extra_t *extra);
-#line 650 "lex.yy.c"
-#line 651 "lex.yy.c"
+#line 650 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lex.yy.c"
+#line 651 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lex.yy.c"
 
 #define INITIAL 0
 
@@ -929,10 +929,10 @@ YY_DECL
 		}
 
 	{
-#line 18 "lexer.l"
+#line 18 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 
 
-#line 936 "lex.yy.c"
+#line 936 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -991,187 +991,187 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 20 "lexer.l"
+#line 20 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { comment(yyscanner, yylloc, yyextra); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 21 "lexer.l"
+#line 21 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 23 "lexer.l"
+#line 23 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return AUTO;      }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 24 "lexer.l"
+#line 24 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return BREAK;     }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 25 "lexer.l"
+#line 25 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return CASE;      }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 26 "lexer.l"
+#line 26 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return CHAR;      }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 27 "lexer.l"
+#line 27 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return CONST;     }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 28 "lexer.l"
+#line 28 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return CONTINUE;  }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 29 "lexer.l"
+#line 29 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return DEFAULT;   }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 30 "lexer.l"
+#line 30 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return DO;        }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 31 "lexer.l"
+#line 31 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return DOUBLE;    }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 32 "lexer.l"
+#line 32 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ELSE;      }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 33 "lexer.l"
+#line 33 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ENUM;      }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 34 "lexer.l"
+#line 34 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return EXTERN;    }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 35 "lexer.l"
+#line 35 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return FLOAT;     }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 36 "lexer.l"
+#line 36 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return FOR;       }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 37 "lexer.l"
+#line 37 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return GOTO;      }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 38 "lexer.l"
+#line 38 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return IF;        }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 39 "lexer.l"
+#line 39 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return INLINE;    }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 40 "lexer.l"
+#line 40 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return INT;       }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 41 "lexer.l"
+#line 41 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return LONG;      }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 42 "lexer.l"
+#line 42 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return REGISTER;  }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 43 "lexer.l"
+#line 43 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return RESTRICT;  }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 44 "lexer.l"
+#line 44 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return RETURN;    }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 45 "lexer.l"
+#line 45 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return SHORT;     }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 46 "lexer.l"
+#line 46 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return SIGNED;    }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 47 "lexer.l"
+#line 47 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return SIZEOF;    }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 48 "lexer.l"
+#line 48 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return STATIC;    }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 49 "lexer.l"
+#line 49 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return STRUCT;    }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 50 "lexer.l"
+#line 50 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return SWITCH;    }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 51 "lexer.l"
+#line 51 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return TYPEDEF;   }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 52 "lexer.l"
+#line 52 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return UNION;     }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 53 "lexer.l"
+#line 53 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return UNSIGNED;  }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 54 "lexer.l"
+#line 54 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return VOID;      }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 55 "lexer.l"
+#line 55 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return VOLATILE;  }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 56 "lexer.l"
+#line 56 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return WHILE;     }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 58 "lexer.l"
+#line 58 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 {
                                 int type;
                                 yylval->ident_id = get_ident_id(yyextra->state, yytext, &type);
@@ -1180,283 +1180,283 @@ YY_RULE_SETUP
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 64 "lexer.l"
+#line 64 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 65 "lexer.l"
+#line 65 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 66 "lexer.l"
+#line 66 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 68 "lexer.l"
+#line 68 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 69 "lexer.l"
+#line 69 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 70 "lexer.l"
+#line 70 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_float(yytext); return(CONSTANT); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 72 "lexer.l"
+#line 72 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->num_literal = get_charval(yytext); return(CONSTANT); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 74 "lexer.l"
+#line 74 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { yylval->str = get_string_id(yyextra->state, yytext); return(STRING_LITERAL); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 76 "lexer.l"
+#line 76 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ELLIPSIS;      }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 77 "lexer.l"
+#line 77 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return RIGHT_ASSIGN;  }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 78 "lexer.l"
+#line 78 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return LEFT_ASSIGN;   }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 79 "lexer.l"
+#line 79 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ADD_ASSIGN;    }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 80 "lexer.l"
+#line 80 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return SUB_ASSIGN;    }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 81 "lexer.l"
+#line 81 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return MUL_ASSIGN;    }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 82 "lexer.l"
+#line 82 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return DIV_ASSIGN;    }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 83 "lexer.l"
+#line 83 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return MOD_ASSIGN;    }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 84 "lexer.l"
+#line 84 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return AND_ASSIGN;    }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 85 "lexer.l"
+#line 85 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return XOR_ASSIGN;    }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 86 "lexer.l"
+#line 86 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return OR_ASSIGN;     }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 87 "lexer.l"
+#line 87 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return RIGHT_OP;      }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 88 "lexer.l"
+#line 88 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return LEFT_OP;       }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 89 "lexer.l"
+#line 89 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return INC_OP;        }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 90 "lexer.l"
+#line 90 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return DEC_OP;        }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 91 "lexer.l"
+#line 91 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return PTR_OP;        }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 92 "lexer.l"
+#line 92 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return AND_OP;        }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 93 "lexer.l"
+#line 93 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return OR_OP;         }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 94 "lexer.l"
+#line 94 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return LE_OP;         }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 95 "lexer.l"
+#line 95 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return GE_OP;         }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 96 "lexer.l"
+#line 96 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return EQ_OP;         }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 97 "lexer.l"
+#line 97 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return NE_OP;         }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 98 "lexer.l"
+#line 98 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ';';   }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 99 "lexer.l"
+#line 99 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '{';   }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 100 "lexer.l"
+#line 100 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '}';   }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 101 "lexer.l"
+#line 101 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ',';   }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 102 "lexer.l"
+#line 102 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ':';   }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 103 "lexer.l"
+#line 103 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '=';   }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 104 "lexer.l"
+#line 104 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '(';   }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 105 "lexer.l"
+#line 105 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ')';   }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 106 "lexer.l"
+#line 106 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '[';   }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 107 "lexer.l"
+#line 107 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return ']';   }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 108 "lexer.l"
+#line 108 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '.';   }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 109 "lexer.l"
+#line 109 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '&';   }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 110 "lexer.l"
+#line 110 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '!';   }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 111 "lexer.l"
+#line 111 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '~';   }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 112 "lexer.l"
+#line 112 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '-';   }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 113 "lexer.l"
+#line 113 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '+';   }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 114 "lexer.l"
+#line 114 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '*';   }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 115 "lexer.l"
+#line 115 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '/';   }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 116 "lexer.l"
+#line 116 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '%';   }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 117 "lexer.l"
+#line 117 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '<';   }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 118 "lexer.l"
+#line 118 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '>';   }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 119 "lexer.l"
+#line 119 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '^';   }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 120 "lexer.l"
+#line 120 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '|';   }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 121 "lexer.l"
+#line 121 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { return '?';   }
 	YY_BREAK
 case 92:
 /* rule 92 can match eol */
 YY_RULE_SETUP
-#line 123 "lexer.l"
+#line 123 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 { }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 124 "lexer.l"
+#line 124 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 {
                     char msg[64];
                     snprintf(msg, sizeof(msg),
@@ -1469,10 +1469,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 134 "lexer.l"
+#line 134 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1476 "lex.yy.c"
+#line 1476 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2665,7 +2665,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 134 "lexer.l"
+#line 134 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/lexer.l"
 
 
 void comment(yyscan_t yyscanner, struct YYLTYPE *loc, lex_extra_t *extra) {

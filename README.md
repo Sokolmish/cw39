@@ -10,7 +10,7 @@ C99 optimizing compiler producing LLVM assembler.
 - **gcc-10** and above
 - **LLVM-13** and above (because early versions cannot be compiled with C++20)
 - **[fmtlib](https://fmt.dev/latest/index.html)** (tested with versions 6 and 8)
-- \[optionally\] **Flex** and **Bison** to generate lexer and parser (invoking manually with [Makefile](/src/parser/Makefile))
+- \[*optionally*\] [**Flex**](https://github.com/westes/flex) and [**Bison**](https://www.gnu.org/software/bison) to generate lexer and parser
 
 ## Building
 
@@ -22,6 +22,17 @@ cd build
 cmake ..
 make
 ```
+
+By default, parsers code generation is enabled.
+But if you don't have Flex and Bison installed, the project can be built using already generated source files.
+To do this, one should call CMake with  option `-DCW39_NO_GENERATE_PARSERS=TRUE`, as shown below.
+Other commands are identical to previous ones.
+
+```
+cmake -DCW39_NO_GENERATE_PARSERS=TRUE ..
+```
+
+Also, if you have troubles with CMake and Flex/Bison communication, you can generate source codes manually using this [Makefile](/src/parser/Makefile).
 
 ### Building using Docker
 
