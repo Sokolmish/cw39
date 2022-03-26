@@ -4,8 +4,6 @@
 %{
     #include "lexer.h"
     #include "y.tab.h"
-
-    void comment(yyscan_t yyscanner, struct YYLTYPE *loc, lex_extra_t *extra);
 %}
 
 D           [0-9]
@@ -16,9 +14,6 @@ FSF         [fFlL]
 ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 
 %%
-
-"/*"            { comment(yyscanner, yylloc, yyextra); }
-"//"[^\n]*      { }
 
 "auto"          { return AUTO;      }
 "break"         { return BREAK;     }
@@ -61,17 +56,17 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
                                 return type;
                             }
 
-0[xX]{H}+{ISF}?             { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
-0[0-7]*{ISF}?               { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
-[1-9]{D}*{ISF}?             { yylval->num_literal = get_integer(yytext); return(CONSTANT); }
+0[xX]{H}+{ISF}?             { yylval->num_literal = get_integer(yytext); return CONSTANT; }
+0[0-7]*{ISF}?               { yylval->num_literal = get_integer(yytext); return CONSTANT; }
+[1-9]{D}*{ISF}?             { yylval->num_literal = get_integer(yytext); return CONSTANT; }
 
-{D}+{EXP}{FSF}?             { yylval->num_literal = get_float(yytext); return(CONSTANT); }
-{D}*"."{D}+{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return(CONSTANT); }
-{D}+"."{D}*{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return(CONSTANT); }
+{D}+{EXP}{FSF}?             { yylval->num_literal = get_float(yytext); return CONSTANT; }
+{D}*"."{D}+{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return CONSTANT; }
+{D}+"."{D}*{EXP}?{FSF}?     { yylval->num_literal = get_float(yytext); return CONSTANT; }
 
-'(\\.|[^\\'\n])'            { yylval->num_literal = get_charval(yytext); return(CONSTANT); }
+'(\\.|[^\\'\n])'            { yylval->num_literal = get_charval(yytext); return CONSTANT; }
 
-\"(\\.|[^\\"\n])*\"         { yylval->str = get_string_id(yyextra->state, yytext); return(STRING_LITERAL); }
+\"(\\.|[^\\"\n])*\"         { yylval->str = get_string_id(yyextra->state, yytext); return STRING_LITERAL; }
 
 "..."           { return ELLIPSIS;      }
 ">>="           { return RIGHT_ASSIGN;  }
@@ -121,6 +116,7 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "?"             { return '?';   }
 
 [ \t\v\n\f]+    { }
+
 .               {
                     char msg[64];
                     snprintf(msg, sizeof(msg),
@@ -132,19 +128,6 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
                 }
 
 %%
-
-void comment(yyscan_t yyscanner, struct YYLTYPE *loc, lex_extra_t *extra) {
-    char c, prev = 0;
-
-    while ((c = input(yyscanner)) != 0) {
-        if (c == '/' && prev == '*')
-            return;
-        prev = c;
-    }
-    lexer_error(loc, extra, "Unterminated multiline comment");
-    exit(EXIT_FAILURE);
-}
-
 
 void init_scanner(const char *program, yyscan_t *scanner, lex_extra_t *extra) {
     extra->cur_line = 1;

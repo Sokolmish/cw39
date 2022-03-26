@@ -11,7 +11,7 @@ static std::string readFile(std::string const &path) {
     }
     t.seekg(0, std::ios::end);
     auto size = t.tellg();
-    std::string buffer(size, ' ');
+    std::string buffer(size, ' '); // TODO: don't fill buffer
     t.seekg(0);
     t.read(&buffer[0], size);
     return buffer;
@@ -51,6 +51,11 @@ void Preprocessor::printWarn(std::string const &msg) {
 }
 
 
+bool Preprocessor::noEnd(string_constit_t const &it) const {
+    return it != raw.top().cend();
+}
+
+
 void Preprocessor::processFile(const std::string &path) {
     raw.push(readFile(path));
     locations.push({ path, 1 });
@@ -61,7 +66,7 @@ void Preprocessor::processFile(const std::string &path) {
     condStatuses = std::stack<LastCondState>();
 
     auto it = raw.top().cbegin();
-    while (it != raw.top().cend()) {
+    while (noEnd(it)) {
         char ch = *(it++);
         if (ch == '\n') {
             isLineStart = true;
@@ -80,15 +85,61 @@ void Preprocessor::processFile(const std::string &path) {
             processDirective(directive, it);
         }
         else {
-            if (!isSkip)
-                globalSS << ch;
             if (isLineStart && !std::isspace(ch))
                 isLineStart = false;
+            if (!isSkip) {
+                if (ch == '/' && noEnd(it)) { // Comments
+                    if (*it == '/') {
+                        it++;
+                        while (noEnd(it) && *it != '\n')
+                            it++;
+                        continue;
+                    }
+                    else if (*it == '*') {
+                        it++;
+                        globalSS << ' ';
+                        processComment(it);
+                        continue;
+                    }
+                }
+
+                globalSS << ch;
+            }
         }
     }
 
     raw.pop();
     locations.pop();
+}
+
+void Preprocessor::processComment(string_constit_t &it) {
+    auto startLoc = locations.top();
+    while (true) {
+        while (noEnd(it) && *it != '*') {
+            if (*it == '\n') {
+                globalSS << '\n';
+                locations.top().line++;
+                globalLine++;
+            }
+            else {
+                globalSS << ' ';
+            }
+            it++;
+        }
+        if (!noEnd(it)) {
+            locations.top() = startLoc;
+            printError("Unterminated comment");
+            exit(EXIT_FAILURE);
+        }
+        it++;
+        globalSS << ' ';
+
+        if (noEnd(it) && *it == '/') {
+            it++;
+            globalSS << ' ';
+            break;
+        }
+    }
 }
 
 void Preprocessor::processDirective(std::string const &dir, string_constit_t &it) {
@@ -182,7 +233,7 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
         uint32_t arg = getU32Arg(it);
         skipSpaces(it);
         std::string filename;
-        if (it != raw.top().cend() && *it == '"')
+        if (noEnd(it) && *it == '"')
             filename = getStringArg(it, false);
         assertNoArg(it);
 
@@ -223,10 +274,10 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
 
     std::stringstream ss;
     char qclose = angleBrackets ? '>' : '"';
-    while (it != raw.top().cend() && *it != qclose)
+    while (noEnd(it) && *it != qclose)
         ss << *(it++);
 
-    if (it == raw.top().cend() || *it != qclose) {
+    if (!noEnd(it) || *it != qclose) {
         printError(fmt::format("Expected closing quote ('{}')", qclose));
         exit(EXIT_FAILURE);
     }
@@ -237,7 +288,7 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
 
 uint32_t Preprocessor::getU32Arg(Preprocessor::string_constit_t &it) {
     std::stringstream ss;
-    while (it != raw.top().cend() && std::isdigit(*it))
+    while (noEnd(it) && std::isdigit(*it))
         ss << *(it++);
 
     std::string snum = ss.str();
@@ -251,25 +302,25 @@ uint32_t Preprocessor::getU32Arg(Preprocessor::string_constit_t &it) {
 }
 
 std::string Preprocessor::getIdentArg(string_constit_t &it) {
-    if (it == raw.top().cend() || !(std::isalpha(*it) || *it == '_')) {
+    if (!noEnd(it) || !(std::isalpha(*it) || *it == '_')) {
         printError(fmt::format("Wrong identifier format"));
         exit(EXIT_FAILURE);
     }
     std::stringstream ss;
     ss << *(it++);
-    while (it != raw.top().cend() && (std::isalnum(*it) || *it == '_'))
+    while (noEnd(it) && (std::isalnum(*it) || *it == '_'))
         ss << *(it++);
     return ss.str();
 }
 
 void Preprocessor::skipSpaces(string_constit_t &it) {
-    while (it != raw.top().cend() && std::isspace(*it) && *it != '\n')
+    while (noEnd(it) && std::isspace(*it) && *it != '\n')
         ++it;
 }
 
 void Preprocessor::assertNoArg(string_constit_t &it) {
     skipSpaces(it);
-    if (it != raw.top().cend() && *it != '\n') {
+    if (noEnd(it) && *it != '\n') {
         printError("Too many arguments for directive");
         exit(EXIT_FAILURE);
     }
@@ -322,6 +373,7 @@ LinesWarpMap::Location LinesWarpMap::getLoc(int line) const {
 }
 
 LinesWarpMap::Location LinesWarpMap::getLocHard(int line) const {
+    (void)line;
     throw; // TODO
 }
 
@@ -340,4 +392,3 @@ int LinesWarpMap::getFilenum(const std::string &file) {
     filenames.emplace_hint(it, file, newNum);
     return newNum;
 }
-

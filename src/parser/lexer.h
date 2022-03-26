@@ -17,6 +17,7 @@ typedef void* yyscan_t;
 
 struct YYLTYPE;
 
+#define YY_NO_INPUT
 #define YY_NO_UNPUT
 
 struct LinesWarpMap;

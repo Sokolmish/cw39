@@ -74,12 +74,15 @@ private:
 
     void processFile(std::string const &path);
     void processDirective(std::string const &dir, string_constit_t &it);
+    void processComment(string_constit_t &it);
 
     std::string getStringArg(string_constit_t &it, bool angleBrackets);
     uint32_t getU32Arg(string_constit_t &it);
     std::string getIdentArg(string_constit_t &it);
     void skipSpaces(string_constit_t &it);
     void assertNoArg(string_constit_t &it);
+
+    bool noEnd(string_constit_t const &it) const;
 
     void printError(std::string const &msg);
     void printWarn(std::string const &msg);
