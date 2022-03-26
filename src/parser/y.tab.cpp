@@ -66,7 +66,7 @@
 
 
 /* First part of user prologue.  */
-#line 14 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 14 "parser.y"
 
 	#include "lexer.h"
 	#include "parser.hpp"
@@ -83,7 +83,7 @@
 	}
 	#endif
 
-#line 87 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 87 "y.tab.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -116,8 +116,8 @@
 
 /* Use api.header.include to #include this header
    instead of duplicating it here.  */
-#ifndef YY_YY_MNT_HDD_PROJECTS_STUDING_CWORK_3_PROJECT_SRC_PARSER_Y_TAB_H_INCLUDED
-# define YY_YY_MNT_HDD_PROJECTS_STUDING_CWORK_3_PROJECT_SRC_PARSER_Y_TAB_H_INCLUDED
+#ifndef YY_YY_Y_TAB_H_INCLUDED
+# define YY_YY_Y_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -126,11 +126,11 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 10 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 10 "parser.y"
 
     struct LinesWarpMap;
 
-#line 134 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 134 "y.tab.cpp"
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
@@ -205,7 +205,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 47 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 47 "parser.y"
 
     int boolean;
 	int enum_val;
@@ -260,7 +260,7 @@ union YYSTYPE
 	struct AST_FunctionDef *func_def;
 	struct AST_TranslationUnit *trans_unit;
 
-#line 264 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 264 "y.tab.cpp"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -286,7 +286,7 @@ struct YYLTYPE
 
 int yyparse (yyscan_t scanner, struct AST_TranslationUnit **parser_result, const struct LinesWarpMap *warps);
 
-#endif /* !YY_YY_MNT_HDD_PROJECTS_STUDING_CWORK_3_PROJECT_SRC_PARSER_Y_TAB_H_INCLUDED  */
+#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
 
 
 
@@ -2020,1303 +2020,1303 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 181 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 181 "parser.y"
                                                                             { (yyval.expr) = AST_Primary::makeIdent((yyvsp[0].ident_id)); SL((yyval.expr), (yyloc)); }
-#line 2026 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2026 "y.tab.cpp"
     break;
 
   case 3:
-#line 182 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 182 "parser.y"
                                                                                     { (yyval.expr) = AST_Primary::makeConst((yyvsp[0].num_literal)); SL((yyval.expr), (yyloc)); }
-#line 2032 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2032 "y.tab.cpp"
     break;
 
   case 4:
-#line 183 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 183 "parser.y"
                                                                         { (yyval.expr) = AST_Primary::makeStr((yyvsp[0].str_seq)); SL((yyval.expr), (yyloc)); }
-#line 2038 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2038 "y.tab.cpp"
     break;
 
   case 5:
-#line 184 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 184 "parser.y"
                                                                             { (yyval.expr) = AST_Primary::makeExpr((yyvsp[-1].expr)); SL((yyval.expr), (yyloc)); }
-#line 2044 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2044 "y.tab.cpp"
     break;
 
   case 6:
-#line 185 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 185 "parser.y"
                                                 { (yyval.expr) = AST_Primary::makeCompound((yyvsp[-4].type_name), (yyvsp[-1].initializer_lst)); SL((yyval.expr), (yyloc)); }
-#line 2050 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2050 "y.tab.cpp"
     break;
 
   case 7:
-#line 186 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 186 "parser.y"
                                                 { (yyval.expr) = AST_Primary::makeCompound((yyvsp[-5].type_name), (yyvsp[-2].initializer_lst)); SL((yyval.expr), (yyloc)); }
-#line 2056 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2056 "y.tab.cpp"
     break;
 
   case 8:
-#line 190 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 190 "parser.y"
                                                 { (yyval.str_seq) = (new AST_StringsSeq())->append((yyvsp[0].str)); SL((yyval.str_seq), (yyloc)); }
-#line 2062 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2062 "y.tab.cpp"
     break;
 
   case 9:
-#line 191 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 191 "parser.y"
                                                 { (yyval.str_seq) = (yyvsp[-1].str_seq)->append((yyvsp[0].str)); }
-#line 2068 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2068 "y.tab.cpp"
     break;
 
   case 10:
-#line 195 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 195 "parser.y"
                                                                         { (yyval.expr) = (yyvsp[0].expr); }
-#line 2074 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2074 "y.tab.cpp"
     break;
 
   case 11:
-#line 196 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 196 "parser.y"
                                                                 { (yyval.expr) = AST_Postfix::makeArr((yyvsp[-3].expr), (yyvsp[-1].expr)); SL((yyval.expr), (yyloc)); }
-#line 2080 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2080 "y.tab.cpp"
     break;
 
   case 12:
-#line 197 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 197 "parser.y"
                                                                 { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-2].expr), nullptr); SL((yyval.expr), (yyloc)); }
-#line 2086 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2086 "y.tab.cpp"
     break;
 
   case 13:
-#line 198 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 198 "parser.y"
                                                         { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-3].expr), (yyvsp[-1].args_list)); SL((yyval.expr), (yyloc)); }
-#line 2092 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2092 "y.tab.cpp"
     break;
 
   case 14:
-#line 199 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 199 "parser.y"
                                                         { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), false); SL((yyval.expr), (yyloc)); }
-#line 2098 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2098 "y.tab.cpp"
     break;
 
   case 15:
-#line 200 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 200 "parser.y"
                                                         { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), true); SL((yyval.expr), (yyloc)); }
-#line 2104 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2104 "y.tab.cpp"
     break;
 
   case 16:
-#line 201 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 201 "parser.y"
                                                                 { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), false); SL((yyval.expr), (yyloc)); }
-#line 2110 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2110 "y.tab.cpp"
     break;
 
   case 17:
-#line 202 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 202 "parser.y"
                                                                 { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), true); SL((yyval.expr), (yyloc)); }
-#line 2116 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2116 "y.tab.cpp"
     break;
 
   case 18:
-#line 206 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 206 "parser.y"
                                                                         { (yyval.args_list) = (new AST_ArgumentsList())->append((yyvsp[0].expr)); SL((yyval.args_list), (yyloc)); }
-#line 2122 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2122 "y.tab.cpp"
     break;
 
   case 19:
-#line 207 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 207 "parser.y"
                                                         { (yyval.args_list) = (yyvsp[-2].args_list)->append((yyvsp[0].expr)); }
-#line 2128 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2128 "y.tab.cpp"
     break;
 
   case 20:
-#line 211 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 211 "parser.y"
                                                                         { (yyval.expr) = (yyvsp[0].expr); }
-#line 2134 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2134 "y.tab.cpp"
     break;
 
   case 21:
-#line 212 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 212 "parser.y"
                                                                         { (yyval.expr) = new AST_Unop(AST_Unop::PRE_INC, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2140 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2140 "y.tab.cpp"
     break;
 
   case 22:
-#line 213 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 213 "parser.y"
                                                                         { (yyval.expr) = new AST_Unop(AST_Unop::PRE_DEC, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2146 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2146 "y.tab.cpp"
     break;
 
   case 23:
-#line 214 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 214 "parser.y"
                                                                 { (yyval.expr) = new AST_Unop(AST_Unop::OpType((yyvsp[-1].enum_val)), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2152 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2152 "y.tab.cpp"
     break;
 
   case 24:
-#line 215 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 215 "parser.y"
                                                                         { (yyval.expr) = new AST_Unop(AST_Unop::SIZEOF_OP, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2158 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2158 "y.tab.cpp"
     break;
 
   case 25:
-#line 216 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 216 "parser.y"
                                                                 { (yyval.expr) = new AST_Unop(AST_Unop::SIZEOF_OP, (yyvsp[-1].type_name)); SL((yyval.expr), (yyloc)); }
-#line 2164 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2164 "y.tab.cpp"
     break;
 
   case 26:
-#line 220 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 220 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Unop::ADDR_OF; }
-#line 2170 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2170 "y.tab.cpp"
     break;
 
   case 27:
-#line 221 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 221 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Unop::DEREF; }
-#line 2176 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2176 "y.tab.cpp"
     break;
 
   case 28:
-#line 222 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 222 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Unop::UN_PLUS; }
-#line 2182 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2182 "y.tab.cpp"
     break;
 
   case 29:
-#line 223 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 223 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Unop::UN_MINUS; }
-#line 2188 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2188 "y.tab.cpp"
     break;
 
   case 30:
-#line 224 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 224 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Unop::UN_NEG; }
-#line 2194 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2194 "y.tab.cpp"
     break;
 
   case 31:
-#line 225 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 225 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Unop::UN_NOT; }
-#line 2200 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2200 "y.tab.cpp"
     break;
 
   case 32:
-#line 229 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 229 "parser.y"
                                                                         { (yyval.expr) = (yyvsp[0].expr); }
-#line 2206 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2206 "y.tab.cpp"
     break;
 
   case 33:
-#line 230 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 230 "parser.y"
                                                         { (yyval.expr) = new AST_Cast((yyvsp[-2].type_name), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2212 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2212 "y.tab.cpp"
     break;
 
   case 34:
-#line 234 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 234 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2218 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2218 "y.tab.cpp"
     break;
 
   case 35:
-#line 235 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 235 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::MUL, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2224 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2224 "y.tab.cpp"
     break;
 
   case 36:
-#line 236 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 236 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2230 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2230 "y.tab.cpp"
     break;
 
   case 37:
-#line 237 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 237 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::REM, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2236 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2236 "y.tab.cpp"
     break;
 
   case 38:
-#line 241 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 241 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2242 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2242 "y.tab.cpp"
     break;
 
   case 39:
-#line 242 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 242 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::ADD, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2248 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2248 "y.tab.cpp"
     break;
 
   case 40:
-#line 243 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 243 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::SUB, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2254 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2254 "y.tab.cpp"
     break;
 
   case 41:
-#line 247 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 247 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2260 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2260 "y.tab.cpp"
     break;
 
   case 42:
-#line 248 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 248 "parser.y"
                                                         { (yyval.expr) = new AST_Binop(AST_Binop::SHL, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2266 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2266 "y.tab.cpp"
     break;
 
   case 43:
-#line 249 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 249 "parser.y"
                                                         { (yyval.expr) = new AST_Binop(AST_Binop::SHR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2272 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2272 "y.tab.cpp"
     break;
 
   case 44:
-#line 253 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 253 "parser.y"
                                                                         { (yyval.expr) = (yyvsp[0].expr); }
-#line 2278 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2278 "y.tab.cpp"
     break;
 
   case 45:
-#line 254 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 254 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::LT, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2284 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2284 "y.tab.cpp"
     break;
 
   case 46:
-#line 255 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 255 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::GT, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2290 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2290 "y.tab.cpp"
     break;
 
   case 47:
-#line 256 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 256 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::LE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2296 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2296 "y.tab.cpp"
     break;
 
   case 48:
-#line 257 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 257 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::GE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2302 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2302 "y.tab.cpp"
     break;
 
   case 49:
-#line 261 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 261 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2308 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2308 "y.tab.cpp"
     break;
 
   case 50:
-#line 262 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 262 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::EQ, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2314 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2314 "y.tab.cpp"
     break;
 
   case 51:
-#line 263 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 263 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::NE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2320 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2320 "y.tab.cpp"
     break;
 
   case 52:
-#line 267 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 267 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2326 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2326 "y.tab.cpp"
     break;
 
   case 53:
-#line 268 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 268 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::BIT_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2332 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2332 "y.tab.cpp"
     break;
 
   case 54:
-#line 272 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 272 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2338 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2338 "y.tab.cpp"
     break;
 
   case 55:
-#line 273 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 273 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::BIT_XOR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2344 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2344 "y.tab.cpp"
     break;
 
   case 56:
-#line 277 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 277 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2350 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2350 "y.tab.cpp"
     break;
 
   case 57:
-#line 278 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 278 "parser.y"
                                                                 { (yyval.expr) = new AST_Binop(AST_Binop::BIT_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2356 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2356 "y.tab.cpp"
     break;
 
   case 58:
-#line 282 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 282 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2362 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2362 "y.tab.cpp"
     break;
 
   case 59:
-#line 283 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 283 "parser.y"
                                                         { (yyval.expr) = new AST_Binop(AST_Binop::LOG_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2368 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2368 "y.tab.cpp"
     break;
 
   case 60:
-#line 287 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 287 "parser.y"
                                                                         { (yyval.expr) = (yyvsp[0].expr); }
-#line 2374 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2374 "y.tab.cpp"
     break;
 
   case 61:
-#line 288 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 288 "parser.y"
                                                         { (yyval.expr) = new AST_Binop(AST_Binop::LOG_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2380 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2380 "y.tab.cpp"
     break;
 
   case 62:
-#line 292 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 292 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2386 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2386 "y.tab.cpp"
     break;
 
   case 63:
-#line 293 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 293 "parser.y"
                                                         { (yyval.expr) = new AST_Ternary((yyvsp[-4].expr), (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2392 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2392 "y.tab.cpp"
     break;
 
   case 64:
-#line 297 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 297 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2398 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2398 "y.tab.cpp"
     break;
 
   case 65:
-#line 298 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 298 "parser.y"
                                                                 { (yyval.expr) = new AST_Assignment(AST_Assignment::OpType((yyvsp[-1].enum_val)), (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2404 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2404 "y.tab.cpp"
     break;
 
   case 66:
-#line 302 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 302 "parser.y"
                                                                                         { (yyval.enum_val) = AST_Assignment::DIRECT; }
-#line 2410 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2410 "y.tab.cpp"
     break;
 
   case 67:
-#line 303 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 303 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::MUL; }
-#line 2416 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2416 "y.tab.cpp"
     break;
 
   case 68:
-#line 304 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 304 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::DIV; }
-#line 2422 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2422 "y.tab.cpp"
     break;
 
   case 69:
-#line 305 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 305 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::REM; }
-#line 2428 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2428 "y.tab.cpp"
     break;
 
   case 70:
-#line 306 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 306 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::ADD; }
-#line 2434 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2434 "y.tab.cpp"
     break;
 
   case 71:
-#line 307 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 307 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::SUB; }
-#line 2440 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2440 "y.tab.cpp"
     break;
 
   case 72:
-#line 308 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 308 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::SHL; }
-#line 2446 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2446 "y.tab.cpp"
     break;
 
   case 73:
-#line 309 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 309 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::SHR; }
-#line 2452 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2452 "y.tab.cpp"
     break;
 
   case 74:
-#line 310 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 310 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::AND; }
-#line 2458 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2458 "y.tab.cpp"
     break;
 
   case 75:
-#line 311 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 311 "parser.y"
                                                                                 { (yyval.enum_val) = AST_Assignment::XOR; }
-#line 2464 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2464 "y.tab.cpp"
     break;
 
   case 76:
-#line 312 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 312 "parser.y"
                                                                                         { (yyval.enum_val) = AST_Assignment::OR; }
-#line 2470 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2470 "y.tab.cpp"
     break;
 
   case 77:
-#line 316 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 316 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); /* TODO: fixme */ }
-#line 2476 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2476 "y.tab.cpp"
     break;
 
   case 78:
-#line 317 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 317 "parser.y"
                                                                         { (yyval.expr) = dynamic_cast<AST_CommaExpression*>((yyvsp[-2].expr))->append((yyvsp[0].expr)); }
-#line 2482 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2482 "y.tab.cpp"
     break;
 
   case 79:
-#line 321 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 321 "parser.y"
                                                                                 { (yyval.expr) = (yyvsp[0].expr); }
-#line 2488 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2488 "y.tab.cpp"
     break;
 
   case 80:
-#line 327 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 327 "parser.y"
                                                                 { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_storage((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2494 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2494 "y.tab.cpp"
     break;
 
   case 81:
-#line 328 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 328 "parser.y"
                                                 { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_storage((yyvsp[-1].enum_val)); }
-#line 2500 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2500 "y.tab.cpp"
     break;
 
   case 82:
-#line 329 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 329 "parser.y"
                                                                         { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_type_spec((yyvsp[0].type_specifier)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2506 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2506 "y.tab.cpp"
     break;
 
   case 83:
-#line 330 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 330 "parser.y"
                                                                 { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_type_spec((yyvsp[-1].type_specifier)); }
-#line 2512 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2512 "y.tab.cpp"
     break;
 
   case 84:
-#line 331 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 331 "parser.y"
                                                                         { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_type_qual((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2518 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2518 "y.tab.cpp"
     break;
 
   case 85:
-#line 332 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 332 "parser.y"
                                                                 { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_type_qual((yyvsp[-1].enum_val)); }
-#line 2524 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2524 "y.tab.cpp"
     break;
 
   case 86:
-#line 333 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 333 "parser.y"
                                                                 { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_func_qual((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2530 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2530 "y.tab.cpp"
     break;
 
   case 87:
-#line 334 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 334 "parser.y"
                                                         { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_func_qual((yyvsp[-1].enum_val)); }
-#line 2536 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2536 "y.tab.cpp"
     break;
 
   case 88:
-#line 338 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 338 "parser.y"
                                                                                 { (yyval.enum_val) = AST_DeclSpecifiers::ST_TYPEDEF; }
-#line 2542 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2542 "y.tab.cpp"
     break;
 
   case 89:
-#line 339 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 339 "parser.y"
                                                                                 { (yyval.enum_val) = AST_DeclSpecifiers::ST_EXTERN; }
-#line 2548 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2548 "y.tab.cpp"
     break;
 
   case 90:
-#line 340 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 340 "parser.y"
                                                                                 { (yyval.enum_val) = AST_DeclSpecifiers::ST_STATIC; }
-#line 2554 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2554 "y.tab.cpp"
     break;
 
   case 91:
-#line 341 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 341 "parser.y"
                                                                                 { (yyval.enum_val) = AST_DeclSpecifiers::ST_AUTO; }
-#line 2560 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2560 "y.tab.cpp"
     break;
 
   case 92:
-#line 342 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 342 "parser.y"
                                                                                 { (yyval.enum_val) = AST_DeclSpecifiers::ST_REGISTER; }
-#line 2566 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2566 "y.tab.cpp"
     break;
 
   case 93:
-#line 346 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 346 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_VOID); }
-#line 2572 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2572 "y.tab.cpp"
     break;
 
   case 94:
-#line 347 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 347 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_CHAR); }
-#line 2578 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2578 "y.tab.cpp"
     break;
 
   case 95:
-#line 348 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 348 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_SHORT); }
-#line 2584 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2584 "y.tab.cpp"
     break;
 
   case 96:
-#line 349 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 349 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_INT); }
-#line 2590 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2590 "y.tab.cpp"
     break;
 
   case 97:
-#line 350 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 350 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_LONG); }
-#line 2596 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2596 "y.tab.cpp"
     break;
 
   case 98:
-#line 351 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 351 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_FLOAT); }
-#line 2602 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2602 "y.tab.cpp"
     break;
 
   case 99:
-#line 352 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 352 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_DOUBLE); }
-#line 2608 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2608 "y.tab.cpp"
     break;
 
   case 100:
-#line 353 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 353 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_SIGNED); }
-#line 2614 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2614 "y.tab.cpp"
     break;
 
   case 101:
-#line 354 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 354 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_UNSIGNED); }
-#line 2620 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2620 "y.tab.cpp"
     break;
 
   case 102:
-#line 355 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 355 "parser.y"
                                                                         { (yyval.type_specifier) = new AST_TypeSpecifier((yyvsp[0].struct_or_union_spec)); }
-#line 2626 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2626 "y.tab.cpp"
     break;
 
   case 103:
-#line 356 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 356 "parser.y"
                                                                         { (yyval.type_specifier) = new AST_TypeSpecifier((yyvsp[0].enum_spec)); }
-#line 2632 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2632 "y.tab.cpp"
     break;
 
   case 104:
-#line 357 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 357 "parser.y"
                                                                                 { (yyval.type_specifier) = new AST_TypeSpecifier(get_def_type((yyvsp[0].ident_id))); }
-#line 2638 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2638 "y.tab.cpp"
     break;
 
   case 105:
-#line 361 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 361 "parser.y"
                                                                                 { (yyval.enum_val) = AST_TypeQualifiers::Q_CONST; }
-#line 2644 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2644 "y.tab.cpp"
     break;
 
   case 106:
-#line 362 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 362 "parser.y"
                                                                                 { (yyval.enum_val) = AST_TypeQualifiers::Q_RESTRICT; }
-#line 2650 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2650 "y.tab.cpp"
     break;
 
   case 107:
-#line 363 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 363 "parser.y"
                                                                                 { (yyval.enum_val) = AST_TypeQualifiers::Q_VOLATILE; }
-#line 2656 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2656 "y.tab.cpp"
     break;
 
   case 108:
-#line 367 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 367 "parser.y"
                                                                                 { (yyval.enum_val) = AST_DeclSpecifiers::Q_INLINE; }
-#line 2662 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2662 "y.tab.cpp"
     break;
 
   case 109:
-#line 371 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 371 "parser.y"
                                                                 { (yyval.struct_or_union_spec) = new AST_StructOrUsionSpec((yyvsp[-4].boolean), (yyvsp[-3].ident_id), (yyvsp[-1].struct_decl_lst)); SL((yyval.struct_or_union_spec), (yyloc)); }
-#line 2668 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2668 "y.tab.cpp"
     break;
 
   case 110:
-#line 372 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 372 "parser.y"
                                                                                 { (yyval.struct_or_union_spec) = new AST_StructOrUsionSpec((yyvsp[-3].boolean), NO_IDENT_ID, (yyvsp[-1].struct_decl_lst)); SL((yyval.struct_or_union_spec), (yyloc)); }
-#line 2674 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2674 "y.tab.cpp"
     break;
 
   case 111:
-#line 373 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 373 "parser.y"
                                                                                                 { (yyval.struct_or_union_spec) = new AST_StructOrUsionSpec((yyvsp[-1].boolean), (yyvsp[0].ident_id), nullptr); SL((yyval.struct_or_union_spec), (yyloc)); }
-#line 2680 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2680 "y.tab.cpp"
     break;
 
   case 112:
-#line 377 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 377 "parser.y"
                                                                                                         { (yyval.boolean) = 0; }
-#line 2686 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2686 "y.tab.cpp"
     break;
 
   case 113:
-#line 378 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 378 "parser.y"
                                                                                                         { (yyval.boolean) = 1; }
-#line 2692 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2692 "y.tab.cpp"
     break;
 
   case 114:
-#line 382 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 382 "parser.y"
                                                                                         { (yyval.struct_decl_lst) = new AST_StructDeclarationList((yyvsp[0].struct_decl)); SL((yyval.struct_decl_lst), (yyloc)); }
-#line 2698 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2698 "y.tab.cpp"
     break;
 
   case 115:
-#line 383 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 383 "parser.y"
                                                                 { (yyval.struct_decl_lst) = (yyvsp[-1].struct_decl_lst)->append((yyvsp[0].struct_decl)); }
-#line 2704 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2704 "y.tab.cpp"
     break;
 
   case 116:
-#line 387 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 387 "parser.y"
                                                                         { (yyval.struct_decl) = new AST_StructDeclaration((yyvsp[-2].spec_qual_lst), (yyvsp[-1].struct_delarator_lst)); SL((yyval.struct_decl), (yyloc)); }
-#line 2710 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2710 "y.tab.cpp"
     break;
 
   case 117:
-#line 391 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 391 "parser.y"
                                                                 { (yyval.spec_qual_lst) = (yyvsp[0].spec_qual_lst)->append_spec((yyvsp[-1].type_specifier)); }
-#line 2716 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2716 "y.tab.cpp"
     break;
 
   case 118:
-#line 392 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 392 "parser.y"
                                                                                 { (yyval.spec_qual_lst) = new AST_SpecifierQualifierList((yyvsp[0].type_specifier)); SL((yyval.spec_qual_lst), (yyloc)); }
-#line 2722 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2722 "y.tab.cpp"
     break;
 
   case 119:
-#line 393 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 393 "parser.y"
                                                                 { (yyval.spec_qual_lst) = (yyvsp[0].spec_qual_lst)->append_qual(AST_TypeQualifiers::QualType((yyvsp[-1].enum_val))); }
-#line 2728 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2728 "y.tab.cpp"
     break;
 
   case 120:
-#line 394 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 394 "parser.y"
                                                                                 { (yyval.spec_qual_lst) = new AST_SpecifierQualifierList(AST_TypeQualifiers::QualType((yyvsp[0].enum_val))); SL((yyval.spec_qual_lst), (yyloc)); }
-#line 2734 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2734 "y.tab.cpp"
     break;
 
   case 121:
-#line 398 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 398 "parser.y"
                                                                                                 { (yyval.struct_delarator_lst) = new AST_StructDeclaratorList((yyvsp[0].struct_delarator)); SL((yyval.struct_delarator_lst), (yyloc)); }
-#line 2740 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2740 "y.tab.cpp"
     break;
 
   case 122:
-#line 399 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 399 "parser.y"
                                                                 { (yyval.struct_delarator_lst) = (yyvsp[-2].struct_delarator_lst)->append((yyvsp[0].struct_delarator)); }
-#line 2746 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2746 "y.tab.cpp"
     break;
 
   case 123:
-#line 403 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 403 "parser.y"
                                                                                                 { (yyval.struct_delarator) = new AST_StructDeclarator((yyvsp[0].declarator), nullptr); SL((yyval.struct_delarator), (yyloc)); }
-#line 2752 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2752 "y.tab.cpp"
     break;
 
   case 124:
-#line 404 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 404 "parser.y"
                                                                                                 { (yyval.struct_delarator) = new AST_StructDeclarator(nullptr, (yyvsp[0].expr)); SL((yyval.struct_delarator), (yyloc)); }
-#line 2758 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2758 "y.tab.cpp"
     break;
 
   case 125:
-#line 405 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 405 "parser.y"
                                                                                         { (yyval.struct_delarator) = new AST_StructDeclarator((yyvsp[-2].declarator), (yyvsp[0].expr)); SL((yyval.struct_delarator), (yyloc)); }
-#line 2764 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2764 "y.tab.cpp"
     break;
 
   case 126:
-#line 409 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 409 "parser.y"
                                                                                 { (yyval.enum_spec) = new AST_EnumSpecifier(NO_IDENT_ID, (yyvsp[-1].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2770 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2770 "y.tab.cpp"
     break;
 
   case 127:
-#line 410 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 410 "parser.y"
                                                                         { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[-3].ident_id), (yyvsp[-1].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2776 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2776 "y.tab.cpp"
     break;
 
   case 128:
-#line 411 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 411 "parser.y"
                                                                                 { (yyval.enum_spec) = new AST_EnumSpecifier(NO_IDENT_ID, (yyvsp[-2].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2782 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2782 "y.tab.cpp"
     break;
 
   case 129:
-#line 412 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 412 "parser.y"
                                                                 { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[-4].ident_id), (yyvsp[-2].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2788 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2788 "y.tab.cpp"
     break;
 
   case 130:
-#line 413 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 413 "parser.y"
                                                                                                 { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[0].ident_id), nullptr); SL((yyval.enum_spec), (yyloc)); }
-#line 2794 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2794 "y.tab.cpp"
     break;
 
   case 131:
-#line 417 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 417 "parser.y"
                                                                                                 { (yyval.enumerator_lst) = new AST_EnumeratorList((yyvsp[0].enumerator)); SL((yyval.enumerator_lst), (yyloc)); }
-#line 2800 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2800 "y.tab.cpp"
     break;
 
   case 132:
-#line 418 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 418 "parser.y"
                                                                                 { (yyval.enumerator_lst) = (yyvsp[-2].enumerator_lst)->append((yyvsp[0].enumerator)); }
-#line 2806 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2806 "y.tab.cpp"
     break;
 
   case 133:
-#line 422 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 422 "parser.y"
                                                                                                 { (yyval.enumerator) = new AST_Enumerator((yyvsp[0].ident_id), nullptr); SL((yyval.enumerator), (yyloc)); }
-#line 2812 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2812 "y.tab.cpp"
     break;
 
   case 134:
-#line 423 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 423 "parser.y"
                                                                                         { (yyval.enumerator) = new AST_Enumerator((yyvsp[-2].ident_id), (yyvsp[0].expr)); SL((yyval.enumerator), (yyloc)); }
-#line 2818 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2818 "y.tab.cpp"
     break;
 
   case 135:
-#line 430 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 430 "parser.y"
                                                                                                 { (yyval.declaration) = new AST_Declaration((yyvsp[-1].decl_specifiers), nullptr); SL((yyval.declaration), (yyloc)); }
-#line 2824 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2824 "y.tab.cpp"
     break;
 
   case 136:
-#line 431 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 431 "parser.y"
                                                                         { (yyval.declaration) = new AST_Declaration((yyvsp[-2].decl_specifiers), (yyvsp[-1].init_declarator_lst)); SL((yyval.declaration), (yyloc)); }
-#line 2830 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2830 "y.tab.cpp"
     break;
 
   case 137:
-#line 435 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 435 "parser.y"
                                                                                                 { (yyval.init_declarator_lst) = new AST_InitDeclaratorList((yyvsp[0].init_declarator)); SL((yyval.init_declarator_lst), (yyloc)); }
-#line 2836 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2836 "y.tab.cpp"
     break;
 
   case 138:
-#line 436 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 436 "parser.y"
                                                                         { (yyval.init_declarator_lst) = (yyvsp[-2].init_declarator_lst)->append((yyvsp[0].init_declarator)); }
-#line 2842 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2842 "y.tab.cpp"
     break;
 
   case 139:
-#line 440 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 440 "parser.y"
                                                                                                 { (yyval.init_declarator) = new AST_InitDeclarator((yyvsp[0].declarator), nullptr); SL((yyval.init_declarator), (yyloc)); }
-#line 2848 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2848 "y.tab.cpp"
     break;
 
   case 140:
-#line 441 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 441 "parser.y"
                                                                                 { (yyval.init_declarator) = new AST_InitDeclarator((yyvsp[-2].declarator), (yyvsp[0].initializer)); SL((yyval.init_declarator), (yyloc)); }
-#line 2854 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2854 "y.tab.cpp"
     break;
 
   case 141:
-#line 445 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 445 "parser.y"
                                                                                         { (yyval.declarator) = new AST_Declarator((yyvsp[0].dir_declarator), (yyvsp[-1].pointer)); SL((yyval.declarator), (yyloc)); }
-#line 2860 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2860 "y.tab.cpp"
     break;
 
   case 142:
-#line 446 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 446 "parser.y"
                                                                                                 { (yyval.declarator) = new AST_Declarator((yyvsp[0].dir_declarator), nullptr); SL((yyval.declarator), (yyloc)); }
-#line 2866 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2866 "y.tab.cpp"
     break;
 
   case 143:
-#line 450 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 450 "parser.y"
                                                                 { (yyval.pointer) = new AST_Pointer(nullptr, nullptr); SL((yyval.pointer), (yyloc)); }
-#line 2872 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2872 "y.tab.cpp"
     break;
 
   case 144:
-#line 451 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 451 "parser.y"
                                                         { (yyval.pointer) = new AST_Pointer((yyvsp[0].type_quals), nullptr); SL((yyval.pointer), (yyloc)); }
-#line 2878 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2878 "y.tab.cpp"
     break;
 
   case 145:
-#line 452 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 452 "parser.y"
                                                         { (yyval.pointer) = new AST_Pointer(nullptr, (yyvsp[0].pointer)); SL((yyval.pointer), (yyloc)); }
-#line 2884 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2884 "y.tab.cpp"
     break;
 
   case 146:
-#line 453 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 453 "parser.y"
                                                 { (yyval.pointer) = new AST_Pointer((yyvsp[-1].type_quals), (yyvsp[0].pointer)); SL((yyval.pointer), (yyloc)); }
-#line 2890 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2890 "y.tab.cpp"
     break;
 
   case 147:
-#line 457 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 457 "parser.y"
                                                                                                         { (yyval.dir_declarator) = AST_DirectDeclarator::makeIdent((yyvsp[0].ident_id)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2896 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2896 "y.tab.cpp"
     break;
 
   case 148:
-#line 458 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 458 "parser.y"
                                                                                                 { (yyval.dir_declarator) = AST_DirectDeclarator::makeNested((yyvsp[-1].declarator)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2902 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2902 "y.tab.cpp"
     break;
 
   case 149:
-#line 459 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 459 "parser.y"
                                                                         { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-4].dir_declarator), (yyvsp[-2].type_quals), (yyvsp[-1].expr)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2908 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2908 "y.tab.cpp"
     break;
 
   case 150:
-#line 460 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 460 "parser.y"
                                                                                 { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-3].dir_declarator), (yyvsp[-1].type_quals), nullptr); SL((yyval.dir_declarator), (yyloc)); }
-#line 2914 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2914 "y.tab.cpp"
     break;
 
   case 151:
-#line 461 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 461 "parser.y"
                                                                                 { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-3].dir_declarator), nullptr, (yyvsp[-1].expr)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2920 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2920 "y.tab.cpp"
     break;
 
   case 152:
-#line 462 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 462 "parser.y"
                                                                                                 { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-2].dir_declarator), nullptr, nullptr); SL((yyval.dir_declarator), (yyloc)); }
-#line 2926 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2926 "y.tab.cpp"
     break;
 
   case 153:
-#line 463 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 463 "parser.y"
                                                                                 { (yyval.dir_declarator) = AST_DirectDeclarator::makeFunc((yyvsp[-3].dir_declarator), (yyvsp[-1].param_type_lst)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2932 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2932 "y.tab.cpp"
     break;
 
   case 154:
-#line 464 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 464 "parser.y"
                                                                                                 { (yyval.dir_declarator) = AST_DirectDeclarator::makeFunc((yyvsp[-2].dir_declarator), nullptr); SL((yyval.dir_declarator), (yyloc)); }
-#line 2938 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2938 "y.tab.cpp"
     break;
 
   case 155:
-#line 468 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 468 "parser.y"
                                                                                         { (yyval.type_quals) = new AST_TypeQualifiers(AST_TypeQualifiers::QualType((yyvsp[0].enum_val))); SL((yyval.type_quals), (yyloc)); }
-#line 2944 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2944 "y.tab.cpp"
     break;
 
   case 156:
-#line 469 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 469 "parser.y"
                                                                         { (yyval.type_quals) = (yyvsp[-1].type_quals)->update(AST_TypeQualifiers::QualType((yyvsp[0].enum_val))); }
-#line 2950 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2950 "y.tab.cpp"
     break;
 
   case 157:
-#line 473 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 473 "parser.y"
                                                                                                 { (yyval.param_type_lst) = new AST_ParameterTypeList((yyvsp[0].param_lst), false); SL((yyval.param_type_lst), (yyloc)); }
-#line 2956 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2956 "y.tab.cpp"
     break;
 
   case 158:
-#line 474 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 474 "parser.y"
                                                                                 { (yyval.param_type_lst) = new AST_ParameterTypeList((yyvsp[-2].param_lst), true); SL((yyval.param_type_lst), (yyloc)); }
-#line 2962 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2962 "y.tab.cpp"
     break;
 
   case 159:
-#line 478 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 478 "parser.y"
                                                                                 { (yyval.param_lst) = new AST_ParameterList((yyvsp[0].param_declaration)); SL((yyval.param_lst), (yyloc)); }
-#line 2968 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2968 "y.tab.cpp"
     break;
 
   case 160:
-#line 479 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 479 "parser.y"
                                                                 { (yyval.param_lst) = (yyvsp[-2].param_lst)->append((yyvsp[0].param_declaration)); }
-#line 2974 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2974 "y.tab.cpp"
     break;
 
   case 161:
-#line 483 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 483 "parser.y"
                                                                                 { (yyval.param_declaration) = new AST_ParameterDeclaration((yyvsp[-1].decl_specifiers), (yyvsp[0].declarator)); SL((yyval.param_declaration), (yyloc)); }
-#line 2980 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2980 "y.tab.cpp"
     break;
 
   case 162:
-#line 484 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 484 "parser.y"
                                                                                         { (yyval.param_declaration) = new AST_ParameterDeclaration((yyvsp[0].decl_specifiers), nullptr); SL((yyval.param_declaration), (yyloc)); }
-#line 2986 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2986 "y.tab.cpp"
     break;
 
   case 163:
-#line 488 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 488 "parser.y"
                                                                                         { (yyval.type_name) = new AST_TypeName((yyvsp[0].spec_qual_lst), nullptr); SL((yyval.type_name), (yyloc)); }
-#line 2992 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2992 "y.tab.cpp"
     break;
 
   case 164:
-#line 489 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 489 "parser.y"
                                                                         { (yyval.type_name) = new AST_TypeName((yyvsp[-1].spec_qual_lst), (yyvsp[0].abstract_decl)); SL((yyval.type_name), (yyloc)); }
-#line 2998 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 2998 "y.tab.cpp"
     break;
 
   case 165:
-#line 493 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 493 "parser.y"
                                                                                 {  (yyval.abstract_decl) = new AST_AbstractDeclarator((yyvsp[0].dir_abstract_decl), nullptr); SL((yyval.abstract_decl), (yyloc)); }
-#line 3004 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3004 "y.tab.cpp"
     break;
 
   case 166:
-#line 494 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 494 "parser.y"
                                                                         {  (yyval.abstract_decl) = new AST_AbstractDeclarator((yyvsp[0].dir_abstract_decl), (yyvsp[-1].pointer)); SL((yyval.abstract_decl), (yyloc)); }
-#line 3010 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3010 "y.tab.cpp"
     break;
 
   case 167:
-#line 495 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 495 "parser.y"
                                                                             {  (yyval.abstract_decl) = new AST_AbstractDeclarator(nullptr, (yyvsp[0].pointer)); SL((yyval.abstract_decl), (yyloc)); }
-#line 3016 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3016 "y.tab.cpp"
     break;
 
   case 168:
-#line 500 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 500 "parser.y"
                                                                                 { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeNested((yyvsp[-1].abstract_decl)); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3022 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3022 "y.tab.cpp"
     break;
 
   case 169:
-#line 501 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 501 "parser.y"
                                                                         { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeArr((yyvsp[-2].dir_abstract_decl), nullptr); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3028 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3028 "y.tab.cpp"
     break;
 
   case 170:
-#line 502 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 502 "parser.y"
                                                                 { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeArr((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].expr)); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3034 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3034 "y.tab.cpp"
     break;
 
   case 171:
-#line 503 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 503 "parser.y"
                                                                         { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeFunc((yyvsp[-2].dir_abstract_decl), nullptr); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3040 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3040 "y.tab.cpp"
     break;
 
   case 172:
-#line 504 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 504 "parser.y"
                                                         { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeFunc((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].param_type_lst)); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3046 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3046 "y.tab.cpp"
     break;
 
   case 173:
-#line 511 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 511 "parser.y"
                                                                                         { (yyval.initializer) = new AST_Initializer((yyvsp[0].expr)); SL((yyval.initializer), (yyloc)); }
-#line 3052 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3052 "y.tab.cpp"
     break;
 
   case 174:
-#line 512 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 512 "parser.y"
                                                                                         { (yyval.initializer) = new AST_Initializer((yyvsp[-1].initializer_lst)); SL((yyval.initializer), (yyloc)); }
-#line 3058 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3058 "y.tab.cpp"
     break;
 
   case 175:
-#line 513 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 513 "parser.y"
                                                                                 { (yyval.initializer) = new AST_Initializer((yyvsp[-2].initializer_lst)); SL((yyval.initializer), (yyloc)); }
-#line 3064 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3064 "y.tab.cpp"
     break;
 
   case 176:
-#line 517 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 517 "parser.y"
                                                                                         { (yyval.initializer_lst) = new AST_InitializerList((yyvsp[0].initializer), nullptr); SL((yyval.initializer_lst), (yyloc)); }
-#line 3070 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3070 "y.tab.cpp"
     break;
 
   case 177:
-#line 518 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 518 "parser.y"
                                                                         { (yyval.initializer_lst) = new AST_InitializerList((yyvsp[0].initializer), (yyvsp[-2].designator)); SL((yyval.initializer_lst), (yyloc)); }
-#line 3076 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3076 "y.tab.cpp"
     break;
 
   case 178:
-#line 519 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 519 "parser.y"
                                                                                 { (yyval.initializer_lst) = (yyvsp[-2].initializer_lst)->append((yyvsp[0].initializer), nullptr); }
-#line 3082 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3082 "y.tab.cpp"
     break;
 
   case 179:
-#line 520 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 520 "parser.y"
                                                                 { (yyval.initializer_lst) = (yyvsp[-4].initializer_lst)->append((yyvsp[0].initializer), (yyvsp[-2].designator)); }
-#line 3088 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3088 "y.tab.cpp"
     break;
 
   case 180:
-#line 524 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 524 "parser.y"
                                                                                 { (yyval.designator) = new AST_Designator((yyvsp[-1].expr)); SL((yyval.designator), (yyloc)); }
-#line 3094 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3094 "y.tab.cpp"
     break;
 
   case 181:
-#line 525 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 525 "parser.y"
                                                                                         { (yyval.designator) = new AST_Designator((yyvsp[0].ident_id)); SL((yyval.designator), (yyloc)); }
-#line 3100 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3100 "y.tab.cpp"
     break;
 
   case 182:
-#line 532 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 532 "parser.y"
                                                                         { (yyval.stmt) = (yyvsp[0].label_stmt); }
-#line 3106 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3106 "y.tab.cpp"
     break;
 
   case 183:
-#line 533 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 533 "parser.y"
                                                                         { (yyval.stmt) = (yyvsp[0].compound_stmt); }
-#line 3112 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3112 "y.tab.cpp"
     break;
 
   case 184:
-#line 534 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 534 "parser.y"
                                                                                 { (yyval.stmt) = (yyvsp[0].expr_stmt); }
-#line 3118 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3118 "y.tab.cpp"
     break;
 
   case 185:
-#line 535 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 535 "parser.y"
                                                                         { (yyval.stmt) = (yyvsp[0].select_stmt); }
-#line 3124 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3124 "y.tab.cpp"
     break;
 
   case 186:
-#line 536 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 536 "parser.y"
                                                                                 { (yyval.stmt) = (yyvsp[0].iter_stmt); }
-#line 3130 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3130 "y.tab.cpp"
     break;
 
   case 187:
-#line 537 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 537 "parser.y"
                                                                                 { (yyval.stmt) = (yyvsp[0].jump_stmt); }
-#line 3136 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3136 "y.tab.cpp"
     break;
 
   case 188:
-#line 541 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 541 "parser.y"
                                                                 { (yyval.label_stmt) = new AST_LabeledStmt((yyvsp[-2].ident_id), (yyvsp[0].stmt), AST_LabeledStmt::SIMPL); SL((yyval.label_stmt), (yyloc)); }
-#line 3142 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3142 "y.tab.cpp"
     break;
 
   case 189:
-#line 542 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 542 "parser.y"
                                                                 { (yyval.label_stmt) = new AST_LabeledStmt((yyvsp[-2].expr), (yyvsp[0].stmt), AST_LabeledStmt::SW_CASE); SL((yyval.label_stmt), (yyloc)); }
-#line 3148 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3148 "y.tab.cpp"
     break;
 
   case 190:
-#line 543 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 543 "parser.y"
                                                                         { (yyval.label_stmt) = new AST_LabeledStmt(nullptr, (yyvsp[0].stmt), AST_LabeledStmt::SW_DEFAULT); SL((yyval.label_stmt), (yyloc)); }
-#line 3154 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3154 "y.tab.cpp"
     break;
 
   case 191:
-#line 547 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 547 "parser.y"
                                                                                 { (yyval.compound_stmt) = new AST_CompoundStmt(new AST_BlockItemList()); SL((yyval.compound_stmt), (yyloc)); }
-#line 3160 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3160 "y.tab.cpp"
     break;
 
   case 192:
-#line 548 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 548 "parser.y"
                                                                 { (yyval.compound_stmt) = new AST_CompoundStmt((yyvsp[-1].block_item_lst)); SL((yyval.compound_stmt), (yyloc)); }
-#line 3166 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3166 "y.tab.cpp"
     break;
 
   case 193:
-#line 552 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 552 "parser.y"
                                                                         { (yyval.block_item_lst) = (new AST_BlockItemList())->append((yyvsp[0].declaration)); SL((yyval.block_item_lst), (yyloc)); }
-#line 3172 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3172 "y.tab.cpp"
     break;
 
   case 194:
-#line 553 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 553 "parser.y"
                                                                                 { (yyval.block_item_lst) = (new AST_BlockItemList())->append((yyvsp[0].stmt)); SL((yyval.block_item_lst), (yyloc)); }
-#line 3178 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3178 "y.tab.cpp"
     break;
 
   case 195:
-#line 554 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 554 "parser.y"
                                                         { (yyval.block_item_lst) = (yyvsp[-1].block_item_lst)->append((yyvsp[0].declaration)); }
-#line 3184 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3184 "y.tab.cpp"
     break;
 
   case 196:
-#line 555 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 555 "parser.y"
                                                                 { (yyval.block_item_lst) = (yyvsp[-1].block_item_lst)->append((yyvsp[0].stmt)); }
-#line 3190 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3190 "y.tab.cpp"
     break;
 
   case 197:
-#line 559 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 559 "parser.y"
                                                                                 { (yyval.expr_stmt) = new AST_ExprStmt(nullptr); SL((yyval.expr_stmt), (yyloc)); }
-#line 3196 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3196 "y.tab.cpp"
     break;
 
   case 198:
-#line 560 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 560 "parser.y"
                                                                                 { (yyval.expr_stmt) = new AST_ExprStmt((yyvsp[-1].expr)); SL((yyval.expr_stmt), (yyloc)); }
-#line 3202 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3202 "y.tab.cpp"
     break;
 
   case 199:
-#line 564 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 564 "parser.y"
                                                         { (yyval.select_stmt) = AST_SelectionStmt::get_if((yyvsp[-2].expr), (yyvsp[0].stmt), nullptr); SL((yyval.select_stmt), (yyloc)); }
-#line 3208 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3208 "y.tab.cpp"
     break;
 
   case 200:
-#line 565 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 565 "parser.y"
                                                         { (yyval.select_stmt) = AST_SelectionStmt::get_if((yyvsp[-4].expr), (yyvsp[-2].stmt), (yyvsp[0].stmt)); SL((yyval.select_stmt), (yyloc)); }
-#line 3214 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3214 "y.tab.cpp"
     break;
 
   case 201:
-#line 566 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 566 "parser.y"
                                                                 { (yyval.select_stmt) = AST_SelectionStmt::get_switch((yyvsp[-2].expr), (yyvsp[0].stmt)); SL((yyval.select_stmt), (yyloc)); }
-#line 3220 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3220 "y.tab.cpp"
     break;
 
   case 202:
-#line 570 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 570 "parser.y"
                                                                                         { (yyval.iter_stmt) = AST_IterationStmt::makeWhileLoop((yyvsp[0].stmt), (yyvsp[-2].expr), false); SL((yyval.iter_stmt), (yyloc)); }
-#line 3226 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3226 "y.tab.cpp"
     break;
 
   case 203:
-#line 571 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 571 "parser.y"
                                                                                 { (yyval.iter_stmt) = AST_IterationStmt::makeWhileLoop((yyvsp[-5].stmt), (yyvsp[-2].expr), true); SL((yyval.iter_stmt), (yyloc)); }
-#line 3232 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3232 "y.tab.cpp"
     break;
 
   case 204:
-#line 572 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 572 "parser.y"
                                                                         { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr_stmt), nullptr); SL((yyval.iter_stmt), (yyloc)); }
-#line 3238 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3238 "y.tab.cpp"
     break;
 
   case 205:
-#line 573 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 573 "parser.y"
                                                                         { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-4].expr_stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); SL((yyval.iter_stmt), (yyloc)); }
-#line 3244 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3244 "y.tab.cpp"
     break;
 
   case 206:
-#line 574 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 574 "parser.y"
                                                                         { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-3].declaration), (yyvsp[-2].expr_stmt), nullptr); SL((yyval.iter_stmt), (yyloc)); }
-#line 3250 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3250 "y.tab.cpp"
     break;
 
   case 207:
-#line 575 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 575 "parser.y"
                                                                 { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-4].declaration), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); SL((yyval.iter_stmt), (yyloc)); }
-#line 3256 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3256 "y.tab.cpp"
     break;
 
   case 208:
-#line 579 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 579 "parser.y"
                                                                                         { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_GOTO, (yyvsp[-1].ident_id)); SL((yyval.jump_stmt), (yyloc)); }
-#line 3262 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3262 "y.tab.cpp"
     break;
 
   case 209:
-#line 580 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 580 "parser.y"
                                                                                                 { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); SL((yyval.jump_stmt), (yyloc)); }
-#line 3268 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3268 "y.tab.cpp"
     break;
 
   case 210:
-#line 581 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 581 "parser.y"
                                                                                                         { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_BREAK); SL((yyval.jump_stmt), (yyloc)); }
-#line 3274 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3274 "y.tab.cpp"
     break;
 
   case 211:
-#line 582 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 582 "parser.y"
                                                                                                 { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_RET); SL((yyval.jump_stmt), (yyloc)); }
-#line 3280 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3280 "y.tab.cpp"
     break;
 
   case 212:
-#line 583 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 583 "parser.y"
                                                                                                 { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_RET, (yyvsp[-1].expr)); SL((yyval.jump_stmt), (yyloc)); }
-#line 3286 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3286 "y.tab.cpp"
     break;
 
   case 213:
-#line 590 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 590 "parser.y"
                                                                         { (yyval.trans_unit) = *parser_result = (new AST_TranslationUnit())->append((yyvsp[0].func_def)); SL((yyval.trans_unit), (yyloc)); }
-#line 3292 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3292 "y.tab.cpp"
     break;
 
   case 214:
-#line 591 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 591 "parser.y"
                                                                 { (yyval.trans_unit) = *parser_result = (new AST_TranslationUnit())->append((yyvsp[0].declaration)); check_typedef((yyvsp[0].declaration)); SL((yyval.trans_unit), (yyloc)); }
-#line 3298 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3298 "y.tab.cpp"
     break;
 
   case 215:
-#line 592 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 592 "parser.y"
                                                         { (yyval.trans_unit) = (yyvsp[-1].trans_unit)->append((yyvsp[0].func_def)); }
-#line 3304 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3304 "y.tab.cpp"
     break;
 
   case 216:
-#line 593 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 593 "parser.y"
                                                 { (yyval.trans_unit) = (yyvsp[-1].trans_unit)->append((yyvsp[0].declaration)); check_typedef((yyvsp[0].declaration)); }
-#line 3310 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3310 "y.tab.cpp"
     break;
 
   case 217:
-#line 597 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 597 "parser.y"
                                                                         { (yyval.func_def) = new AST_FunctionDef((yyvsp[-2].decl_specifiers), (yyvsp[-1].declarator), (yyvsp[0].compound_stmt)); SL((yyval.func_def), (yyloc)); }
-#line 3316 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3316 "y.tab.cpp"
     break;
 
 
-#line 3320 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/y.tab.cpp"
+#line 3320 "y.tab.cpp"
 
       default: break;
     }
@@ -3554,7 +3554,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 601 "/mnt/HDD/Projects/Studing/cwork_3/project/src/parser/parser.y"
+#line 601 "parser.y"
 
 
 AST_TranslationUnit* CoreParser::parse_program(std::string const &str,
