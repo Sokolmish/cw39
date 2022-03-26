@@ -17,6 +17,7 @@ CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc)
     using namespace cxxopts;
 
     options.add_options()
+            ("preproc", "Write preprocessor outrrut", value<std::string>()->implicit_value(""))
             ("ast", "Write AST", value<std::string>()->implicit_value(""))
             ("ir-raw", "Write IR before optimizations", value<std::string>()->implicit_value(""))
             ("cfg-raw", "Write CFG before optimizations", value<std::string>()->implicit_value(""))

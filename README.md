@@ -52,6 +52,7 @@ cw39 [options] <input_file>
 
 Each of following options can accept optional argument with path (e.g. `--llvm=./out.ll`). In this case output will be written into specified file. Otherwise, it will be written into stdout. Without any of these options, compiler will print nothing but errors.
 
+- `--preproc` - print preprocessor output
 - `--ast` - print abstract syntax tree with pseudo graphics
 - `--ir` - print final IR
 - `--cfg` - print final CFG representation in the [dot](https://graphviz.org/) language

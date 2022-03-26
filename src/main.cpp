@@ -40,6 +40,10 @@ int main(int argc, char **argv) {
     std::string text = preproc.getText();
     auto warps = preproc.getWarps();
 
+    if (args.count("preproc")) {
+        writeOut(args.getString("preproc"), text);
+    }
+
     auto parser = std::make_unique<CoreParser>(text, warps);
     auto ast = parser->getTransUnit();
 
