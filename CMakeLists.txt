@@ -25,6 +25,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/preprocessor.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/warps.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/${BISON_PARSER_RES}
         ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_RES}
