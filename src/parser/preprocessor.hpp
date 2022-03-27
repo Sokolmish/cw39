@@ -24,14 +24,13 @@ private:
     std::stack<std::string> raw;
     std::map<std::string, std::string> defines;
 
-    size_t globalLine = 0;
+    size_t globalLine;
 
     std::stringstream globalSS;
     std::string finalText;
 
     LinesWarpMap warps;
 
-    bool isLineStart;
     bool isSkip;
     int nestCntr;
 
@@ -57,6 +56,10 @@ private:
     void assertNoArg(string_constit_t &it);
 
     bool noEnd(string_constit_t const &it) const;
+
+    void processLine(string_constit_t &it);
+    std::string scanIdent(string_constit_t &it);
+    void passNumber(string_constit_t &it);
 
     void printError(std::string const &msg);
     void printWarn(std::string const &msg);

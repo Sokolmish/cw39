@@ -19,6 +19,7 @@ static std::string readFile(std::string const &path) {
 
 
 Preprocessor::Preprocessor(std::string const &path) : warps(path) {
+    globalLine = 0;
     processFile(path);
     finalText = globalSS.str();
 }
@@ -60,56 +61,152 @@ void Preprocessor::processFile(const std::string &path) {
     raw.push(readFile(path));
     locations.push({ path, 1 });
 
-    isLineStart = true;
     isSkip = false;
     nestCntr = 0;
     condStatuses = std::stack<LastCondState>();
 
     auto it = raw.top().cbegin();
     while (noEnd(it)) {
-        char ch = *(it++);
-        if (ch == '\n') {
-            isLineStart = true;
-            globalSS << ch;
-            locations.top().line++;
-            globalLine++;
-        }
-        else if (isLineStart && ch == '#') {
-            skipSpaces(it);
-            if (!std::isalpha(*it)) {
-                printError("Expected directive name");
-                exit(EXIT_FAILURE);
-            }
-            std::string directive = getIdentArg(it);
-            skipSpaces(it);
-            processDirective(directive, it);
-        }
-        else {
-            if (isLineStart && !std::isspace(ch))
-                isLineStart = false;
-            if (!isSkip) {
-                if (ch == '/' && noEnd(it)) { // Comments
-                    if (*it == '/') {
-                        it++;
-                        while (noEnd(it) && *it != '\n')
-                            it++;
-                        continue;
-                    }
-                    else if (*it == '*') {
-                        it++;
-                        globalSS << ' ';
-                        processComment(it);
-                        continue;
-                    }
-                }
-
-                globalSS << ch;
-            }
-        }
+        globalSS.put('\n');
+        globalLine++;
+        processLine(it);
+        locations.top().line++;
+        if (noEnd(it))
+            it++;
     }
 
     raw.pop();
     locations.pop();
+}
+
+void Preprocessor::processLine(string_constit_t &it) {
+    while (noEnd(it) && isspace(*it) && *it != '\n') {
+        if (!isSkip)
+            globalSS << ' ';
+        it++;
+    }
+
+    if (!noEnd(it))
+        return;
+
+    if (*it == '#') {
+        it++;
+        skipSpaces(it);
+        if (!noEnd(it)) // Empty directive
+            return;
+        if (!std::isalpha(*it)) {
+            printError("Expected directive name");
+            exit(EXIT_FAILURE);
+        }
+        std::string directive = getIdentArg(it);
+        skipSpaces(it);
+        processDirective(directive, it);
+        if (isSkip) {
+            while (noEnd(it) && *it != '\n')
+                it++;
+        }
+        return;
+    }
+
+    if (isSkip) {
+        while (noEnd(it) && *it != '\n')
+            it++;
+        return;
+    }
+
+    while (noEnd(it) && *it != '\n') {
+        if (isalpha(*it) || *it == '_') {
+            std::string ident = scanIdent(it);
+            globalSS << ident; // TODO
+        }
+        else if (isdigit(*it)) {
+            passNumber(it);
+        }
+        else if (*it == '"') {
+            it++;
+            globalSS << '"';
+            while (noEnd(it) && *it != '"' && *it != '\n') {
+                if (*it == '\\') {
+                    it++;
+                    if (!noEnd(it)) {
+                        printError("Incomplete escape sequence");
+                        exit(EXIT_FAILURE);
+                    }
+                    if (*it != '\n') { // Lines concatenator
+                        globalSS << '\\';
+                        globalSS << *(it++);
+                    }
+                }
+                else {
+                    globalSS << *(it++);
+                }
+            }
+            if (!noEnd(it) || *it != '"') {
+                printError("Incomplete string");
+                exit(EXIT_FAILURE);
+            }
+            it++;
+            globalSS << '"';
+        }
+        else if (*it == '\'') {
+            it++;
+            globalSS << '\'';
+            if (noEnd(it) && *it == '\\') {
+                it++;
+                if (!noEnd(it)) {
+                    printError("Incomplete escape sequence");
+                    exit(EXIT_FAILURE);
+                }
+                globalSS << '\\';
+                globalSS << *(it++);
+            }
+            else if (noEnd(it)) {
+                globalSS << *(it++);
+            }
+            if (!noEnd(it) || *it != '\'') {
+                printError("Incomplete character literal");
+                exit(EXIT_FAILURE);
+            }
+            it++;
+            globalSS << '\'';
+        }
+        else if (*it == '/') {
+            if (noEnd(it + 1)) {
+                if (*(it + 1) == '/') {
+                    it += 2;
+                    while (noEnd(it) && *it != '\n')
+                        it++;
+                    return;
+                }
+                else if (*(it + 1) == '*') {
+                    it += 2;
+                    globalSS << "  ";
+                    processComment(it);
+                    continue;
+                }
+            }
+            else {
+                globalSS << '/';
+            }
+        }
+        else {
+            globalSS << *(it++);
+        }
+    }
+}
+
+std::string Preprocessor::scanIdent(string_constit_t &it) {
+    std::stringstream ss;
+    // Assume that first character is alphabetic or '_'
+    while (noEnd(it) && (isalnum(*it) || *it == '_'))
+        ss << *(it++);
+    return ss.str();
+}
+
+void Preprocessor::passNumber(string_constit_t &it) {
+    // Assume that current character is digit
+    while (noEnd(it) && isalnum(*it)) // Doesn't care about number correctess
+        globalSS << *(it++);
 }
 
 void Preprocessor::processComment(string_constit_t &it) {
