@@ -1,7 +1,9 @@
 #include "preprocessor.hpp"
 #include <fstream>
 #include <sstream>
+#include <fmt/ostream.h>
 #include <fmt/core.h>
+#include <fmt/chrono.h>
 
 static std::string readFile(std::string const &path) {
     std::ifstream t(path.c_str());
@@ -10,7 +12,7 @@ static std::string readFile(std::string const &path) {
         exit(EXIT_FAILURE);
     }
     t.seekg(0, std::ios::end);
-    auto size = t.tellg();
+    auto size = static_cast<long>(t.tellg());
     std::string buffer(size, ' '); // TODO: don't fill buffer
     t.seekg(0);
     t.read(&buffer[0], size);
@@ -20,6 +22,8 @@ static std::string readFile(std::string const &path) {
 
 Preprocessor::Preprocessor(std::string const &path) : warps(path) {
     globalLine = 0;
+    trTime = time(nullptr);
+
     processFile(path);
     finalText = globalSS.str();
 }
@@ -82,7 +86,7 @@ void Preprocessor::processFile(const std::string &path) {
 void Preprocessor::processLine(string_constit_t &it) {
     while (noEnd(it) && isspace(*it) && *it != '\n') {
         if (!isSkip)
-            globalSS << ' ';
+            globalSS.put(' ');
         it++;
     }
 
@@ -117,14 +121,14 @@ void Preprocessor::processLine(string_constit_t &it) {
     while (noEnd(it) && *it != '\n') {
         if (isalpha(*it) || *it == '_') {
             std::string ident = scanIdent(it);
-            globalSS << ident; // TODO
+            putIdent(ident);
         }
         else if (isdigit(*it)) {
             passNumber(it);
         }
         else if (*it == '"') {
             it++;
-            globalSS << '"';
+            globalSS.put('"');
             while (noEnd(it) && *it != '"' && *it != '\n') {
                 if (*it == '\\') {
                     it++;
@@ -133,12 +137,12 @@ void Preprocessor::processLine(string_constit_t &it) {
                         exit(EXIT_FAILURE);
                     }
                     if (*it != '\n') { // Lines concatenator
-                        globalSS << '\\';
-                        globalSS << *(it++);
+                        globalSS.put('\\');
+                        globalSS.put(*(it++));
                     }
                 }
                 else {
-                    globalSS << *(it++);
+                    globalSS.put(*(it++));
                 }
             }
             if (!noEnd(it) || *it != '"') {
@@ -146,29 +150,29 @@ void Preprocessor::processLine(string_constit_t &it) {
                 exit(EXIT_FAILURE);
             }
             it++;
-            globalSS << '"';
+            globalSS.put('"');
         }
         else if (*it == '\'') {
             it++;
-            globalSS << '\'';
+            globalSS.put('\'');
             if (noEnd(it) && *it == '\\') {
                 it++;
                 if (!noEnd(it)) {
                     printError("Incomplete escape sequence");
                     exit(EXIT_FAILURE);
                 }
-                globalSS << '\\';
-                globalSS << *(it++);
+                globalSS.put('\\');
+                globalSS.put(*(it++));
             }
             else if (noEnd(it)) {
-                globalSS << *(it++);
+                globalSS.put(*(it++));
             }
             if (!noEnd(it) || *it != '\'') {
                 printError("Incomplete character literal");
                 exit(EXIT_FAILURE);
             }
             it++;
-            globalSS << '\'';
+            globalSS.put('\'');
         }
         else if (*it == '/') {
             if (noEnd(it + 1)) {
@@ -180,17 +184,17 @@ void Preprocessor::processLine(string_constit_t &it) {
                 }
                 else if (*(it + 1) == '*') {
                     it += 2;
-                    globalSS << "  ";
+                    globalSS.write("  ", 2);
                     processComment(it);
                     continue;
                 }
             }
             else {
-                globalSS << '/';
+                globalSS.put('/');
             }
         }
         else {
-            globalSS << *(it++);
+            globalSS.put(*(it++));
         }
     }
 }
@@ -206,7 +210,7 @@ std::string Preprocessor::scanIdent(string_constit_t &it) {
 void Preprocessor::passNumber(string_constit_t &it) {
     // Assume that current character is digit
     while (noEnd(it) && isalnum(*it)) // Doesn't care about number correctess
-        globalSS << *(it++);
+        globalSS.put(*(it++));
 }
 
 void Preprocessor::processComment(string_constit_t &it) {
@@ -214,12 +218,12 @@ void Preprocessor::processComment(string_constit_t &it) {
     while (true) {
         while (noEnd(it) && *it != '*') {
             if (*it == '\n') {
-                globalSS << '\n';
+                globalSS.put('\n');
                 locations.top().line++;
                 globalLine++;
             }
             else {
-                globalSS << ' ';
+                globalSS.put(' ');
             }
             it++;
         }
@@ -229,11 +233,11 @@ void Preprocessor::processComment(string_constit_t &it) {
             exit(EXIT_FAILURE);
         }
         it++;
-        globalSS << ' ';
+        globalSS.put(' ');
 
         if (noEnd(it) && *it == '/') {
             it++;
-            globalSS << ' ';
+            globalSS.put(' ');
             break;
         }
     }
@@ -361,6 +365,28 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
         exit(EXIT_FAILURE);
     }
 }
+
+void Preprocessor::putIdent(const std::string &ident) {
+    if (ident == "__FILE__") {
+        std::string const &filename = locations.top().file;
+        globalSS.put('"');
+        globalSS.write(filename.c_str(), filename.size());
+        globalSS.put('"');
+    }
+    else if (ident == "__LINE__") {
+        globalSS << locations.top().line;
+    }
+    else if (ident == "__DATE__") { // Mar 27 2022, Jan  1 2022
+        fmt::print(globalSS, "\"{:%b %e %Y}\"", fmt::localtime(trTime));
+    }
+    else if (ident == "__TIME__") {
+        fmt::print(globalSS, "\"{:%H:%M:%S}\"", fmt::localtime(trTime));
+    }
+    else {
+        globalSS.write(ident.c_str(), ident.size());
+    }
+}
+
 
 std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets) {
     if ((angleBrackets && *it != '<') || (!angleBrackets && *it != '"')) {

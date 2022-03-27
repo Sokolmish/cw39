@@ -5,6 +5,7 @@
 #include <map>
 #include <stack>
 #include <sstream>
+#include <ctime>
 
 #include "warps.hpp"
 
@@ -43,9 +44,12 @@ private:
     };
     std::stack<Location> locations;
 
+    std::time_t trTime;
+
     using string_constit_t = decltype(raw.top().cbegin());
 
     void processFile(std::string const &path);
+    void processLine(string_constit_t &it);
     void processDirective(std::string const &dir, string_constit_t &it);
     void processComment(string_constit_t &it);
 
@@ -55,11 +59,12 @@ private:
     void skipSpaces(string_constit_t &it);
     void assertNoArg(string_constit_t &it);
 
-    bool noEnd(string_constit_t const &it) const;
-
-    void processLine(string_constit_t &it);
     std::string scanIdent(string_constit_t &it);
     void passNumber(string_constit_t &it);
+
+    void putIdent(std::string const &ident);
+
+    bool noEnd(string_constit_t const &it) const;
 
     void printError(std::string const &msg);
     void printWarn(std::string const &msg);
