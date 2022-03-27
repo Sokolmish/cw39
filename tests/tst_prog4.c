@@ -3,7 +3,7 @@
 #undef HELLO
 
 
-//#line 666
+//#line 666 "xxx"
 
 #include "incl_file.h"
 
