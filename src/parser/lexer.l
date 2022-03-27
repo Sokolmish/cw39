@@ -1,4 +1,5 @@
 %option reentrant noyywrap bison-bridge bison-locations
+%option nounput noinput
 %option extra-type="struct lex_extra*"
 
 %{
