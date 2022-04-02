@@ -1,36 +1,86 @@
 #include "preprocessor.hpp"
 #include <fstream>
 #include <sstream>
+#include <stack>
+#include <ctime>
 #include <fmt/ostream.h>
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 
-Preprocessor::Preprocessor(std::string const &path) : warps(path) {
-    globalLine = 0;
+class PreprocessorImpl {
+public:
+    PreprocessorImpl(std::string const &path, std::map<std::string, std::string> &defines);
+
+    std::string finalText() const;
+    LinesWarpMap&& moveWarps();
+
+private:
+    std::map<std::string, std::string> &defines;
+    LinesWarpMap warps;
+
+    size_t globalLine = 0;
+
+    std::stack<std::string> raw;
+    std::stringstream globalSS;
+
+    bool isSkip;
+    int nestCntr;
+
+    enum LastCondState {
+        PC_IF_TRUE, PC_IF_FALSE, PC_ELSE
+    };
+    std::stack<LastCondState> condStatuses;
+
+    struct Location {
+        std::string file;
+        int line;
+    };
+    std::stack<Location> locations;
+
+    std::time_t trTime;
+
+    using string_constit_t = decltype(raw.top().cbegin());
+
+    void processFile(std::string const &path);
+    void processLine(string_constit_t &it);
+    void processDirective(std::string const &dir, string_constit_t &it);
+    void processComment(string_constit_t &it);
+
+    std::string getStringArg(string_constit_t &it, bool angleBrackets);
+    uint32_t getLineNumArg(string_constit_t &it);
+    std::string getIdentArg(string_constit_t &it);
+
+    void skipSpaces(string_constit_t &it);
+    void assertNoArg(string_constit_t &it);
+    std::string scanIdent(string_constit_t &it);
+    void passNumber(string_constit_t &it);
+    void putIdent(std::string const &ident);
+
+    bool noEnd(string_constit_t const &it) const;
+    [[nodiscard]] std::string readFile(std::string const &path);
+
+    [[noreturn]] void printError(std::string const &msg);
+    void printWarn(std::string const &msg);
+};
+
+
+PreprocessorImpl::PreprocessorImpl(const std::string &path,
+                                   std::map<std::string, std::string> &defines)
+        : defines(defines), warps(path) {
     trTime = time(nullptr);
-
     processFile(path);
-    finalText = globalSS.str();
 }
 
-void Preprocessor::addDefine(std::string name, std::string value) {
-    defines.emplace(std::move(name), std::move(value));
+std::string PreprocessorImpl::finalText() const {
+    return globalSS.str();
 }
 
-void Preprocessor::removeDefine(std::string const &name) {
-    defines.erase(name);
-}
-
-std::string Preprocessor::getText() const {
-    return finalText;
-}
-
-LinesWarpMap Preprocessor::getWarps() const {
-    return warps;
+LinesWarpMap&& PreprocessorImpl::moveWarps() {
+    return std::move(warps);
 }
 
 
-void Preprocessor::printError(std::string const &msg) {
+void PreprocessorImpl::printError(std::string const &msg) {
     if (!locations.empty()) {
         auto const &loc = locations.top();
         fmt::print(stderr, "Error ({}:{}): {}\n", loc.file, loc.line, msg);
@@ -41,13 +91,13 @@ void Preprocessor::printError(std::string const &msg) {
     exit(EXIT_FAILURE);
 }
 
-void Preprocessor::printWarn(std::string const &msg) {
+void PreprocessorImpl::printWarn(std::string const &msg) {
     auto const &loc = locations.top();
     fmt::print(stderr, "Warning ({}:{}): {}\n", loc.file, loc.line, msg);
 }
 
 
-std::string Preprocessor::readFile(std::string const &path) {
+std::string PreprocessorImpl::readFile(std::string const &path) {
     std::ifstream ifs(path);
     if (!ifs.is_open())
         printError(fmt::format("Error: Cannot read file '{}'\n", path));
@@ -57,12 +107,12 @@ std::string Preprocessor::readFile(std::string const &path) {
 }
 
 
-bool Preprocessor::noEnd(string_constit_t const &it) const {
+bool PreprocessorImpl::noEnd(string_constit_t const &it) const {
     return it != raw.top().cend();
 }
 
 
-void Preprocessor::processFile(const std::string &path) {
+void PreprocessorImpl::processFile(const std::string &path) {
     raw.push(readFile(path));
     locations.push({ path, 1 });
 
@@ -84,7 +134,7 @@ void Preprocessor::processFile(const std::string &path) {
     locations.pop();
 }
 
-void Preprocessor::processLine(string_constit_t &it) {
+void PreprocessorImpl::processLine(string_constit_t &it) {
     while (noEnd(it) && isspace(*it) && *it != '\n') {
         if (!isSkip)
             globalSS.put(' ');
@@ -199,7 +249,7 @@ void Preprocessor::processLine(string_constit_t &it) {
     }
 }
 
-std::string Preprocessor::scanIdent(string_constit_t &it) {
+std::string PreprocessorImpl::scanIdent(string_constit_t &it) {
     std::stringstream ss;
     // Assume that first character is alphabetic or '_'
     while (noEnd(it) && (isalnum(*it) || *it == '_'))
@@ -207,13 +257,13 @@ std::string Preprocessor::scanIdent(string_constit_t &it) {
     return ss.str();
 }
 
-void Preprocessor::passNumber(string_constit_t &it) {
+void PreprocessorImpl::passNumber(string_constit_t &it) {
     // Assume that current character is digit
     while (noEnd(it) && isalnum(*it)) // Doesn't care about number correctess
         globalSS.put(*(it++));
 }
 
-void Preprocessor::processComment(string_constit_t &it) {
+void PreprocessorImpl::processComment(string_constit_t &it) {
     auto startLoc = locations.top();
     while (true) {
         while (noEnd(it) && *it != '*') {
@@ -244,16 +294,17 @@ void Preprocessor::processComment(string_constit_t &it) {
     }
 }
 
-void Preprocessor::processDirective(std::string const &dir, string_constit_t &it) {
+void PreprocessorImpl::processDirective(std::string const &dir, string_constit_t &it) {
     if (dir == "include") {
         if (isSkip)
             return;
         std::string filename = getStringArg(it, *it == '<');
         assertNoArg(it);
 
-        if (raw.size() > MAX_INCLUDES_DEPTH) {
+        if (raw.size() > Preprocessor::MAX_INCLUDES_DEPTH) {
             printError(fmt::format(
-                    "Too many recursive includes (depth {})", MAX_INCLUDES_DEPTH));
+                    "Too many recursive includes (depth {})",
+                    Preprocessor::MAX_INCLUDES_DEPTH));
         }
 
         warps.appendWarpLoc(globalLine, 0, filename);
@@ -269,7 +320,7 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
             printError("Directive #define expects argument");
 
         assertNoArg(it);
-        addDefine(name, ""); // TODO
+        defines.emplace(std::move(name), ""); // TODO: macros
     }
     else if (dir == "undef") {
         std::string name = getIdentArg(it);
@@ -280,7 +331,7 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
             printError("Directive #undef expects argument");
 
         assertNoArg(it);
-        removeDefine(name);
+        defines.erase(name);
     }
     else if (dir == "ifdef" || dir == "ifndef") {
         if (isSkip) {
@@ -362,29 +413,32 @@ void Preprocessor::processDirective(std::string const &dir, string_constit_t &it
     }
 }
 
-void Preprocessor::putIdent(const std::string &ident) {
-    if (ident == "__FILE__") {
-        std::string const &filename = locations.top().file;
-        globalSS.put('"');
-        globalSS.write(filename.c_str(), filename.size());
-        globalSS.put('"');
+void PreprocessorImpl::putIdent(const std::string &ident) {
+    if (ident.starts_with("__")) { // Small optimization for predefined macros
+        if (ident == "__FILE__") {
+            std::string const &filename = locations.top().file;
+            fmt::print(globalSS, "\"{:s}\"", filename);
+            return;
+        }
+        else if (ident == "__LINE__") {
+            globalSS << locations.top().line;
+            return;
+        }
+        else if (ident == "__DATE__") { // "Mar 27 2022", "Jan  1 2022"
+            fmt::print(globalSS, "\"{:%b %e %Y}\"", fmt::localtime(trTime));
+            return;
+        }
+        else if (ident == "__TIME__") { // "15:24:12"
+            fmt::print(globalSS, "\"{:%H:%M:%S}\"", fmt::localtime(trTime));
+            return;
+        }
     }
-    else if (ident == "__LINE__") {
-        globalSS << locations.top().line;
-    }
-    else if (ident == "__DATE__") { // Mar 27 2022, Jan  1 2022
-        fmt::print(globalSS, "\"{:%b %e %Y}\"", fmt::localtime(trTime));
-    }
-    else if (ident == "__TIME__") {
-        fmt::print(globalSS, "\"{:%H:%M:%S}\"", fmt::localtime(trTime));
-    }
-    else {
-        globalSS.write(ident.c_str(), ident.size());
-    }
+
+    globalSS.write(ident.c_str(), ident.size());
 }
 
 
-std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets) {
+std::string PreprocessorImpl::getStringArg(string_constit_t &it, bool angleBrackets) {
     if ((angleBrackets && *it != '<') || (!angleBrackets && *it != '"'))
         printError(fmt::format("Wrong quote symbol ({})", *it));
     ++it;
@@ -401,7 +455,7 @@ std::string Preprocessor::getStringArg(string_constit_t &it, bool angleBrackets)
     return ss.str();
 }
 
-uint32_t Preprocessor::getLineNumArg(Preprocessor::string_constit_t &it) {
+uint32_t PreprocessorImpl::getLineNumArg(string_constit_t &it) {
     std::stringstream ss;
     while (noEnd(it) && std::isdigit(*it))
         ss << *(it++);
@@ -416,7 +470,7 @@ uint32_t Preprocessor::getLineNumArg(Preprocessor::string_constit_t &it) {
     return static_cast<uint32_t>(val);
 }
 
-std::string Preprocessor::getIdentArg(string_constit_t &it) {
+std::string PreprocessorImpl::getIdentArg(string_constit_t &it) {
     if (!noEnd(it) || !(std::isalpha(*it) || *it == '_'))
         printError(fmt::format("Wrong identifier format"));
 
@@ -427,13 +481,36 @@ std::string Preprocessor::getIdentArg(string_constit_t &it) {
     return ss.str();
 }
 
-void Preprocessor::skipSpaces(string_constit_t &it) {
+void PreprocessorImpl::skipSpaces(string_constit_t &it) {
     while (noEnd(it) && std::isspace(*it) && *it != '\n')
         ++it;
 }
 
-void Preprocessor::assertNoArg(string_constit_t &it) {
+void PreprocessorImpl::assertNoArg(string_constit_t &it) {
     skipSpaces(it);
     if (noEnd(it) && *it != '\n')
         printError("Too many arguments for directive");
+}
+
+
+Preprocessor::Preprocessor(std::string const &path) {
+    auto impl = PreprocessorImpl(path, defines);
+    finalText = impl.finalText();
+    warps = std::make_unique<LinesWarpMap>(impl.moveWarps());
+}
+
+void Preprocessor::addDefine(std::string name, std::string value) {
+    defines.emplace(std::move(name), std::move(value));
+}
+
+void Preprocessor::removeDefine(std::string const &name) {
+    defines.erase(name);
+}
+
+std::string Preprocessor::getText() const {
+    return finalText;
+}
+
+LinesWarpMap Preprocessor::getWarps() const {
+    return *warps;
 }
