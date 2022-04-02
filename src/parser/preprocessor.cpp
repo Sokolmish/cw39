@@ -43,8 +43,20 @@ private:
 
     void processFile(std::string const &path);
     void processLine(string_constit_t &it);
-    void processDirective(std::string const &dir, string_constit_t &it);
-    void processComment(string_constit_t &it);
+    void processDirective(string_constit_t &it);
+
+    void processSLComment(string_constit_t &it);
+    void processMLComment(string_constit_t &it);
+
+    void directiveInclude(string_constit_t &it);
+    void directiveDefine(string_constit_t &it);
+    void directiveUndef(string_constit_t &it);
+    void directiveIfdef(string_constit_t &it, bool isNdef);
+    void directiveElse(string_constit_t &it);
+    void directiveEndif(string_constit_t &it);
+    void directiveLine(string_constit_t &it);
+    void directiveError(string_constit_t &it);
+    void directiveWarning(string_constit_t &it);
 
     std::string getStringArg(string_constit_t &it, bool angleBrackets);
     uint32_t getLineNumArg(string_constit_t &it);
@@ -53,8 +65,10 @@ private:
     void skipSpaces(string_constit_t &it);
     void assertNoArg(string_constit_t &it);
     std::string scanIdent(string_constit_t &it);
-    void passNumber(string_constit_t &it);
     void putIdent(std::string const &ident);
+    void passNumber(string_constit_t &it);
+    void passString(string_constit_t &it);
+    void passChar(string_constit_t &it);
 
     bool noEnd(string_constit_t const &it) const;
     [[nodiscard]] std::string readFile(std::string const &path);
@@ -135,34 +149,24 @@ void PreprocessorImpl::processFile(const std::string &path) {
 }
 
 void PreprocessorImpl::processLine(string_constit_t &it) {
+    // Skip leading spaces
     while (noEnd(it) && isspace(*it) && *it != '\n') {
         if (!isSkip)
             globalSS.put(' ');
         it++;
     }
 
+    // Empty line
     if (!noEnd(it))
         return;
 
+    // Preprocessor directive
     if (*it == '#') {
-        it++;
-        skipSpaces(it);
-        if (!noEnd(it)) // Empty directive
-            return;
-
-        if (!std::isalpha(*it))
-            printError("Expected directive name");
-
-        std::string directive = getIdentArg(it);
-        skipSpaces(it);
-        processDirective(directive, it);
-        if (isSkip) {
-            while (noEnd(it) && *it != '\n')
-                it++;
-        }
+        processDirective(it);
         return;
     }
 
+    // Skip line under negative #ifdef
     if (isSkip) {
         while (noEnd(it) && *it != '\n')
             it++;
@@ -170,80 +174,36 @@ void PreprocessorImpl::processLine(string_constit_t &it) {
     }
 
     while (noEnd(it) && *it != '\n') {
-        if (isalpha(*it) || *it == '_') {
+        if (isalpha(*it) || *it == '_') { // Ident
             std::string ident = scanIdent(it);
             putIdent(ident);
         }
-        else if (isdigit(*it)) {
+        else if (isdigit(*it)) { // Number
             passNumber(it);
         }
-        else if (*it == '"') {
-            it++;
-            globalSS.put('"');
-            while (noEnd(it) && *it != '"' && *it != '\n') {
-                if (*it == '\\') {
-                    it++;
-
-                    if (!noEnd(it))
-                        printError("Incomplete escape sequence");
-
-                    if (*it != '\n') { // Lines concatenator
-                        globalSS.put('\\');
-                        globalSS.put(*(it++));
-                    }
-                }
-                else {
-                    globalSS.put(*(it++));
-                }
-            }
-            if (!noEnd(it) || *it != '"')
-                printError("Incomplete string");
-
-            it++;
-            globalSS.put('"');
+        else if (*it == '"') { // String
+            passString(it);
         }
-        else if (*it == '\'') {
-            it++;
-            globalSS.put('\'');
-            if (noEnd(it) && *it == '\\') {
-                it++;
-
-                if (!noEnd(it))
-                    printError("Incomplete escape sequence");
-
-                globalSS.put('\\');
-                globalSS.put(*(it++));
-            }
-            else if (noEnd(it)) {
-                globalSS.put(*(it++));
-            }
-
-            if (!noEnd(it) || *it != '\'')
-                printError("Incomplete character literal");
-
-            it++;
-            globalSS.put('\'');
+        else if (*it == '\'') { // Char
+            passChar(it);
         }
-        else if (*it == '/') {
+        else if (*it == '/') { // Potential comment
             if (noEnd(it + 1)) {
-                if (*(it + 1) == '/') {
-                    it += 2;
-                    while (noEnd(it) && *it != '\n')
-                        it++;
+                if (*(it + 1) == '/') { // Single line comment
+                    processSLComment(it);
                     return;
                 }
-                else if (*(it + 1) == '*') {
-                    it += 2;
-                    globalSS.write("  ", 2);
-                    processComment(it);
+                else if (*(it + 1) == '*') { // Multiline comment
+                    processMLComment(it);
                     continue;
                 }
             }
-            else {
-                globalSS.put('/');
-            }
+
+            // There is no comment at this point
+            ++it;
+            globalSS.put('/');
         }
-        else {
+        else { // Other character
             globalSS.put(*(it++));
         }
     }
@@ -263,8 +223,65 @@ void PreprocessorImpl::passNumber(string_constit_t &it) {
         globalSS.put(*(it++));
 }
 
-void PreprocessorImpl::processComment(string_constit_t &it) {
+void PreprocessorImpl::passString(string_constit_t &it) {
+    it++;
+    globalSS.put('"');
+    while (noEnd(it) && *it != '"' && *it != '\n') {
+        if (*it == '\\') {
+            it++;
+
+            if (!noEnd(it))
+                printError("Incomplete escape sequence");
+
+            if (*it != '\n') { // Lines concatenator
+                globalSS.put('\\');
+                globalSS.put(*(it++));
+            }
+        }
+        else {
+            globalSS.put(*(it++));
+        }
+    }
+    if (!noEnd(it) || *it != '"')
+        printError("Incomplete string");
+
+    it++;
+    globalSS.put('"');
+}
+
+void PreprocessorImpl::passChar(string_constit_t &it) {
+    it++;
+    globalSS.put('\'');
+    if (noEnd(it) && *it == '\\') {
+        it++;
+
+        if (!noEnd(it))
+            printError("Incomplete escape sequence");
+
+        globalSS.put('\\');
+        globalSS.put(*(it++));
+    }
+    else if (noEnd(it)) {
+        globalSS.put(*(it++));
+    }
+
+    if (!noEnd(it) || *it != '\'')
+        printError("Incomplete character literal");
+
+    it++;
+    globalSS.put('\'');
+}
+
+void PreprocessorImpl::processSLComment(string_constit_t &it) {
+    it += 2;
+    while (noEnd(it) && *it != '\n')
+        it++;
+}
+
+void PreprocessorImpl::processMLComment(string_constit_t &it) {
     auto startLoc = locations.top();
+    it += 2;
+    globalSS.write("  ", 2);
     while (true) {
         while (noEnd(it) && *it != '*') {
             if (*it == '\n') {
@@ -294,124 +311,185 @@ void PreprocessorImpl::processComment(string_constit_t &it) {
     }
 }
 
-void PreprocessorImpl::processDirective(std::string const &dir, string_constit_t &it) {
-    if (dir == "include") {
-        if (isSkip)
-            return;
-        std::string filename = getStringArg(it, *it == '<');
-        assertNoArg(it);
+void PreprocessorImpl::processDirective(string_constit_t &it) {
+    it++;
+    skipSpaces(it);
+    if (!noEnd(it)) // Empty directive
+        return;
 
-        if (raw.size() > Preprocessor::MAX_INCLUDES_DEPTH) {
-            printError(fmt::format(
-                    "Too many recursive includes (depth {})",
-                    Preprocessor::MAX_INCLUDES_DEPTH));
-        }
+    if (!std::isalpha(*it))
+        printError("Expected directive name");
 
-        warps.appendWarpLoc(globalLine, 0, filename);
-        processFile(filename);
-        warps.appendWarpLoc(globalLine, locations.top().line - 1, locations.top().file);
+    std::string directive = getIdentArg(it);
+    skipSpaces(it);
+
+    // TODO: Use hash function here (perfect hash, gperf)
+    if (directive == "include") {
+        directiveInclude(it);
     }
-    else if (dir == "define") {
-        if (isSkip)
-            return;
-        std::string name = getIdentArg(it);
-
-        if (name.empty())
-            printError("Directive #define expects argument");
-
-        assertNoArg(it);
-        defines.emplace(std::move(name), ""); // TODO: macros
+    else if (directive == "define") {
+        directiveDefine(it);
     }
-    else if (dir == "undef") {
-        std::string name = getIdentArg(it);
-        if (isSkip)
-            return;
-
-        if (name.empty())
-            printError("Directive #undef expects argument");
-
-        assertNoArg(it);
-        defines.erase(name);
+    else if (directive == "undef") {
+        directiveUndef(it);
     }
-    else if (dir == "ifdef" || dir == "ifndef") {
-        if (isSkip) {
-            nestCntr++;
-            return;
-        }
-        std::string arg = getIdentArg(it);
-
-        if (arg.empty())
-            printError(fmt::format("Directive #{} expects argument", dir));
-
-        assertNoArg(it);
-
-        if (defines.contains(arg) || dir == "ifndef") {
-            condStatuses.push(PC_IF_TRUE);
-        }
-        else {
-            condStatuses.push(PC_IF_FALSE);
-            isSkip = true;
-        }
+    else if (directive == "ifdef") {
+        directiveIfdef(it, false);
     }
-    else if (dir == "endif") {
-        if (isSkip && nestCntr > 0) {
-            nestCntr--;
-            return;
-        }
-        assertNoArg(it);
-        condStatuses.pop();
-        isSkip = false;
+    else if (directive == "ifndef") {
+        directiveIfdef(it, true);
     }
-    else if (dir == "else") {
-        if (isSkip && nestCntr > 0)
-            return;
-        assertNoArg(it);
-
-        if (condStatuses.top() == PC_IF_FALSE)
-            isSkip = false;
-        else if (condStatuses.top() == PC_IF_TRUE)
-            isSkip = true;
-        else
-            printError("Unexpected #else directive");
-
-        condStatuses.pop();
-        condStatuses.push(PC_ELSE);
+    else if (directive == "endif") {
+        directiveEndif(it);
     }
-    else if (dir == "line") {
-        if (isSkip)
-            return;
-        uint32_t arg = getLineNumArg(it);
-        skipSpaces(it);
-        std::string filename;
-        if (noEnd(it) && *it == '"')
-            filename = getStringArg(it, false);
-        assertNoArg(it);
-
-        locations.top().line = arg;
-        if (!filename.empty())
-            locations.top().file = filename;
-        warps.appendWarpLoc(globalLine, locations.top().line, locations.top().file);
+    else if (directive == "else") {
+        directiveElse(it);
     }
-    else if (dir == "error") {
-        if (isSkip)
-            return;
-        std::string msg = getStringArg(it, false);
-        assertNoArg(it);
-        printError(fmt::format("#error \"{}\"", msg)); // Exit here
+    else if (directive == "line") {
+        directiveLine(it);
     }
-    else if (dir == "warning") {
-        if (isSkip)
-            return;
-        std::string msg = getStringArg(it, false);
-        assertNoArg(it);
-        printWarn(fmt::format("#warning \"{}\"", msg));
+    else if (directive == "error") {
+        directiveError(it);
+    }
+    else if (directive == "warning") {
+        directiveWarning(it);
     }
     else {
         if (isSkip)
             return;
-        printError(fmt::format("Unknown preprocessor directive ({})", dir)); // Exit here
+        printError(fmt::format("Unknown preprocessor directive ({})", directive));
+    }
+
+    if (isSkip) {
+        while (noEnd(it) && *it != '\n')
+            it++;
+    }
+    return;
+}
+
+
+void PreprocessorImpl::directiveInclude(string_constit_t &it) {
+    if (isSkip)
+        return;
+    std::string filename = getStringArg(it, *it == '<');
+    assertNoArg(it);
+
+    if (raw.size() > Preprocessor::MAX_INCLUDES_DEPTH) {
+        printError(fmt::format(
+                "Too many recursive includes (depth {})",
+                Preprocessor::MAX_INCLUDES_DEPTH));
+    }
+
+    warps.appendWarpLoc(globalLine, 0, filename);
+    processFile(filename);
+    warps.appendWarpLoc(globalLine, locations.top().line - 1, locations.top().file);
+}
+
+void PreprocessorImpl::directiveDefine(string_constit_t &it) {
+    if (isSkip)
+        return;
+    std::string name = getIdentArg(it);
+
+    if (name.empty())
+        printError("Directive #define expects argument");
+
+    assertNoArg(it);
+    defines.emplace(std::move(name), ""); // TODO: macros
+}
+
+void PreprocessorImpl::directiveUndef(string_constit_t &it) {
+    std::string name = getIdentArg(it);
+    if (isSkip)
+        return;
+
+    if (name.empty())
+        printError("Directive #undef expects argument");
+
+    assertNoArg(it);
+    defines.erase(name);
+}
+
+void PreprocessorImpl::directiveIfdef(string_constit_t &it, bool isNdef) {
+    if (isSkip) {
+        ++nestCntr;
+        return;
+    }
+    std::string arg = getIdentArg(it);
+
+    if (arg.empty()) {
+        std::string dirName = isNdef ? "ifndef" : "ifdef";
+        printError(fmt::format("Directive #{} expects argument", dirName));
+    }
+
+    assertNoArg(it);
+
+    if (defines.contains(arg) || isNdef) {
+        condStatuses.push(PC_IF_TRUE);
+    }
+    else {
+        condStatuses.push(PC_IF_FALSE);
+        isSkip = true;
     }
 }
+
+void PreprocessorImpl::directiveElse(string_constit_t &it) {
+    if (isSkip && nestCntr > 0)
+        return;
+    assertNoArg(it);
+
+    if (condStatuses.top() == PC_IF_FALSE)
+        isSkip = false;
+    else if (condStatuses.top() == PC_IF_TRUE)
+        isSkip = true;
+    else
+        printError("Unexpected #else directive");
+
+    condStatuses.pop();
+    condStatuses.push(PC_ELSE);
+}
+
+void PreprocessorImpl::directiveEndif(string_constit_t &it) {
+    if (isSkip && nestCntr > 0) {
+        --nestCntr;
+        return;
+    }
+    assertNoArg(it);
+    condStatuses.pop();
+    isSkip = false;
+}
+
+void PreprocessorImpl::directiveLine(string_constit_t &it) {
+    if (isSkip)
+        return;
+    uint32_t arg = getLineNumArg(it);
+    skipSpaces(it);
+    std::string filename;
+    if (noEnd(it) && *it == '"')
+        filename = getStringArg(it, false);
+    assertNoArg(it);
+
+    locations.top().line = arg;
+    if (!filename.empty())
+        locations.top().file = filename;
+    warps.appendWarpLoc(globalLine, locations.top().line, locations.top().file);
+}
+
+void PreprocessorImpl::directiveError(string_constit_t &it) {
+    if (isSkip)
+        return;
+    std::string msg = getStringArg(it, false);
+    assertNoArg(it);
+    printError(fmt::format("#error \"{}\"", msg)); // Exit here
+}
+
+void PreprocessorImpl::directiveWarning(string_constit_t &it) {
+    if (isSkip)
+        return;
+    std::string msg = getStringArg(it, false);
+    assertNoArg(it);
+    printWarn(fmt::format("#warning \"{}\"", msg));
+}
+
 
 void PreprocessorImpl::putIdent(const std::string &ident) {
     if (ident.starts_with("__")) { // Small optimization for predefined macros
