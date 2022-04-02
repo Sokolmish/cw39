@@ -26,10 +26,7 @@ private:
     std::vector<LineWarp> ldata;
     std::map<std::string, int> filenames;
 
-    mutable size_t hint = 0;
-
     int getFilenum(std::string const &file);
-    Location getLocHard(int line) const;
 };
 
 #endif /* WARPS_HPP_INCLUDED__ */
