@@ -54,7 +54,7 @@ private:
     void processComment(string_constit_t &it);
 
     std::string getStringArg(string_constit_t &it, bool angleBrackets);
-    uint32_t getU32Arg(string_constit_t &it);
+    uint32_t getLineNumArg(string_constit_t &it);
     std::string getIdentArg(string_constit_t &it);
     void skipSpaces(string_constit_t &it);
     void assertNoArg(string_constit_t &it);
@@ -66,7 +66,9 @@ private:
 
     bool noEnd(string_constit_t const &it) const;
 
-    void printError(std::string const &msg);
+    [[nodiscard]] std::string readFile(std::string const &path);
+
+    [[noreturn]] void printError(std::string const &msg);
     void printWarn(std::string const &msg);
 };
 
