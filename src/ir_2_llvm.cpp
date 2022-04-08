@@ -96,6 +96,9 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
     module = std::make_unique<Module>("top", *context);
     builder = std::make_unique<IRBuilder<>>(*context);
 
+    // For some reason there is a bug in the LLVM library
+    //   when creating types or globals without active insert point in builder,
+    //   so there is a dummy function, that will be erased later
     Function *dummyFunc = Function::Create(FunctionType::get(builder->getVoidTy(), false),
                                            Function::InternalLinkage, "__dummy_func", *module);
     BasicBlock *dummyEntryBlock = BasicBlock::Create(*context, "__dummy_block", dummyFunc);

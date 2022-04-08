@@ -114,7 +114,7 @@ void PreprocessorImpl::printWarn(std::string const &msg) {
 std::string PreprocessorImpl::readFile(std::string const &path) {
     std::ifstream ifs(path);
     if (!ifs.is_open())
-        printError(fmt::format("Error: Cannot read file '{}'\n", path));
+        printError(fmt::format("Cannot read file '{}'", path));
     std::stringstream ss;
     ss << ifs.rdbuf();
     return ss.str();

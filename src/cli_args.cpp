@@ -5,7 +5,9 @@
 class CLIArgs::CLIArgs_Impl {
 public:
     static constexpr const char *name = "cw39";
-    static constexpr const char *desc = "C compiler";
+    static constexpr const char *vers = "0.2.0";
+    static constexpr const char *desc =
+            "An optimizing compiler for the subset of the C language.";
 
     cxxopts::Options options;
     cxxopts::ParseResult res;
@@ -16,19 +18,33 @@ public:
 CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc) {
     using namespace cxxopts;
 
-    options.add_options()
-            ("preproc", "Write preprocessor outrrut", value<std::string>()->implicit_value(""))
-            ("ast", "Write AST", value<std::string>()->implicit_value(""))
-            ("ir-raw", "Write IR before optimizations", value<std::string>()->implicit_value(""))
-            ("cfg-raw", "Write CFG before optimizations", value<std::string>()->implicit_value(""))
-            ("ir", "Write IR after optimizations", value<std::string>()->implicit_value(""))
-            ("cfg", "Write CFG after optimizations", value<std::string>()->implicit_value(""))
-            ("llvm", "Write final LLVM", value<std::string>()->implicit_value(""))
-            ("h,help", "Print usage");
-    res = options.parse(argc, argv);
+    auto opt = options.add_options();
+
+    opt("preproc", "Write preprocessor output", value<std::string>()->implicit_value(""));
+    opt("ast", "Write AST", value<std::string>()->implicit_value(""));
+    opt("ir-raw", "Write IR before optimizations", value<std::string>()->implicit_value(""));
+    opt("cfg-raw", "Write CFG before optimizations", value<std::string>()->implicit_value(""));
+    opt("ir", "Write IR after optimizations", value<std::string>()->implicit_value(""));
+    opt("cfg", "Write CFG after optimizations", value<std::string>()->implicit_value(""));
+    opt("llvm", "Write final LLVM", value<std::string>()->implicit_value(""));
+
+    opt("version", "Print version");
+    opt("h,help", "Print usage");
+
+    try {
+        res = options.parse(argc, argv);
+    }
+    catch (cxxopts::OptionException const &exc) {
+        fmt::print(stderr, "Error: {}\n", exc.what());
+        exit(EXIT_FAILURE);
+    }
 
     if (res.count("help")) {
         fmt::print("{}\n", options.help());
+        exit(EXIT_SUCCESS);
+    }
+    else if (res.count("version")) {
+        fmt::print("{} version: {}\n", name, vers);
         exit(EXIT_SUCCESS);
     }
 }

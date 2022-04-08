@@ -30,10 +30,10 @@ void lexer_error(YYLTYPE *loc, lex_extra_t *extra, const char *msg) {
                filename, fixLoc.line, loc->first_column, msg);
 }
 
-void yyerror(void *loc, yyscan_t scan, AST_TranslationUnit **root, const LinesWarpMap *warps, const char *str) {
-    (void)root;
+void yyerror(void *loc,
+             [[maybe_unused]] yyscan_t scan, [[maybe_unused]] AST_TranslationUnit **root,
+             const LinesWarpMap *warps, const char *str) {
     YYLTYPE *mloc = reinterpret_cast<YYLTYPE*>(loc);
-    //fprintf(stderr, "error (%d:%d): %s\n", mloc->first_line, mloc->first_column, str);
     auto fixLoc = warps->getLoc(mloc->first_line);
     std::string filename = warps->getFilename(fixLoc.filenum);
     fmt::print(stderr, "Parser error ({}:{}:{}):\n\t{}\n",
