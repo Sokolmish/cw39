@@ -47,7 +47,7 @@ std::string LinesWarpMap::getFilename(int num) const {
 
 int LinesWarpMap::getFilenum(const std::string &file) {
     auto it = filenames.lower_bound(file);
-    if (it->first == file)
+    if (it != filenames.end() && it->first == file)
         return it->second;
     int newNum = filenames.size();
     filenames.emplace_hint(it, file, newNum);
