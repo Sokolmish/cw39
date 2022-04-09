@@ -17,6 +17,9 @@ set(FLEX_LEXER_RES   lex.yy.c)
 set(BISON_PARSER_SRC parser.y)
 set(FLEX_LEXER_SRC   lexer.l)
 
+set(GPERF_DIRECTIVES_RES    directives_hashtable.cpp)
+set(GPERF_DIRECTIVES_SRC    directives.gperf)
+
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp
         ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
@@ -78,7 +81,7 @@ target_link_libraries(cw39 ${llvm_libs})
 
 # Flex and Bison
 
-IF(NOT CW39_NO_GENERATE_PARSERS)
+IF(NOT CW39_NO_BISON)
     find_package(BISON REQUIRED)
     find_package(FLEX REQUIRED)
 
@@ -103,10 +106,30 @@ IF(NOT CW39_NO_GENERATE_PARSERS)
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_RES}
             COMMAND ${FLEX_EXECUTABLE}
                     -o ${FLEX_LEXER_RES}
-            ${FLEX_LEXER_SRC}
+                    ${FLEX_LEXER_SRC}
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_SRC}
                     ${PROJECT_SOURCE_DIR}/src/parser/${BISON_HEADER_RES}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
             COMMENT "Generating core lexer with flex"
     )
 ENDIF() # CW39_NO_GENERATE_PARSERS
+
+IF(NOT CW39_NO_GPERF)
+    # TODO: check if installed
+
+    add_custom_command(
+            OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_DIRECTIVES_RES}
+            COMMAND gperf -m 20
+                    --output-file=${GPERF_DIRECTIVES_RES}
+                    ${GPERF_DIRECTIVES_SRC}
+            DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_DIRECTIVES_SRC}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
+            COMMENT "Generating preprocessor directives hastable"
+    )
+    add_custom_target(
+            pc_directives_hashtable_target
+            DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_DIRECTIVES_RES}
+    )
+    add_dependencies(cw39 pc_directives_hashtable_target)
+
+ENDIF()

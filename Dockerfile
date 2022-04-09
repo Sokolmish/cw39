@@ -15,6 +15,7 @@ RUN apt-get update \
       g++-11     \
       llvm-13    \
       flex bison \
+      gperf \
       zlib1g-dev \
     && apt-get remove -y \
       software-properties-common wget \

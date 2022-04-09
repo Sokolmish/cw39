@@ -7,6 +7,8 @@
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 
+#include "directives_hashtable.cpp"
+
 class PreprocessorImpl {
 public:
     PreprocessorImpl(std::string const &path, std::map<std::string, std::string> &defines);
@@ -323,41 +325,44 @@ void PreprocessorImpl::processDirective(string_constit_t &it) {
     std::string directive = getIdentArg(it);
     skipSpaces(it);
 
-    // TODO: Use hash function here (perfect hash, gperf)
-    if (directive == "include") {
-        directiveInclude(it);
-    }
-    else if (directive == "define") {
-        directiveDefine(it);
-    }
-    else if (directive == "undef") {
-        directiveUndef(it);
-    }
-    else if (directive == "ifdef") {
-        directiveIfdef(it, false);
-    }
-    else if (directive == "ifndef") {
-        directiveIfdef(it, true);
-    }
-    else if (directive == "endif") {
-        directiveEndif(it);
-    }
-    else if (directive == "else") {
-        directiveElse(it);
-    }
-    else if (directive == "line") {
-        directiveLine(it);
-    }
-    else if (directive == "error") {
-        directiveError(it);
-    }
-    else if (directive == "warning") {
-        directiveWarning(it);
-    }
-    else {
+    auto dirEntry = PC_Directives::lookup(directive.c_str(), directive.size());
+    if (dirEntry == nullptr) {
         if (isSkip)
             return;
         printError(fmt::format("Unknown preprocessor directive ({})", directive));
+    }
+
+    switch (dirEntry->id) {
+        case PC_DIR_INCLUDE:
+            directiveInclude(it);
+            break;
+        case PC_DIR_DEFINE:
+            directiveDefine(it);
+            break;
+        case PC_DIR_UNDEF:
+            directiveUndef(it);
+            break;
+        case PC_DIR_IFDEF:
+            directiveIfdef(it, false);
+            break;
+        case PC_DIR_IFNDEF:
+            directiveIfdef(it, true);
+            break;
+        case PC_DIR_ENDIF:
+            directiveEndif(it);
+            break;
+        case PC_DIR_ELSE:
+            directiveElse(it);
+            break;
+        case PC_DIR_LINE:
+            directiveLine(it);
+            break;
+        case PC_DIR_ERROR:
+            directiveError(it);
+            break;
+        case PC_DIR_WARNING:
+            directiveWarning(it);
+            break;
     }
 
     if (isSkip) {
@@ -506,7 +511,7 @@ void PreprocessorImpl::putIdent(const std::string &ident) {
             fmt::print(globalSS, "\"{:%b %e %Y}\"", fmt::localtime(trTime));
             return;
         }
-        else if (ident == "__TIME__") { // "15:24:12"
+        else if (ident == "__TIME__") { // "15:24:12", "01:02:16"
             fmt::print(globalSS, "\"{:%H:%M:%S}\"", fmt::localtime(trTime));
             return;
         }

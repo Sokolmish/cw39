@@ -1,0 +1,35 @@
+%language=C++
+%includes
+%readonly-tables
+%enum
+%switch=1
+%{
+enum pc_directive_num {
+    PC_DIR_INCLUDE,
+    PC_DIR_DEFINE,
+    PC_DIR_UNDEF,
+    PC_DIR_IFDEF,
+    PC_DIR_IFNDEF,
+    PC_DIR_ENDIF,
+    PC_DIR_ELSE,
+    PC_DIR_LINE,
+    PC_DIR_ERROR,
+    PC_DIR_WARNING,
+};
+%}
+%define lookup-function-name lookup
+%define class-name PC_Directives
+%struct-type
+struct pc_directive { const char *name; pc_directive_num id; };
+%%
+include,    PC_DIR_INCLUDE
+define,     PC_DIR_DEFINE
+undef,      PC_DIR_UNDEF
+ifdef,      PC_DIR_IFDEF
+ifndef,     PC_DIR_IFNDEF
+endif,      PC_DIR_ENDIF
+else,       PC_DIR_ELSE
+line,       PC_DIR_LINE
+error,      PC_DIR_ERROR
+warning,    PC_DIR_WARNING
+%%
