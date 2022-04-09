@@ -28,6 +28,8 @@ public:
         std::string getName() const;
         int getEntryBlockId() const;
         std::shared_ptr<IR_TypeFunc> getFuncType() const;
+
+        void setEntryBlockId(int id);
     };
 
     struct GlobalVar {
@@ -57,6 +59,7 @@ public:
     uint64_t putString(std::string str);
 
     std::map<int, Function> const& getFuncs() const;
+    std::map<int, Function>& getFuncsMut();
     std::map<int, Function> const& getPrototypes() const;
     std::map<int, IR_Block> const& getBlocks() const;
     std::map<int, IR_Block>& getBlocksData();

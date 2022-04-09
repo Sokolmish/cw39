@@ -13,6 +13,7 @@
 #include "transformations/ssa_generator.hpp"
 #include "transformations/algebraic_transformer.hpp"
 #include "transformations/copy_propagator.hpp"
+#include "transformations/tailrec_eliminator.hpp"
 
 #include "ir_2_llvm.hpp"
 
@@ -22,10 +23,8 @@ static void writeOut(std::string const &path, std::string const &data) {
         fmt::print("{}\n", data);
     }
     else {
-        std::ofstream myfile;
-        myfile.open(path);
+        std::ofstream myfile(path);
         myfile << data << std::endl;
-        myfile.close();
     }
 }
 
@@ -65,14 +64,15 @@ int main(int argc, char **argv) {
     auto cfg3 = SSA_Generator(cfg2).getCfg();
     auto cfg4 = AlgebraicTransformer(cfg3).getCfg();
     auto cfg5 = CopyPropagator(cfg4).getCfg();
+    auto cfg6 = TailrecEliminator(cfg5).getCfg();
 
     if (args.count("ir"))
-        writeOut(args.getString("ir"), cfg5->printIR());
+        writeOut(args.getString("ir"), cfg6->printIR());
     if (args.count("cfg"))
-        writeOut(args.getString("cfg"), cfg5->drawCFG());
+        writeOut(args.getString("cfg"), cfg6->drawCFG());
 
     if (args.count("llvm")) {
-        IR2LLVM materializer(cfg5);
+        IR2LLVM materializer(cfg6);
         writeOut(args.getString("llvm"), materializer.getRes());
     }
 

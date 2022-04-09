@@ -32,6 +32,11 @@ std::shared_ptr<IR_TypeFunc> ControlFlowGraph::Function::getFuncType() const {
 }
 
 
+void ControlFlowGraph::Function::setEntryBlockId(int blockId) {
+    entryBlockId = blockId;
+}
+
+
 ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     blocksCounter = oth.blocksCounter;
     regs_counter = oth.regs_counter;
@@ -142,6 +147,11 @@ uint64_t ControlFlowGraph::putString(std::string str) {
 const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
     return funcs;
 }
+
+std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncsMut() {
+    return funcs;
+}
+
 
 const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getPrototypes() const {
     return prototypes;
