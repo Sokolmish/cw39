@@ -5,9 +5,7 @@
 #include "ir/constants_folder.hpp"
 
 
-CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> const &rawCfg)
-        : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
-
+CopyPropagator::CopyPropagator(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
     changed = true;
     globalChanged = true;
     while (globalChanged) {
@@ -16,18 +14,23 @@ CopyPropagator::CopyPropagator(std::shared_ptr<ControlFlowGraph> const &rawCfg)
         foldConstants();
     }
 
-    CfgCleaner cleaner(cfg);
+    CfgCleaner cleaner(std::move(cfg));
     cleaner.removeNops();
     cleaner.fixVersions();
     cleaner.removeUselessNodes();
     cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
-    cfg = cleaner.getCfg();
+    cfg = std::move(cleaner).moveCfg();
 }
 
-std::shared_ptr<ControlFlowGraph> CopyPropagator::getCfg() {
+ControlFlowGraph const& CopyPropagator::getCfg() {
     return cfg;
 }
+
+ControlFlowGraph CopyPropagator::moveCfg() && {
+    return std::move(cfg);
+}
+
 
 void CopyPropagator::propagateCopies() {
     std::set<int> visited;
@@ -37,9 +40,9 @@ void CopyPropagator::propagateCopies() {
         changed = false;
         visited.clear();
 
-        for (auto const &[fId, func] : cfg->getFuncs()) {
-            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
-                auto &curBlock = cfg->block(blockId);
+        for (auto const &[fId, func] : cfg.getFuncs()) {
+            cfg.traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
+                auto &curBlock = cfg.block(blockId);
 
                 for (auto *node : curBlock.getAllNodes()) {
                     if (!node->body)
@@ -79,9 +82,9 @@ void CopyPropagator::foldConstants() {
         changed = false;
         visited.clear();
 
-        for (auto const &[fId, func] : cfg->getFuncs()) {
-            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
-                auto &curBlock = cfg->block(blockId);
+        for (auto const &[fId, func] : cfg.getFuncs()) {
+            cfg.traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
+                auto &curBlock = cfg.block(blockId);
                 for (auto *node : curBlock.getAllNodes()) {
                     if (!node->body)
                         continue;

@@ -7,7 +7,7 @@
 
 class IR2LLVM {
 public:
-    explicit IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg);
+    explicit IR2LLVM(ControlFlowGraph const &cfg);
 
     IR2LLVM(IR2LLVM const&) = delete;
     IR2LLVM& operator=(IR2LLVM const&) = delete;
@@ -22,7 +22,7 @@ private:
     friend class IR2LLVM_Impl;
     std::unique_ptr<IR2LLVM_Impl> impl;
 
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph const &cfg;
     std::string llvmIR;
 };
 

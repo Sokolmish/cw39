@@ -78,7 +78,7 @@ public:
 
 using IR2LLVM_Impl = IR2LLVM::IR2LLVM_Impl;
 
-IR2LLVM::IR2LLVM(std::shared_ptr<ControlFlowGraph> cfg) : cfg(std::move(cfg)) {
+IR2LLVM::IR2LLVM(ControlFlowGraph const &cfg_) : cfg(cfg_) {
     impl = std::make_unique<IR2LLVM_Impl>(this);
 }
 
@@ -123,7 +123,7 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
 
 
 void IR2LLVM_Impl::createTypes() {
-    for (auto const &[sId, tstruct] : parent->cfg->getStructs()) {
+    for (auto const &[sId, tstruct] : parent->cfg.getStructs()) {
         std::vector<Type*> elements;
         for (auto const &elem : tstruct->fields)
             elements.push_back(getType(*elem.irType));
@@ -134,11 +134,11 @@ void IR2LLVM_Impl::createTypes() {
 }
 
 void IR2LLVM_Impl::createGlobals() {
-    for (auto const &[sId, str] : parent->cfg->getStrings()) {
+    for (auto const &[sId, str] : parent->cfg.getStrings()) {
         Value *res = builder->CreateGlobalStringPtr(StringRef(str), fmt::format(".str{}", sId));
         strings.emplace(sId, res);
     }
-    for (auto const &[gId, global] : parent->cfg->getGlobals()) {
+    for (auto const &[gId, global] : parent->cfg.getGlobals()) {
         auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(global.type);
         auto gType = ptrType->child;
         module->getOrInsertGlobal(global.name, getType(*gType));
@@ -272,7 +272,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
 
 
 void IR2LLVM_Impl::createPrototypes() {
-    for (auto const &[fId, func] : parent->cfg->getPrototypes()) {
+    for (auto const &[fId, func] : parent->cfg.getPrototypes()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
         Type *retType = getType(*irFuncType->ret);
         std::vector<Type*> args;
@@ -285,7 +285,7 @@ void IR2LLVM_Impl::createPrototypes() {
 }
 
 void IR2LLVM_Impl::createFunctions() {
-    for (auto const &[fId, func] : parent->cfg->getFuncs()) {
+    for (auto const &[fId, func] : parent->cfg.getFuncs()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
         Type *retType = getType(*irFuncType->ret);
         std::vector<Type *> args;
@@ -317,7 +317,7 @@ void IR2LLVM_Impl::createFunctions() {
 
         // Link blocks
         for (int blockId : visited) {
-            auto const &cfgBlock = parent->cfg->block(blockId);
+            auto const &cfgBlock = parent->cfg.block(blockId);
             IR_ExprTerminator const *term = cfgBlock.getTerminator();
             if (term->termType == IR_ExprTerminator::JUMP) {
                 builder->SetInsertPoint(blocksMap.at(blockId));
@@ -337,7 +337,7 @@ void IR2LLVM_Impl::createFunctions() {
 
         // Link phis
         for (int blockId : visited) {
-            auto const &cfgBlock = parent->cfg->block(blockId);
+            auto const &cfgBlock = parent->cfg.block(blockId);
             for (auto const &phiNode : cfgBlock.phis) {
                 auto cfgPhiFunc = phiNode.body->getPhi();
                 PHINode *ph = unfilledPhis.at(*phiNode.res);
@@ -355,7 +355,7 @@ void IR2LLVM_Impl::createFunctions() {
 }
 
 void IR2LLVM_Impl::createBlock(int id) {
-    auto const &cfgBlock = parent->cfg->block(id);
+    auto const &cfgBlock = parent->cfg.block(id);
     BasicBlock *cur_bb =
             BasicBlock::Create(*context, fmt::format("block_{}", id), curFunction);
     blocksMap.emplace(id, cur_bb);

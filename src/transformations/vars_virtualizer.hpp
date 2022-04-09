@@ -1,17 +1,15 @@
 #ifndef VARS_VIRTUALIZER_HPP_INCLUDED__
 #define VARS_VIRTUALIZER_HPP_INCLUDED__
 
-#include <memory>
 #include <map>
 #include <optional>
-#include <functional>
-#include "ir/cfg.hpp"
+#include "ir_transformer.hpp"
 
 // TODO: check for phi functions
 
-class VarsVirtualizer {
+class VarsVirtualizer : IRTransformer {
 private:
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph cfg;
 
     std::map<IRval, std::optional<IRval>, IRval::ComparatorIgnoreVers> toRedudeList;
 
@@ -20,8 +18,10 @@ private:
     void optimizeBlock(IR_Block &block);
 
 public:
-    explicit VarsVirtualizer(ControlFlowGraph const &rawCfg);
-    std::shared_ptr<ControlFlowGraph> getCfg();
+    explicit VarsVirtualizer(ControlFlowGraph rawCfg);
+
+    ControlFlowGraph const& getCfg() override;
+    ControlFlowGraph moveCfg() && override;
 };
 
 #endif /* VARS_VIRTUALIZER_HPP_INCLUDED__ */

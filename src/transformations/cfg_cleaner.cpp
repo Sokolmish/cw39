@@ -7,26 +7,29 @@
 
 namespace rng = std::ranges;
 
-CfgCleaner::CfgCleaner(std::shared_ptr<ControlFlowGraph> const &rawCfg)
-        : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {}
+CfgCleaner::CfgCleaner(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {}
 
-std::shared_ptr<ControlFlowGraph> CfgCleaner::getCfg() {
+ControlFlowGraph const& CfgCleaner::getCfg() {
     return cfg;
 }
+ControlFlowGraph CfgCleaner::moveCfg() && {
+    return std::move(cfg);
+}
+
 
 void CfgCleaner::removeNops() {
-    for (auto const &[bId, block] : cfg->getBlocks()) {
+    for (auto const &[bId, block] : cfg.getBlocks()) {
         std::vector<IR_Node> newPhis;
-        for (IR_Node &node : cfg->block(bId).phis)
+        for (IR_Node &node : cfg.block(bId).phis)
             if (node.body)
                 newPhis.push_back(std::move(node));
-        cfg->block(bId).phis = std::move(newPhis);
+        cfg.block(bId).phis = std::move(newPhis);
 
         std::vector<IR_Node> newBody;
-        for (IR_Node &node : cfg->block(bId).body)
+        for (IR_Node &node : cfg.block(bId).body)
             if (node.body)
                 newBody.push_back(std::move(node));
-        cfg->block(bId).body = std::move(newBody);
+        cfg.block(bId).body = std::move(newBody);
     }
 }
 
@@ -35,9 +38,9 @@ void CfgCleaner::fixVersions() {
     std::map<IRval, std::pair<bool, int>, IRval::ComparatorIgnoreVers> versionedRegs;
 
     visited.clear();
-    for (auto const &[fId, func]: cfg->getFuncs()) {
-        cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
-            auto &curBlock = cfg->block(blockId);
+    for (auto const &[fId, func]: cfg.getFuncs()) {
+        cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
+            auto &curBlock = cfg.block(blockId);
             for (IR_Node *node: curBlock.getAllNodes()) {
                 if (node->res) {
                     int curVers = *node->res->getVersion();
@@ -55,9 +58,9 @@ void CfgCleaner::fixVersions() {
     }
 
     visited.clear();
-    for (auto const &[fId, func]: cfg->getFuncs()) {
-        cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
-            auto &curBlock = cfg->block(blockId);
+    for (auto const &[fId, func]: cfg.getFuncs()) {
+        cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
+            auto &curBlock = cfg.block(blockId);
 
             for (auto *node: curBlock.getAllNodes()) {
                 if (node->res) {
@@ -91,18 +94,18 @@ void CfgCleaner::removeUselessNodes() {
         usedRegs.clear();
 
         visited.clear();
-        for (auto const &[fId, func]: cfg->getFuncs()) {
-            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs](int blockId) {
-                auto &curBlock = cfg->block(blockId);
+        for (auto const &[fId, func]: cfg.getFuncs()) {
+            cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs](int blockId) {
+                auto &curBlock = cfg.block(blockId);
                 auto refs = curBlock.getReferences();
                 usedRegs.insert(refs.begin(), refs.end());
             });
         }
 
         visited.clear();
-        for (auto const &[fId, func]: cfg->getFuncs()) {
-            cfg->traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs, &changed](int blockId) {
-                auto &curBlock = cfg->block(blockId);
+        for (auto const &[fId, func]: cfg.getFuncs()) {
+            cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs, &changed](int blockId) {
+                auto &curBlock = cfg.block(blockId);
                 for (auto *node: curBlock.getAllNodes()) {
                     if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
                         changed = true;
@@ -126,7 +129,7 @@ void CfgCleaner::removeUselessNodes() {
 void CfgCleaner::removeTransitBlocks() {
     std::vector<int> toRemoveList;
 
-    for (auto &[bId, block] : cfg->getBlocksData()) {
+    for (auto &[bId, block] : cfg.getBlocksData()) {
         if (block.body.empty() && block.phis.empty()) {
             if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
                 if (block.next.size() != 1)
@@ -136,8 +139,8 @@ void CfgCleaner::removeTransitBlocks() {
                 if (block.prev.size() != 1) // Concentrating block
                     continue;
 
-                IR_Block &prevBlock = cfg->block(block.prev[0]);
-                IR_Block &nextBlock = cfg->block(block.next[0]);
+                IR_Block &prevBlock = cfg.block(block.prev[0]);
+                IR_Block &nextBlock = cfg.block(block.next[0]);
 
                 // TODO: select op and phis folding
                 if (!nextBlock.phis.empty()) {
@@ -170,23 +173,23 @@ void CfgCleaner::removeTransitBlocks() {
     }
 
     for (int id : toRemoveList)
-        cfg->getBlocksData().erase(id);
+        cfg.getBlocksData().erase(id);
 }
 
 // tODO: refactor this
 void CfgCleaner::removeUnreachableBlocks() {
     std::set<int> visited;
-    for (auto const &[fId, func]: cfg->getFuncs())
-        cfg->traverseBlocks(func.getEntryBlockId(), visited, [](int blockId) {});
+    for (auto const &[fId, func]: cfg.getFuncs())
+        cfg.traverseBlocks(func.getEntryBlockId(), visited, [](int blockId) {});
 
     std::set<int> toRemoveList;
-    for (auto &[bId, block] : cfg->getBlocksData())
+    for (auto &[bId, block] : cfg.getBlocksData())
         if (!visited.contains(bId))
             toRemoveList.insert(bId);
 
     for (int id : toRemoveList)
-        cfg->getBlocksData().erase(id);
-    for (auto &[bId, block] : cfg->getBlocksData()) {
+        cfg.getBlocksData().erase(id);
+    for (auto &[bId, block] : cfg.getBlocksData()) {
         std::vector<int> newPrev;
         bool changed = false;
         for (int prev : block.prev) {
@@ -201,7 +204,7 @@ void CfgCleaner::removeUnreachableBlocks() {
 
     toRemoveList.clear();
 
-    for (auto &[bId, block] : cfg->getBlocksData()) {
+    for (auto &[bId, block] : cfg.getBlocksData()) {
         if (block.getTerminator()->termType == IR_ExprTerminator::BRANCH) {
             if (block.getTerminator()->arg->getValueClass() == IRval::VAL) {
                 int toRemoveId;
@@ -222,8 +225,8 @@ void CfgCleaner::removeUnreachableBlocks() {
     }
 
     for (int id : toRemoveList)
-        cfg->getBlocksData().erase(id);
-    for (auto &[bId, block] : cfg->getBlocksData()) { // TODO: duplicate
+        cfg.getBlocksData().erase(id);
+    for (auto &[bId, block] : cfg.getBlocksData()) { // TODO: duplicate
         std::vector<int> newPrev;
         bool changed = false;
         for (int prev : block.prev) {
@@ -238,14 +241,14 @@ void CfgCleaner::removeUnreachableBlocks() {
 }
 
 std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
-    if (cfg->block(startId).prev.size() != 1)
+    if (cfg.block(startId).prev.size() != 1)
         return {};
     GraphInfo gInfo(cfg); // TODO: dominators for subgraph (at least function)
     std::set<int> res { startId };
     std::stack<int> stack;
     stack.push(startId);
     while (!stack.empty()) {
-        IR_Block const &curBlock = cfg->block(stack.top());
+        IR_Block const &curBlock = cfg.block(stack.top());
         stack.pop();
 
         for (int next : curBlock.next) {

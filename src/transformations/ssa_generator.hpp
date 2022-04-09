@@ -5,13 +5,12 @@
 #include <set>
 #include <deque>
 #include <memory>
-#include "ir/cfg.hpp"
 #include "graph_info.hpp"
+#include "ir_transformer.hpp"
 
-class SSA_Generator {
+class SSA_Generator : IRTransformer {
 private:
-    std::shared_ptr<ControlFlowGraph> origCfg;
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph cfg;
 
     std::unique_ptr<GraphInfo> gInfo;
     std::map<int, int> postOrder;
@@ -31,9 +30,10 @@ private:
     void traverseForVar(int blockId, IRval const &var);
 
 public:
-    explicit SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg);
+    explicit SSA_Generator(ControlFlowGraph in_cfg);
 
-    std::shared_ptr<ControlFlowGraph> getCfg();
+    ControlFlowGraph const& getCfg() override;
+    ControlFlowGraph moveCfg() && override;
 };
 
 

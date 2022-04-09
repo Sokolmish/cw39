@@ -1,24 +1,22 @@
 #ifndef TAILREC_ELIMINATOR_HPP_INCLUDED__
 #define TAILREC_ELIMINATOR_HPP_INCLUDED__
 
-#include <memory>
-#include <map>
-#include <optional>
-#include <functional>
-#include "ir/cfg.hpp"
+#include <vector>
+#include "ir_transformer.hpp"
 
-class TailrecEliminator {
+class TailrecEliminator :IRTransformer {
 public:
-    explicit TailrecEliminator(std::shared_ptr<ControlFlowGraph> const &rawCfg);
-    std::shared_ptr<ControlFlowGraph> getCfg();
+    explicit TailrecEliminator(ControlFlowGraph rawCfg);
+
+    ControlFlowGraph const& getCfg() override;
+    ControlFlowGraph moveCfg() && override;
 
 private:
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph cfg;
 
     void passFunction(ControlFlowGraph::Function &func);
-    std::vector<int> findTailCalls(ControlFlowGraph::Function const &func) const;
+    std::vector<int> findTailCalls(ControlFlowGraph::Function const &func);
     void replaceParams(int entryId, const std::vector<IRval> &newArgs);
 };
-
 
 #endif /* TAILREC_ELIMINATOR_HPP_INCLUDED__ */

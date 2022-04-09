@@ -9,7 +9,7 @@
 
 class GraphInfo {
 public:
-    explicit GraphInfo(std::shared_ptr<ControlFlowGraph> graph);
+    explicit GraphInfo(ControlFlowGraph const &graph);
 
     enum ArcClass { NONE, TREE, BACK, FWD, CROSS };
     ArcClass getArcClass(int from, int to);
@@ -42,7 +42,7 @@ private:
     std::map<int, DomNode> domData;
 
     // Temporary data (used only at construction)
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph const &cfg;
     int globalTime = 1;
 
     struct UtilNode {

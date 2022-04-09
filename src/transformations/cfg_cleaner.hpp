@@ -1,20 +1,18 @@
 #ifndef CFG_CLEANER_HPP_INCLUDED__
 #define CFG_CLEANER_HPP_INCLUDED__
 
-#include "ir/cfg.hpp"
-#include <map>
+#include "ir_transformer.hpp"
 #include <set>
-#include <functional>
 
-class CfgCleaner {
+class CfgCleaner : IRTransformer {
 private:
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph cfg;
 
     /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
     std::set<int> getDominatedByGiven(int startId);
 
 public:
-    explicit CfgCleaner(std::shared_ptr<ControlFlowGraph> const &rawCfg);
+    explicit CfgCleaner(ControlFlowGraph rawCfg);
 
     void removeNops();
     void fixVersions();
@@ -22,8 +20,8 @@ public:
     void removeTransitBlocks();
     void removeUnreachableBlocks();
 
-    std::shared_ptr<ControlFlowGraph> getCfg();
+    ControlFlowGraph const& getCfg() override;
+    ControlFlowGraph moveCfg() && override;
 };
-
 
 #endif /* CFG_CLEANER_HPP_INCLUDED__ */

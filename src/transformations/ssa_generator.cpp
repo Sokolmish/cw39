@@ -3,33 +3,36 @@
 #include <vector>
 #include <stack>
 
-SSA_Generator::SSA_Generator(std::shared_ptr<ControlFlowGraph> in_cfg)
-        : origCfg(std::move(in_cfg)) {
-    cfg = std::make_shared<ControlFlowGraph>(*origCfg);
+SSA_Generator::SSA_Generator(ControlFlowGraph in_cfg) : cfg(std::move(in_cfg)) {
     gInfo = std::make_unique<GraphInfo>(cfg);
 
     placePhis();
     versionize();
 
-    CfgCleaner cleaner(cfg);
+    gInfo.reset();
+
+    CfgCleaner cleaner(std::move(cfg));
     cleaner.fixVersions();
     cleaner.removeUselessNodes();
     cleaner.removeNops();
-    cfg = cleaner.getCfg();
-
-    origCfg.reset();
+    cfg = std::move(cleaner).moveCfg();
 }
 
-std::shared_ptr<ControlFlowGraph> SSA_Generator::getCfg() {
+ControlFlowGraph const& SSA_Generator::getCfg() {
     return cfg;
 }
+
+ControlFlowGraph SSA_Generator::moveCfg() && {
+    return std::move(cfg);
+}
+
 
 // PHIs placing
 
 void SSA_Generator::placePhis() {
     int counter = 0;
     std::set<int> visited;
-    for (auto const &[fId, func] : cfg->getFuncs()) {
+    for (auto const &[fId, func] : cfg.getFuncs()) {
         makePostOrder(visited, counter, func.getEntryBlockId());
     }
 
@@ -37,21 +40,21 @@ void SSA_Generator::placePhis() {
 
     // For each variable find, where a value assigned to it
     std::map<IRval, std::set<int>, IRval::ComparatorIgnoreVers> varsDefSet;
-    for (auto const &[bId, block] : cfg->getBlocks())
+    for (auto const &[bId, block] : cfg.getBlocks())
         for (IRval const &def : block.getDefinitions())
             varsDefSet[def].insert(bId);
 
     for (auto const &[var, varDefs] : varsDefSet) {
         std::set<int> JP = getSetDFP(varDefs); // JP == DFP (theorem)
         for (int blockId : JP) {
-            cfg->block(blockId).addNewPhiNode(var);
+            cfg.block(blockId).addNewPhiNode(var);
         }
     }
 }
 
 void SSA_Generator::makePostOrder(std::set<int> &visited, int &counter, int cur) {
     visited.insert(cur);
-    for (int nextId : cfg->block(cur).next)
+    for (int nextId : cfg.block(cur).next)
         if (!visited.contains(nextId))
             makePostOrder(visited, counter, nextId);
     postOrder.insert({ cur, counter++ });
@@ -60,7 +63,7 @@ void SSA_Generator::makePostOrder(std::set<int> &visited, int &counter, int cur)
 void SSA_Generator::makeVerticesDF() {
     // Sort blocks by post order
     std::vector<int> sortedIds;
-    for (auto const &[bId, block] : cfg->getBlocks())
+    for (auto const &[bId, block] : cfg.getBlocks())
         if (postOrder.contains(bId)) // TODO: get set from makePostOrder
             sortedIds.push_back(bId);
     std::sort(sortedIds.begin(), sortedIds.end(), [this](int a, int b) {
@@ -70,7 +73,7 @@ void SSA_Generator::makeVerticesDF() {
     for (int xId : sortedIds) {
         auto it = verticesDF.emplace(xId, std::set<int>());
         auto &curSet = it.first->second;
-        for (int yId : cfg->block(xId).next) {
+        for (int yId : cfg.block(xId).next) {
             if (gInfo->getIdom(yId) != xId) {
                 curSet.insert(yId);
             }
@@ -116,7 +119,7 @@ void SSA_Generator::versionize() {
     // TODO: traverse blocks for functions
     // Collect variables from graph because its was not passed in CFG
     std::set<IRval, IRval::ComparatorIgnoreVers> variables;
-    for (auto const &[bId, block] : cfg->getBlocks()) {
+    for (auto const &[bId, block] : cfg.getBlocks()) {
         for (const IRval& def : block.getDefinitions())
             variables.insert(def);
         for (const IRval& ref : block.getReferences())
@@ -128,7 +131,7 @@ void SSA_Generator::versionize() {
         versions.clear();
         versions.push_back(-1); // In case of uninitialized variable
 
-        for (auto const &[fId, func] : cfg->getFuncs()) {
+        for (auto const &[fId, func] : cfg.getFuncs()) {
             traverseForVar(func.getEntryBlockId(), var);
         }
     }
@@ -151,7 +154,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
         int blockId = stack.top().first;
         stack.pop();
 
-        auto &curBlock = cfg->block(blockId);
+        auto &curBlock = cfg.block(blockId);
         int rollbackCnt = 0;
 
         // Phis
@@ -187,7 +190,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
 
         // Set phis args in next blocks
         for (int nextId : curBlock.next) {
-            auto &nextBlock = cfg->block(nextId);
+            auto &nextBlock = cfg.block(nextId);
             int j = -1;
             for (size_t k = 0; k < nextBlock.prev.size(); k++) {
                 if (nextBlock.prev.at(k) == blockId) {

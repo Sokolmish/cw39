@@ -4,22 +4,25 @@
 #include <deque>
 #include <set>
 
-VarsVirtualizer::VarsVirtualizer(ControlFlowGraph const &rawCfg)
-        : cfg(std::make_shared<ControlFlowGraph>(rawCfg)) {
-    for (auto const &[id, func] : cfg->getFuncs()) {
+VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
+    for (auto const &[id, func] : cfg.getFuncs()) {
         toRedudeList.clear();
         passFunction(func);
     }
 
-    CfgCleaner cleaner(cfg);
+    CfgCleaner cleaner(std::move(cfg));
     cleaner.removeNops();
     cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
-    cfg = cleaner.getCfg();
+    cfg = std::move(cleaner).moveCfg();
 }
 
-std::shared_ptr<ControlFlowGraph> VarsVirtualizer::getCfg() {
+ControlFlowGraph const& VarsVirtualizer::getCfg() {
     return cfg;
+}
+
+ControlFlowGraph VarsVirtualizer::moveCfg() && {
+    return std::move(cfg);
 }
 
 
@@ -29,7 +32,7 @@ void VarsVirtualizer::passFunction(const ControlFlowGraph::Function &func) {
 
     nextBlocks.push_back(func.getEntryBlockId());
     while (!nextBlocks.empty()) {
-        IR_Block &curBlock = cfg->block(nextBlocks.front());
+        IR_Block &curBlock = cfg.block(nextBlocks.front());
         nextBlocks.pop_front();
         visited.insert(curBlock.id);
         analyzeBlock(curBlock);
@@ -41,7 +44,7 @@ void VarsVirtualizer::passFunction(const ControlFlowGraph::Function &func) {
     nextBlocks.push_back(func.getEntryBlockId());
     visited.clear();
     while (!nextBlocks.empty()) {
-        IR_Block &curBlock = cfg->block(nextBlocks.front());
+        IR_Block &curBlock = cfg.block(nextBlocks.front());
         nextBlocks.pop_front();
         visited.insert(curBlock.id);
         optimizeBlock(curBlock);
@@ -94,7 +97,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
             auto it = toRedudeList.find(*instr.res);
             if (it != toRedudeList.end()) {
                 auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
-                it->second = cfg->createReg(alloc.type);
+                it->second = cfg.createReg(alloc.type);
                 instr.res = {};
                 instr.body = nullptr;
                 continue;

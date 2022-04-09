@@ -6,8 +6,8 @@
 
 GraphInfo::UtilNode::UtilNode(int id, DomNode *dom) : id(id), dom(dom) {}
 
-GraphInfo::GraphInfo(std::shared_ptr<ControlFlowGraph> graph) : cfg(std::move(graph)) {
-    for (auto const &[fid, func] : cfg->getFuncs()) {
+GraphInfo::GraphInfo(ControlFlowGraph const &graph) : cfg(graph) {
+    for (auto const &[fid, func] : cfg.getFuncs()) {
         processFunc(func.getEntryBlockId());
     }
     for (auto &[nodeId, node] : domData) {
@@ -40,7 +40,7 @@ void GraphInfo::dfs(UtilNode &node) {
     funBlocksIds.push_back(node.id);
     node.timeIn = globalTime++;
 
-    IR_Block &block = cfg->block(node.id);
+    IR_Block const &block = cfg.block(node.id);
     for (int nextId : block.next) {
         auto it = utilNodes.lower_bound(nextId);
         if (it == utilNodes.end() || it->first != nextId) {
@@ -109,7 +109,7 @@ void GraphInfo::dominators(std::vector<int> &nodes) {
         if (wNode.parent == nullptr || wNode.timeIn == -1)
             continue;
 
-        for (auto vId : cfg->block(wNode.id).prev) {
+        for (auto vId : cfg.block(wNode.id).prev) {
             UtilNode &vNode = utilNodes.at(vId);
             if (vNode.timeIn == -1)
                 continue;

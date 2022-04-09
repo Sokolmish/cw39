@@ -60,19 +60,20 @@ int main(int argc, char **argv) {
     if (args.count("cfg-raw"))
         writeOut(args.getString("cfg-raw"), gen->getCfg()->drawCFG());
 
-    auto cfg2 = VarsVirtualizer(*gen->getCfg()).getCfg();
-    auto cfg3 = SSA_Generator(cfg2).getCfg();
-    auto cfg4 = AlgebraicTransformer(cfg3).getCfg();
-    auto cfg5 = CopyPropagator(cfg4).getCfg();
-    auto cfg6 = TailrecEliminator(cfg5).getCfg();
+    ControlFlowGraph optCfg;
+    optCfg = VarsVirtualizer(*gen->getCfg()).moveCfg();
+    optCfg = SSA_Generator(std::move(optCfg)).moveCfg();
+    optCfg = AlgebraicTransformer(std::move(optCfg)).moveCfg();
+    optCfg = CopyPropagator(std::move(optCfg)).moveCfg();
+    optCfg = TailrecEliminator(std::move(optCfg)).moveCfg();
 
     if (args.count("ir"))
-        writeOut(args.getString("ir"), cfg6->printIR());
+        writeOut(args.getString("ir"), optCfg.printIR());
     if (args.count("cfg"))
-        writeOut(args.getString("cfg"), cfg6->drawCFG());
+        writeOut(args.getString("cfg"), optCfg.drawCFG());
 
     if (args.count("llvm")) {
-        IR2LLVM materializer(cfg6);
+        IR2LLVM materializer(optCfg);
         writeOut(args.getString("llvm"), materializer.getRes());
     }
 

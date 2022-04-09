@@ -2,7 +2,7 @@
 #include <stack>
 #include <fmt/core.h>
 
-Looper::Looper(std::shared_ptr<ControlFlowGraph> in) : cfg(std::move(in)), gInfo(cfg) {
+Looper::Looper(std::shared_ptr<ControlFlowGraph> in) : cfg(std::move(in)), gInfo(*cfg) {
     for (auto &[bId, block] : cfg->getBlocksData()) {
         lblocks.emplace_hint(lblocks.end(), bId, BlockInfo(block));
     }

@@ -1,18 +1,22 @@
 #ifndef ALGEBRAIC_TRANSFORMER_HPP_INCLUDED__
 #define ALGEBRAIC_TRANSFORMER_HPP_INCLUDED__
 
-#include <memory>
-#include "ir/cfg.hpp"
+#include "ir_transformer.hpp"
 
-class AlgebraicTransformer {
+class AlgebraicTransformer : IRTransformer {
+public:
+    explicit AlgebraicTransformer(ControlFlowGraph rawCfg);
+
+    ControlFlowGraph const& getCfg() override;
+    ControlFlowGraph moveCfg() && override;
+
+    bool isChanged() const;
+
 private:
-    std::shared_ptr<ControlFlowGraph> cfg;
+    ControlFlowGraph cfg;
+    bool changed = false;
 
     void processNode(IR_Node *node);
-
-public:
-    explicit AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> const &rawCfg);
-    std::shared_ptr<ControlFlowGraph> getCfg();
 };
 
 #endif /* ALGEBRAIC_TRANSFORMER_HPP_INCLUDED__ */

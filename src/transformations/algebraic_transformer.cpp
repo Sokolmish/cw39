@@ -2,12 +2,11 @@
 #include "utils.hpp"
 #include <bit>
 
-AlgebraicTransformer::AlgebraicTransformer(std::shared_ptr<ControlFlowGraph> const &rawCfg)
-        : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
+AlgebraicTransformer::AlgebraicTransformer(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
     std::set<int> visited;
-    for (auto const &[fId, func] : cfg->getFuncs()) {
-        cfg->traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
-            auto &curBlock = cfg->block(blockId);
+    for (auto const &[fId, func] : cfg.getFuncs()) {
+        cfg.traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
+            auto &curBlock = cfg.block(blockId);
             for (auto *node : curBlock.getAllNodes()) {
                 processNode(node);
             }
@@ -38,11 +37,13 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
             if (oper.op == IR_ExprOper::ADD) {
                 oper.op = IR_ExprOper::MOV;
                 oper.args = std::vector<IRval>{ oper.args[1] };
+                changed = true;
             }
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
     }
 
@@ -51,10 +52,12 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (isConstEqual(oper.args[0], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[1] };
+            changed = true;
         }
     }
 
@@ -63,6 +66,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (isConstEqual(oper.args[0], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
             generalError("Division by zero");
@@ -74,10 +78,12 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (isConstEqual(oper.args[1], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
         else if (isConstEqual(oper.args[0], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
     }
 
@@ -86,10 +92,12 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (isConstEqual(oper.args[1], 1ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
         else if (isConstEqual(oper.args[0], 1ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[1] };
+            changed = true;
         }
     }
 
@@ -98,6 +106,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (isConstEqual(oper.args[1], 1ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
+            changed = true;
         }
     }
 
@@ -106,6 +115,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         if (oper.args[0].equal(oper.args[1])) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ IRval::createVal(oper.args[0].getType(), 0ULL) };
+            changed = true;
         }
     }
 
@@ -119,6 +129,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper.op = IR_ExprOper::SHL;
                     oper.args = std::vector<IRval>{ oper.args[1], IRval::createVal(dirType, log) };
+                    changed = true;
                 }
             }
         }
@@ -130,6 +141,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper.op = IR_ExprOper::SHL;
                     oper.args = std::vector<IRval>{ oper.args[0], IRval::createVal(dirType, log) };
+                    changed = true;
                 }
             }
         }
@@ -145,12 +157,21 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper.op = IR_ExprOper::SHR;
                     oper.args = std::vector<IRval>{ oper.args[0], IRval::createVal(dirType, log) };
+                    changed = true;
                 }
             }
         }
     }
 }
 
-std::shared_ptr<ControlFlowGraph> AlgebraicTransformer::getCfg() {
+ControlFlowGraph const& AlgebraicTransformer::getCfg() {
     return cfg;
+}
+
+ControlFlowGraph AlgebraicTransformer::moveCfg() && {
+    return std::move(cfg);
+}
+
+bool AlgebraicTransformer::isChanged() const {
+    return changed;
 }

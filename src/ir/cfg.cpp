@@ -59,6 +59,9 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     }
 }
 
+ControlFlowGraph &ControlFlowGraph::operator=(ControlFlowGraph &&oth) noexcept = default;
+ControlFlowGraph::ControlFlowGraph(ControlFlowGraph &&oth) noexcept = default;
+
 IR_Block &ControlFlowGraph::createBlock() {
     int newId = blocksCounter++;
     auto it = blocks.emplace_hint(blocks.end(), newId, IR_Block(newId));
@@ -71,6 +74,10 @@ void ControlFlowGraph::linkBlocks(IR_Block &prev, IR_Block &next) {
 }
 
 IR_Block &ControlFlowGraph::block(int id) {
+    return blocks.at(id);
+}
+
+IR_Block const& ControlFlowGraph::block(int id) const {
     return blocks.at(id);
 }
 

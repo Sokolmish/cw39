@@ -1,34 +1,38 @@
 #include "tailrec_eliminator.hpp"
 #include "cfg_cleaner.hpp"
+#include <set>
 
-TailrecEliminator::TailrecEliminator(std::shared_ptr<ControlFlowGraph> const &rawCfg)
-        : cfg(std::make_shared<ControlFlowGraph>(*rawCfg)) {
-    for (auto &[id, func] : cfg->getFuncsMut()) {
+TailrecEliminator::TailrecEliminator(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
+    for (auto &[id, func] : cfg.getFuncsMut()) {
         passFunction(func);
     }
 
-    CfgCleaner cleaner(cfg);
+    CfgCleaner cleaner(std::move(cfg));
     cleaner.removeNops();
     cleaner.removeUselessNodes();
-//    cleaner.removeTransitBlocks(); // TODO: check working with entry block
-    cfg = cleaner.getCfg();
+    cfg = std::move(cleaner).moveCfg();
 }
 
-std::shared_ptr<ControlFlowGraph> TailrecEliminator::getCfg() {
+ControlFlowGraph const& TailrecEliminator::getCfg() {
     return cfg;
 }
+
+ControlFlowGraph TailrecEliminator::moveCfg() && {
+    return std::move(cfg);
+}
+
 
 void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
     std::vector<int> tailrecBlocks = findTailCalls(func);
     if (tailrecBlocks.empty())
         return;
 
-    IR_Block &oldHead = cfg->block(func.getEntryBlockId());
+    IR_Block &oldHead = cfg.block(func.getEntryBlockId());
 
     // NewHead is a dummy block, created because entry block cannot have predcessors
-    IR_Block &newHead = cfg->createBlock();
+    IR_Block &newHead = cfg.createBlock();
     newHead.setTerminator(IR_ExprTerminator::JUMP);
-    cfg->linkBlocks(newHead, oldHead);
+    cfg.linkBlocks(newHead, oldHead);
     func.setEntryBlockId(newHead.id);
 
     std::vector<IRval> newArgs;
@@ -37,7 +41,7 @@ void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
 
     // Place phis in oldHead (there are no other phis because it was entry block)
     for (uint64_t an = 0; auto const &argType : argsTypes) {
-        IRval arg = cfg->createReg(argType);
+        IRval arg = cfg.createReg(argType);
         newArgs.push_back(arg);
 
         auto phi = std::make_unique<IR_ExprPhi>();
@@ -50,9 +54,9 @@ void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
 
     // Remove tail calls
     for (int i = 1; int tailId : tailrecBlocks) {
-        IR_Block &tailBlock = cfg->block(tailId);
+        IR_Block &tailBlock = cfg.block(tailId);
         tailBlock.setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(tailBlock, oldHead);
+        cfg.linkBlocks(tailBlock, oldHead);
 
         auto &lastNode = tailBlock.body.back();
         auto const &callExpr = dynamic_cast<IR_ExprCall const &>(*lastNode.body);
@@ -69,13 +73,13 @@ void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
     replaceParams(func.getEntryBlockId(), newArgs);
 }
 
-std::vector<int> TailrecEliminator::findTailCalls(ControlFlowGraph::Function const &func) const {
+std::vector<int> TailrecEliminator::findTailCalls(ControlFlowGraph::Function const &func) {
     std::set<int> visited;
     std::vector<int> tailrecBlocks;
     int funcId = func.getId();
 
     auto visitor = [this, funcId, &tailrecBlocks](int blockId) {
-        IR_Block &curBlock = cfg->block(blockId);
+        IR_Block &curBlock = cfg.block(blockId);
 
         // Inspect only blocks with return statement
         auto terminator = curBlock.getTerminator();
@@ -105,14 +109,14 @@ std::vector<int> TailrecEliminator::findTailCalls(ControlFlowGraph::Function con
         tailrecBlocks.push_back(blockId);
     };
 
-    cfg->traverseBlocks(func.getEntryBlockId(), visited, visitor);
+    cfg.traverseBlocks(func.getEntryBlockId(), visited, visitor);
     return tailrecBlocks;
 }
 
 void TailrecEliminator::replaceParams(int entryId, std::vector<IRval> const &newArgs) {
     std::set<int> visited;
     auto visitor = [this, &newArgs](int blockId) {
-        IR_Block &block = cfg->block(blockId);
+        IR_Block &block = cfg.block(blockId);
         for (IR_Node &node : block.body) {
             if (node.body) {
                 for (auto arg: node.body->getArgs()) {
@@ -122,5 +126,5 @@ void TailrecEliminator::replaceParams(int entryId, std::vector<IRval> const &new
             }
         }
     };
-    cfg->traverseBlocks(entryId, visited, visitor);
+    cfg.traverseBlocks(entryId, visited, visitor);
 }
