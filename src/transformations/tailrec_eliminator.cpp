@@ -63,9 +63,7 @@ void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
         for (uint64_t an = 0; an < argsTypes.size(); an++) {
             phis[an]->args.emplace(i, callExpr.args[an].copy());
         }
-
-        lastNode.res = {}; // TODO: create abstraction for NOP
-        lastNode.body = nullptr;
+        lastNode = IR_Node::nop();
 
         i++;
     }

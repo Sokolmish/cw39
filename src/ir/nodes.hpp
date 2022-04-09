@@ -164,6 +164,8 @@ struct IR_Node {
     explicit IR_Node(std::unique_ptr<IR_Expr> body);
     IR_Node(IRval res, std::unique_ptr<IR_Expr> body);
     IR_Node copy() const;
+
+    static IR_Node nop();
 };
 
 

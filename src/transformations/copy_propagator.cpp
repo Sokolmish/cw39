@@ -44,7 +44,7 @@ void CopyPropagator::propagateCopies() {
             cfg.traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
                 auto &curBlock = cfg.block(blockId);
 
-                for (auto *node : curBlock.getAllNodes()) {
+                for (IR_Node *node : curBlock.getAllNodes()) {
                     if (!node->body)
                         continue;
 
@@ -54,7 +54,7 @@ void CopyPropagator::propagateCopies() {
                             changed = true;
                             globalChanged = true;
                             remlacementMap.emplace(*node->res, oper.args.at(0));
-                            node->body = nullptr;
+                            *node = IR_Node::nop();
                         }
                     }
 

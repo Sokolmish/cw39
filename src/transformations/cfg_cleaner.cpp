@@ -106,7 +106,7 @@ void CfgCleaner::removeUselessNodes() {
         for (auto const &[fId, func]: cfg.getFuncs()) {
             cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs, &changed](int blockId) {
                 auto &curBlock = cfg.block(blockId);
-                for (auto *node: curBlock.getAllNodes()) {
+                for (IR_Node *node: curBlock.getAllNodes()) {
                     if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
                         changed = true;
                         node->res = {};
@@ -116,7 +116,7 @@ void CfgCleaner::removeUselessNodes() {
                             continue;
                         else if (body->type == IR_Expr::MEMORY && body->getMem().op == IR_ExprMem::STORE)
                             continue;
-                        node->body = nullptr;
+                        *node = IR_Node::nop();
                     }
                 }
             });

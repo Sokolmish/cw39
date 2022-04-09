@@ -98,8 +98,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
             if (it != toRedudeList.end()) {
                 auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
                 it->second = cfg.createReg(alloc.type);
-                instr.res = {};
-                instr.body = nullptr;
+                instr = IR_Node::nop();
                 continue;
             }
         }

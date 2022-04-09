@@ -407,6 +407,10 @@ IR_Node IR_Node::copy() const {
     }
 }
 
+IR_Node IR_Node::nop() {
+    return IR_Node(nullptr);
+}
+
 
 // Blocks
 
