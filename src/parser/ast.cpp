@@ -14,8 +14,6 @@ void ast_set_pstate_ptr(CoreParserState *state) {
 
 AST_Node::AST_Node(int type) : node_type(type) {}
 
-AST_Node::~AST_Node() = default;
-
 void AST_Node::setLoc(int line, int col) {
     this->loc = AST_Location{ line, col };
 }

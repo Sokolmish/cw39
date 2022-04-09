@@ -41,8 +41,8 @@ public:
 
     ControlFlowGraph() = default;
     ControlFlowGraph(ControlFlowGraph const &oth);
-    ControlFlowGraph(ControlFlowGraph &&oth) noexcept;
-    ControlFlowGraph& operator=(ControlFlowGraph &&oth) noexcept;
+    ControlFlowGraph(ControlFlowGraph &&oth) noexcept = default;
+    ControlFlowGraph& operator=(ControlFlowGraph &&oth) noexcept = default;
 
     IR_Block& createBlock();
     void linkBlocks(IR_Block &prev, IR_Block &next);

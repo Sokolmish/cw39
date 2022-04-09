@@ -17,7 +17,9 @@
 }
 
 [[noreturn]] inline void generalError(const std::string &msg) {
-    throw std::runtime_error(fmt::format("Error: {}\n", msg));
+//    throw std::runtime_error(fmt::format("Error: {}\n", msg));
+    fmt::print(stderr, "Error: {}\n", msg);
+    exit(EXIT_FAILURE);
 }
 
 [[noreturn]] inline void notImplemented(int line, const std::string &msg = "") {

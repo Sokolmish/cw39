@@ -31,11 +31,11 @@ static void writeOut(std::string const &path, std::string const &data) {
 int main(int argc, char **argv) {
     CLIArgs args(argc, argv);
 
-    std::string path = "tests/tst_prog1.c";
-    if (!args.unmatched().empty())
-        path = args.unmatched().at(0);
+    if (args.unmatched().empty())
+        generalError("No input files");
+    std::string path = args.unmatched().at(0);
 
-    auto preproc = Preprocessor(path);
+    Preprocessor preproc(path);
     std::string text = preproc.getText();
     auto warps = preproc.getWarps();
 

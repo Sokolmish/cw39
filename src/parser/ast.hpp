@@ -39,7 +39,7 @@ struct AST_Node {
     AST_Location loc;
 
     explicit AST_Node(int type);
-    virtual ~AST_Node();
+    virtual ~AST_Node() = default;
 
     void setLoc(int line, int col);
 
