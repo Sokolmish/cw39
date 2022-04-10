@@ -31,8 +31,8 @@ struct CoreParserState;
 
 enum class IdentType { IDENT, TYPENAME };
 
-string_id_t get_string_id(struct CoreParserState *rpstate, const char *str);
-string_id_t get_ident_id(struct CoreParserState *rpstate, const char *ident, IdentType *type);
+string_id_t get_string_id(struct CoreParserState *rpstate, const char *str, size_t len);
+string_id_t get_ident_id(struct CoreParserState *rpstate, const char *ident, size_t len, IdentType *type);
 
 std::string get_ident_by_id(CoreParserState *rpstate, string_id_t id);
 std::string get_string_by_id(CoreParserState *rpstate, string_id_t id);

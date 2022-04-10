@@ -70,7 +70,7 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 
 {L}({L}|{D})*		        {
                                 IdentType type;
-                                string_id_t id = get_ident_id(drv.pstate.get(), yytext, &type);
+                                string_id_t id = get_ident_id(drv.pstate.get(), yytext, yyleng, &type);
                                 if (type == IdentType::IDENT)
                                     return yy::parser::make_IDENTIFIER(id, loc);
                                 else
@@ -87,7 +87,10 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 
 '(\\.|[^\\'\n])'            { return yy::parser::make_CONSTANT(get_charval(yytext), loc); }
 
-\"(\\.|[^\\"\n])*\"         { return yy::parser::make_STRING_LITERAL(get_string_id(drv.pstate.get(), yytext), loc); }
+\"(\\.|[^\\"\n])*\"         {
+                                string_id_t id = get_string_id(drv.pstate.get(), yytext, yyleng);
+                                return yy::parser::make_STRING_LITERAL(id, loc);
+                            }
 
 "..."           return yy::parser::make_ELLIPSIS(loc);
 ">>="           return yy::parser::make_RIGHT_ASSIGN(loc);

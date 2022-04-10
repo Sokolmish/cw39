@@ -6,10 +6,12 @@
 #include "core_driver.hpp"
 #include "yy_parser.hpp"
 
-string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, IdentType *type) {
-    auto it = pstate->identsMap.lower_bound(ident);
-    if (it == pstate->identsMap.end() || it->first != ident) {
-        auto ins = pstate->identsMap.emplace_hint(it, ident, CoreParserState::IdentInfo(pstate->idCnt));
+string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, size_t len,  IdentType *type) {
+    std::string str(ident, len);
+    auto it = pstate->identsMap.lower_bound(str);
+    if (it == pstate->identsMap.end() || it->first != str) {
+        auto ins = pstate->identsMap.emplace_hint(it, std::move(str),
+                                                  CoreParserState::IdentInfo(pstate->idCnt));
         pstate->invIdentsMap.emplace_hint(pstate->invIdentsMap.end(), pstate->idCnt, ins->first);
         pstate->idCnt++;
         *type = IdentType::IDENT;
@@ -52,9 +54,8 @@ static char unescapeChar(char ch) {
     }
 }
 
-/* TODO: use yyleng */
-string_id_t get_string_id(struct CoreParserState *pstate, const char *str) {
-    size_t len = strlen(str);
+string_id_t get_string_id(struct CoreParserState *pstate, const char *str, size_t len) {
+//    size_t len = strlen(str);
     std::string newStr;
     newStr.reserve(len);
 
