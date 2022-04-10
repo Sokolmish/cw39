@@ -126,57 +126,57 @@ union YYSTYPE
 #line 47 "parser.y"
 
     int boolean;
-	int enum_val;
-	struct AST_Literal num_literal;
-	string_id_t str;
-	string_id_t ident_id;
+    int enum_val;
+    struct AST_Literal num_literal;
+    string_id_t str;
+    string_id_t ident_id;
 
-	struct AST_Expr *expr;
+    struct AST_Expr *expr;
 
-	struct AST_ArgumentsList *args_list;
-	struct AST_StringsSeq *str_seq;
+    struct AST_ArgumentsList *args_list;
+    struct AST_StringsSeq *str_seq;
 
-	struct AST_DeclSpecifiers *decl_specifiers;
-	struct AST_TypeSpecifier *type_specifier;
-	struct AST_StructDeclarationList *struct_decl_lst;
-	struct AST_StructDeclaration *struct_decl;
-	struct AST_SpecifierQualifierList *spec_qual_lst;
-	struct AST_StructDeclarator *struct_delarator;
-	struct AST_StructDeclaratorList *struct_delarator_lst;
-	struct AST_StructOrUsionSpec *struct_or_union_spec;
-	struct AST_Enumerator *enumerator;
-	struct AST_EnumeratorList *enumerator_lst;
-	struct AST_EnumSpecifier *enum_spec;
+    struct AST_DeclSpecifiers *decl_specifiers;
+    struct AST_TypeSpecifier *type_specifier;
+    struct AST_StructDeclarationList *struct_decl_lst;
+    struct AST_StructDeclaration *struct_decl;
+    struct AST_SpecsQualsList *spec_qual_lst;
+    struct AST_StructDeclarator *struct_delarator;
+    struct AST_StructDeclaratorList *struct_delarator_lst;
+    struct AST_UStructSpec *struct_or_union_spec;
+    struct AST_Enumerator *enumerator;
+    struct AST_EnumeratorList *enumerator_lst;
+    struct AST_EnumSpecifier *enum_spec;
 
-	struct AST_InitDeclarator *init_declarator;
-	struct AST_InitDeclaratorList *init_declarator_lst;
-	struct AST_Declaration *declaration;
-	struct AST_DirectDeclarator *dir_declarator;
-	struct AST_Pointer *pointer;
-	struct AST_Declarator *declarator;
-	struct AST_ParameterDeclaration *param_declaration;
-	struct AST_ParameterTypeList *param_type_lst;
-	struct AST_ParameterList *param_lst;
-	struct AST_TypeName *type_name;
-	struct AST_DirectAbstractDeclarator *dir_abstract_decl;
-	struct AST_AbstractDeclarator *abstract_decl;
-	struct AST_TypeQualifiers *type_quals;
+    struct AST_InitDeclarator *init_decltor;
+    struct AST_InitDeclaratorList *init_decltor_lst;
+    struct AST_Declaration *declaration;
+    struct AST_DirDeclarator *dir_decltor;
+    struct AST_Pointer *pointer;
+    struct AST_Declarator *declarator;
+    struct AST_ParameterDeclaration *param_declaration;
+    struct AST_ParameterTypeList *param_type_lst;
+    struct AST_ParameterList *param_lst;
+    struct AST_TypeName *type_name;
+    struct AST_DirAbstrDeclarator *dir_abstract_decl;
+    struct AST_AbstrDeclarator *abstract_decl;
+    struct AST_TypeQuals *type_quals;
 
-	struct AST_Designator *designator;
-	struct AST_InitializerList *initializer_lst;
-	struct AST_Initializer *initializer;
+    struct AST_Designator *designator;
+    struct AST_InitializerList *initializer_lst;
+    struct AST_Initializer *initializer;
 
-	struct AST_Statement *stmt;
-	struct AST_LabeledStmt *label_stmt;
-	struct AST_BlockItemList *block_item_lst;
-	struct AST_CompoundStmt *compound_stmt;
-	struct AST_ExprStmt *expr_stmt;
-	struct AST_SelectionStmt *select_stmt;
-	struct AST_IterationStmt *iter_stmt;
-	struct AST_JumpStmt *jump_stmt;
+    struct AST_Stmt *stmt;
+    struct AST_LabeledStmt *label_stmt;
+    struct AST_BlockItemList *block_item_lst;
+    struct AST_CompoundStmt *compound_stmt;
+    struct AST_ExprStmt *expr_stmt;
+    struct AST_SelectionStmt *select_stmt;
+    struct AST_IterStmt *iter_stmt;
+    struct AST_JumpStmt *jump_stmt;
 
-	struct AST_FunctionDef *func_def;
-	struct AST_TranslationUnit *trans_unit;
+    struct AST_FunctionDef *func_def;
+    struct AST_TranslationUnit *trans_unit;
 
 #line 182 "y.tab.h"
 

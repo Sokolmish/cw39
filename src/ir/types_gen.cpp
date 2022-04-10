@@ -1,6 +1,6 @@
 #include "generator.hpp"
 
-std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_StructOrUsionSpec const &spec) {
+std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec) {
     // Lookup for existing struct type
     auto itFound = cfg->structs.find(spec.name);
     if (!spec.body) {
@@ -40,7 +40,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     if (spec[0]->spec_type == ast_ts::T_UNISTRUCT) {
         if (spec.size() != 1)
             semanticError(spec[0]->loc, "Struct specifier must be the only specifier");
-        auto const &structSpec = dynamic_cast<AST_StructOrUsionSpec const &>(*spec[0]->v);
+        auto const &structSpec = dynamic_cast<AST_UStructSpec const &>(*spec[0]->v);
         if (structSpec.is_union)
             NOT_IMPLEMENTED("Unions");
         return getStructType(structSpec);
@@ -155,10 +155,10 @@ std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *dec
     }
 
     if constexpr (std::is_same<DeclaratorType, AST_Declarator>()) {
-        return getDirectType(*decl->direct.get(), std::move(lastPtr));
+        return getDirType(*decl->direct.get(), std::move(lastPtr));
     }
-    else if constexpr (std::is_same<DeclaratorType, AST_AbstractDeclarator>()) {
-        return getDirectAbstractType(decl->direct.get(), std::move(lastPtr));
+    else if constexpr (std::is_same<DeclaratorType, AST_AbstrDeclarator>()) {
+        return getDirAbstrType(decl->direct.get(), std::move(lastPtr));
     }
     else {
         static_assert(! std::is_same<DeclaratorType, DeclaratorType>(),
@@ -167,15 +167,15 @@ std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *dec
     }
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const &decl,
-                                                     std::shared_ptr<IR_Type> base) {
-    if (decl.type == AST_DirectDeclarator::NAME) {
+std::shared_ptr<IR_Type> IR_Generator::getDirType(AST_DirDeclarator const &decl,
+                                                  std::shared_ptr<IR_Type> base) {
+    if (decl.type == AST_DirDeclarator::NAME) {
         return base; // Name is ignored there
     }
-    else if (decl.type == AST_DirectDeclarator::NESTED) {
+    else if (decl.type == AST_DirDeclarator::NESTED) {
         return getIndirectType(&decl.getBaseDecl(), std::move(base));
     }
-    else if (decl.type == AST_DirectDeclarator::ARRAY) {
+    else if (decl.type == AST_DirDeclarator::ARRAY) {
         auto sizeExpr = evalConstantExpr(*decl.arr_size);
         if (!sizeExpr.has_value())
             semanticError(decl.arr_size->loc, "Non constant array size");
@@ -185,20 +185,20 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
             semanticError(decl.arr_size->loc, "Non integer array size");
         auto size = sizeExpr->castValTo<uint64_t>();
         auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
-        return getDirectType(decl.getBaseDirectDecl(), arr);
+        return getDirType(decl.getBaseDirectDecl(), arr);
     }
-    else if (decl.type == AST_DirectDeclarator::FUNC) {
+    else if (decl.type == AST_DirDeclarator::FUNC) {
         if (decl.func_args) {
             std::vector<std::shared_ptr<IR_Type>> params;
             for (const auto &param: decl.func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
             bool isVararg = decl.func_args->has_ellipsis;
             auto func = std::make_shared<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
-            return getDirectType(decl.getBaseDirectDecl(), func);
+            return getDirType(decl.getBaseDirectDecl(), func);
         }
         else {
             auto func = std::make_shared<IR_TypeFunc>(std::move(base));
-            return getDirectType(decl.getBaseDirectDecl(), func);
+            return getDirType(decl.getBaseDirectDecl(), func);
         }
     }
     else {
@@ -206,16 +206,15 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectType(AST_DirectDeclarator const 
     }
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractDeclarator const *decl,
-                                                             std::shared_ptr<IR_Type> base) {
-
+std::shared_ptr<IR_Type> IR_Generator::getDirAbstrType(AST_DirAbstrDeclarator const *decl,
+                                                       std::shared_ptr<IR_Type> base) {
     if (!decl) {
         return base;
     }
-    else if (decl->type == AST_DirectAbstractDeclarator::NESTED) {
+    else if (decl->type == AST_DirAbstrDeclarator::NESTED) {
         return getIndirectType(&decl->getBaseDecl(), std::move(base));
     }
-    else if (decl->type == AST_DirectAbstractDeclarator::ARRAY) {
+    else if (decl->type == AST_DirAbstrDeclarator::ARRAY) {
         auto sizeExpr = evalConstantExpr(*decl->arr_size);
         if (!sizeExpr.has_value())
             semanticError(decl->arr_size->loc, "Non constant array size");
@@ -225,20 +224,20 @@ std::shared_ptr<IR_Type> IR_Generator::getDirectAbstractType(AST_DirectAbstractD
             semanticError(decl->arr_size->loc, "Non integer array size");
         auto size = sizeExpr->castValTo<uint64_t>();
         auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
-        return getDirectAbstractType(&decl->getBaseDirectDecl(), arr);
+        return getDirAbstrType(&decl->getBaseDirectDecl(), arr);
     }
-    else if (decl->type == AST_DirectAbstractDeclarator::FUNC) {
+    else if (decl->type == AST_DirAbstrDeclarator::FUNC) {
         if (decl->func_args) {
             std::vector<std::shared_ptr<IR_Type>> params;
             for (const auto &param: decl->func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
             bool isVararg = decl->func_args->has_ellipsis;
             auto func = std::make_shared<IR_TypeFunc>(std::move(base), std::move(params), isVararg);
-            return getDirectAbstractType(&decl->getBaseDirectDecl(), func);
+            return getDirAbstrType(&decl->getBaseDirectDecl(), func);
         }
         else {
             auto func = std::make_shared<IR_TypeFunc>(std::move(base));
-            return getDirectAbstractType(&decl->getBaseDirectDecl(), func);
+            return getDirAbstrType(&decl->getBaseDirectDecl(), func);
         }
     }
     internalError("Unknown direct abstract declarator type");
@@ -248,8 +247,7 @@ std::shared_ptr<IR_Type> IR_Generator::getType(AST_DeclSpecifiers const &spec, A
     return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
 }
 
-std::shared_ptr<IR_Type> IR_Generator::getType(AST_SpecifierQualifierList const &spec,
-                                               AST_Declarator const &decl) {
+std::shared_ptr<IR_Type> IR_Generator::getType(AST_SpecsQualsList const &spec, AST_Declarator const &decl) {
     return getIndirectType(&decl, getPrimaryType(spec.type_specifiers));
 }
 
@@ -257,14 +255,14 @@ std::shared_ptr<IR_Type> IR_Generator::getType(AST_TypeName const &typeName) {
     return getIndirectType(typeName.declarator.get(), getPrimaryType(typeName.qual->type_specifiers));
 }
 
-string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirectDeclarator const &decl) {
-    if (decl.type == AST_DirectDeclarator::NAME) {
+string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirDeclarator const &decl) {
+    if (decl.type == AST_DirDeclarator::NAME) {
         return decl.getIdent();
     }
-    else if (decl.type == AST_DirectDeclarator::NESTED) {
+    else if (decl.type == AST_DirDeclarator::NESTED) {
         return getDeclaredIdent(decl.getBaseDecl());
     }
-    else if (decl.type == AST_DirectDeclarator::ARRAY || decl.type == AST_DirectDeclarator::FUNC) {
+    else if (decl.type == AST_DirDeclarator::ARRAY || decl.type == AST_DirDeclarator::FUNC) {
         return getDeclaredIdentDirect(decl.getBaseDirectDecl());
     }
     else {
@@ -276,9 +274,8 @@ string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
 }
 
-std::vector<IR_Generator::IR_FuncArgument>
-IR_Generator::getDeclaredFuncArguments(AST_Declarator const &decl) {
-    if (decl.direct->type != AST_DirectDeclarator::FUNC)
+std::vector<IR_Generator::IR_FuncArgument> IR_Generator::getDeclaredFuncArgs(AST_Declarator const &decl) {
+    if (decl.direct->type != AST_DirDeclarator::FUNC)
         semanticError(decl.direct->loc, "Non function type");
     if (!decl.direct->func_args)
         return std::vector<IR_FuncArgument>();

@@ -255,7 +255,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     selectBlock(cfg->block(fun.getEntryBlockId()));
     curFunctionType = std::dynamic_pointer_cast<IR_TypeFunc>(fun.fullType);
 
-    auto declArgs = getDeclaredFuncArguments(*def.decl);
+    auto declArgs = getDeclaredFuncArgs(*def.decl);
     int curArgNum = 0;
     for (auto const &[argIdent, argType] : declArgs) {
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
@@ -289,7 +289,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         if (elem->node_type == AST_DECLARATION)
             insertDeclaration(dynamic_cast<AST_Declaration const &>(*elem));
         else if (elem->node_type == AST_STATEMENT)
-            insertStatement(dynamic_cast<AST_Statement const &>(*elem));
+            insertStatement(dynamic_cast<AST_Stmt const &>(*elem));
         else
             internalError("Wrong node in compound statement");
 
@@ -357,21 +357,21 @@ IRval IR_Generator::getInitializerVal(std::shared_ptr<IR_Type> const &type, cons
     }
 }
 
-void IR_Generator::insertStatement(const AST_Statement &stmt) {
-    if (stmt.type == AST_Statement::EXPR) {
+void IR_Generator::insertStatement(const AST_Stmt &stmt) {
+    if (stmt.type == AST_Stmt::EXPR) {
         auto const &exprStmt = static_cast<AST_ExprStmt const &>(stmt);
         if (exprStmt.child) // Skip empty statements
             evalExpr(*exprStmt.child);
     }
-    else if (stmt.type == AST_Statement::SELECT)
+    else if (stmt.type == AST_Stmt::SELECT)
         insertIfStatement(static_cast<AST_SelectionStmt const &>(stmt));
-    else if (stmt.type == AST_Statement::ITER)
-        insertLoopStatement(static_cast<AST_IterationStmt const &>(stmt));
-    else if (stmt.type == AST_Statement::JUMP)
+    else if (stmt.type == AST_Stmt::ITER)
+        insertLoopStatement(static_cast<AST_IterStmt const &>(stmt));
+    else if (stmt.type == AST_Stmt::JUMP)
         insertJumpStatement(static_cast<AST_JumpStmt const &>(stmt));
-    else if (stmt.type == AST_Statement::COMPOUND)
+    else if (stmt.type == AST_Stmt::COMPOUND)
         insertCompoundStatement(static_cast<AST_CompoundStmt const &>(stmt));
-    else if (stmt.type == AST_Statement::LABEL)
+    else if (stmt.type == AST_Stmt::LABEL)
         insertLabeledStatement(static_cast<AST_LabeledStmt const &>(stmt));
     else
         internalError("Wrong statement type");
@@ -402,7 +402,7 @@ void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
 
     // Fill 'true' block
     selectBlock(blockTrue);
-    if (stmt.body->type == AST_Statement::COMPOUND)
+    if (stmt.body->type == AST_Stmt::COMPOUND)
         fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
     else
         insertStatement(*stmt.body);
@@ -418,7 +418,7 @@ void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
     if (blockFalse) { // if (stmt.else_body)
         // Fill 'else' block
         selectBlock(*blockFalse);
-        if (stmt.else_body->type == AST_Statement::COMPOUND)
+        if (stmt.else_body->type == AST_Stmt::COMPOUND)
             fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.else_body));
         else
             insertStatement(*stmt.else_body);
@@ -446,7 +446,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     IR_Block &switchedBlock = cfg->createBlock();
     IR_Block &blockAfter = cfg->createBlock();
 
-    if (stmt.body->type != AST_Statement::COMPOUND)
+    if (stmt.body->type != AST_Stmt::COMPOUND)
         semanticError(stmt.body->loc, "Switch statement can only has compound statement child");
 
     activeControls.emplace_back(ControlStructData::SwitchBlocks{
@@ -493,7 +493,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
         deselectBlock();
 }
 
-void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
+void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
     IR_Block &blockCond = cfg->createBlock();
     IR_Block &blockLoop = cfg->createBlock();
     IR_Block &blockAfter = cfg->createBlock();
@@ -501,7 +501,7 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     IR_Block &blockBefore = curBlock();
 
     // Create for-loop initializer
-    if (stmt.type == AST_IterationStmt::FOR_LOOP) {
+    if (stmt.type == AST_IterStmt::FOR_LOOP) {
         variables.increaseLevel();
 
         // If 'for' loop hasn't initializer, it represented as empty statement
@@ -516,7 +516,7 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
 
     // Make jump to condition
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
-    if (stmt.type == AST_IterationStmt::DO_LOOP)
+    if (stmt.type == AST_IterStmt::DO_LOOP)
         cfg->linkBlocks(curBlock(), blockLoop);
     else
         cfg->linkBlocks(curBlock(), blockCond);
@@ -531,7 +531,7 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     cfg->linkBlocks(curBlock(), blockAfter);
 
     // Create last action
-    if (stmt.type == AST_IterationStmt::FOR_LOOP) {
+    if (stmt.type == AST_IterStmt::FOR_LOOP) {
         if (stmt.getForLoopControls().action) {
             auto &blockLastAct = cfg->createBlock();
             blockLastAct.setTerminator(IR_ExprTerminator::JUMP);
@@ -560,7 +560,7 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
 
     // Fill body
     selectBlock(blockLoop);
-    if (stmt.body->type == AST_Statement::COMPOUND)
+    if (stmt.body->type == AST_Stmt::COMPOUND)
         fillBlock(static_cast<AST_CompoundStmt const &>(*stmt.body));
     else
         insertStatement(*stmt.body);
@@ -573,7 +573,7 @@ void IR_Generator::insertLoopStatement(const AST_IterationStmt &stmt) {
     selectBlock(blockAfter);
 
     activeControls.pop_back();
-    if (stmt.type == AST_IterationStmt::FOR_LOOP)
+    if (stmt.type == AST_IterStmt::FOR_LOOP)
         variables.decreaseLevel();
 }
 

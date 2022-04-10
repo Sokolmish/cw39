@@ -106,10 +106,10 @@ private:
     void insertDeclaration(AST_Declaration const &decl);
     IRval getInitializerVal(std::shared_ptr<IR_Type> const &type, AST_Initializer const &init);
 
-    void insertStatement(AST_Statement const &stmt);
+    void insertStatement(AST_Stmt const &stmt);
     void insertIfStatement(AST_SelectionStmt const &stmt);
     void insertSwitchStatement(const AST_SelectionStmt &stmt);
-    void insertLoopStatement(AST_IterationStmt const &stmt);
+    void insertLoopStatement(AST_IterStmt const &stmt);
     void insertJumpStatement(AST_JumpStmt const &stmt);
     void insertCompoundStatement(AST_CompoundStmt const &stmt);
     void insertLabeledStatement(const AST_LabeledStmt &stmt);
@@ -132,24 +132,21 @@ private:
 
     std::optional<IRval> evalConstantExpr(AST_Expr const &node);
 
-    std::shared_ptr<IR_Type> getStructType(AST_StructOrUsionSpec const &spec);
+    std::shared_ptr<IR_Type> getStructType(AST_UStructSpec const &spec);
     typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
     std::shared_ptr<IR_Type> getPrimaryType(TypeSpecifiers const &spec);
     template <typename DeclaratorType>
-    std::shared_ptr<IR_Type> getIndirectType(DeclaratorType const *decl,
-                                             std::shared_ptr<IR_Type> base);
-    std::shared_ptr<IR_Type> getDirectAbstractType(AST_DirectAbstractDeclarator const *decl,
-                                                   std::shared_ptr<IR_Type> base);
-    std::shared_ptr<IR_Type> getDirectType(AST_DirectDeclarator const &decl,
-                                           std::shared_ptr<IR_Type> base);
+    std::shared_ptr<IR_Type> getIndirectType(DeclaratorType const *decl, std::shared_ptr<IR_Type> base);
+    std::shared_ptr<IR_Type> getDirAbstrType(AST_DirAbstrDeclarator const *decl, std::shared_ptr<IR_Type> base);
+    std::shared_ptr<IR_Type> getDirType(AST_DirDeclarator const &decl, std::shared_ptr<IR_Type> base);
     std::shared_ptr<IR_Type> getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl);
-    std::shared_ptr<IR_Type> getType(AST_SpecifierQualifierList const &spec, AST_Declarator const &decl);
+    std::shared_ptr<IR_Type> getType(AST_SpecsQualsList const &spec, AST_Declarator const &decl);
     std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
     std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
 
-    string_id_t getDeclaredIdentDirect(AST_DirectDeclarator const &decl);
+    string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
-    std::vector<IR_FuncArgument> getDeclaredFuncArguments(AST_Declarator const &decl);
+    std::vector<IR_FuncArgument> getDeclaredFuncArgs(AST_Declarator const &decl);
 
     [[noreturn]] void semanticError(AST_Node::AST_Location loc, std::string const &msg);
 };

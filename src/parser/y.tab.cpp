@@ -68,20 +68,20 @@
 /* First part of user prologue.  */
 #line 14 "parser.y"
 
-	#include "lexer.h"
-	#include "parser.hpp"
-	#include "warps.hpp"
+    #include "lexer.h"
+    #include "parser.hpp"
+    #include "warps.hpp"
 
-	#ifdef __cplusplus
-	extern "C" {
-	#endif
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
 
-	int yylex(void*, void*, yyscan_t);
-	void yyerror(void*, yyscan_t, AST_TranslationUnit**, const LinesWarpMap *warps, const char *str);
+    int yylex(void*, void*, yyscan_t);
+    void yyerror(void*, yyscan_t, AST_TranslationUnit**, const LinesWarpMap *warps, const char *str);
 
-	#ifdef __cplusplus
-	}
-	#endif
+    #ifdef __cplusplus
+    }
+    #endif
 
 #line 87 "y.tab.cpp"
 
@@ -208,57 +208,57 @@ union YYSTYPE
 #line 47 "parser.y"
 
     int boolean;
-	int enum_val;
-	struct AST_Literal num_literal;
-	string_id_t str;
-	string_id_t ident_id;
+    int enum_val;
+    struct AST_Literal num_literal;
+    string_id_t str;
+    string_id_t ident_id;
 
-	struct AST_Expr *expr;
+    struct AST_Expr *expr;
 
-	struct AST_ArgumentsList *args_list;
-	struct AST_StringsSeq *str_seq;
+    struct AST_ArgumentsList *args_list;
+    struct AST_StringsSeq *str_seq;
 
-	struct AST_DeclSpecifiers *decl_specifiers;
-	struct AST_TypeSpecifier *type_specifier;
-	struct AST_StructDeclarationList *struct_decl_lst;
-	struct AST_StructDeclaration *struct_decl;
-	struct AST_SpecifierQualifierList *spec_qual_lst;
-	struct AST_StructDeclarator *struct_delarator;
-	struct AST_StructDeclaratorList *struct_delarator_lst;
-	struct AST_StructOrUsionSpec *struct_or_union_spec;
-	struct AST_Enumerator *enumerator;
-	struct AST_EnumeratorList *enumerator_lst;
-	struct AST_EnumSpecifier *enum_spec;
+    struct AST_DeclSpecifiers *decl_specifiers;
+    struct AST_TypeSpecifier *type_specifier;
+    struct AST_StructDeclarationList *struct_decl_lst;
+    struct AST_StructDeclaration *struct_decl;
+    struct AST_SpecsQualsList *spec_qual_lst;
+    struct AST_StructDeclarator *struct_delarator;
+    struct AST_StructDeclaratorList *struct_delarator_lst;
+    struct AST_UStructSpec *struct_or_union_spec;
+    struct AST_Enumerator *enumerator;
+    struct AST_EnumeratorList *enumerator_lst;
+    struct AST_EnumSpecifier *enum_spec;
 
-	struct AST_InitDeclarator *init_declarator;
-	struct AST_InitDeclaratorList *init_declarator_lst;
-	struct AST_Declaration *declaration;
-	struct AST_DirectDeclarator *dir_declarator;
-	struct AST_Pointer *pointer;
-	struct AST_Declarator *declarator;
-	struct AST_ParameterDeclaration *param_declaration;
-	struct AST_ParameterTypeList *param_type_lst;
-	struct AST_ParameterList *param_lst;
-	struct AST_TypeName *type_name;
-	struct AST_DirectAbstractDeclarator *dir_abstract_decl;
-	struct AST_AbstractDeclarator *abstract_decl;
-	struct AST_TypeQualifiers *type_quals;
+    struct AST_InitDeclarator *init_decltor;
+    struct AST_InitDeclaratorList *init_decltor_lst;
+    struct AST_Declaration *declaration;
+    struct AST_DirDeclarator *dir_decltor;
+    struct AST_Pointer *pointer;
+    struct AST_Declarator *declarator;
+    struct AST_ParameterDeclaration *param_declaration;
+    struct AST_ParameterTypeList *param_type_lst;
+    struct AST_ParameterList *param_lst;
+    struct AST_TypeName *type_name;
+    struct AST_DirAbstrDeclarator *dir_abstract_decl;
+    struct AST_AbstrDeclarator *abstract_decl;
+    struct AST_TypeQuals *type_quals;
 
-	struct AST_Designator *designator;
-	struct AST_InitializerList *initializer_lst;
-	struct AST_Initializer *initializer;
+    struct AST_Designator *designator;
+    struct AST_InitializerList *initializer_lst;
+    struct AST_Initializer *initializer;
 
-	struct AST_Statement *stmt;
-	struct AST_LabeledStmt *label_stmt;
-	struct AST_BlockItemList *block_item_lst;
-	struct AST_CompoundStmt *compound_stmt;
-	struct AST_ExprStmt *expr_stmt;
-	struct AST_SelectionStmt *select_stmt;
-	struct AST_IterationStmt *iter_stmt;
-	struct AST_JumpStmt *jump_stmt;
+    struct AST_Stmt *stmt;
+    struct AST_LabeledStmt *label_stmt;
+    struct AST_BlockItemList *block_item_lst;
+    struct AST_CompoundStmt *compound_stmt;
+    struct AST_ExprStmt *expr_stmt;
+    struct AST_SelectionStmt *select_stmt;
+    struct AST_IterStmt *iter_stmt;
+    struct AST_JumpStmt *jump_stmt;
 
-	struct AST_FunctionDef *func_def;
-	struct AST_TranslationUnit *trans_unit;
+    struct AST_FunctionDef *func_def;
+    struct AST_TranslationUnit *trans_unit;
 
 #line 264 "y.tab.cpp"
 
@@ -678,7 +678,7 @@ static const yytype_int16 yyrline[] =
      524,   525,   532,   533,   534,   535,   536,   537,   541,   542,
      543,   547,   548,   552,   553,   554,   555,   559,   560,   564,
      565,   566,   570,   571,   572,   573,   574,   575,   579,   580,
-     581,   582,   583,   590,   591,   592,   593,   597
+     581,   582,   583,   590,   591,   596,   597,   601
 };
 #endif
 
@@ -702,19 +702,18 @@ static const char *const yytname[] =
   "'='", "';'", "$accept", "primary_expr", "strings_seq", "postfix_expr",
   "arg_expr_lst", "unary_expr", "unary_operator", "cast_expr", "mult_expr",
   "add_expr", "shift_expr", "rel_expr", "eq_expr", "and_expr", "xor_expr",
-  "or_expr", "log_and_expr", "log_or_expr", "ternary_expr", "assign_expr",
+  "or_expr", "land_expr", "lor_expr", "ternary_expr", "assign_expr",
   "assign_op", "expr", "const_expr", "decl_specs",
-  "storage_class_specifier", "type_specifier", "type_qualifier",
-  "function_specifier", "unistruct_spec", "unistruct",
-  "struct_declaration_list", "struct_declaration", "spec_qual_lst",
-  "struct_declarator_list", "struct_declarator", "enum_specifier",
-  "enumerator_list", "enumerator", "declaration", "init_declarator_list",
-  "init_declarator", "declarator", "pointer", "dir_declarator",
-  "type_qual_lst", "param_type_lst", "param_lst", "parameter_declaration",
-  "type_name", "abstr_declarator", "dir_abstr_declarator", "initializer",
-  "init_lst", "designator", "stmt", "label_stmt", "compound_stmt",
-  "block_item_list", "expr_stmt", "select_stmt", "loop_stmt", "jmp_stmt",
-  "translation_unit", "func_def", YY_NULLPTR
+  "storage_class_specifier", "type_specifier", "type_qual",
+  "function_specifier", "ustruct_spec", "ustruct", "struct_decls_lst",
+  "struct_declaration", "spec_qual_lst", "struct_declarator_list",
+  "struct_declarator", "enum_specifier", "enumerator_list", "enumerator",
+  "declaration", "init_decltor_list", "init_decltor", "declarator",
+  "pointer", "dir_decltor", "type_qual_lst", "param_type_lst", "param_lst",
+  "parameter_declaration", "type_name", "abstr_decltor",
+  "dir_abstr_decltor", "initializer", "init_lst", "designator", "stmt",
+  "label_stmt", "compound_stmt", "block_items", "expr_stmt", "select_stmt",
+  "loop_stmt", "jmp_stmt", "trans_unit", "func_def", YY_NULLPTR
 };
 #endif
 
@@ -2021,1302 +2020,1306 @@ yyreduce:
     {
   case 2:
 #line 181 "parser.y"
-                                                                            { (yyval.expr) = AST_Primary::makeIdent((yyvsp[0].ident_id)); SL((yyval.expr), (yyloc)); }
-#line 2026 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Primary::makeIdent((yyvsp[0].ident_id)); SL((yyval.expr), (yyloc)); }
+#line 2025 "y.tab.cpp"
     break;
 
   case 3:
 #line 182 "parser.y"
-                                                                                    { (yyval.expr) = AST_Primary::makeConst((yyvsp[0].num_literal)); SL((yyval.expr), (yyloc)); }
-#line 2032 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Primary::makeConst((yyvsp[0].num_literal)); SL((yyval.expr), (yyloc)); }
+#line 2031 "y.tab.cpp"
     break;
 
   case 4:
 #line 183 "parser.y"
-                                                                        { (yyval.expr) = AST_Primary::makeStr((yyvsp[0].str_seq)); SL((yyval.expr), (yyloc)); }
-#line 2038 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Primary::makeStr((yyvsp[0].str_seq)); SL((yyval.expr), (yyloc)); }
+#line 2037 "y.tab.cpp"
     break;
 
   case 5:
 #line 184 "parser.y"
-                                                                            { (yyval.expr) = AST_Primary::makeExpr((yyvsp[-1].expr)); SL((yyval.expr), (yyloc)); }
-#line 2044 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Primary::makeExpr((yyvsp[-1].expr)); SL((yyval.expr), (yyloc)); }
+#line 2043 "y.tab.cpp"
     break;
 
   case 6:
 #line 185 "parser.y"
                                                 { (yyval.expr) = AST_Primary::makeCompound((yyvsp[-4].type_name), (yyvsp[-1].initializer_lst)); SL((yyval.expr), (yyloc)); }
-#line 2050 "y.tab.cpp"
+#line 2049 "y.tab.cpp"
     break;
 
   case 7:
 #line 186 "parser.y"
                                                 { (yyval.expr) = AST_Primary::makeCompound((yyvsp[-5].type_name), (yyvsp[-2].initializer_lst)); SL((yyval.expr), (yyloc)); }
-#line 2056 "y.tab.cpp"
+#line 2055 "y.tab.cpp"
     break;
 
   case 8:
 #line 190 "parser.y"
                                                 { (yyval.str_seq) = (new AST_StringsSeq())->append((yyvsp[0].str)); SL((yyval.str_seq), (yyloc)); }
-#line 2062 "y.tab.cpp"
+#line 2061 "y.tab.cpp"
     break;
 
   case 9:
 #line 191 "parser.y"
                                                 { (yyval.str_seq) = (yyvsp[-1].str_seq)->append((yyvsp[0].str)); }
-#line 2068 "y.tab.cpp"
+#line 2067 "y.tab.cpp"
     break;
 
   case 10:
 #line 195 "parser.y"
-                                                                        { (yyval.expr) = (yyvsp[0].expr); }
-#line 2074 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2073 "y.tab.cpp"
     break;
 
   case 11:
 #line 196 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::makeArr((yyvsp[-3].expr), (yyvsp[-1].expr)); SL((yyval.expr), (yyloc)); }
-#line 2080 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeArr((yyvsp[-3].expr), (yyvsp[-1].expr)); SL((yyval.expr), (yyloc)); }
+#line 2079 "y.tab.cpp"
     break;
 
   case 12:
 #line 197 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-2].expr), nullptr); SL((yyval.expr), (yyloc)); }
-#line 2086 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-2].expr), nullptr); SL((yyval.expr), (yyloc)); }
+#line 2085 "y.tab.cpp"
     break;
 
   case 13:
 #line 198 "parser.y"
-                                                        { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-3].expr), (yyvsp[-1].args_list)); SL((yyval.expr), (yyloc)); }
-#line 2092 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeCall((yyvsp[-3].expr), (yyvsp[-1].args_list)); SL((yyval.expr), (yyloc)); }
+#line 2091 "y.tab.cpp"
     break;
 
   case 14:
 #line 199 "parser.y"
-                                                        { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), false); SL((yyval.expr), (yyloc)); }
-#line 2098 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), false); SL((yyval.expr), (yyloc)); }
+#line 2097 "y.tab.cpp"
     break;
 
   case 15:
 #line 200 "parser.y"
-                                                        { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), true); SL((yyval.expr), (yyloc)); }
-#line 2104 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeAccesor((yyvsp[-2].expr), (yyvsp[0].ident_id), true); SL((yyval.expr), (yyloc)); }
+#line 2103 "y.tab.cpp"
     break;
 
   case 16:
 #line 201 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), false); SL((yyval.expr), (yyloc)); }
-#line 2110 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), false); SL((yyval.expr), (yyloc)); }
+#line 2109 "y.tab.cpp"
     break;
 
   case 17:
 #line 202 "parser.y"
-                                                                { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), true); SL((yyval.expr), (yyloc)); }
-#line 2116 "y.tab.cpp"
+                                                { (yyval.expr) = AST_Postfix::makeIncdec((yyvsp[-1].expr), true); SL((yyval.expr), (yyloc)); }
+#line 2115 "y.tab.cpp"
     break;
 
   case 18:
 #line 206 "parser.y"
-                                                                        { (yyval.args_list) = (new AST_ArgumentsList())->append((yyvsp[0].expr)); SL((yyval.args_list), (yyloc)); }
-#line 2122 "y.tab.cpp"
+                                                { (yyval.args_list) = (new AST_ArgumentsList())->append((yyvsp[0].expr)); SL((yyval.args_list), (yyloc)); }
+#line 2121 "y.tab.cpp"
     break;
 
   case 19:
 #line 207 "parser.y"
-                                                        { (yyval.args_list) = (yyvsp[-2].args_list)->append((yyvsp[0].expr)); }
-#line 2128 "y.tab.cpp"
+                                                { (yyval.args_list) = (yyvsp[-2].args_list)->append((yyvsp[0].expr)); }
+#line 2127 "y.tab.cpp"
     break;
 
   case 20:
 #line 211 "parser.y"
-                                                                        { (yyval.expr) = (yyvsp[0].expr); }
-#line 2134 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2133 "y.tab.cpp"
     break;
 
   case 21:
 #line 212 "parser.y"
-                                                                        { (yyval.expr) = new AST_Unop(AST_Unop::PRE_INC, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2140 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Unop(AST_Unop::PRE_INC, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2139 "y.tab.cpp"
     break;
 
   case 22:
 #line 213 "parser.y"
-                                                                        { (yyval.expr) = new AST_Unop(AST_Unop::PRE_DEC, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2146 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Unop(AST_Unop::PRE_DEC, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2145 "y.tab.cpp"
     break;
 
   case 23:
 #line 214 "parser.y"
-                                                                { (yyval.expr) = new AST_Unop(AST_Unop::OpType((yyvsp[-1].enum_val)), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2152 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Unop(AST_Unop::OpType((yyvsp[-1].enum_val)), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2151 "y.tab.cpp"
     break;
 
   case 24:
 #line 215 "parser.y"
-                                                                        { (yyval.expr) = new AST_Unop(AST_Unop::SIZEOF_OP, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2158 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Unop(AST_Unop::SIZEOF_OP, (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2157 "y.tab.cpp"
     break;
 
   case 25:
 #line 216 "parser.y"
-                                                                { (yyval.expr) = new AST_Unop(AST_Unop::SIZEOF_OP, (yyvsp[-1].type_name)); SL((yyval.expr), (yyloc)); }
-#line 2164 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Unop(AST_Unop::SIZEOF_OP, (yyvsp[-1].type_name)); SL((yyval.expr), (yyloc)); }
+#line 2163 "y.tab.cpp"
     break;
 
   case 26:
 #line 220 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Unop::ADDR_OF; }
-#line 2170 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Unop::ADDR_OF; }
+#line 2169 "y.tab.cpp"
     break;
 
   case 27:
 #line 221 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Unop::DEREF; }
-#line 2176 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Unop::DEREF; }
+#line 2175 "y.tab.cpp"
     break;
 
   case 28:
 #line 222 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Unop::UN_PLUS; }
-#line 2182 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Unop::UN_PLUS; }
+#line 2181 "y.tab.cpp"
     break;
 
   case 29:
 #line 223 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Unop::UN_MINUS; }
-#line 2188 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Unop::UN_MINUS; }
+#line 2187 "y.tab.cpp"
     break;
 
   case 30:
 #line 224 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Unop::UN_NEG; }
-#line 2194 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Unop::UN_NEG; }
+#line 2193 "y.tab.cpp"
     break;
 
   case 31:
 #line 225 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Unop::UN_NOT; }
-#line 2200 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Unop::UN_NOT; }
+#line 2199 "y.tab.cpp"
     break;
 
   case 32:
 #line 229 "parser.y"
-                                                                        { (yyval.expr) = (yyvsp[0].expr); }
-#line 2206 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2205 "y.tab.cpp"
     break;
 
   case 33:
 #line 230 "parser.y"
-                                                        { (yyval.expr) = new AST_Cast((yyvsp[-2].type_name), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2212 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Cast((yyvsp[-2].type_name), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2211 "y.tab.cpp"
     break;
 
   case 34:
 #line 234 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2218 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2217 "y.tab.cpp"
     break;
 
   case 35:
 #line 235 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::MUL, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2224 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::MUL, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2223 "y.tab.cpp"
     break;
 
   case 36:
 #line 236 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2230 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2229 "y.tab.cpp"
     break;
 
   case 37:
 #line 237 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::REM, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2236 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::REM, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2235 "y.tab.cpp"
     break;
 
   case 38:
 #line 241 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2242 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2241 "y.tab.cpp"
     break;
 
   case 39:
 #line 242 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::ADD, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2248 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::ADD, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2247 "y.tab.cpp"
     break;
 
   case 40:
 #line 243 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::SUB, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2254 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::SUB, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2253 "y.tab.cpp"
     break;
 
   case 41:
 #line 247 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2260 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2259 "y.tab.cpp"
     break;
 
   case 42:
 #line 248 "parser.y"
-                                                        { (yyval.expr) = new AST_Binop(AST_Binop::SHL, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2266 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::SHL, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2265 "y.tab.cpp"
     break;
 
   case 43:
 #line 249 "parser.y"
-                                                        { (yyval.expr) = new AST_Binop(AST_Binop::SHR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2272 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::SHR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2271 "y.tab.cpp"
     break;
 
   case 44:
 #line 253 "parser.y"
-                                                                        { (yyval.expr) = (yyvsp[0].expr); }
-#line 2278 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2277 "y.tab.cpp"
     break;
 
   case 45:
 #line 254 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::LT, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2284 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::LT, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2283 "y.tab.cpp"
     break;
 
   case 46:
 #line 255 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::GT, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2290 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::GT, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2289 "y.tab.cpp"
     break;
 
   case 47:
 #line 256 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::LE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2296 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::LE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2295 "y.tab.cpp"
     break;
 
   case 48:
 #line 257 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::GE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2302 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::GE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2301 "y.tab.cpp"
     break;
 
   case 49:
 #line 261 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2308 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2307 "y.tab.cpp"
     break;
 
   case 50:
 #line 262 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::EQ, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2314 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::EQ, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2313 "y.tab.cpp"
     break;
 
   case 51:
 #line 263 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::NE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2320 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::NE, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2319 "y.tab.cpp"
     break;
 
   case 52:
 #line 267 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2326 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2325 "y.tab.cpp"
     break;
 
   case 53:
 #line 268 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::BIT_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2332 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::BIT_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2331 "y.tab.cpp"
     break;
 
   case 54:
 #line 272 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2338 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2337 "y.tab.cpp"
     break;
 
   case 55:
 #line 273 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::BIT_XOR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2344 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::BIT_XOR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2343 "y.tab.cpp"
     break;
 
   case 56:
 #line 277 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2350 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2349 "y.tab.cpp"
     break;
 
   case 57:
 #line 278 "parser.y"
-                                                                { (yyval.expr) = new AST_Binop(AST_Binop::BIT_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2356 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::BIT_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2355 "y.tab.cpp"
     break;
 
   case 58:
 #line 282 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2362 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2361 "y.tab.cpp"
     break;
 
   case 59:
 #line 283 "parser.y"
-                                                        { (yyval.expr) = new AST_Binop(AST_Binop::LOG_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2368 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::LOG_AND, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2367 "y.tab.cpp"
     break;
 
   case 60:
 #line 287 "parser.y"
-                                                                        { (yyval.expr) = (yyvsp[0].expr); }
-#line 2374 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2373 "y.tab.cpp"
     break;
 
   case 61:
 #line 288 "parser.y"
-                                                        { (yyval.expr) = new AST_Binop(AST_Binop::LOG_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2380 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Binop(AST_Binop::LOG_OR, (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2379 "y.tab.cpp"
     break;
 
   case 62:
 #line 292 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2386 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2385 "y.tab.cpp"
     break;
 
   case 63:
 #line 293 "parser.y"
-                                                        { (yyval.expr) = new AST_Ternary((yyvsp[-4].expr), (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2392 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Ternary((yyvsp[-4].expr), (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2391 "y.tab.cpp"
     break;
 
   case 64:
 #line 297 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2398 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2397 "y.tab.cpp"
     break;
 
   case 65:
 #line 298 "parser.y"
-                                                                { (yyval.expr) = new AST_Assignment(AST_Assignment::OpType((yyvsp[-1].enum_val)), (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
-#line 2404 "y.tab.cpp"
+                                                { (yyval.expr) = new AST_Assignment(AST_Assignment::OpType((yyvsp[-1].enum_val)), (yyvsp[-2].expr), (yyvsp[0].expr)); SL((yyval.expr), (yyloc)); }
+#line 2403 "y.tab.cpp"
     break;
 
   case 66:
 #line 302 "parser.y"
-                                                                                        { (yyval.enum_val) = AST_Assignment::DIRECT; }
-#line 2410 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::DIRECT; }
+#line 2409 "y.tab.cpp"
     break;
 
   case 67:
 #line 303 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::MUL; }
-#line 2416 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::MUL; }
+#line 2415 "y.tab.cpp"
     break;
 
   case 68:
 #line 304 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::DIV; }
-#line 2422 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::DIV; }
+#line 2421 "y.tab.cpp"
     break;
 
   case 69:
 #line 305 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::REM; }
-#line 2428 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::REM; }
+#line 2427 "y.tab.cpp"
     break;
 
   case 70:
 #line 306 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::ADD; }
-#line 2434 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::ADD; }
+#line 2433 "y.tab.cpp"
     break;
 
   case 71:
 #line 307 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::SUB; }
-#line 2440 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::SUB; }
+#line 2439 "y.tab.cpp"
     break;
 
   case 72:
 #line 308 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::SHL; }
-#line 2446 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::SHL; }
+#line 2445 "y.tab.cpp"
     break;
 
   case 73:
 #line 309 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::SHR; }
-#line 2452 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::SHR; }
+#line 2451 "y.tab.cpp"
     break;
 
   case 74:
 #line 310 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::AND; }
-#line 2458 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::AND; }
+#line 2457 "y.tab.cpp"
     break;
 
   case 75:
 #line 311 "parser.y"
-                                                                                { (yyval.enum_val) = AST_Assignment::XOR; }
-#line 2464 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::XOR; }
+#line 2463 "y.tab.cpp"
     break;
 
   case 76:
 #line 312 "parser.y"
-                                                                                        { (yyval.enum_val) = AST_Assignment::OR; }
-#line 2470 "y.tab.cpp"
+                                                { (yyval.enum_val) = AST_Assignment::OR; }
+#line 2469 "y.tab.cpp"
     break;
 
   case 77:
 #line 316 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); /* TODO: fixme */ }
-#line 2476 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); /* TODO: fixme */ }
+#line 2475 "y.tab.cpp"
     break;
 
   case 78:
 #line 317 "parser.y"
-                                                                        { (yyval.expr) = dynamic_cast<AST_CommaExpression*>((yyvsp[-2].expr))->append((yyvsp[0].expr)); }
-#line 2482 "y.tab.cpp"
+                                                { (yyval.expr) = dynamic_cast<AST_CommaExpression*>((yyvsp[-2].expr))->append((yyvsp[0].expr)); }
+#line 2481 "y.tab.cpp"
     break;
 
   case 79:
 #line 321 "parser.y"
-                                                                                { (yyval.expr) = (yyvsp[0].expr); }
-#line 2488 "y.tab.cpp"
+                                                { (yyval.expr) = (yyvsp[0].expr); }
+#line 2487 "y.tab.cpp"
     break;
 
   case 80:
 #line 327 "parser.y"
-                                                                { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_storage((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2494 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_storage((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
+#line 2493 "y.tab.cpp"
     break;
 
   case 81:
 #line 328 "parser.y"
                                                 { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_storage((yyvsp[-1].enum_val)); }
-#line 2500 "y.tab.cpp"
+#line 2499 "y.tab.cpp"
     break;
 
   case 82:
 #line 329 "parser.y"
-                                                                        { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_type_spec((yyvsp[0].type_specifier)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2506 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_type_spec((yyvsp[0].type_specifier)); SL((yyval.decl_specifiers), (yyloc)); }
+#line 2505 "y.tab.cpp"
     break;
 
   case 83:
 #line 330 "parser.y"
-                                                                { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_type_spec((yyvsp[-1].type_specifier)); }
-#line 2512 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_type_spec((yyvsp[-1].type_specifier)); }
+#line 2511 "y.tab.cpp"
     break;
 
   case 84:
 #line 331 "parser.y"
-                                                                        { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_type_qual((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2518 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_type_qual((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
+#line 2517 "y.tab.cpp"
     break;
 
   case 85:
 #line 332 "parser.y"
-                                                                { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_type_qual((yyvsp[-1].enum_val)); }
-#line 2524 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_type_qual((yyvsp[-1].enum_val)); }
+#line 2523 "y.tab.cpp"
     break;
 
   case 86:
 #line 333 "parser.y"
-                                                                { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_func_qual((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
-#line 2530 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (new AST_DeclSpecifiers())->update_func_qual((yyvsp[0].enum_val)); SL((yyval.decl_specifiers), (yyloc)); }
+#line 2529 "y.tab.cpp"
     break;
 
   case 87:
 #line 334 "parser.y"
-                                                        { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_func_qual((yyvsp[-1].enum_val)); }
-#line 2536 "y.tab.cpp"
+                                                { (yyval.decl_specifiers) = (yyvsp[0].decl_specifiers)->update_func_qual((yyvsp[-1].enum_val)); }
+#line 2535 "y.tab.cpp"
     break;
 
   case 88:
 #line 338 "parser.y"
-                                                                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_TYPEDEF; }
-#line 2542 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_TYPEDEF; }
+#line 2541 "y.tab.cpp"
     break;
 
   case 89:
 #line 339 "parser.y"
-                                                                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_EXTERN; }
-#line 2548 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_EXTERN; }
+#line 2547 "y.tab.cpp"
     break;
 
   case 90:
 #line 340 "parser.y"
-                                                                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_STATIC; }
-#line 2554 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_STATIC; }
+#line 2553 "y.tab.cpp"
     break;
 
   case 91:
 #line 341 "parser.y"
-                                                                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_AUTO; }
-#line 2560 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_AUTO; }
+#line 2559 "y.tab.cpp"
     break;
 
   case 92:
 #line 342 "parser.y"
-                                                                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_REGISTER; }
-#line 2566 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_DeclSpecifiers::ST_REGISTER; }
+#line 2565 "y.tab.cpp"
     break;
 
   case 93:
 #line 346 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_VOID); }
-#line 2572 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_VOID); }
+#line 2571 "y.tab.cpp"
     break;
 
   case 94:
 #line 347 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_CHAR); }
-#line 2578 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_CHAR); }
+#line 2577 "y.tab.cpp"
     break;
 
   case 95:
 #line 348 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_SHORT); }
-#line 2584 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_SHORT); }
+#line 2583 "y.tab.cpp"
     break;
 
   case 96:
 #line 349 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_INT); }
-#line 2590 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_INT); }
+#line 2589 "y.tab.cpp"
     break;
 
   case 97:
 #line 350 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_LONG); }
-#line 2596 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_LONG); }
+#line 2595 "y.tab.cpp"
     break;
 
   case 98:
 #line 351 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_FLOAT); }
-#line 2602 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_FLOAT); }
+#line 2601 "y.tab.cpp"
     break;
 
   case 99:
 #line 352 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_DOUBLE); }
-#line 2608 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_DOUBLE); }
+#line 2607 "y.tab.cpp"
     break;
 
   case 100:
 #line 353 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_SIGNED); }
-#line 2614 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_SIGNED); }
+#line 2613 "y.tab.cpp"
     break;
 
   case 101:
 #line 354 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_UNSIGNED); }
-#line 2620 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(AST_TypeSpecifier::T_UNSIGNED); }
+#line 2619 "y.tab.cpp"
     break;
 
   case 102:
 #line 355 "parser.y"
-                                                                        { (yyval.type_specifier) = new AST_TypeSpecifier((yyvsp[0].struct_or_union_spec)); }
-#line 2626 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier((yyvsp[0].struct_or_union_spec)); }
+#line 2625 "y.tab.cpp"
     break;
 
   case 103:
 #line 356 "parser.y"
-                                                                        { (yyval.type_specifier) = new AST_TypeSpecifier((yyvsp[0].enum_spec)); }
-#line 2632 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier((yyvsp[0].enum_spec)); }
+#line 2631 "y.tab.cpp"
     break;
 
   case 104:
 #line 357 "parser.y"
-                                                                                { (yyval.type_specifier) = new AST_TypeSpecifier(get_def_type((yyvsp[0].ident_id))); }
-#line 2638 "y.tab.cpp"
+                                { (yyval.type_specifier) = new AST_TypeSpecifier(get_def_type((yyvsp[0].ident_id))); }
+#line 2637 "y.tab.cpp"
     break;
 
   case 105:
 #line 361 "parser.y"
-                                                                                { (yyval.enum_val) = AST_TypeQualifiers::Q_CONST; }
-#line 2644 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_TypeQuals::Q_CONST; }
+#line 2643 "y.tab.cpp"
     break;
 
   case 106:
 #line 362 "parser.y"
-                                                                                { (yyval.enum_val) = AST_TypeQualifiers::Q_RESTRICT; }
-#line 2650 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_TypeQuals::Q_RESTRICT; }
+#line 2649 "y.tab.cpp"
     break;
 
   case 107:
 #line 363 "parser.y"
-                                                                                { (yyval.enum_val) = AST_TypeQualifiers::Q_VOLATILE; }
-#line 2656 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_TypeQuals::Q_VOLATILE; }
+#line 2655 "y.tab.cpp"
     break;
 
   case 108:
 #line 367 "parser.y"
-                                                                                { (yyval.enum_val) = AST_DeclSpecifiers::Q_INLINE; }
-#line 2662 "y.tab.cpp"
+                                { (yyval.enum_val) = AST_DeclSpecifiers::Q_INLINE; }
+#line 2661 "y.tab.cpp"
     break;
 
   case 109:
 #line 371 "parser.y"
-                                                                { (yyval.struct_or_union_spec) = new AST_StructOrUsionSpec((yyvsp[-4].boolean), (yyvsp[-3].ident_id), (yyvsp[-1].struct_decl_lst)); SL((yyval.struct_or_union_spec), (yyloc)); }
-#line 2668 "y.tab.cpp"
+                                                    { (yyval.struct_or_union_spec) = new AST_UStructSpec((yyvsp[-4].boolean), (yyvsp[-3].ident_id), (yyvsp[-1].struct_decl_lst)); SL((yyval.struct_or_union_spec), (yyloc)); }
+#line 2667 "y.tab.cpp"
     break;
 
   case 110:
 #line 372 "parser.y"
-                                                                                { (yyval.struct_or_union_spec) = new AST_StructOrUsionSpec((yyvsp[-3].boolean), NO_IDENT_ID, (yyvsp[-1].struct_decl_lst)); SL((yyval.struct_or_union_spec), (yyloc)); }
-#line 2674 "y.tab.cpp"
+                                                    { (yyval.struct_or_union_spec) = new AST_UStructSpec((yyvsp[-3].boolean), NO_IDENT_ID, (yyvsp[-1].struct_decl_lst)); SL((yyval.struct_or_union_spec), (yyloc)); }
+#line 2673 "y.tab.cpp"
     break;
 
   case 111:
 #line 373 "parser.y"
-                                                                                                { (yyval.struct_or_union_spec) = new AST_StructOrUsionSpec((yyvsp[-1].boolean), (yyvsp[0].ident_id), nullptr); SL((yyval.struct_or_union_spec), (yyloc)); }
-#line 2680 "y.tab.cpp"
+                                                    { (yyval.struct_or_union_spec) = new AST_UStructSpec((yyvsp[-1].boolean), (yyvsp[0].ident_id), nullptr); SL((yyval.struct_or_union_spec), (yyloc)); }
+#line 2679 "y.tab.cpp"
     break;
 
   case 112:
 #line 377 "parser.y"
-                                                                                                        { (yyval.boolean) = 0; }
-#line 2686 "y.tab.cpp"
+                                                    { (yyval.boolean) = 0; }
+#line 2685 "y.tab.cpp"
     break;
 
   case 113:
 #line 378 "parser.y"
-                                                                                                        { (yyval.boolean) = 1; }
-#line 2692 "y.tab.cpp"
+                                                    { (yyval.boolean) = 1; }
+#line 2691 "y.tab.cpp"
     break;
 
   case 114:
 #line 382 "parser.y"
-                                                                                        { (yyval.struct_decl_lst) = new AST_StructDeclarationList((yyvsp[0].struct_decl)); SL((yyval.struct_decl_lst), (yyloc)); }
-#line 2698 "y.tab.cpp"
+                                                    { (yyval.struct_decl_lst) = new AST_StructDeclarationList((yyvsp[0].struct_decl)); SL((yyval.struct_decl_lst), (yyloc)); }
+#line 2697 "y.tab.cpp"
     break;
 
   case 115:
 #line 383 "parser.y"
-                                                                { (yyval.struct_decl_lst) = (yyvsp[-1].struct_decl_lst)->append((yyvsp[0].struct_decl)); }
-#line 2704 "y.tab.cpp"
+                                                    { (yyval.struct_decl_lst) = (yyvsp[-1].struct_decl_lst)->append((yyvsp[0].struct_decl)); }
+#line 2703 "y.tab.cpp"
     break;
 
   case 116:
 #line 387 "parser.y"
-                                                                        { (yyval.struct_decl) = new AST_StructDeclaration((yyvsp[-2].spec_qual_lst), (yyvsp[-1].struct_delarator_lst)); SL((yyval.struct_decl), (yyloc)); }
-#line 2710 "y.tab.cpp"
+                                                    { (yyval.struct_decl) = new AST_StructDeclaration((yyvsp[-2].spec_qual_lst), (yyvsp[-1].struct_delarator_lst)); SL((yyval.struct_decl), (yyloc)); }
+#line 2709 "y.tab.cpp"
     break;
 
   case 117:
 #line 391 "parser.y"
-                                                                { (yyval.spec_qual_lst) = (yyvsp[0].spec_qual_lst)->append_spec((yyvsp[-1].type_specifier)); }
-#line 2716 "y.tab.cpp"
+                                        { (yyval.spec_qual_lst) = (yyvsp[0].spec_qual_lst)->append_spec((yyvsp[-1].type_specifier)); }
+#line 2715 "y.tab.cpp"
     break;
 
   case 118:
 #line 392 "parser.y"
-                                                                                { (yyval.spec_qual_lst) = new AST_SpecifierQualifierList((yyvsp[0].type_specifier)); SL((yyval.spec_qual_lst), (yyloc)); }
-#line 2722 "y.tab.cpp"
+                                        { (yyval.spec_qual_lst) = new AST_SpecsQualsList((yyvsp[0].type_specifier)); SL((yyval.spec_qual_lst), (yyloc)); }
+#line 2721 "y.tab.cpp"
     break;
 
   case 119:
 #line 393 "parser.y"
-                                                                { (yyval.spec_qual_lst) = (yyvsp[0].spec_qual_lst)->append_qual(AST_TypeQualifiers::QualType((yyvsp[-1].enum_val))); }
-#line 2728 "y.tab.cpp"
+                                        { (yyval.spec_qual_lst) = (yyvsp[0].spec_qual_lst)->append_qual(AST_TypeQuals::QualType((yyvsp[-1].enum_val))); }
+#line 2727 "y.tab.cpp"
     break;
 
   case 120:
 #line 394 "parser.y"
-                                                                                { (yyval.spec_qual_lst) = new AST_SpecifierQualifierList(AST_TypeQualifiers::QualType((yyvsp[0].enum_val))); SL((yyval.spec_qual_lst), (yyloc)); }
-#line 2734 "y.tab.cpp"
+                                        { (yyval.spec_qual_lst) = new AST_SpecsQualsList(AST_TypeQuals::QualType((yyvsp[0].enum_val))); SL((yyval.spec_qual_lst), (yyloc)); }
+#line 2733 "y.tab.cpp"
     break;
 
   case 121:
 #line 398 "parser.y"
-                                                                                                { (yyval.struct_delarator_lst) = new AST_StructDeclaratorList((yyvsp[0].struct_delarator)); SL((yyval.struct_delarator_lst), (yyloc)); }
-#line 2740 "y.tab.cpp"
+                                                        { (yyval.struct_delarator_lst) = new AST_StructDeclaratorList((yyvsp[0].struct_delarator)); SL((yyval.struct_delarator_lst), (yyloc)); }
+#line 2739 "y.tab.cpp"
     break;
 
   case 122:
 #line 399 "parser.y"
-                                                                { (yyval.struct_delarator_lst) = (yyvsp[-2].struct_delarator_lst)->append((yyvsp[0].struct_delarator)); }
-#line 2746 "y.tab.cpp"
+                                                        { (yyval.struct_delarator_lst) = (yyvsp[-2].struct_delarator_lst)->append((yyvsp[0].struct_delarator)); }
+#line 2745 "y.tab.cpp"
     break;
 
   case 123:
 #line 403 "parser.y"
-                                                                                                { (yyval.struct_delarator) = new AST_StructDeclarator((yyvsp[0].declarator), nullptr); SL((yyval.struct_delarator), (yyloc)); }
-#line 2752 "y.tab.cpp"
+                                                        { (yyval.struct_delarator) = new AST_StructDeclarator((yyvsp[0].declarator), nullptr); SL((yyval.struct_delarator), (yyloc)); }
+#line 2751 "y.tab.cpp"
     break;
 
   case 124:
 #line 404 "parser.y"
-                                                                                                { (yyval.struct_delarator) = new AST_StructDeclarator(nullptr, (yyvsp[0].expr)); SL((yyval.struct_delarator), (yyloc)); }
-#line 2758 "y.tab.cpp"
+                                                        { (yyval.struct_delarator) = new AST_StructDeclarator(nullptr, (yyvsp[0].expr)); SL((yyval.struct_delarator), (yyloc)); }
+#line 2757 "y.tab.cpp"
     break;
 
   case 125:
 #line 405 "parser.y"
-                                                                                        { (yyval.struct_delarator) = new AST_StructDeclarator((yyvsp[-2].declarator), (yyvsp[0].expr)); SL((yyval.struct_delarator), (yyloc)); }
-#line 2764 "y.tab.cpp"
+                                                        { (yyval.struct_delarator) = new AST_StructDeclarator((yyvsp[-2].declarator), (yyvsp[0].expr)); SL((yyval.struct_delarator), (yyloc)); }
+#line 2763 "y.tab.cpp"
     break;
 
   case 126:
 #line 409 "parser.y"
-                                                                                { (yyval.enum_spec) = new AST_EnumSpecifier(NO_IDENT_ID, (yyvsp[-1].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2770 "y.tab.cpp"
+                                                        { (yyval.enum_spec) = new AST_EnumSpecifier(NO_IDENT_ID, (yyvsp[-1].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
+#line 2769 "y.tab.cpp"
     break;
 
   case 127:
 #line 410 "parser.y"
-                                                                        { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[-3].ident_id), (yyvsp[-1].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2776 "y.tab.cpp"
+                                                        { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[-3].ident_id), (yyvsp[-1].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
+#line 2775 "y.tab.cpp"
     break;
 
   case 128:
 #line 411 "parser.y"
-                                                                                { (yyval.enum_spec) = new AST_EnumSpecifier(NO_IDENT_ID, (yyvsp[-2].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2782 "y.tab.cpp"
+                                                        { (yyval.enum_spec) = new AST_EnumSpecifier(NO_IDENT_ID, (yyvsp[-2].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
+#line 2781 "y.tab.cpp"
     break;
 
   case 129:
 #line 412 "parser.y"
-                                                                { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[-4].ident_id), (yyvsp[-2].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
-#line 2788 "y.tab.cpp"
+                                                        { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[-4].ident_id), (yyvsp[-2].enumerator_lst)); SL((yyval.enum_spec), (yyloc)); }
+#line 2787 "y.tab.cpp"
     break;
 
   case 130:
 #line 413 "parser.y"
-                                                                                                { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[0].ident_id), nullptr); SL((yyval.enum_spec), (yyloc)); }
-#line 2794 "y.tab.cpp"
+                                                        { (yyval.enum_spec) = new AST_EnumSpecifier((yyvsp[0].ident_id), nullptr); SL((yyval.enum_spec), (yyloc)); }
+#line 2793 "y.tab.cpp"
     break;
 
   case 131:
 #line 417 "parser.y"
-                                                                                                { (yyval.enumerator_lst) = new AST_EnumeratorList((yyvsp[0].enumerator)); SL((yyval.enumerator_lst), (yyloc)); }
-#line 2800 "y.tab.cpp"
+                                                        { (yyval.enumerator_lst) = new AST_EnumeratorList((yyvsp[0].enumerator)); SL((yyval.enumerator_lst), (yyloc)); }
+#line 2799 "y.tab.cpp"
     break;
 
   case 132:
 #line 418 "parser.y"
-                                                                                { (yyval.enumerator_lst) = (yyvsp[-2].enumerator_lst)->append((yyvsp[0].enumerator)); }
-#line 2806 "y.tab.cpp"
+                                                        { (yyval.enumerator_lst) = (yyvsp[-2].enumerator_lst)->append((yyvsp[0].enumerator)); }
+#line 2805 "y.tab.cpp"
     break;
 
   case 133:
 #line 422 "parser.y"
-                                                                                                { (yyval.enumerator) = new AST_Enumerator((yyvsp[0].ident_id), nullptr); SL((yyval.enumerator), (yyloc)); }
-#line 2812 "y.tab.cpp"
+                                                        { (yyval.enumerator) = new AST_Enumerator((yyvsp[0].ident_id), nullptr); SL((yyval.enumerator), (yyloc)); }
+#line 2811 "y.tab.cpp"
     break;
 
   case 134:
 #line 423 "parser.y"
-                                                                                        { (yyval.enumerator) = new AST_Enumerator((yyvsp[-2].ident_id), (yyvsp[0].expr)); SL((yyval.enumerator), (yyloc)); }
-#line 2818 "y.tab.cpp"
+                                                        { (yyval.enumerator) = new AST_Enumerator((yyvsp[-2].ident_id), (yyvsp[0].expr)); SL((yyval.enumerator), (yyloc)); }
+#line 2817 "y.tab.cpp"
     break;
 
   case 135:
 #line 430 "parser.y"
-                                                                                                { (yyval.declaration) = new AST_Declaration((yyvsp[-1].decl_specifiers), nullptr); SL((yyval.declaration), (yyloc)); }
-#line 2824 "y.tab.cpp"
+                                                        { (yyval.declaration) = new AST_Declaration((yyvsp[-1].decl_specifiers), nullptr); SL((yyval.declaration), (yyloc)); }
+#line 2823 "y.tab.cpp"
     break;
 
   case 136:
 #line 431 "parser.y"
-                                                                        { (yyval.declaration) = new AST_Declaration((yyvsp[-2].decl_specifiers), (yyvsp[-1].init_declarator_lst)); SL((yyval.declaration), (yyloc)); }
-#line 2830 "y.tab.cpp"
+                                                        { (yyval.declaration) = new AST_Declaration((yyvsp[-2].decl_specifiers), (yyvsp[-1].init_decltor_lst)); SL((yyval.declaration), (yyloc)); }
+#line 2829 "y.tab.cpp"
     break;
 
   case 137:
 #line 435 "parser.y"
-                                                                                                { (yyval.init_declarator_lst) = new AST_InitDeclaratorList((yyvsp[0].init_declarator)); SL((yyval.init_declarator_lst), (yyloc)); }
-#line 2836 "y.tab.cpp"
+                                                        { (yyval.init_decltor_lst) = new AST_InitDeclaratorList((yyvsp[0].init_decltor)); SL((yyval.init_decltor_lst), (yyloc)); }
+#line 2835 "y.tab.cpp"
     break;
 
   case 138:
 #line 436 "parser.y"
-                                                                        { (yyval.init_declarator_lst) = (yyvsp[-2].init_declarator_lst)->append((yyvsp[0].init_declarator)); }
-#line 2842 "y.tab.cpp"
+                                                        { (yyval.init_decltor_lst) = (yyvsp[-2].init_decltor_lst)->append((yyvsp[0].init_decltor)); }
+#line 2841 "y.tab.cpp"
     break;
 
   case 139:
 #line 440 "parser.y"
-                                                                                                { (yyval.init_declarator) = new AST_InitDeclarator((yyvsp[0].declarator), nullptr); SL((yyval.init_declarator), (yyloc)); }
-#line 2848 "y.tab.cpp"
+                                                        { (yyval.init_decltor) = new AST_InitDeclarator((yyvsp[0].declarator), nullptr); SL((yyval.init_decltor), (yyloc)); }
+#line 2847 "y.tab.cpp"
     break;
 
   case 140:
 #line 441 "parser.y"
-                                                                                { (yyval.init_declarator) = new AST_InitDeclarator((yyvsp[-2].declarator), (yyvsp[0].initializer)); SL((yyval.init_declarator), (yyloc)); }
-#line 2854 "y.tab.cpp"
+                                                        { (yyval.init_decltor) = new AST_InitDeclarator((yyvsp[-2].declarator), (yyvsp[0].initializer)); SL((yyval.init_decltor), (yyloc)); }
+#line 2853 "y.tab.cpp"
     break;
 
   case 141:
 #line 445 "parser.y"
-                                                                                        { (yyval.declarator) = new AST_Declarator((yyvsp[0].dir_declarator), (yyvsp[-1].pointer)); SL((yyval.declarator), (yyloc)); }
-#line 2860 "y.tab.cpp"
+                                        { (yyval.declarator) = new AST_Declarator((yyvsp[0].dir_decltor), (yyvsp[-1].pointer)); SL((yyval.declarator), (yyloc)); }
+#line 2859 "y.tab.cpp"
     break;
 
   case 142:
 #line 446 "parser.y"
-                                                                                                { (yyval.declarator) = new AST_Declarator((yyvsp[0].dir_declarator), nullptr); SL((yyval.declarator), (yyloc)); }
-#line 2866 "y.tab.cpp"
+                                        { (yyval.declarator) = new AST_Declarator((yyvsp[0].dir_decltor), nullptr); SL((yyval.declarator), (yyloc)); }
+#line 2865 "y.tab.cpp"
     break;
 
   case 143:
 #line 450 "parser.y"
-                                                                { (yyval.pointer) = new AST_Pointer(nullptr, nullptr); SL((yyval.pointer), (yyloc)); }
-#line 2872 "y.tab.cpp"
+                                        { (yyval.pointer) = new AST_Pointer(nullptr, nullptr); SL((yyval.pointer), (yyloc)); }
+#line 2871 "y.tab.cpp"
     break;
 
   case 144:
 #line 451 "parser.y"
-                                                        { (yyval.pointer) = new AST_Pointer((yyvsp[0].type_quals), nullptr); SL((yyval.pointer), (yyloc)); }
-#line 2878 "y.tab.cpp"
+                                        { (yyval.pointer) = new AST_Pointer((yyvsp[0].type_quals), nullptr); SL((yyval.pointer), (yyloc)); }
+#line 2877 "y.tab.cpp"
     break;
 
   case 145:
 #line 452 "parser.y"
-                                                        { (yyval.pointer) = new AST_Pointer(nullptr, (yyvsp[0].pointer)); SL((yyval.pointer), (yyloc)); }
-#line 2884 "y.tab.cpp"
+                                        { (yyval.pointer) = new AST_Pointer(nullptr, (yyvsp[0].pointer)); SL((yyval.pointer), (yyloc)); }
+#line 2883 "y.tab.cpp"
     break;
 
   case 146:
 #line 453 "parser.y"
-                                                { (yyval.pointer) = new AST_Pointer((yyvsp[-1].type_quals), (yyvsp[0].pointer)); SL((yyval.pointer), (yyloc)); }
-#line 2890 "y.tab.cpp"
+                                        { (yyval.pointer) = new AST_Pointer((yyvsp[-1].type_quals), (yyvsp[0].pointer)); SL((yyval.pointer), (yyloc)); }
+#line 2889 "y.tab.cpp"
     break;
 
   case 147:
 #line 457 "parser.y"
-                                                                                                        { (yyval.dir_declarator) = AST_DirectDeclarator::makeIdent((yyvsp[0].ident_id)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2896 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeIdent((yyvsp[0].ident_id)); SL((yyval.dir_decltor), (yyloc)); }
+#line 2895 "y.tab.cpp"
     break;
 
   case 148:
 #line 458 "parser.y"
-                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeNested((yyvsp[-1].declarator)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2902 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeNested((yyvsp[-1].declarator)); SL((yyval.dir_decltor), (yyloc)); }
+#line 2901 "y.tab.cpp"
     break;
 
   case 149:
 #line 459 "parser.y"
-                                                                        { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-4].dir_declarator), (yyvsp[-2].type_quals), (yyvsp[-1].expr)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2908 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeArr((yyvsp[-4].dir_decltor), (yyvsp[-2].type_quals), (yyvsp[-1].expr)); SL((yyval.dir_decltor), (yyloc)); }
+#line 2907 "y.tab.cpp"
     break;
 
   case 150:
 #line 460 "parser.y"
-                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-3].dir_declarator), (yyvsp[-1].type_quals), nullptr); SL((yyval.dir_declarator), (yyloc)); }
-#line 2914 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeArr((yyvsp[-3].dir_decltor), (yyvsp[-1].type_quals), nullptr); SL((yyval.dir_decltor), (yyloc)); }
+#line 2913 "y.tab.cpp"
     break;
 
   case 151:
 #line 461 "parser.y"
-                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-3].dir_declarator), nullptr, (yyvsp[-1].expr)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2920 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeArr((yyvsp[-3].dir_decltor), nullptr, (yyvsp[-1].expr)); SL((yyval.dir_decltor), (yyloc)); }
+#line 2919 "y.tab.cpp"
     break;
 
   case 152:
 #line 462 "parser.y"
-                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeArr((yyvsp[-2].dir_declarator), nullptr, nullptr); SL((yyval.dir_declarator), (yyloc)); }
-#line 2926 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeArr((yyvsp[-2].dir_decltor), nullptr, nullptr); SL((yyval.dir_decltor), (yyloc)); }
+#line 2925 "y.tab.cpp"
     break;
 
   case 153:
 #line 463 "parser.y"
-                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeFunc((yyvsp[-3].dir_declarator), (yyvsp[-1].param_type_lst)); SL((yyval.dir_declarator), (yyloc)); }
-#line 2932 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeFunc((yyvsp[-3].dir_decltor), (yyvsp[-1].param_type_lst)); SL((yyval.dir_decltor), (yyloc)); }
+#line 2931 "y.tab.cpp"
     break;
 
   case 154:
 #line 464 "parser.y"
-                                                                                                { (yyval.dir_declarator) = AST_DirectDeclarator::makeFunc((yyvsp[-2].dir_declarator), nullptr); SL((yyval.dir_declarator), (yyloc)); }
-#line 2938 "y.tab.cpp"
+                                                        { (yyval.dir_decltor) = AST_DirDeclarator::makeFunc((yyvsp[-2].dir_decltor), nullptr); SL((yyval.dir_decltor), (yyloc)); }
+#line 2937 "y.tab.cpp"
     break;
 
   case 155:
 #line 468 "parser.y"
-                                                                                        { (yyval.type_quals) = new AST_TypeQualifiers(AST_TypeQualifiers::QualType((yyvsp[0].enum_val))); SL((yyval.type_quals), (yyloc)); }
-#line 2944 "y.tab.cpp"
+                                    { (yyval.type_quals) = new AST_TypeQuals(AST_TypeQuals::QualType((yyvsp[0].enum_val))); SL((yyval.type_quals), (yyloc)); }
+#line 2943 "y.tab.cpp"
     break;
 
   case 156:
 #line 469 "parser.y"
-                                                                        { (yyval.type_quals) = (yyvsp[-1].type_quals)->update(AST_TypeQualifiers::QualType((yyvsp[0].enum_val))); }
-#line 2950 "y.tab.cpp"
+                                    { (yyval.type_quals) = (yyvsp[-1].type_quals)->update(AST_TypeQuals::QualType((yyvsp[0].enum_val))); }
+#line 2949 "y.tab.cpp"
     break;
 
   case 157:
 #line 473 "parser.y"
-                                                                                                { (yyval.param_type_lst) = new AST_ParameterTypeList((yyvsp[0].param_lst), false); SL((yyval.param_type_lst), (yyloc)); }
-#line 2956 "y.tab.cpp"
+                                    { (yyval.param_type_lst) = new AST_ParameterTypeList((yyvsp[0].param_lst), false); SL((yyval.param_type_lst), (yyloc)); }
+#line 2955 "y.tab.cpp"
     break;
 
   case 158:
 #line 474 "parser.y"
-                                                                                { (yyval.param_type_lst) = new AST_ParameterTypeList((yyvsp[-2].param_lst), true); SL((yyval.param_type_lst), (yyloc)); }
-#line 2962 "y.tab.cpp"
+                                    { (yyval.param_type_lst) = new AST_ParameterTypeList((yyvsp[-2].param_lst), true); SL((yyval.param_type_lst), (yyloc)); }
+#line 2961 "y.tab.cpp"
     break;
 
   case 159:
 #line 478 "parser.y"
-                                                                                { (yyval.param_lst) = new AST_ParameterList((yyvsp[0].param_declaration)); SL((yyval.param_lst), (yyloc)); }
-#line 2968 "y.tab.cpp"
+                                                { (yyval.param_lst) = new AST_ParameterList((yyvsp[0].param_declaration)); SL((yyval.param_lst), (yyloc)); }
+#line 2967 "y.tab.cpp"
     break;
 
   case 160:
 #line 479 "parser.y"
-                                                                { (yyval.param_lst) = (yyvsp[-2].param_lst)->append((yyvsp[0].param_declaration)); }
-#line 2974 "y.tab.cpp"
+                                                { (yyval.param_lst) = (yyvsp[-2].param_lst)->append((yyvsp[0].param_declaration)); }
+#line 2973 "y.tab.cpp"
     break;
 
   case 161:
 #line 483 "parser.y"
-                                                                                { (yyval.param_declaration) = new AST_ParameterDeclaration((yyvsp[-1].decl_specifiers), (yyvsp[0].declarator)); SL((yyval.param_declaration), (yyloc)); }
-#line 2980 "y.tab.cpp"
+                                                { (yyval.param_declaration) = new AST_ParameterDeclaration((yyvsp[-1].decl_specifiers), (yyvsp[0].declarator)); SL((yyval.param_declaration), (yyloc)); }
+#line 2979 "y.tab.cpp"
     break;
 
   case 162:
 #line 484 "parser.y"
-                                                                                        { (yyval.param_declaration) = new AST_ParameterDeclaration((yyvsp[0].decl_specifiers), nullptr); SL((yyval.param_declaration), (yyloc)); }
-#line 2986 "y.tab.cpp"
+                                                { (yyval.param_declaration) = new AST_ParameterDeclaration((yyvsp[0].decl_specifiers), nullptr); SL((yyval.param_declaration), (yyloc)); }
+#line 2985 "y.tab.cpp"
     break;
 
   case 163:
 #line 488 "parser.y"
-                                                                                        { (yyval.type_name) = new AST_TypeName((yyvsp[0].spec_qual_lst), nullptr); SL((yyval.type_name), (yyloc)); }
-#line 2992 "y.tab.cpp"
+                                                { (yyval.type_name) = new AST_TypeName((yyvsp[0].spec_qual_lst), nullptr); SL((yyval.type_name), (yyloc)); }
+#line 2991 "y.tab.cpp"
     break;
 
   case 164:
 #line 489 "parser.y"
-                                                                        { (yyval.type_name) = new AST_TypeName((yyvsp[-1].spec_qual_lst), (yyvsp[0].abstract_decl)); SL((yyval.type_name), (yyloc)); }
-#line 2998 "y.tab.cpp"
+                                                { (yyval.type_name) = new AST_TypeName((yyvsp[-1].spec_qual_lst), (yyvsp[0].abstract_decl)); SL((yyval.type_name), (yyloc)); }
+#line 2997 "y.tab.cpp"
     break;
 
   case 165:
 #line 493 "parser.y"
-                                                                                {  (yyval.abstract_decl) = new AST_AbstractDeclarator((yyvsp[0].dir_abstract_decl), nullptr); SL((yyval.abstract_decl), (yyloc)); }
-#line 3004 "y.tab.cpp"
+                                                { (yyval.abstract_decl) = new AST_AbstrDeclarator((yyvsp[0].dir_abstract_decl), nullptr); SL((yyval.abstract_decl), (yyloc)); }
+#line 3003 "y.tab.cpp"
     break;
 
   case 166:
 #line 494 "parser.y"
-                                                                        {  (yyval.abstract_decl) = new AST_AbstractDeclarator((yyvsp[0].dir_abstract_decl), (yyvsp[-1].pointer)); SL((yyval.abstract_decl), (yyloc)); }
-#line 3010 "y.tab.cpp"
+                                                { (yyval.abstract_decl) = new AST_AbstrDeclarator((yyvsp[0].dir_abstract_decl), (yyvsp[-1].pointer)); SL((yyval.abstract_decl), (yyloc)); }
+#line 3009 "y.tab.cpp"
     break;
 
   case 167:
 #line 495 "parser.y"
-                                                                            {  (yyval.abstract_decl) = new AST_AbstractDeclarator(nullptr, (yyvsp[0].pointer)); SL((yyval.abstract_decl), (yyloc)); }
-#line 3016 "y.tab.cpp"
+                                                { (yyval.abstract_decl) = new AST_AbstrDeclarator(nullptr, (yyvsp[0].pointer)); SL((yyval.abstract_decl), (yyloc)); }
+#line 3015 "y.tab.cpp"
     break;
 
   case 168:
 #line 500 "parser.y"
-                                                                                { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeNested((yyvsp[-1].abstract_decl)); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3022 "y.tab.cpp"
+                                                    { (yyval.dir_abstract_decl) = AST_DirAbstrDeclarator::makeNested((yyvsp[-1].abstract_decl)); SL((yyval.dir_abstract_decl), (yyloc)); }
+#line 3021 "y.tab.cpp"
     break;
 
   case 169:
 #line 501 "parser.y"
-                                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeArr((yyvsp[-2].dir_abstract_decl), nullptr); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3028 "y.tab.cpp"
+                                                    { (yyval.dir_abstract_decl) = AST_DirAbstrDeclarator::makeArr((yyvsp[-2].dir_abstract_decl), nullptr); SL((yyval.dir_abstract_decl), (yyloc)); }
+#line 3027 "y.tab.cpp"
     break;
 
   case 170:
 #line 502 "parser.y"
-                                                                { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeArr((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].expr)); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3034 "y.tab.cpp"
+                                                    { (yyval.dir_abstract_decl) = AST_DirAbstrDeclarator::makeArr((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].expr)); SL((yyval.dir_abstract_decl), (yyloc)); }
+#line 3033 "y.tab.cpp"
     break;
 
   case 171:
 #line 503 "parser.y"
-                                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeFunc((yyvsp[-2].dir_abstract_decl), nullptr); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3040 "y.tab.cpp"
+                                                    { (yyval.dir_abstract_decl) = AST_DirAbstrDeclarator::makeFunc((yyvsp[-2].dir_abstract_decl), nullptr); SL((yyval.dir_abstract_decl), (yyloc)); }
+#line 3039 "y.tab.cpp"
     break;
 
   case 172:
 #line 504 "parser.y"
-                                                        { (yyval.dir_abstract_decl) = AST_DirectAbstractDeclarator::makeFunc((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].param_type_lst)); SL((yyval.dir_abstract_decl), (yyloc)); }
-#line 3046 "y.tab.cpp"
+                                                    { (yyval.dir_abstract_decl) = AST_DirAbstrDeclarator::makeFunc((yyvsp[-3].dir_abstract_decl), (yyvsp[-1].param_type_lst)); SL((yyval.dir_abstract_decl), (yyloc)); }
+#line 3045 "y.tab.cpp"
     break;
 
   case 173:
 #line 511 "parser.y"
-                                                                                        { (yyval.initializer) = new AST_Initializer((yyvsp[0].expr)); SL((yyval.initializer), (yyloc)); }
-#line 3052 "y.tab.cpp"
+                                                    { (yyval.initializer) = new AST_Initializer((yyvsp[0].expr)); SL((yyval.initializer), (yyloc)); }
+#line 3051 "y.tab.cpp"
     break;
 
   case 174:
 #line 512 "parser.y"
-                                                                                        { (yyval.initializer) = new AST_Initializer((yyvsp[-1].initializer_lst)); SL((yyval.initializer), (yyloc)); }
-#line 3058 "y.tab.cpp"
+                                                    { (yyval.initializer) = new AST_Initializer((yyvsp[-1].initializer_lst)); SL((yyval.initializer), (yyloc)); }
+#line 3057 "y.tab.cpp"
     break;
 
   case 175:
 #line 513 "parser.y"
-                                                                                { (yyval.initializer) = new AST_Initializer((yyvsp[-2].initializer_lst)); SL((yyval.initializer), (yyloc)); }
-#line 3064 "y.tab.cpp"
+                                                    { (yyval.initializer) = new AST_Initializer((yyvsp[-2].initializer_lst)); SL((yyval.initializer), (yyloc)); }
+#line 3063 "y.tab.cpp"
     break;
 
   case 176:
 #line 517 "parser.y"
-                                                                                        { (yyval.initializer_lst) = new AST_InitializerList((yyvsp[0].initializer), nullptr); SL((yyval.initializer_lst), (yyloc)); }
-#line 3070 "y.tab.cpp"
+                                                    { (yyval.initializer_lst) = new AST_InitializerList((yyvsp[0].initializer), nullptr); SL((yyval.initializer_lst), (yyloc)); }
+#line 3069 "y.tab.cpp"
     break;
 
   case 177:
 #line 518 "parser.y"
-                                                                        { (yyval.initializer_lst) = new AST_InitializerList((yyvsp[0].initializer), (yyvsp[-2].designator)); SL((yyval.initializer_lst), (yyloc)); }
-#line 3076 "y.tab.cpp"
+                                                    { (yyval.initializer_lst) = new AST_InitializerList((yyvsp[0].initializer), (yyvsp[-2].designator)); SL((yyval.initializer_lst), (yyloc)); }
+#line 3075 "y.tab.cpp"
     break;
 
   case 178:
 #line 519 "parser.y"
-                                                                                { (yyval.initializer_lst) = (yyvsp[-2].initializer_lst)->append((yyvsp[0].initializer), nullptr); }
-#line 3082 "y.tab.cpp"
+                                                    { (yyval.initializer_lst) = (yyvsp[-2].initializer_lst)->append((yyvsp[0].initializer), nullptr); }
+#line 3081 "y.tab.cpp"
     break;
 
   case 179:
 #line 520 "parser.y"
-                                                                { (yyval.initializer_lst) = (yyvsp[-4].initializer_lst)->append((yyvsp[0].initializer), (yyvsp[-2].designator)); }
-#line 3088 "y.tab.cpp"
+                                                    { (yyval.initializer_lst) = (yyvsp[-4].initializer_lst)->append((yyvsp[0].initializer), (yyvsp[-2].designator)); }
+#line 3087 "y.tab.cpp"
     break;
 
   case 180:
 #line 524 "parser.y"
-                                                                                { (yyval.designator) = new AST_Designator((yyvsp[-1].expr)); SL((yyval.designator), (yyloc)); }
-#line 3094 "y.tab.cpp"
+                                                    { (yyval.designator) = new AST_Designator((yyvsp[-1].expr)); SL((yyval.designator), (yyloc)); }
+#line 3093 "y.tab.cpp"
     break;
 
   case 181:
 #line 525 "parser.y"
-                                                                                        { (yyval.designator) = new AST_Designator((yyvsp[0].ident_id)); SL((yyval.designator), (yyloc)); }
-#line 3100 "y.tab.cpp"
+                                                    { (yyval.designator) = new AST_Designator((yyvsp[0].ident_id)); SL((yyval.designator), (yyloc)); }
+#line 3099 "y.tab.cpp"
     break;
 
   case 182:
 #line 532 "parser.y"
-                                                                        { (yyval.stmt) = (yyvsp[0].label_stmt); }
-#line 3106 "y.tab.cpp"
+                                    { (yyval.stmt) = (yyvsp[0].label_stmt); }
+#line 3105 "y.tab.cpp"
     break;
 
   case 183:
 #line 533 "parser.y"
-                                                                        { (yyval.stmt) = (yyvsp[0].compound_stmt); }
-#line 3112 "y.tab.cpp"
+                                    { (yyval.stmt) = (yyvsp[0].compound_stmt); }
+#line 3111 "y.tab.cpp"
     break;
 
   case 184:
 #line 534 "parser.y"
-                                                                                { (yyval.stmt) = (yyvsp[0].expr_stmt); }
-#line 3118 "y.tab.cpp"
+                                    { (yyval.stmt) = (yyvsp[0].expr_stmt); }
+#line 3117 "y.tab.cpp"
     break;
 
   case 185:
 #line 535 "parser.y"
-                                                                        { (yyval.stmt) = (yyvsp[0].select_stmt); }
-#line 3124 "y.tab.cpp"
+                                    { (yyval.stmt) = (yyvsp[0].select_stmt); }
+#line 3123 "y.tab.cpp"
     break;
 
   case 186:
 #line 536 "parser.y"
-                                                                                { (yyval.stmt) = (yyvsp[0].iter_stmt); }
-#line 3130 "y.tab.cpp"
+                                    { (yyval.stmt) = (yyvsp[0].iter_stmt); }
+#line 3129 "y.tab.cpp"
     break;
 
   case 187:
 #line 537 "parser.y"
-                                                                                { (yyval.stmt) = (yyvsp[0].jump_stmt); }
-#line 3136 "y.tab.cpp"
+                                    { (yyval.stmt) = (yyvsp[0].jump_stmt); }
+#line 3135 "y.tab.cpp"
     break;
 
   case 188:
 #line 541 "parser.y"
-                                                                { (yyval.label_stmt) = new AST_LabeledStmt((yyvsp[-2].ident_id), (yyvsp[0].stmt), AST_LabeledStmt::SIMPL); SL((yyval.label_stmt), (yyloc)); }
-#line 3142 "y.tab.cpp"
+                                    { (yyval.label_stmt) = new AST_LabeledStmt((yyvsp[-2].ident_id), (yyvsp[0].stmt), AST_LabeledStmt::SIMPL); SL((yyval.label_stmt), (yyloc)); }
+#line 3141 "y.tab.cpp"
     break;
 
   case 189:
 #line 542 "parser.y"
-                                                                { (yyval.label_stmt) = new AST_LabeledStmt((yyvsp[-2].expr), (yyvsp[0].stmt), AST_LabeledStmt::SW_CASE); SL((yyval.label_stmt), (yyloc)); }
-#line 3148 "y.tab.cpp"
+                                    { (yyval.label_stmt) = new AST_LabeledStmt((yyvsp[-2].expr), (yyvsp[0].stmt), AST_LabeledStmt::SW_CASE); SL((yyval.label_stmt), (yyloc)); }
+#line 3147 "y.tab.cpp"
     break;
 
   case 190:
 #line 543 "parser.y"
-                                                                        { (yyval.label_stmt) = new AST_LabeledStmt(nullptr, (yyvsp[0].stmt), AST_LabeledStmt::SW_DEFAULT); SL((yyval.label_stmt), (yyloc)); }
-#line 3154 "y.tab.cpp"
+                                    { (yyval.label_stmt) = new AST_LabeledStmt(nullptr, (yyvsp[0].stmt), AST_LabeledStmt::SW_DEFAULT); SL((yyval.label_stmt), (yyloc)); }
+#line 3153 "y.tab.cpp"
     break;
 
   case 191:
 #line 547 "parser.y"
-                                                                                { (yyval.compound_stmt) = new AST_CompoundStmt(new AST_BlockItemList()); SL((yyval.compound_stmt), (yyloc)); }
-#line 3160 "y.tab.cpp"
+                                    { (yyval.compound_stmt) = new AST_CompoundStmt(new AST_BlockItemList()); SL((yyval.compound_stmt), (yyloc)); }
+#line 3159 "y.tab.cpp"
     break;
 
   case 192:
 #line 548 "parser.y"
-                                                                { (yyval.compound_stmt) = new AST_CompoundStmt((yyvsp[-1].block_item_lst)); SL((yyval.compound_stmt), (yyloc)); }
-#line 3166 "y.tab.cpp"
+                                    { (yyval.compound_stmt) = new AST_CompoundStmt((yyvsp[-1].block_item_lst)); SL((yyval.compound_stmt), (yyloc)); }
+#line 3165 "y.tab.cpp"
     break;
 
   case 193:
 #line 552 "parser.y"
-                                                                        { (yyval.block_item_lst) = (new AST_BlockItemList())->append((yyvsp[0].declaration)); SL((yyval.block_item_lst), (yyloc)); }
-#line 3172 "y.tab.cpp"
+                                    { (yyval.block_item_lst) = (new AST_BlockItemList())->append((yyvsp[0].declaration)); SL((yyval.block_item_lst), (yyloc)); }
+#line 3171 "y.tab.cpp"
     break;
 
   case 194:
 #line 553 "parser.y"
-                                                                                { (yyval.block_item_lst) = (new AST_BlockItemList())->append((yyvsp[0].stmt)); SL((yyval.block_item_lst), (yyloc)); }
-#line 3178 "y.tab.cpp"
+                                    { (yyval.block_item_lst) = (new AST_BlockItemList())->append((yyvsp[0].stmt)); SL((yyval.block_item_lst), (yyloc)); }
+#line 3177 "y.tab.cpp"
     break;
 
   case 195:
 #line 554 "parser.y"
-                                                        { (yyval.block_item_lst) = (yyvsp[-1].block_item_lst)->append((yyvsp[0].declaration)); }
-#line 3184 "y.tab.cpp"
+                                    { (yyval.block_item_lst) = (yyvsp[-1].block_item_lst)->append((yyvsp[0].declaration)); }
+#line 3183 "y.tab.cpp"
     break;
 
   case 196:
 #line 555 "parser.y"
-                                                                { (yyval.block_item_lst) = (yyvsp[-1].block_item_lst)->append((yyvsp[0].stmt)); }
-#line 3190 "y.tab.cpp"
+                                    { (yyval.block_item_lst) = (yyvsp[-1].block_item_lst)->append((yyvsp[0].stmt)); }
+#line 3189 "y.tab.cpp"
     break;
 
   case 197:
 #line 559 "parser.y"
-                                                                                { (yyval.expr_stmt) = new AST_ExprStmt(nullptr); SL((yyval.expr_stmt), (yyloc)); }
-#line 3196 "y.tab.cpp"
+                                    { (yyval.expr_stmt) = new AST_ExprStmt(nullptr); SL((yyval.expr_stmt), (yyloc)); }
+#line 3195 "y.tab.cpp"
     break;
 
   case 198:
 #line 560 "parser.y"
-                                                                                { (yyval.expr_stmt) = new AST_ExprStmt((yyvsp[-1].expr)); SL((yyval.expr_stmt), (yyloc)); }
-#line 3202 "y.tab.cpp"
+                                    { (yyval.expr_stmt) = new AST_ExprStmt((yyvsp[-1].expr)); SL((yyval.expr_stmt), (yyloc)); }
+#line 3201 "y.tab.cpp"
     break;
 
   case 199:
 #line 564 "parser.y"
-                                                        { (yyval.select_stmt) = AST_SelectionStmt::get_if((yyvsp[-2].expr), (yyvsp[0].stmt), nullptr); SL((yyval.select_stmt), (yyloc)); }
-#line 3208 "y.tab.cpp"
+                                            { (yyval.select_stmt) = AST_SelectionStmt::get_if((yyvsp[-2].expr), (yyvsp[0].stmt), nullptr); SL((yyval.select_stmt), (yyloc)); }
+#line 3207 "y.tab.cpp"
     break;
 
   case 200:
 #line 565 "parser.y"
-                                                        { (yyval.select_stmt) = AST_SelectionStmt::get_if((yyvsp[-4].expr), (yyvsp[-2].stmt), (yyvsp[0].stmt)); SL((yyval.select_stmt), (yyloc)); }
-#line 3214 "y.tab.cpp"
+                                            { (yyval.select_stmt) = AST_SelectionStmt::get_if((yyvsp[-4].expr), (yyvsp[-2].stmt), (yyvsp[0].stmt)); SL((yyval.select_stmt), (yyloc)); }
+#line 3213 "y.tab.cpp"
     break;
 
   case 201:
 #line 566 "parser.y"
-                                                                { (yyval.select_stmt) = AST_SelectionStmt::get_switch((yyvsp[-2].expr), (yyvsp[0].stmt)); SL((yyval.select_stmt), (yyloc)); }
-#line 3220 "y.tab.cpp"
+                                            { (yyval.select_stmt) = AST_SelectionStmt::get_switch((yyvsp[-2].expr), (yyvsp[0].stmt)); SL((yyval.select_stmt), (yyloc)); }
+#line 3219 "y.tab.cpp"
     break;
 
   case 202:
 #line 570 "parser.y"
-                                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeWhileLoop((yyvsp[0].stmt), (yyvsp[-2].expr), false); SL((yyval.iter_stmt), (yyloc)); }
-#line 3226 "y.tab.cpp"
+                                                    { (yyval.iter_stmt) = AST_IterStmt::makeWhile((yyvsp[0].stmt), (yyvsp[-2].expr), false); SL((yyval.iter_stmt), (yyloc)); }
+#line 3225 "y.tab.cpp"
     break;
 
   case 203:
 #line 571 "parser.y"
-                                                                                { (yyval.iter_stmt) = AST_IterationStmt::makeWhileLoop((yyvsp[-5].stmt), (yyvsp[-2].expr), true); SL((yyval.iter_stmt), (yyloc)); }
-#line 3232 "y.tab.cpp"
+                                                    { (yyval.iter_stmt) = AST_IterStmt::makeWhile((yyvsp[-5].stmt), (yyvsp[-2].expr), true); SL((yyval.iter_stmt), (yyloc)); }
+#line 3231 "y.tab.cpp"
     break;
 
   case 204:
 #line 572 "parser.y"
-                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr_stmt), nullptr); SL((yyval.iter_stmt), (yyloc)); }
-#line 3238 "y.tab.cpp"
+                                                    { (yyval.iter_stmt) = AST_IterStmt::makeFor((yyvsp[0].stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr_stmt), nullptr); SL((yyval.iter_stmt), (yyloc)); }
+#line 3237 "y.tab.cpp"
     break;
 
   case 205:
 #line 573 "parser.y"
-                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-4].expr_stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); SL((yyval.iter_stmt), (yyloc)); }
-#line 3244 "y.tab.cpp"
+                                                    { (yyval.iter_stmt) = AST_IterStmt::makeFor((yyvsp[0].stmt), (yyvsp[-4].expr_stmt), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); SL((yyval.iter_stmt), (yyloc)); }
+#line 3243 "y.tab.cpp"
     break;
 
   case 206:
 #line 574 "parser.y"
-                                                                        { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-3].declaration), (yyvsp[-2].expr_stmt), nullptr); SL((yyval.iter_stmt), (yyloc)); }
-#line 3250 "y.tab.cpp"
+                                                    { (yyval.iter_stmt) = AST_IterStmt::makeFor((yyvsp[0].stmt), (yyvsp[-3].declaration), (yyvsp[-2].expr_stmt), nullptr); SL((yyval.iter_stmt), (yyloc)); }
+#line 3249 "y.tab.cpp"
     break;
 
   case 207:
 #line 575 "parser.y"
-                                                                { (yyval.iter_stmt) = AST_IterationStmt::makeForLoop((yyvsp[0].stmt), (yyvsp[-4].declaration), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); SL((yyval.iter_stmt), (yyloc)); }
-#line 3256 "y.tab.cpp"
+                                                    { (yyval.iter_stmt) = AST_IterStmt::makeFor((yyvsp[0].stmt), (yyvsp[-4].declaration), (yyvsp[-3].expr_stmt), (yyvsp[-2].expr)); SL((yyval.iter_stmt), (yyloc)); }
+#line 3255 "y.tab.cpp"
     break;
 
   case 208:
 #line 579 "parser.y"
-                                                                                        { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_GOTO, (yyvsp[-1].ident_id)); SL((yyval.jump_stmt), (yyloc)); }
-#line 3262 "y.tab.cpp"
+                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_GOTO, (yyvsp[-1].ident_id)); SL((yyval.jump_stmt), (yyloc)); }
+#line 3261 "y.tab.cpp"
     break;
 
   case 209:
 #line 580 "parser.y"
-                                                                                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); SL((yyval.jump_stmt), (yyloc)); }
-#line 3268 "y.tab.cpp"
+                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); SL((yyval.jump_stmt), (yyloc)); }
+#line 3267 "y.tab.cpp"
     break;
 
   case 210:
 #line 581 "parser.y"
-                                                                                                        { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_BREAK); SL((yyval.jump_stmt), (yyloc)); }
-#line 3274 "y.tab.cpp"
+                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_BREAK); SL((yyval.jump_stmt), (yyloc)); }
+#line 3273 "y.tab.cpp"
     break;
 
   case 211:
 #line 582 "parser.y"
-                                                                                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_RET); SL((yyval.jump_stmt), (yyloc)); }
-#line 3280 "y.tab.cpp"
+                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_RET); SL((yyval.jump_stmt), (yyloc)); }
+#line 3279 "y.tab.cpp"
     break;
 
   case 212:
 #line 583 "parser.y"
-                                                                                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_RET, (yyvsp[-1].expr)); SL((yyval.jump_stmt), (yyloc)); }
-#line 3286 "y.tab.cpp"
+                                { (yyval.jump_stmt) = new AST_JumpStmt(AST_JumpStmt::J_RET, (yyvsp[-1].expr)); SL((yyval.jump_stmt), (yyloc)); }
+#line 3285 "y.tab.cpp"
     break;
 
   case 213:
 #line 590 "parser.y"
-                                                                        { (yyval.trans_unit) = *parser_result = (new AST_TranslationUnit())->append((yyvsp[0].func_def)); SL((yyval.trans_unit), (yyloc)); }
-#line 3292 "y.tab.cpp"
+                                    { (yyval.trans_unit) = *parser_result = (new AST_TranslationUnit())->append((yyvsp[0].func_def)); SL((yyval.trans_unit), (yyloc)); }
+#line 3291 "y.tab.cpp"
     break;
 
   case 214:
 #line 591 "parser.y"
-                                                                { (yyval.trans_unit) = *parser_result = (new AST_TranslationUnit())->append((yyvsp[0].declaration)); check_typedef((yyvsp[0].declaration)); SL((yyval.trans_unit), (yyloc)); }
-#line 3298 "y.tab.cpp"
+                                    {
+                                        (yyval.trans_unit) = *parser_result = (new AST_TranslationUnit())->append((yyvsp[0].declaration));
+                                        check_typedef((yyvsp[0].declaration));
+                                        SL((yyval.trans_unit), (yyloc));
+                                    }
+#line 3301 "y.tab.cpp"
     break;
 
   case 215:
-#line 592 "parser.y"
-                                                        { (yyval.trans_unit) = (yyvsp[-1].trans_unit)->append((yyvsp[0].func_def)); }
-#line 3304 "y.tab.cpp"
+#line 596 "parser.y"
+                                    { (yyval.trans_unit) = (yyvsp[-1].trans_unit)->append((yyvsp[0].func_def)); }
+#line 3307 "y.tab.cpp"
     break;
 
   case 216:
-#line 593 "parser.y"
-                                                { (yyval.trans_unit) = (yyvsp[-1].trans_unit)->append((yyvsp[0].declaration)); check_typedef((yyvsp[0].declaration)); }
-#line 3310 "y.tab.cpp"
+#line 597 "parser.y"
+                                    { (yyval.trans_unit) = (yyvsp[-1].trans_unit)->append((yyvsp[0].declaration)); check_typedef((yyvsp[0].declaration)); }
+#line 3313 "y.tab.cpp"
     break;
 
   case 217:
-#line 597 "parser.y"
-                                                                        { (yyval.func_def) = new AST_FunctionDef((yyvsp[-2].decl_specifiers), (yyvsp[-1].declarator), (yyvsp[0].compound_stmt)); SL((yyval.func_def), (yyloc)); }
-#line 3316 "y.tab.cpp"
+#line 601 "parser.y"
+                                                { (yyval.func_def) = new AST_FunctionDef((yyvsp[-2].decl_specifiers), (yyvsp[-1].declarator), (yyvsp[0].compound_stmt)); SL((yyval.func_def), (yyloc)); }
+#line 3319 "y.tab.cpp"
     break;
 
 
-#line 3320 "y.tab.cpp"
+#line 3323 "y.tab.cpp"
 
       default: break;
     }
@@ -3554,25 +3557,25 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 601 "parser.y"
+#line 605 "parser.y"
 
 
 AST_TranslationUnit* CoreParser::parse_program(std::string const &str,
                                                CoreParserState *state,
                                                const LinesWarpMap *warps) {
-	yyscan_t scanner;
-	lex_extra_t extra;
-	extra.state = state;
-	extra.warps = warps;
-	init_scanner(str.c_str(), &scanner, &extra);
-	ast_set_pstate_ptr(state);
-	AST_TranslationUnit *res;
-	int isFailure = yyparse(scanner, &res, warps);
-	destroy_scanner(scanner);
-	ast_set_pstate_ptr(nullptr);
-	if (isFailure) {
-		fprintf(stderr, "Parsing failed\n");
-		exit(EXIT_FAILURE);
-	}
-	return res;
+    yyscan_t scanner;
+    lex_extra_t extra;
+    extra.state = state;
+    extra.warps = warps;
+    init_scanner(str.c_str(), &scanner, &extra);
+    ast_set_pstate_ptr(state);
+    AST_TranslationUnit *res;
+    int isFailure = yyparse(scanner, &res, warps);
+    destroy_scanner(scanner);
+    ast_set_pstate_ptr(nullptr);
+    if (isFailure) {
+        fprintf(stderr, "Parsing failed\n");
+        exit(EXIT_FAILURE);
+    }
+    return res;
 }

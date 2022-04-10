@@ -353,15 +353,15 @@ TreeNodeRef AST_CommaExpression::getTreeNode() const {
 
 // AST_TypeQualifiers
 
-static void update_type_qualifiers(AST_TypeQualifiers &list, AST_TypeQualifiers::QualType qual) {
+static void update_type_qualifiers(AST_TypeQuals &list, AST_TypeQuals::QualType qual) {
     switch (qual) {
-        case AST_TypeQualifiers::Q_CONST:
+        case AST_TypeQuals::Q_CONST:
             list.is_const = true;
             return;
-        case AST_TypeQualifiers::Q_RESTRICT:
+        case AST_TypeQuals::Q_RESTRICT:
             list.is_restrict = true;
             return;
-        case AST_TypeQualifiers::Q_VOLATILE:
+        case AST_TypeQuals::Q_VOLATILE:
             list.is_volatile = true;
             return;
         default:
@@ -370,21 +370,21 @@ static void update_type_qualifiers(AST_TypeQualifiers &list, AST_TypeQualifiers:
     }
 }
 
-AST_TypeQualifiers::AST_TypeQualifiers()
+AST_TypeQuals::AST_TypeQuals()
     : AST_Node(AST_TYPE_QUALIFIERS), is_const(false), is_restrict(false), is_volatile(false) {}
 
-AST_TypeQualifiers::AST_TypeQualifiers(QualType init_qual)
+AST_TypeQuals::AST_TypeQuals(QualType init_qual)
     : AST_Node(AST_TYPE_QUALIFIERS), is_const(false), is_restrict(false), is_volatile(false)
 {
     update_type_qualifiers(*this, init_qual);
 }
 
-AST_TypeQualifiers* AST_TypeQualifiers::update(QualType new_qual) {
+AST_TypeQuals* AST_TypeQuals::update(QualType new_qual) {
     update_type_qualifiers(*this, new_qual);
     return this;
 }
 
-TreeNodeRef AST_TypeQualifiers::getTreeNode() const {
+TreeNodeRef AST_TypeQuals::getTreeNode() const {
     std::string str("tq:"s);
     if (is_const)
         str += " const"s;
@@ -401,7 +401,7 @@ TreeNodeRef AST_TypeQualifiers::getTreeNode() const {
 AST_TypeSpecifier::AST_TypeSpecifier(TypeSpec type)
     : AST_Node(AST_TYPE_SPECIFIER), spec_type(type), v(nullptr) {}
 
-AST_TypeSpecifier::AST_TypeSpecifier(AST_StructOrUsionSpec *spec)
+AST_TypeSpecifier::AST_TypeSpecifier(AST_UStructSpec *spec)
     : AST_Node(AST_TYPE_SPECIFIER), spec_type(AST_TypeSpecifier::T_UNISTRUCT), v(spec) {}
 
 AST_TypeSpecifier::AST_TypeSpecifier(AST_EnumSpecifier *spec)
@@ -422,7 +422,7 @@ TreeNodeRef AST_TypeSpecifier::getTreeNode() const {
 //AST_DeclSpecifiers
 
 AST_DeclSpecifiers::AST_DeclSpecifiers()
-    : AST_Node(AST_DECL_SPECIFIERS), type_qualifiers(new AST_TypeQualifiers()) {}
+    : AST_Node(AST_DECL_SPECIFIERS), type_qualifiers(new AST_TypeQuals()) {}
 
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_storage(ast_enum_t val) {
     if (storage_specifier != ST_NONE || val == ST_NONE) {
@@ -439,7 +439,7 @@ AST_DeclSpecifiers* AST_DeclSpecifiers::update_type_spec(AST_TypeSpecifier *val)
 }
 
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_type_qual(ast_enum_t val) {
-    type_qualifiers->update(AST_TypeQualifiers::QualType(val));
+    type_qualifiers->update(AST_TypeQuals::QualType(val));
     return this;
 }
 
@@ -470,7 +470,7 @@ TreeNodeRef AST_DeclSpecifiers::getTreeNode() const {
 
 // AST_StructDeclaration
 
-AST_StructDeclaration::AST_StructDeclaration(AST_SpecifierQualifierList *type, AST_StructDeclaratorList *child)
+AST_StructDeclaration::AST_StructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child)
     : AST_Node(AST_STRUCT_DECL), type(type), child(child) {}
 
 TreeNodeRef AST_StructDeclaration::getTreeNode() const {
@@ -540,27 +540,27 @@ TreeNodeRef AST_StructDeclarationList::getTreeNode() const {
 
 // AST_SpecifierQualifierList
 
-AST_SpecifierQualifierList::AST_SpecifierQualifierList(AST_TypeQualifiers::QualType qual) 
-            : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(new AST_TypeQualifiers()) {
+AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeQuals::QualType qual)
+            : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(new AST_TypeQuals()) {
     type_qualifiers->update(qual);
 }
 
-AST_SpecifierQualifierList::AST_SpecifierQualifierList(AST_TypeSpecifier* type)
-            : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(new AST_TypeQualifiers()) {
+AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeSpecifier* type)
+            : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(new AST_TypeQuals()) {
     type_specifiers.emplace_back(type);
 }
 
-AST_SpecifierQualifierList* AST_SpecifierQualifierList::append_qual(AST_TypeQualifiers::QualType qual) {
+AST_SpecsQualsList* AST_SpecsQualsList::append_qual(AST_TypeQuals::QualType qual) {
     type_qualifiers->update(qual);
     return this;
 }
 
-AST_SpecifierQualifierList* AST_SpecifierQualifierList::append_spec(AST_TypeSpecifier* type) {
+AST_SpecsQualsList* AST_SpecsQualsList::append_spec(AST_TypeSpecifier* type) {
     type_specifiers.emplace_back(type);
     return this;
 }
 
-TreeNodeRef AST_SpecifierQualifierList::getTreeNode() const {
+TreeNodeRef AST_SpecsQualsList::getTreeNode() const {
     auto node = TreeNode::create("spec_qual_lst"s);
     if (type_qualifiers)
         node->addChild(type_qualifiers->getTreeNode());
@@ -572,10 +572,10 @@ TreeNodeRef AST_SpecifierQualifierList::getTreeNode() const {
 
 // AST_StructOrUsionSpec
 
-AST_StructOrUsionSpec::AST_StructOrUsionSpec(bool is_uni, string_id_t name, AST_StructDeclarationList *body)
-    : AST_Node(AST_STRUCT_OR_UNION_SPEC), is_union(is_uni), name(name), body(body) {}
+AST_UStructSpec::AST_UStructSpec(bool is_uni, string_id_t name, AST_StructDeclarationList *body)
+    : AST_Node(AST_USTRUCT_SPEC), is_union(is_uni), name(name), body(body) {}
 
-TreeNodeRef AST_StructOrUsionSpec::getTreeNode() const {
+TreeNodeRef AST_UStructSpec::getTreeNode() const {
     std::string str(is_union ? "union"s : "struct"s);
     if (name != 0)
         str += "  "s + get_ident_by_id(ast_pstate, name);
@@ -688,47 +688,44 @@ TreeNodeRef AST_Declaration::getTreeNode() const {
 
 // AST_DirectDeclarator
 
-AST_DirectDeclarator::AST_DirectDeclarator(DeclType dtype)
+AST_DirDeclarator::AST_DirDeclarator(DeclType dtype)
     : AST_Node(AST_DIR_DECLARATOR), type(dtype) {}
 
-AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::makeIdent(string_id_t ident) {
-    auto res = new AST_DirectDeclarator(AST_DirectDeclarator::NAME);
+AST_DirDeclarator* AST_DirDeclarator::AST_DirDeclarator::makeIdent(string_id_t ident) {
+    auto res = new AST_DirDeclarator(AST_DirDeclarator::NAME);
     res->base = ident;
     return res;
 }
 
-AST_DirectDeclarator* AST_DirectDeclarator::AST_DirectDeclarator::makeNested(AST_Declarator *decl) {
-    auto res = new AST_DirectDeclarator(AST_DirectDeclarator::NESTED);
+AST_DirDeclarator* AST_DirDeclarator::AST_DirDeclarator::makeNested(AST_Declarator *decl) {
+    auto res = new AST_DirDeclarator(AST_DirDeclarator::NESTED);
     res->base = uniqify(decl);
     return res;
 }
 
-AST_DirectDeclarator* AST_DirectDeclarator::makeArr(AST_DirectDeclarator *base,
-                                                    AST_TypeQualifiers *qual,
-                                                    AST_Expr *sz) {
-    auto res = new AST_DirectDeclarator(AST_DirectDeclarator::ARRAY);
+AST_DirDeclarator* AST_DirDeclarator::makeArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz) {
+    auto res = new AST_DirDeclarator(AST_DirDeclarator::ARRAY);
     res->base = uniqify(base);
     res->arr_type_qual = uniqify(qual);
     res->arr_size = uniqify(sz);
     return res;
 }
 
-AST_DirectDeclarator* AST_DirectDeclarator::makeFunc(AST_DirectDeclarator *base,
-                                                     AST_ParameterTypeList *args) {
-    auto res = new AST_DirectDeclarator(AST_DirectDeclarator::FUNC);
+AST_DirDeclarator* AST_DirDeclarator::makeFunc(AST_DirDeclarator *base, AST_ParameterTypeList *args) {
+    auto res = new AST_DirDeclarator(AST_DirDeclarator::FUNC);
     res->base = uniqify(base);
     res->func_args = uniqify(args);
     return res;
 }
 
-TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
-    if (type == AST_DirectDeclarator::NAME) {
+TreeNodeRef AST_DirDeclarator::getTreeNode() const {
+    if (type == AST_DirDeclarator::NAME) {
         return TreeNode::create(get_ident_by_id(ast_pstate, std::get<string_id_t>(base)));
     }
-    else if (type == AST_DirectDeclarator::NESTED) {
+    else if (type == AST_DirDeclarator::NESTED) {
         return std::get<uniq<AST_Node>>(base)->getTreeNode();
     }
-    else if (type == AST_DirectDeclarator::ARRAY) {
+    else if (type == AST_DirDeclarator::ARRAY) {
         auto node = TreeNode::create("array_of"s);
         node->addChild(std::get<uniq<AST_Node>>(base)->getTreeNode());
         auto arr_node = TreeNode::create("properties"s);
@@ -739,7 +736,7 @@ TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
         node->addChild(arr_node);
         return node;
     }
-    else if (type == AST_DirectDeclarator::FUNC) {
+    else if (type == AST_DirDeclarator::FUNC) {
         auto node = TreeNode::create("function"s);
         node->addChild(std::get<uniq<AST_Node>>(base)->getTreeNode());
         if (func_args)
@@ -754,16 +751,16 @@ TreeNodeRef AST_DirectDeclarator::getTreeNode() const {
     }
 }
 
-string_id_t AST_DirectDeclarator::getIdent() const {
+string_id_t AST_DirDeclarator::getIdent() const {
     return std::get<string_id_t>(base);
 }
 
-AST_DirectDeclarator const &AST_DirectDeclarator::getBaseDirectDecl() const {
+AST_DirDeclarator const &AST_DirDeclarator::getBaseDirectDecl() const {
     auto const &uptr = std::get<std::unique_ptr<AST_Node>>(base);
-    return dynamic_cast<AST_DirectDeclarator const &>(*uptr);
+    return dynamic_cast<AST_DirDeclarator const &>(*uptr);
 }
 
-AST_Declarator const &AST_DirectDeclarator::getBaseDecl() const {
+AST_Declarator const &AST_DirDeclarator::getBaseDecl() const {
     auto const &uptr = std::get<std::unique_ptr<AST_Node>>(base);
     return dynamic_cast<AST_Declarator const &>(*uptr);
 }
@@ -771,7 +768,7 @@ AST_Declarator const &AST_DirectDeclarator::getBaseDecl() const {
 
 // AST_Pointer
 
-AST_Pointer::AST_Pointer(AST_TypeQualifiers *qual, AST_Pointer *child)
+AST_Pointer::AST_Pointer(AST_TypeQuals *qual, AST_Pointer *child)
     : AST_Node(AST_POINTER), qualifiers(qual), child(child) {}
 
 TreeNodeRef AST_Pointer::getTreeNode() const {
@@ -786,7 +783,7 @@ TreeNodeRef AST_Pointer::getTreeNode() const {
 
 // AST_Declarator
 
-AST_Declarator::AST_Declarator(AST_DirectDeclarator *decl, AST_Pointer *ptr)
+AST_Declarator::AST_Declarator(AST_DirDeclarator *decl, AST_Pointer *ptr)
     : AST_Node(AST_DECLARATOR), direct(decl), ptr(ptr) {}
 
 TreeNodeRef AST_Declarator::getTreeNode() const {
@@ -850,7 +847,7 @@ TreeNodeRef AST_ParameterTypeList::getTreeNode() const {
 
 // AST_TypeName
 
-AST_TypeName::AST_TypeName(AST_SpecifierQualifierList *qual, AST_AbstractDeclarator *decl)
+AST_TypeName::AST_TypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl)
     : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl) {}
 
 TreeNodeRef AST_TypeName::getTreeNode() const {
@@ -864,32 +861,32 @@ TreeNodeRef AST_TypeName::getTreeNode() const {
 
 // AST_DirectAbstractDeclarator
 
-AST_DirectAbstractDeclarator::AST_DirectAbstractDeclarator(DeclType dtype)
+AST_DirAbstrDeclarator::AST_DirAbstrDeclarator(DeclType dtype)
         : AST_Node(AST_DIR_ABSTRACT_DECL), type(dtype) {}
 
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeNested(AST_Node *decl) {
-    auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::NESTED);
+AST_DirAbstrDeclarator* AST_DirAbstrDeclarator::makeNested(AST_Node *decl) {
+    auto res = new AST_DirAbstrDeclarator(AST_DirAbstrDeclarator::NESTED);
     res->base = uniqify(decl);
     return res;
 }
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeArr(AST_Node *base, AST_Expr *sz) {
-    auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::ARRAY);
+AST_DirAbstrDeclarator* AST_DirAbstrDeclarator::makeArr(AST_Node *base, AST_Expr *sz) {
+    auto res = new AST_DirAbstrDeclarator(AST_DirAbstrDeclarator::ARRAY);
     res->base = uniqify(base);
     res->arr_size = uniqify(sz);
     return res;
 }
-AST_DirectAbstractDeclarator* AST_DirectAbstractDeclarator::makeFunc(AST_Node *base, AST_ParameterTypeList *args) {
-    auto res = new AST_DirectAbstractDeclarator(AST_DirectAbstractDeclarator::FUNC);
+AST_DirAbstrDeclarator* AST_DirAbstrDeclarator::makeFunc(AST_Node *base, AST_ParameterTypeList *args) {
+    auto res = new AST_DirAbstrDeclarator(AST_DirAbstrDeclarator::FUNC);
     res->base = uniqify(base);
     res->func_args = uniqify(args);
     return res;
 }
 
-TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
-    if (type == AST_DirectAbstractDeclarator::NESTED) {
+TreeNodeRef AST_DirAbstrDeclarator::getTreeNode() const {
+    if (type == AST_DirAbstrDeclarator::NESTED) {
         return base->getTreeNode();
     }
-    else if (type == AST_DirectAbstractDeclarator::ARRAY) {
+    else if (type == AST_DirAbstrDeclarator::ARRAY) {
         auto node = TreeNode::create("abstr_array_of"s);
         if (base)
             node->addChild(base->getTreeNode());
@@ -897,7 +894,7 @@ TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
             node->addChild(arr_size->getTreeNode());
         return node;
     }
-    else if (type == AST_DirectAbstractDeclarator::FUNC) {
+    else if (type == AST_DirAbstrDeclarator::FUNC) {
         auto node = TreeNode::create("abstr_func"s);
         if (base)
             node->addChild(base->getTreeNode());
@@ -911,22 +908,21 @@ TreeNodeRef AST_DirectAbstractDeclarator::getTreeNode() const {
     }
 }
 
-AST_DirectAbstractDeclarator const &AST_DirectAbstractDeclarator::getBaseDirectDecl() const {
-    return dynamic_cast<AST_DirectAbstractDeclarator const &>(*base);
+AST_DirAbstrDeclarator const &AST_DirAbstrDeclarator::getBaseDirectDecl() const {
+    return dynamic_cast<AST_DirAbstrDeclarator const &>(*base);
 }
 
-AST_AbstractDeclarator const &AST_DirectAbstractDeclarator::getBaseDecl() const {
-    return dynamic_cast<AST_AbstractDeclarator const &>(*base);
+AST_AbstrDeclarator const &AST_DirAbstrDeclarator::getBaseDecl() const {
+    return dynamic_cast<AST_AbstrDeclarator const &>(*base);
 }
 
 
 // AST_AbstractDeclarator
 
-AST_AbstractDeclarator::AST_AbstractDeclarator(
-        AST_DirectAbstractDeclarator *decl, AST_Pointer *pointer)
+AST_AbstrDeclarator::AST_AbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer)
         : AST_Node(AST_ABSTRACT_DECL), direct(decl), ptr(pointer) {}
 
-TreeNodeRef AST_AbstractDeclarator::getTreeNode() const {
+TreeNodeRef AST_AbstrDeclarator::getTreeNode() const {
     auto node = TreeNode::create("abstr_decl"s);
     if (ptr)
         node->addChild(ptr->getTreeNode());
@@ -1028,13 +1024,13 @@ TreeNodeRef AST_Initializer::getTreeNode() const {
 
 // AST_Statement
 
-AST_Statement::AST_Statement(StmtType stype) : AST_Node(AST_STATEMENT), type(stype) {}
+AST_Stmt::AST_Stmt(StmtType stype) : AST_Node(AST_STATEMENT), type(stype) {}
 
 
 // AST_LabeledStmt
 
-AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Statement *stmt, LabelType type)
-    : AST_Statement(AST_Statement::LABEL), label(uniqify(label)), child(stmt), type(type)
+AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Stmt *stmt, LabelType type)
+    : AST_Stmt(AST_Stmt::LABEL), label(uniqify(label)), child(stmt), type(type)
 {
     if (type == AST_LabeledStmt::SIMPL)
         throw std::runtime_error("Wrong type for simple label");
@@ -1044,8 +1040,8 @@ AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Statement *stmt, LabelType
         throw std::runtime_error("'default' label with argument");
 }
 
-AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Statement *stmt, LabelType type)
-    : AST_Statement(AST_Statement::LABEL), label(label), child(stmt), type(type) 
+AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Stmt *stmt, LabelType type)
+    : AST_Stmt(AST_Stmt::LABEL), label(label), child(stmt), type(type)
 {
     if (type != AST_LabeledStmt::SIMPL)
         throw std::runtime_error("Wrong type for switch label");
@@ -1095,7 +1091,7 @@ TreeNodeRef AST_BlockItemList::getTreeNode() const {
 // AST_CompoundStmt
 
 AST_CompoundStmt::AST_CompoundStmt(AST_BlockItemList *body)
-    : AST_Statement(AST_Statement::COMPOUND), body(body) {}
+    : AST_Stmt(AST_Stmt::COMPOUND), body(body) {}
 
 TreeNodeRef AST_CompoundStmt::getTreeNode() const {
     auto node = TreeNode::create("compound_stmt"s);
@@ -1107,7 +1103,7 @@ TreeNodeRef AST_CompoundStmt::getTreeNode() const {
 // AST_ExprStmt
 
 AST_ExprStmt::AST_ExprStmt(AST_Expr *child)
-    : AST_Statement(AST_Statement::EXPR), child(child) {}
+    : AST_Stmt(AST_Stmt::EXPR), child(child) {}
 
 TreeNodeRef AST_ExprStmt::getTreeNode() const {
     auto node = TreeNode::create("expr_stmt"s);
@@ -1120,10 +1116,10 @@ TreeNodeRef AST_ExprStmt::getTreeNode() const {
 // AST_SelectionStmt
 
 AST_SelectionStmt::AST_SelectionStmt(bool sw)
-    : AST_Statement(AST_Statement::SELECT), is_switch(sw) {}
+    : AST_Stmt(AST_Stmt::SELECT), is_switch(sw) {}
 
-AST_SelectionStmt* AST_SelectionStmt::get_if(AST_Expr *cond, AST_Statement *body,
-                                             AST_Statement *else_body) {
+AST_SelectionStmt* AST_SelectionStmt::get_if(AST_Expr *cond, AST_Stmt *body,
+                                             AST_Stmt *else_body) {
     auto res = new AST_SelectionStmt(false);
     res->condition = uniqify(cond);
     res->body = uniqify(body);
@@ -1131,7 +1127,7 @@ AST_SelectionStmt* AST_SelectionStmt::get_if(AST_Expr *cond, AST_Statement *body
     return res;    
 }
 
-AST_SelectionStmt* AST_SelectionStmt::get_switch(AST_Expr *cond, AST_Statement *body) {
+AST_SelectionStmt* AST_SelectionStmt::get_switch(AST_Expr *cond, AST_Stmt *body) {
     auto res = new AST_SelectionStmt(true);
     res->condition = uniqify(cond);
     res->body = uniqify(body);
@@ -1156,36 +1152,35 @@ TreeNodeRef AST_SelectionStmt::getTreeNode() const {
 
 // AST_IterationStmt
 
-AST_IterationStmt::AST_IterationStmt(LoopType ltype, AST_Statement *body)
-    : AST_Statement(AST_Statement::ITER), type(ltype), body(body) {}
+AST_IterStmt::AST_IterStmt(LoopType ltype, AST_Stmt *body)
+    : AST_Stmt(AST_Stmt::ITER), type(ltype), body(body) {}
 
-std::unique_ptr<AST_Expr> const& AST_IterationStmt::getCond() const {
-    if (type == AST_IterationStmt::FOR_LOOP)
+std::unique_ptr<AST_Expr> const& AST_IterStmt::getCond() const {
+    if (type == AST_IterStmt::FOR_LOOP)
         return std::get<ForLoopControls>(control).cond->child;
     else
         return std::get<std::unique_ptr<AST_Expr>>(control);
 }
 
-const AST_IterationStmt::ForLoopControls &AST_IterationStmt::getForLoopControls() const {
+const AST_IterStmt::ForLoopControls &AST_IterStmt::getForLoopControls() const {
     return std::get<ForLoopControls>(control);
 }
 
-AST_IterationStmt* AST_IterationStmt::makeWhileLoop(AST_Statement *body, AST_Expr *ctl, bool is_do) {
-    auto ltype = is_do ? AST_IterationStmt::DO_LOOP : AST_IterationStmt::WHILE_LOOP;
-    auto res = new AST_IterationStmt(ltype, body);
+AST_IterStmt* AST_IterStmt::makeWhile(AST_Stmt *body, AST_Expr *ctl, bool is_do) {
+    auto ltype = is_do ? AST_IterStmt::DO_LOOP : AST_IterStmt::WHILE_LOOP;
+    auto res = new AST_IterStmt(ltype, body);
     res->control = uniqify(ctl);
     return res;
 }
 
-AST_IterationStmt* AST_IterationStmt::makeForLoop(AST_Statement *body, AST_Node *decl,
-                                                  AST_ExprStmt *cond, AST_Expr *act) {
-    auto res = new AST_IterationStmt(AST_IterationStmt::FOR_LOOP, body);
+AST_IterStmt* AST_IterStmt::makeFor(AST_Stmt *body, AST_Node *decl, AST_ExprStmt *cond, AST_Expr *act) {
+    auto res = new AST_IterStmt(AST_IterStmt::FOR_LOOP, body);
     res->control = ForLoopControls{ uniqify(decl), uniqify(cond), uniqify(act) };
     return res;
 }
 
 
-TreeNodeRef AST_IterationStmt::ForLoopControls::getTreeNode() const {
+TreeNodeRef AST_IterStmt::ForLoopControls::getTreeNode() const {
     auto node = TreeNode::create("ctl"s);
     node->addChild(decl->getTreeNode());
     node->addChild(cond->getTreeNode());
@@ -1194,18 +1189,18 @@ TreeNodeRef AST_IterationStmt::ForLoopControls::getTreeNode() const {
     return node;
 }
 
-TreeNodeRef AST_IterationStmt::getTreeNode() const {
+TreeNodeRef AST_IterStmt::getTreeNode() const {
     std::string str;
     TreeNodeRef ctl;
-    if (type == AST_IterationStmt::FOR_LOOP) {
+    if (type == AST_IterStmt::FOR_LOOP) {
         str = "for"s;
         ctl = std::get<ForLoopControls>(control).getTreeNode();
     }
-    else if (type == AST_IterationStmt::WHILE_LOOP) {
+    else if (type == AST_IterStmt::WHILE_LOOP) {
         str = "while"s;
         ctl = std::get<uniq<AST_Expr>>(control)->getTreeNode();
     }
-    else if (type == AST_IterationStmt::DO_LOOP){
+    else if (type == AST_IterStmt::DO_LOOP){
         str = "do while"s;
         ctl = std::get<uniq<AST_Expr>>(control)->getTreeNode();
     }
@@ -1219,13 +1214,13 @@ TreeNodeRef AST_IterationStmt::getTreeNode() const {
 // AST_JumpStmt
 
 AST_JumpStmt::AST_JumpStmt(JumpType jtype)
-    : AST_Statement(AST_Statement::JUMP), type(jtype), arg(nullptr) {}
+    : AST_Stmt(AST_Stmt::JUMP), type(jtype), arg(nullptr) {}
 
 AST_JumpStmt::AST_JumpStmt(JumpType jtype, AST_Expr *arg)
-    : AST_Statement(AST_Statement::JUMP), type(jtype), arg(uniqify(arg)) {}
+    : AST_Stmt(AST_Stmt::JUMP), type(jtype), arg(uniqify(arg)) {}
 
 AST_JumpStmt::AST_JumpStmt(JumpType jtype, string_id_t arg)
-    : AST_Statement(AST_Statement::JUMP), type(jtype), arg(arg) {}
+    : AST_Stmt(AST_Stmt::JUMP), type(jtype), arg(arg) {}
 
 TreeNodeRef AST_JumpStmt::getTreeNode() const {
     std::string str;
