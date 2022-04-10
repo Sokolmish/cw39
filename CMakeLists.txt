@@ -11,11 +11,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 add_compile_options(-Wall -Wextra)
 add_compile_options("-Wno-unused-parameter") # Because of warnings in LLVM headers
 
-set(BISON_PARSER_RES y.tab.cpp)
-set(BISON_HEADER_RES y.tab.h)
-set(FLEX_LEXER_RES   lex.yy.c)
-set(BISON_PARSER_SRC parser.y)
-set(FLEX_LEXER_SRC   lexer.l)
+set(BISON_PARSER_RES    yy_parser.cpp)
+set(BISON_HEADER_RES    yy_parser.hpp)
+set(BISON_LOCATIONS_HEADER  yy_location.hpp)
+set(FLEX_LEXER_RES      yy_scanner.cpp)
+set(BISON_PARSER_SRC    parser.y)
+set(FLEX_LEXER_SRC      lexer.l)
 
 set(GPERF_DIRECTIVES_RES    directives_hashtable.cpp)
 set(GPERF_DIRECTIVES_SRC    directives.gperf)
@@ -26,9 +27,10 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/cli_args.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
-        ${PROJECT_SOURCE_DIR}/src/parser/parser.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/lexer.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/preprocessor.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/warps.cpp
+        ${PROJECT_SOURCE_DIR}/src/parser/core_driver.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/${BISON_PARSER_RES}
         ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_RES}
@@ -82,19 +84,16 @@ target_link_libraries(cw39 ${llvm_libs})
 # Flex and Bison
 
 IF(NOT CW39_NO_BISON)
-    find_package(BISON REQUIRED)
-    find_package(FLEX REQUIRED)
-
-#    IF(NOT (FLEX_FOUND AND BISON_FOUND))
-#        message(FATAL_ERROR
-#                "Flex or Bison are not found. Try to configure without CW39_GENERATE_PARSERS.")
-#    ENDIF()
+    # There are problems with changing version of flex and bison
+    #   so there are no FIND_PACKAGE commands and direct names are used
 
     add_custom_command(
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${BISON_PARSER_RES}
                     ${PROJECT_SOURCE_DIR}/src/parser/${BISON_HEADER_RES}
-            COMMAND ${BISON_EXECUTABLE} -Wall -Wno-yacc
+                    ${PROJECT_SOURCE_DIR}/src/parser/${BISON_LOCATIONS_HEADER}
+            COMMAND bison -Wall -Wno-yacc
                     --defines=${BISON_HEADER_RES}
+                    -Dapi.location.file='"${BISON_LOCATIONS_HEADER}"'
                     -o ${BISON_PARSER_RES}
                     ${BISON_PARSER_SRC}
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${BISON_PARSER_SRC}
@@ -104,19 +103,16 @@ IF(NOT CW39_NO_BISON)
 
     add_custom_command(
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_RES}
-            COMMAND ${FLEX_EXECUTABLE}
-                    -o ${FLEX_LEXER_RES}
+            COMMAND flex
+                    -o${FLEX_LEXER_RES}
                     ${FLEX_LEXER_SRC}
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_SRC}
-                    ${PROJECT_SOURCE_DIR}/src/parser/${BISON_HEADER_RES}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
             COMMENT "Generating core lexer with flex"
     )
 ENDIF() # CW39_NO_GENERATE_PARSERS
 
 IF(NOT CW39_NO_GPERF)
-    # TODO: check if installed
-
     add_custom_command(
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_DIRECTIVES_RES}
             COMMAND gperf -m 20

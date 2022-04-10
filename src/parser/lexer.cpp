@@ -1,57 +1,23 @@
 #include "common.hpp"
-#include "lexer.h"
-#include "parser.hpp"
+#include "lexer.hpp"
 #include <fmt/core.h>
-
 #include <cstdlib>
 #include <cctype>
+#include "core_driver.hpp"
+#include "yy_parser.hpp"
 
-#include "y.tab.h"
-
-CoreParser::CoreParser(const std::string &str, LinesWarpMap &warps) {
-    pstate = std::make_unique<CoreParserState>();
-    AST_TranslationUnit *rawUnit = CoreParser::parse_program(str, pstate.get(), &warps);
-    unit = std::shared_ptr<AST_TranslationUnit>(rawUnit);
-}
-
-std::shared_ptr<AST_TranslationUnit> CoreParser::getTransUnit() {
-    return unit;
-}
-
-CoreParserState *CoreParser::getPState() {
-    return pstate.get();
-}
-
-
-void lexer_error(YYLTYPE *loc, lex_extra_t *extra, const char *msg) {
-    auto fixLoc = extra->warps->getLoc(loc->first_line);
-    std::string filename = extra->warps->getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Lexer error ({}:{}:{}):\n\t{}\n",
-               filename, fixLoc.line, loc->first_column, msg);
-}
-
-void yyerror(void *loc,
-             [[maybe_unused]] yyscan_t scan, [[maybe_unused]] AST_TranslationUnit **root,
-             const LinesWarpMap *warps, const char *str) {
-    YYLTYPE *mloc = reinterpret_cast<YYLTYPE*>(loc);
-    auto fixLoc = warps->getLoc(mloc->first_line);
-    std::string filename = warps->getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Parser error ({}:{}:{}):\n\t{}\n",
-               filename, fixLoc.line, mloc->first_column, str);
-}
-
-
-string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, int *type) {
+string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, IdentType *type) {
     auto it = pstate->identsMap.lower_bound(ident);
     if (it == pstate->identsMap.end() || it->first != ident) {
         auto ins = pstate->identsMap.emplace_hint(it, ident, CoreParserState::IdentInfo(pstate->idCnt));
         pstate->invIdentsMap.emplace_hint(pstate->invIdentsMap.end(), pstate->idCnt, ins->first);
         pstate->idCnt++;
-        *type = IDENTIFIER;
+        *type = IdentType::IDENT;
         return ins->second.id;
     }
     else { // If already exists
-        *type = it->second.type == CoreParserState::IdentInfo::IDENT ? IDENTIFIER : TYPE_NAME;
+        bool isIdent = (it->second.type == CoreParserState::IdentInfo::IDENT);
+        *type = isIdent ? IdentType::IDENT : IdentType::TYPENAME;
         return it->second.id;
     }
 }
@@ -86,6 +52,7 @@ static char unescapeChar(char ch) {
     }
 }
 
+/* TODO: use yyleng */
 string_id_t get_string_id(struct CoreParserState *pstate, const char *str) {
     size_t len = strlen(str);
     std::string newStr;

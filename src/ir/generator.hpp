@@ -4,7 +4,7 @@
 #include "nodes.hpp"
 #include "cfg.hpp"
 #include "parser/warps.hpp"
-#include "parser/parser.hpp"
+#include "parser/core_driver.hpp"
 #include "utils.hpp"
 
 #include <vector>
@@ -17,7 +17,7 @@
 class IR_Generator {
 public:
     IR_Generator();
-    void parse(CoreParser &parser, LinesWarpMap &xwarps);
+    void parse(CoreDriver &parser, LinesWarpMap &xwarps);
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 
 private:
@@ -80,7 +80,7 @@ private:
     ControlStructData::SwitchBlocks* getNearestSwitch();
 
     std::map<string_id_t, int> labels;                      // label_id -> block_id
-    std::vector<std::tuple<int, string_id_t, AST_Node::AST_Location>> danglingGotos; // block_id, label_id, loc
+    std::vector<std::tuple<int, string_id_t, yy::location>> danglingGotos; // block_id, label_id, loc
 
     bool isShortLogicEnabled = true;
 
@@ -120,9 +120,8 @@ private:
 
     IRval getPtrWithOffset(IRval const &base, IRval const &index);
     void doAssignment(AST_Expr const &dest, IRval const &wrValue);
-    IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, AST_Node::AST_Location loc);
-    IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right,
-                         AST_Node::AST_Location loc);
+    IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc);
+    IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right, yy::location loc);
     IRval doAddrOf(const AST_Expr &expr);
     IRval evalExpr(AST_Expr const &node);
     IRval getLiteralIRval(AST_Literal const &lit);
@@ -148,7 +147,7 @@ private:
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArgs(AST_Declarator const &decl);
 
-    [[noreturn]] void semanticError(AST_Node::AST_Location loc, std::string const &msg);
+    [[noreturn]] void semanticError(yy::location loc, std::string const &msg);
 };
 
 #endif /* GENERATOR_HPP_INCLUDED__ */

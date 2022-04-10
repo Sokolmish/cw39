@@ -1,6 +1,8 @@
-src/parser/lex.yy.c linguist-generated
-src/parser/y.tab.cpp linguist-generated
-src/parser/y.tab.h linguist-generated
+src/parser/yy_location.hpp linguist-generated
+src/parser/yy_parser.cpp linguist-generated
+src/parser/yy_parser.hpp linguist-generated
+src/parser/yy_scanner.cpp linguist-generated
+
 src/parser/directives_hastable.cpp linguist-generated
 
 src/cxxopts.hpp linguist-vendored

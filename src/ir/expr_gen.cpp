@@ -159,7 +159,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
 }
 
 /** Create node with specified binary operation */
-IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, AST_Node::AST_Location loc) {
+IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc) {
     using bop = AST_Binop;
 
     if (lhs.getType()->type != IR_Type::DIRECT)
@@ -227,7 +227,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
 
 /** Create nodes and blocks for logical operation with short evaluation */
 IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right,
-                                   AST_Node::AST_Location loc) {
+                                   yy::location loc) {
     if (op != AST_Binop::LOG_AND && op != AST_Binop::LOG_OR)
         internalError("Wrong short-logic operation");
 

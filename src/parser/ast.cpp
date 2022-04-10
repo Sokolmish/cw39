@@ -1,5 +1,4 @@
 #include "ast.hpp"
-#include "parser.hpp"
 #include <memory>
 #include <string>
 #include <fmt/core.h>
@@ -14,8 +13,8 @@ void ast_set_pstate_ptr(CoreParserState *state) {
 
 AST_Node::AST_Node(int type) : node_type(type) {}
 
-void AST_Node::setLoc(int line, int col) {
-    this->loc = AST_Location{ line, col };
+void AST_Node::setLoc(yy::location loc_) {
+    this->loc = std::move(loc_);
 }
 
 // =================================================

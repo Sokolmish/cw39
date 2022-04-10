@@ -6,8 +6,9 @@
 #include <vector>
 #include <variant>
 #include <optional>
-#include "common.h"
+#include "common.hpp"
 #include "print_tree.hpp"
+#include "yy_location.hpp"
 
 void ast_set_pstate_ptr(CoreParserState *pstate);
 
@@ -36,12 +37,12 @@ struct AST_Node {
     };
 
     int node_type;
-    AST_Location loc;
+    yy::location loc;
 
     explicit AST_Node(int type);
     virtual ~AST_Node() = default;
 
-    void setLoc(int line, int col);
+    void setLoc(yy::location loc);
 
     [[nodiscard]] virtual TreeNodeRef getTreeNode() const = 0;
 

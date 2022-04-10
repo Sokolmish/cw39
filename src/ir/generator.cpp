@@ -4,10 +4,11 @@
 IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}
 
 
-void IR_Generator::semanticError(AST_Node::AST_Location loc, const std::string &msg) {
-    auto true_loc = warps->getLoc(loc.line);
+void IR_Generator::semanticError(yy::location loc, const std::string &msg) {
+    auto true_loc = warps->getLoc(loc.begin.line);
     std::string filename = warps->getFilename(true_loc.filenum);
-    fmt::print(stderr, "Semantic error ({}:{}:{}):\n\t{}\n", filename, true_loc.line, loc.col, msg);
+    fmt::print(stderr, "Semantic error ({}:{}:{}):\n\t{}\n",
+               filename, true_loc.line, loc.begin.column, msg);
     exit(EXIT_FAILURE);
 }
 
@@ -159,7 +160,7 @@ IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vecto
 
 // Generator
 
-void IR_Generator::parse(CoreParser &parser, LinesWarpMap &xwarps) {
+void IR_Generator::parse(CoreDriver &parser, LinesWarpMap &xwarps) {
     pstate = parser.getPState();
     warps = &xwarps;
 

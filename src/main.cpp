@@ -6,7 +6,7 @@
 #include "cli_args.hpp"
 
 #include "parser/preprocessor.hpp"
-#include "parser/parser.hpp"
+#include "parser/core_driver.hpp"
 #include "ir/generator.hpp"
 
 #include "transformations/vars_virtualizer.hpp"
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
         writeOut(args.getString("preproc"), text);
     }
 
-    auto parser = std::make_unique<CoreParser>(text, warps);
+    auto parser = std::make_unique<CoreDriver>(text, warps);
     auto ast = parser->getTransUnit();
 
     if (args.count("ast")) {

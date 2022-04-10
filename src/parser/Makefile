@@ -2,23 +2,23 @@
 
 all: core_parser hashtables
 
-core_parser: lex.yy.c y.tab.cpp y.tab.h
+core_parser: yy_scanner.cpp yy_parser.cpp yy_parser.hpp
 
 hashtables: directives_hashtable.cpp
 
 clean:
-	rm -f lex.yy.c y.tab.cpp y.tab.h
+	rm -f scanner.cpp parser.cpp parser.hpp
 	rm -f directives_hashtable.cpp
 
 # Flex and Bison
 
-y.tab.cpp y.tab.h: parser.y
+yy_parser.cpp yy_parser.hpp: parser.y
 	$(info [*] Generating parser ...)
-	bison -Wall -Wno-yacc --defines=y.tab.h -o y.tab.cpp parser.y
+	bison -Wall --defines=yy_parser.hpp -Dapi.location.file="yy_location.hpp" -o yy_parser.cpp parser.y
 
-lex.yy.c: lexer.l y.tab.h
+yy_scanner.cpp: lexer.l
 	$(info [*] Generating lexer ...)
-	flex -o lex.yy.c lexer.l
+	flex -o yy_scanner.cpp lexer.l
 
 # Gperf
 
