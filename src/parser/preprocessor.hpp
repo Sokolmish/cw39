@@ -5,7 +5,7 @@
 #include <map>
 #include <memory>
 
-#include "warps.hpp"
+#include "parsing_context.hpp"
 
 class Preprocessor {
 public:
@@ -15,14 +15,17 @@ public:
     void removeDefine(std::string const &name);
 
     std::string getText() const;
-    LinesWarpMap getWarps() const;
+    std::shared_ptr<ParsingContext> getContext() const;
 
     static const constexpr size_t MAX_INCLUDES_DEPTH = 64;
 
 private:
     std::string finalText;
+    std::shared_ptr<ParsingContext> ctx;
+
     std::map<std::string, std::string> defines;
-    std::unique_ptr<LinesWarpMap> warps;
+
+    friend class PreprocessorImpl;
 };
 
 #endif /* PREPROCESSOR_HPP_INCLUDED__ */

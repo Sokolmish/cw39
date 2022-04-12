@@ -9,8 +9,9 @@
 #include "common.hpp"
 #include "print_tree.hpp"
 #include "yy_location.hpp"
+#include "parsing_context.hpp"
 
-void ast_set_pstate_ptr(CoreParserState *pstate);
+void ast_set_pctx_ptr(ParsingContext *ctx);
 
 typedef int ast_enum_t;
 

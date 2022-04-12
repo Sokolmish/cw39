@@ -37,31 +37,31 @@ int main(int argc, char **argv) {
 
     Preprocessor preproc(path);
     std::string text = preproc.getText();
-    auto warps = preproc.getWarps();
+    auto ctx = preproc.getContext();
 
     if (args.count("preproc")) {
         writeOut(args.getString("preproc"), text);
     }
 
-    auto parser = std::make_unique<CoreDriver>(text, warps);
+    auto parser = std::make_unique<CoreDriver>(*ctx, text);
     auto ast = parser->getTransUnit();
 
     if (args.count("ast")) {
-        ast_set_pstate_ptr(parser->getPState());
+        ast_set_pctx_ptr(ctx.get());
         writeOut(args.getString("ast"), ast->getTreeNode()->printHor());
-        ast_set_pstate_ptr(nullptr);
+        ast_set_pctx_ptr(nullptr);
     }
 
-    auto gen = std::make_unique<IR_Generator>();
-    gen->parse(*parser, warps);
+    auto gen = std::make_unique<IR_Generator>(*parser, *ctx);
+    auto rawCfg = gen->getCfg();
 
     if (args.count("ir-raw"))
-        writeOut(args.getString("ir-raw"), gen->getCfg()->printIR());
+        writeOut(args.getString("ir-raw"), rawCfg->printIR());
     if (args.count("cfg-raw"))
-        writeOut(args.getString("cfg-raw"), gen->getCfg()->drawCFG());
+        writeOut(args.getString("cfg-raw"), rawCfg->drawCFG());
 
     ControlFlowGraph optCfg;
-    optCfg = VarsVirtualizer(*gen->getCfg()).moveCfg();
+    optCfg = VarsVirtualizer(*rawCfg).moveCfg();
     optCfg = SSA_Generator(std::move(optCfg)).moveCfg();
     optCfg = AlgebraicTransformer(std::move(optCfg)).moveCfg();
     optCfg = CopyPropagator(std::move(optCfg)).moveCfg();

@@ -3,26 +3,7 @@
 #include <fmt/core.h>
 #include <cstdlib>
 #include <cctype>
-#include "core_driver.hpp"
 #include "yy_parser.hpp"
-
-string_id_t get_ident_id(struct CoreParserState *pstate, const char *ident, size_t len,  IdentType *type) {
-    std::string str(ident, len);
-    auto it = pstate->identsMap.lower_bound(str);
-    if (it == pstate->identsMap.end() || it->first != str) {
-        auto ins = pstate->identsMap.emplace_hint(it, std::move(str),
-                                                  CoreParserState::IdentInfo(pstate->idCnt));
-        pstate->invIdentsMap.emplace_hint(pstate->invIdentsMap.end(), pstate->idCnt, ins->first);
-        pstate->idCnt++;
-        *type = IdentType::IDENT;
-        return ins->second.id;
-    }
-    else { // If already exists
-        bool isIdent = (it->second.type == CoreParserState::IdentInfo::IDENT);
-        *type = isIdent ? IdentType::IDENT : IdentType::TYPENAME;
-        return it->second.id;
-    }
-}
 
 static char unescapeChar(char ch) {
     // TODO: '\xhh'
@@ -54,42 +35,6 @@ static char unescapeChar(char ch) {
     }
 }
 
-string_id_t get_string_id(struct CoreParserState *pstate, const char *str, size_t len) {
-//    size_t len = strlen(str);
-    std::string newStr;
-    newStr.reserve(len);
-
-    for (size_t i = 1; i < len - 1; i++) {
-        if (str[i] != '\\') {
-            newStr.push_back(str[i]);
-        }
-        else {
-            i++;
-            if (i < len - 1)
-                newStr.push_back(unescapeChar(str[i]));
-        }
-    }
-
-    auto it = pstate->stringsMap.lower_bound(newStr);
-    if (it == pstate->stringsMap.end() || it->first != newStr) {
-        auto ins = pstate->stringsMap.emplace_hint(it, newStr, CoreParserState::StringInfo(pstate->strCnt));
-        pstate->invStringsMap.emplace_hint(pstate->invStringsMap.end(), pstate->strCnt, ins->first);
-        pstate->strCnt++;
-        return ins->second.id;
-    }
-    else { // If already exists
-        return it->second.id;
-    }
-}
-
-std::string get_ident_by_id(CoreParserState *pstate, string_id_t id) {
-    return std::string(pstate->invIdentsMap.find(id)->second);
-}
-
-std::string get_string_by_id(CoreParserState *pstate, string_id_t id) {
-    return std::string(pstate->invStringsMap.find(id)->second);
-}
-
 void check_typedef(AST_Declaration *decl) {
     (void)decl; // TODO
 }
@@ -100,25 +45,25 @@ AST_TypeName* get_def_type(string_id_t id) {
 }
 
 
-enum isuff {
-    ISUFF_ERR, ISUFF_U, ISUFF_L, ISUFF_LL
+enum class IntSuff {
+    ERR, U, L, LL
 };
 
-static enum isuff get_int_suff(const char **str) {
+static IntSuff get_int_suff(const char **str) {
     if (tolower((*str)[0]) == 'u') {
         (*str)++;
-        return ISUFF_U;
+        return IntSuff::U;
     }
     else if (tolower((*str)[0]) == 'l') {
         (*str)++;
         if ((*str)[1] == (*str)[0]) {
             (*str)++;
-            return ISUFF_LL;
+            return IntSuff::LL;
         }
-        return ISUFF_L;
+        return IntSuff::L;
     }
     else {
-        return ISUFF_ERR;
+        return IntSuff::ERR;
     }
 }
 
@@ -136,12 +81,12 @@ AST_Literal_t get_integer(const char *str) {
     
     suff = endptr;
     while (*endptr) {
-        enum isuff sf = get_int_suff(&endptr);
-        if (sf == ISUFF_U && !res.isUnsigned)
+        enum IntSuff sf = get_int_suff(&endptr);
+        if (sf == IntSuff::U && !res.isUnsigned)
             res.isUnsigned = 1;
-        else if (sf == ISUFF_L && !res.longCnt)
+        else if (sf == IntSuff::L && !res.longCnt)
             res.longCnt = 1;
-        else if (sf == ISUFF_LL && !res.longCnt)
+        else if (sf == IntSuff::LL && !res.longCnt)
             res.longCnt = 2;
         else {
             fprintf(stderr, "Bad integer suffix: %s\n", suff);
@@ -166,7 +111,7 @@ AST_Literal_t get_integer(const char *str) {
     return res;
 }
 
-AST_Literal_t get_float(const char *str) {
+AST_Literal_t get_float(const char *str, size_t len) {
     AST_Literal res{
         .type = FLOAT_LITERAL,
         .longCnt = 0,
@@ -175,7 +120,6 @@ AST_Literal_t get_float(const char *str) {
         .val = { 0ULL },
     };
 
-    size_t len = strlen(str);
     char *tmpStr = strdup(str);
 
     if (tolower(tmpStr[len - 1]) == 'f') {
@@ -203,7 +147,7 @@ AST_Literal_t get_float(const char *str) {
     return res;
 }
 
-AST_Literal_t get_charval(const char *str) {
+AST_Literal_t get_charval(const char *str, size_t len) {
     AST_Literal res{
         .type = CHAR_LITERAL,
         .longCnt = 0,
@@ -211,8 +155,6 @@ AST_Literal_t get_charval(const char *str) {
         .isFloat = 0,
         .val = { 0ULL },
     };
-
-    size_t len = strlen(str);
 
     if (len == 3) {
         res.val.v_char = str[1];

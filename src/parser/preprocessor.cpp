@@ -11,14 +11,10 @@
 
 class PreprocessorImpl {
 public:
-    PreprocessorImpl(std::string const &path, std::map<std::string, std::string> &defines);
-
-    std::string finalText() const;
-    LinesWarpMap&& moveWarps();
+    PreprocessorImpl(Preprocessor &parent, const std::string &path);
 
 private:
-    std::map<std::string, std::string> &defines;
-    LinesWarpMap warps;
+    Preprocessor &par;
 
     size_t globalLine = 0;
 
@@ -80,21 +76,12 @@ private:
 };
 
 
-PreprocessorImpl::PreprocessorImpl(const std::string &path,
-                                   std::map<std::string, std::string> &defines)
-        : defines(defines), warps(path) {
+PreprocessorImpl::PreprocessorImpl(Preprocessor &parent, std::string const &path)
+        : par(parent) {
     trTime = time(nullptr);
     processFile(path);
+    par.finalText = globalSS.str();
 }
-
-std::string PreprocessorImpl::finalText() const {
-    return globalSS.str();
-}
-
-LinesWarpMap&& PreprocessorImpl::moveWarps() {
-    return std::move(warps);
-}
-
 
 void PreprocessorImpl::printError(std::string const &msg) {
     if (!locations.empty()) {
@@ -385,9 +372,9 @@ void PreprocessorImpl::directiveInclude(string_constit_t &it) {
                 Preprocessor::MAX_INCLUDES_DEPTH));
     }
 
-    warps.appendWarpLoc(globalLine, 0, filename);
+    par.ctx->warps.appendWarpLoc(globalLine, 0, filename);
     processFile(filename);
-    warps.appendWarpLoc(globalLine, locations.top().line - 1, locations.top().file);
+    par.ctx->warps.appendWarpLoc(globalLine, locations.top().line - 1, locations.top().file);
 }
 
 void PreprocessorImpl::directiveDefine(string_constit_t &it) {
@@ -399,7 +386,7 @@ void PreprocessorImpl::directiveDefine(string_constit_t &it) {
         printError("Directive #define expects argument");
 
     assertNoArg(it);
-    defines.emplace(std::move(name), ""); // TODO: macros
+    par.defines.emplace(std::move(name), ""); // TODO: macros
 }
 
 void PreprocessorImpl::directiveUndef(string_constit_t &it) {
@@ -411,7 +398,7 @@ void PreprocessorImpl::directiveUndef(string_constit_t &it) {
         printError("Directive #undef expects argument");
 
     assertNoArg(it);
-    defines.erase(name);
+    par.defines.erase(name);
 }
 
 void PreprocessorImpl::directiveIfdef(string_constit_t &it, bool isNdef) {
@@ -428,7 +415,7 @@ void PreprocessorImpl::directiveIfdef(string_constit_t &it, bool isNdef) {
 
     assertNoArg(it);
 
-    if (defines.contains(arg) || isNdef) {
+    if (par.defines.contains(arg) || isNdef) {
         condStatuses.push(PC_IF_TRUE);
     }
     else {
@@ -476,7 +463,7 @@ void PreprocessorImpl::directiveLine(string_constit_t &it) {
     locations.top().line = arg;
     if (!filename.empty())
         locations.top().file = filename;
-    warps.appendWarpLoc(globalLine, locations.top().line, locations.top().file);
+    par.ctx->warps.appendWarpLoc(globalLine, locations.top().line, locations.top().file);
 }
 
 void PreprocessorImpl::directiveError(string_constit_t &it) {
@@ -577,9 +564,8 @@ void PreprocessorImpl::assertNoArg(string_constit_t &it) {
 
 
 Preprocessor::Preprocessor(std::string const &path) {
-    auto impl = PreprocessorImpl(path, defines);
-    finalText = impl.finalText();
-    warps = std::make_unique<LinesWarpMap>(impl.moveWarps());
+    ctx = std::make_shared<ParsingContext>(path);
+    PreprocessorImpl(*this, path);
 }
 
 void Preprocessor::addDefine(std::string name, std::string value) {
@@ -594,6 +580,6 @@ std::string Preprocessor::getText() const {
     return finalText;
 }
 
-LinesWarpMap Preprocessor::getWarps() const {
-    return *warps;
+std::shared_ptr<ParsingContext> Preprocessor::getContext() const {
+    return ctx;
 }

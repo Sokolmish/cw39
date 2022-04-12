@@ -1520,7 +1520,7 @@ YY_RULE_SETUP
 #line 72 "lexer.l"
 {
                                 IdentType type;
-                                string_id_t id = get_ident_id(drv.pstate.get(), yytext, yyleng, &type);
+                                string_id_t id = drv.ctx.getIdentId(yytext, yyleng, &type);
                                 if (type == IdentType::IDENT)
                                     return yy::parser::make_IDENTIFIER(id, loc);
                                 else
@@ -1530,43 +1530,43 @@ YY_RULE_SETUP
 case 36:
 YY_RULE_SETUP
 #line 81 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_integer(yytext), loc); }
+return yy::parser::make_CONSTANT(get_integer(yytext), loc);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
 #line 82 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_integer(yytext), loc); }
+return yy::parser::make_CONSTANT(get_integer(yytext), loc);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
 #line 83 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_integer(yytext), loc); }
+return yy::parser::make_CONSTANT(get_integer(yytext), loc);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
 #line 85 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_float(yytext), loc); }
+return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
 #line 86 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_float(yytext), loc); }
+return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 87 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_float(yytext), loc); }
+return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 89 "lexer.l"
-{ return yy::parser::make_CONSTANT(get_charval(yytext), loc); }
+return yy::parser::make_CONSTANT(get_charval(yytext, yyleng), loc);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 91 "lexer.l"
 {
-                                string_id_t id = get_string_id(drv.pstate.get(), yytext, yyleng);
+                                string_id_t id = drv.ctx.getStringId(yytext, yyleng);
                                 return yy::parser::make_STRING_LITERAL(id, loc);
                             }
 	YY_BREAK

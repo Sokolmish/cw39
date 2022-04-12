@@ -68,27 +68,27 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "volatile"                  return yy::parser::make_VOLATILE(loc);
 "while"                     return yy::parser::make_WHILE(loc);
 
-{L}({L}|{D})*		        {
+{L}({L}|{D})*               {
                                 IdentType type;
-                                string_id_t id = get_ident_id(drv.pstate.get(), yytext, yyleng, &type);
+                                string_id_t id = drv.ctx.getIdentId(yytext, yyleng, &type);
                                 if (type == IdentType::IDENT)
                                     return yy::parser::make_IDENTIFIER(id, loc);
                                 else
                                     return yy::parser::make_TYPE_NAME(id, loc);
                             }
 
-0[xX]{H}+{ISF}?             { return yy::parser::make_CONSTANT(get_integer(yytext), loc); }
-0[0-7]*{ISF}?               { return yy::parser::make_CONSTANT(get_integer(yytext), loc); }
-[1-9]{D}*{ISF}?             { return yy::parser::make_CONSTANT(get_integer(yytext), loc); }
+0[xX]{H}+{ISF}?             return yy::parser::make_CONSTANT(get_integer(yytext), loc);
+0[0-7]*{ISF}?               return yy::parser::make_CONSTANT(get_integer(yytext), loc);
+[1-9]{D}*{ISF}?             return yy::parser::make_CONSTANT(get_integer(yytext), loc);
 
-{D}+{EXP}{FSF}?             { return yy::parser::make_CONSTANT(get_float(yytext), loc); }
-{D}*"."{D}+{EXP}?{FSF}?     { return yy::parser::make_CONSTANT(get_float(yytext), loc); }
-{D}+"."{D}*{EXP}?{FSF}?     { return yy::parser::make_CONSTANT(get_float(yytext), loc); }
+{D}+{EXP}{FSF}?             return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
+{D}*"."{D}+{EXP}?{FSF}?     return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
+{D}+"."{D}*{EXP}?{FSF}?     return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
 
-'(\\.|[^\\'\n])'            { return yy::parser::make_CONSTANT(get_charval(yytext), loc); }
+'(\\.|[^\\'\n])'            return yy::parser::make_CONSTANT(get_charval(yytext, yyleng), loc);
 
 \"(\\.|[^\\"\n])*\"         {
-                                string_id_t id = get_string_id(drv.pstate.get(), yytext, yyleng);
+                                string_id_t id = drv.ctx.getStringId(yytext, yyleng);
                                 return yy::parser::make_STRING_LITERAL(id, loc);
                             }
 
@@ -124,19 +124,19 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 ")"             return yy::parser::make_RPAREN(loc);
 "["             return yy::parser::make_LBRACKET(loc);
 "]"             return yy::parser::make_RBRACKET(loc);
-"."			    return yy::parser::make_DOT(loc);
-"&"			    return yy::parser::make_AMPERSAND(loc);
-"!"			    return yy::parser::make_EXCMARK(loc);
-"~"			    return yy::parser::make_TILDA(loc);
-"-"			    return yy::parser::make_MINUS(loc);
-"+"			    return yy::parser::make_PLUS(loc);
-"*"			    return yy::parser::make_ASTERISK(loc);
-"/"			    return yy::parser::make_SLASH(loc);
-"%"			    return yy::parser::make_PERCENT(loc);
-"<"			    return yy::parser::make_LANGLE(loc);
-">"			    return yy::parser::make_RANGLE(loc);
-"^"			    return yy::parser::make_CIRCUM(loc);
-"|"			    return yy::parser::make_VBAR(loc);
+"."             return yy::parser::make_DOT(loc);
+"&"             return yy::parser::make_AMPERSAND(loc);
+"!"             return yy::parser::make_EXCMARK(loc);
+"~"             return yy::parser::make_TILDA(loc);
+"-"             return yy::parser::make_MINUS(loc);
+"+"             return yy::parser::make_PLUS(loc);
+"*"             return yy::parser::make_ASTERISK(loc);
+"/"             return yy::parser::make_SLASH(loc);
+"%"             return yy::parser::make_PERCENT(loc);
+"<"             return yy::parser::make_LANGLE(loc);
+">"             return yy::parser::make_RANGLE(loc);
+"^"             return yy::parser::make_CIRCUM(loc);
+"|"             return yy::parser::make_VBAR(loc);
 "?"             return yy::parser::make_QUESTMARK(loc);
 
 [ \t\v\f]+      { loc.step(); }

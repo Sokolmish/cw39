@@ -3,7 +3,7 @@
 
 #include "nodes.hpp"
 #include "cfg.hpp"
-#include "parser/warps.hpp"
+#include "parser/parsing_context.hpp"
 #include "parser/core_driver.hpp"
 #include "utils.hpp"
 
@@ -16,13 +16,12 @@
 
 class IR_Generator {
 public:
-    IR_Generator();
-    void parse(CoreDriver &parser, LinesWarpMap &xwarps);
+    IR_Generator(CoreDriver &parser, ParsingContext &ctx);
+
     [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
 
 private:
-    CoreParserState *pstate;
-    LinesWarpMap *warps;
+    ParsingContext &ctx;
 
     VariablesStack<string_id_t, IRval> variables;
     std::map<string_id_t, IRval> globals;
@@ -84,6 +83,8 @@ private:
 
     bool isShortLogicEnabled = true;
 
+
+    void genTransUnit(CoreDriver &parser);
 
     std::optional<IRval> emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr);
     std::optional<IRval> emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr);

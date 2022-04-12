@@ -775,12 +775,12 @@ std::pair<string_id_t, std::string> IR_Generator::getStringLiteral(AST_StringsSe
     std::string fullStr;
     if (scat.v.size() == 1) {
         parserStrId = scat.v[0];
-        fullStr = get_string_by_id(pstate, parserStrId);
+        fullStr = ctx.getStringById(parserStrId);
     }
     else {
         for (string_id_t sId : scat.v)
-            fullStr += get_string_by_id(pstate, sId);
-        parserStrId = get_string_id(pstate, fullStr.c_str(), fullStr.size());
+            fullStr += ctx.getStringById(sId);
+        parserStrId = ctx.getStringId(fullStr);
     }
     return std::make_pair(parserStrId, fullStr);
 }

@@ -1,12 +1,15 @@
 #include "generator.hpp"
 #include "constants_folder.hpp"
 
-IR_Generator::IR_Generator() : cfg(std::make_unique<ControlFlowGraph>()) {}
+IR_Generator::IR_Generator(CoreDriver &parser, ParsingContext &ctx) : ctx(ctx) {
+    cfg = std::make_unique<ControlFlowGraph>();
+    genTransUnit(parser);
+}
 
 
 void IR_Generator::semanticError(yy::location loc, const std::string &msg) {
-    auto true_loc = warps->getLoc(loc.begin.line);
-    std::string filename = warps->getFilename(true_loc.filenum);
+    auto true_loc = ctx.warps.getLoc(loc.begin.line);
+    std::string filename = ctx.warps.getFilename(true_loc.filenum);
     fmt::print(stderr, "Semantic error ({}:{}:{}):\n\t{}\n",
                filename, true_loc.line, loc.begin.column, msg);
     exit(EXIT_FAILURE);
@@ -160,10 +163,7 @@ IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vecto
 
 // Generator
 
-void IR_Generator::parse(CoreDriver &parser, LinesWarpMap &xwarps) {
-    pstate = parser.getPState();
-    warps = &xwarps;
-
+void IR_Generator::genTransUnit(CoreDriver &parser) {
     for (const auto &top_instr: parser.getTransUnit()->children) {
         if (top_instr->node_type == AST_FUNC_DEF)
             createFunction(dynamic_cast<AST_FunctionDef &>(*top_instr));
@@ -172,8 +172,6 @@ void IR_Generator::parse(CoreDriver &parser, LinesWarpMap &xwarps) {
         else
             internalError("Wrong top-level instruction");
     }
-
-    pstate = nullptr;
 }
 
 /** Insert global variable declaration, new struct type or function prototype */
@@ -196,7 +194,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
 
             // TODO
             auto funcIdent = getDeclaredIdent(*singleDecl->declarator);
-            auto fun = cfg->createPrototype(get_ident_by_id(pstate, funcIdent),
+            auto fun = cfg->createPrototype(ctx.getIdentById(funcIdent),
                                             IR_StorageSpecifier::EXTERN, varType);
             functions.emplace(funcIdent, fun.getId());
             continue; // break?
@@ -214,7 +212,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             semanticError(singleDecl->loc, "Global variable should be initialized with constant value");
 
         auto ptrType = std::make_shared<IR_TypePtr>(varType);
-        IRval res = cfg->createGlobal(get_ident_by_id(pstate, ident), ptrType, initVal);
+        IRval res = cfg->createGlobal(ctx.getIdentById(ident), ptrType, initVal);
         globals.emplace(ident, res);
     }
 }
@@ -251,7 +249,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     fullType = getType(*def.specifiers, *def.decl);
 
     auto funcIdent = getDeclaredIdent(*def.decl);
-    auto fun = cfg->createFunction(get_ident_by_id(pstate, funcIdent), storage, isInline, fullType);
+    auto fun = cfg->createFunction(ctx.getIdentById(funcIdent), storage, isInline, fullType);
     functions.emplace(funcIdent, fun.getId());
     selectBlock(cfg->block(fun.getEntryBlockId()));
     curFunctionType = std::dynamic_pointer_cast<IR_TypeFunc>(fun.fullType);
