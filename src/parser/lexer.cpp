@@ -72,7 +72,7 @@ AST_Literal_t get_integer(const char *str) {
     uint64_t val = strtoull(str, (char**)(&endptr), 0);
 
     AST_Literal res{
-        .type = INTEGER_LITERAL,
+        .type = AST_Literal::INTEGER,
         .longCnt = 0,
         .isUnsigned = 0,
         .isFloat = 0,
@@ -113,7 +113,7 @@ AST_Literal_t get_integer(const char *str) {
 
 AST_Literal_t get_float(const char *str, size_t len) {
     AST_Literal res{
-        .type = FLOAT_LITERAL,
+        .type = AST_Literal::FLOAT,
         .longCnt = 0,
         .isUnsigned = 0,
         .isFloat = 0,
@@ -149,7 +149,7 @@ AST_Literal_t get_float(const char *str, size_t len) {
 
 AST_Literal_t get_charval(const char *str, size_t len) {
     AST_Literal res{
-        .type = CHAR_LITERAL,
+        .type = AST_Literal::CHARACTER,
         .longCnt = 0,
         .isUnsigned = 0,
         .isFloat = 0,

@@ -4,12 +4,10 @@
 #include <string>
 #include <cstdint>
 
-enum AST_LiteralType {
-    INTEGER_LITERAL, FLOAT_LITERAL, CHAR_LITERAL
-};
-
 typedef struct AST_Literal {
-    enum AST_LiteralType type;
+    enum LiteralType { INTEGER, FLOAT, CHARACTER };
+
+    LiteralType type;
     int longCnt;
     int isUnsigned;
     int isFloat;

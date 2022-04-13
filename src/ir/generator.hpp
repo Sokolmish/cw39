@@ -84,7 +84,7 @@ private:
     bool isShortLogicEnabled = true;
 
 
-    void genTransUnit(CoreDriver &parser);
+    // Common
 
     std::optional<IRval> emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr);
     std::optional<IRval> emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr);
@@ -100,6 +100,12 @@ private:
     IRval emitExtract(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices);
     IRval emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> indices);
     IRval emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices);
+
+    [[noreturn]] void semanticError(yy::location loc, std::string const &msg);
+
+    // Control generator
+
+    void genTransUnit(CoreDriver &parser);
 
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
@@ -119,18 +125,32 @@ private:
     static bool isIntegerNumOp(AST_Binop::OpType op);
     static bool isComparsionOp(AST_Binop::OpType op);
 
+    // Expresions generator
+
+    IRval evalExpr(AST_Expr const &node);
+    std::optional<IRval> evalConstantExpr(AST_Expr const &node);
+
+    IRval evalCommaExpr(AST_CommaExpression const &expr);
+    IRval evalAssignmentExpr(AST_Assignment const &expr);
+    IRval evalBinopExpr(AST_Binop const &expr);
+    IRval evalCastExpr(AST_Cast const &expr);
+    IRval evalUnopExpr(AST_Unop const &expr);
+    IRval evalPostfixExpr(AST_Postfix const &expr);
+    IRval evalPrimaryExpr(AST_Primary const &expr);
+
     IRval getPtrWithOffset(IRval const &base, IRval const &index);
     void doAssignment(AST_Expr const &dest, IRval const &wrValue);
     IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc);
     IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right, yy::location loc);
-    IRval doAddrOf(const AST_Expr &expr);
-    IRval evalExpr(AST_Expr const &node);
+    IRval doAddrOf(AST_Expr const &expr);
+    IRval doCall(AST_Postfix const &expr);
+
+    IRval getCompoundVal(std::shared_ptr<IR_Type> const &type, AST_InitializerList const &lst);
     IRval getLiteralIRval(AST_Literal const &lit);
     std::optional<IRval> getPtrToVariable(string_id_t ident);
     std::pair<string_id_t, std::string> getStringLiteral(const AST_StringsSeq &scat);
-    IRval getCompoundVal(std::shared_ptr<IR_Type> const &type, AST_InitializerList const &lst);
 
-    std::optional<IRval> evalConstantExpr(AST_Expr const &node);
+    // Types generator
 
     std::shared_ptr<IR_Type> getStructType(AST_UStructSpec const &spec);
     typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
@@ -147,8 +167,6 @@ private:
     string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArgs(AST_Declarator const &decl);
-
-    [[noreturn]] void semanticError(yy::location loc, std::string const &msg);
 };
 
 #endif /* GENERATOR_HPP_INCLUDED__ */

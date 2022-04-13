@@ -290,7 +290,7 @@ std::vector<IR_Generator::IR_FuncArgument> IR_Generator::getDeclaredFuncArgs(AST
 }
 
 std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
-    if (lit.type == INTEGER_LITERAL) {
+    if (lit.type == AST_Literal::INTEGER) {
         if (lit.isUnsigned) {
             if (lit.longCnt)
                 return std::make_shared<IR_TypeDirect>(IR_TypeDirect::U64);
@@ -304,14 +304,14 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
                 return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I32);
         }
     }
-    else if (lit.type == FLOAT_LITERAL) {
+    else if (lit.type == AST_Literal::FLOAT) {
         if (lit.isFloat)
             return std::make_shared<IR_TypeDirect>(IR_TypeDirect::F32);
         else {
             return std::make_shared<IR_TypeDirect>(IR_TypeDirect::F64);
         }
     }
-    else if (lit.type == CHAR_LITERAL) {
+    else if (lit.type == AST_Literal::CHARACTER) {
         return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
     }
     else {

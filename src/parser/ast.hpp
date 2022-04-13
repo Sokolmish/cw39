@@ -172,9 +172,10 @@ struct AST_Binop : public AST_Expr {
     };
 
     enum OpType : ast_enum_t {
-        MUL, DIV, REM, ADD, SUB, SHL, SHR,
+        ADD, SUB, MUL, DIV, REM, SHL, SHR,
+        BIT_AND, BIT_XOR, BIT_OR,
+        LOG_AND, LOG_OR,
         LT, GT, LE, GE, EQ, NE,
-        BIT_AND, BIT_XOR, BIT_OR, LOG_AND, LOG_OR
     } op;
     uniq<AST_Expr> lhs, rhs;
 
