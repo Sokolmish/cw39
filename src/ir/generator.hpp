@@ -35,7 +35,7 @@ private:
     void selectBlock(IR_Block &block);
     void deselectBlock();
 
-    std::shared_ptr<IR_TypeFunc> curFunctionType = nullptr;
+    int curFuncId = -1;
 
     struct IR_FuncArgument {
         string_id_t ident;

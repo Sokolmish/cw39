@@ -238,21 +238,23 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     variables.increaseLevel();
 
     IR_StorageSpecifier storage;
-    bool isInline;
     std::shared_ptr<IR_Type> fullType;
 
     if (def.specifiers->storage_specifier == AST_DeclSpecifiers::ST_NONE)
         storage = IR_StorageSpecifier::EXTERN;
     else
         storage = storageSpecFromAst(def.specifiers->storage_specifier);
-    isInline = def.specifiers->is_inline;
     fullType = getType(*def.specifiers, *def.decl);
 
+    int fspec = ControlFlowGraph::Function::FSPEC_NONE;
+    if (def.specifiers->is_inline)
+        fspec = fspec | ControlFlowGraph::Function::INLINE;
+
     auto funcIdent = getDeclaredIdent(*def.decl);
-    auto fun = cfg->createFunction(ctx.getIdentById(funcIdent), storage, isInline, fullType);
+    auto fun = cfg->createFunction(ctx.getIdentById(funcIdent), storage, fspec, fullType);
     functions.emplace(funcIdent, fun.getId());
     selectBlock(cfg->block(fun.getEntryBlockId()));
-    curFunctionType = std::dynamic_pointer_cast<IR_TypeFunc>(fun.fullType);
+    curFuncId = fun.getId();
 
     auto declArgs = getDeclaredFuncArgs(*def.decl);
     int curArgNum = 0;
@@ -268,7 +270,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     }
 
     fillBlock(*def.body);
-    curFunctionType = nullptr;
+    curFuncId = -1;
     variables.decreaseLevel();
 
     for (auto const &[block, label, loc] : danglingGotos) {
@@ -579,14 +581,15 @@ void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
 void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
     if (stmt.type == AST_JumpStmt::J_RET) {
         auto const &arg = stmt.getExpr();
+        auto funcType = cfg->getFunction(curFuncId).getFuncType();
         if (arg) {
             auto retVal = evalExpr(*arg);
-            if (!curFunctionType->ret->equal(*retVal.getType()))
+            if (!funcType->ret->equal(*retVal.getType()))
                 semanticError(stmt.loc, "Wrong return value type");
             curBlock().setTerminator(IR_ExprTerminator::RET, retVal);
         }
         else {
-            if (!curFunctionType->ret->equal(*IR_TypeDirect::getVoid()))
+            if (!funcType->ret->equal(*IR_TypeDirect::getVoid()))
                 semanticError(stmt.loc, "Cannot return value in void function");
             curBlock().setTerminator(IR_ExprTerminator::RET);
         }
@@ -608,6 +611,8 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_GOTO) {
+        cfg->getFunction(curFuncId).fspec |= ControlFlowGraph::Function::GOTOED;
+
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         string_id_t label = stmt.getIdent();
         if (auto it = labels.find(label); it != labels.end())

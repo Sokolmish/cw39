@@ -10,7 +10,7 @@ ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
     res.name = name;
     res.entryBlockId = entryBlockId;
     res.storage = storage;
-    res.isInline = isInline;
+    res.fspec = fspec;
     res.fullType = fullType->copy();
     return res;
 }
@@ -115,7 +115,7 @@ IRval ControlFlowGraph::createGlobal(std::string name, std::shared_ptr<IR_Type> 
 }
 
 ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
-        IR_StorageSpecifier stor, bool isInline, std::shared_ptr<IR_Type> fullType) {
+        IR_StorageSpecifier stor, int fspec, std::shared_ptr<IR_Type> fullType) {
 
     auto &newBlock = createBlock();
     Function func;
@@ -123,7 +123,7 @@ ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
     func.name = std::move(name);
     func.entryBlockId = newBlock.id;
     func.storage = stor;
-    func.isInline = isInline;
+    func.fspec = fspec;
     func.fullType = std::move(fullType);
     auto it = funcs.emplace_hint(funcs.end(), func.id, std::move(func));
     return it->second;
@@ -136,7 +136,7 @@ ControlFlowGraph::Function& ControlFlowGraph::createPrototype(std::string name,
     func.name = std::move(name);
     func.entryBlockId = -1;
     func.storage = stor;
-    func.isInline = false;
+    func.fspec = Function::FuncSpec::FSPEC_NONE;
     func.fullType = std::move(fullType);
     auto it = prototypes.emplace_hint(prototypes.end(), func.id, std::move(func));
     return it->second;

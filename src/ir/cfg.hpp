@@ -20,8 +20,14 @@ public:
 
     public:
         IR_StorageSpecifier storage;
-        bool isInline;
         std::shared_ptr<IR_Type> fullType;
+
+        enum FuncSpec : int {
+            FSPEC_NONE = 0,
+            INLINE = 0x1,
+            GOTOED = 0x2,
+        };
+        int fspec;
 
         Function clone() const;
         int getId() const;
@@ -46,7 +52,7 @@ public:
 
     IR_Block& createBlock();
     void linkBlocks(IR_Block &prev, IR_Block &next);
-    Function& createFunction(std::string name, IR_StorageSpecifier stor, bool isInline,
+    Function& createFunction(std::string name, IR_StorageSpecifier stor, int fspec,
                              std::shared_ptr<IR_Type> fullType);
     Function& createPrototype(std::string name, IR_StorageSpecifier stor,
                               std::shared_ptr<IR_Type> fullType);
