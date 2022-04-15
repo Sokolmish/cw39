@@ -592,7 +592,7 @@ void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
                 getValue(acc.base), indices, name);
         regsMap.emplace(*node.res, res);
     }
-    else if (isInList(acc.op, { IR_ExprAccess::EXTRACT, IR_ExprAccess::INSERT })) {
+    else if (isInList(acc.op, IR_ExprAccess::EXTRACT, IR_ExprAccess::INSERT)) {
         std::vector<uint32_t> indices;
         indices.reserve(acc.indices.size());
         for (auto const &ind : acc.indices) {

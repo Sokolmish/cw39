@@ -29,12 +29,9 @@
 #define NOT_IMPLEMENTED(msg) notImplemented(__LINE__, __FILE__ " " msg)
 
 
-template <typename T>
-constexpr inline bool isInList(T const &val, std::initializer_list<T> const &lst) {
-    for (auto const &e : lst)
-        if (val == e)
-            return true;
-    return false;
+template <typename T, typename... Us>
+constexpr inline bool isInList(T const &val, Us const&&... elems) {
+    return ((val == elems) || ...);
 }
 
 

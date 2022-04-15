@@ -106,23 +106,23 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
 
 constexpr bool ConstantsFolder::isGeneralNumOp(IR_ExprOper::IR_Ops op) {
     using o = IR_ExprOper;
-    return isInList(op, { o::ADD, o::SUB, o::DIV, o::MUL });
+    return isInList(op, o::ADD, o::SUB, o::DIV, o::MUL);
 }
 
 constexpr bool ConstantsFolder::isIntegerOp(IR_ExprOper::IR_Ops op) {
     using o = IR_ExprOper;
-    return isInList(op, { o::SHL, o::SHR, o::REM, o::AND, o::OR, o::XOR });
+    return isInList(op, o::SHL, o::SHR, o::REM, o::AND, o::OR, o::XOR);
 }
 
 /** Includes short-logic operations */
 constexpr bool ConstantsFolder::isComparsionOp(IR_ExprOper::IR_Ops op) {
     using o = IR_ExprOper;
-    return isInList(op, { o::LT, o::GT, o::LE, o::GE, o::EQ, o::NE, o::LAND, o::LOR });
+    return isInList(op, o::LT, o::GT, o::LE, o::GE, o::EQ, o::NE, o::LAND, o::LOR);
 }
 
 constexpr bool ConstantsFolder::isShortLogicOp(IR_ExprOper::IR_Ops op) {
     using o = IR_ExprOper;
-    return isInList(op, { o::LAND, o::LOR });
+    return isInList(op, o::LAND, o::LOR);
 }
 
 

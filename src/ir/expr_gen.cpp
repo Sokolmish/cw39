@@ -1,18 +1,18 @@
 #include "generator.hpp"
 
-bool IR_Generator::isGeneralNumOp(AST_Binop::OpType op) {
+constexpr bool IR_Generator::isGeneralNumOp(AST_Binop::OpType op) {
     using b = AST_Binop;
-    return isInList(op, { b::ADD, b::SUB, b::MUL, b::DIV });
+    return isInList(op, b::ADD, b::SUB, b::MUL, b::DIV);
 }
 
-bool IR_Generator::isIntegerNumOp(AST_Binop::OpType op) {
+constexpr bool IR_Generator::isIntegerNumOp(AST_Binop::OpType op) {
     using b = AST_Binop;
-    return isInList(op, { b::SHL, b::SHR, b::REM, b::BIT_AND, b::BIT_OR, b::BIT_XOR });
+    return isInList(op, b::SHL, b::SHR, b::REM, b::BIT_AND, b::BIT_OR, b::BIT_XOR);
 }
 
-bool IR_Generator::isComparsionOp(AST_Binop::OpType op) {
+constexpr bool IR_Generator::isComparsionOp(AST_Binop::OpType op) {
     using b = AST_Binop;
-    return isInList(op, { b::LT, b::GT, b::LE, b::GE, b::EQ, b::NE, b::LOG_AND, b::LOG_OR });
+    return isInList(op, b::LT, b::GT, b::LE, b::GE, b::EQ, b::NE, b::LOG_AND, b::LOG_OR);
 }
 
 
@@ -470,7 +470,7 @@ IRval IR_Generator::evalAssignmentExpr(AST_Assignment const &expr) {
 }
 
 IRval IR_Generator::evalBinopExpr(AST_Binop const &expr) {
-    bool isLogic = isInList(expr.op, { AST_Binop::LOG_AND, AST_Binop::LOG_OR });
+    bool isLogic = isInList(expr.op, AST_Binop::LOG_AND, AST_Binop::LOG_OR);
     if (isLogic && isShortLogicEnabled)
         return doShortLogicOp(expr.op, *expr.lhs, *expr.rhs, expr.loc);
     return doBinOp(expr.op, evalExpr(*expr.lhs), evalExpr(*expr.rhs), expr.loc);

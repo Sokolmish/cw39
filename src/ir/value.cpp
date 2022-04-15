@@ -92,7 +92,7 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
 
 
 bool IRval::isConstant() const {
-    return isInList(valClass, { IRval::VAL, IRval::ZEROINIT, IRval::AGGREGATE });
+    return isInList(valClass, IRval::VAL, IRval::ZEROINIT, IRval::AGGREGATE);
 }
 
 bool IRval::isVReg() const {

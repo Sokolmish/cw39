@@ -32,7 +32,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     auto &oper = dynamic_cast<IR_ExprOper &>(*node->body);
 
     // Add or subtract 0
-    if (isInList(oper.op, { IR_ExprOper::ADD, IR_ExprOper::SUB })) {
+    if (isInList(oper.op, IR_ExprOper::ADD, IR_ExprOper::SUB)) {
         if (isConstEqual(oper.args[0], 0ULL)) {
             if (oper.op == IR_ExprOper::ADD) {
                 oper.op = IR_ExprOper::MOV;
@@ -48,7 +48,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Mul by 0
-    if (isInList(oper.op, { IR_ExprOper::MUL })) {
+    if (oper.op == IR_ExprOper::MUL) {
         if (isConstEqual(oper.args[0], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
@@ -62,7 +62,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Zero division
-    if (isInList(oper.op, { IR_ExprOper::DIV, IR_ExprOper::REM })) {
+    if (isInList(oper.op, IR_ExprOper::DIV, IR_ExprOper::REM)) {
         if (isConstEqual(oper.args[0], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
@@ -74,7 +74,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Bit shift of 0 and by 0
-    if (isInList(oper.op, { IR_ExprOper::SHR, IR_ExprOper::SHL })) {
+    if (isInList(oper.op, IR_ExprOper::SHR, IR_ExprOper::SHL)) {
         if (isConstEqual(oper.args[1], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
@@ -88,7 +88,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Mul by 1
-    if (isInList(oper.op, { IR_ExprOper::MUL })) {
+    if (oper.op == IR_ExprOper::MUL) {
         if (isConstEqual(oper.args[1], 1ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
@@ -102,7 +102,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Div by 1
-    if (isInList(oper.op, { IR_ExprOper::MUL })) {
+    if (oper.op == IR_ExprOper::DIV) {
         if (isConstEqual(oper.args[1], 1ULL)) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ oper.args[0] };
@@ -111,7 +111,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 
     // Zero subtraction
-    if (isInList(oper.op, { IR_ExprOper::SUB, IR_ExprOper::XOR })) {
+    if (isInList(oper.op, IR_ExprOper::SUB, IR_ExprOper::XOR)) {
         if (oper.args[0].equal(oper.args[1])) {
             oper.op = IR_ExprOper::MOV;
             oper.args = std::vector<IRval>{ IRval::createVal(oper.args[0].getType(), 0ULL) };

@@ -19,19 +19,19 @@ IR_Type::IR_Type(IR_Type::Type type) : type(type) {}
 IR_TypeDirect::IR_TypeDirect(DirType spec) : IR_Type(IR_Type::DIRECT), spec(spec) {}
 
 bool IR_TypeDirect::isInteger() const {
-    return isInList(spec, { BOOL, I8, U8, I32, U32, I64, U64 });
+    return isInList(spec, BOOL, I8, U8, I32, U32, I64, U64);
 }
 
 bool IR_TypeDirect::isFloat() const {
-    return isInList(spec, { F32, F64 });
+    return isInList(spec, F32, F64);
 }
 
 bool IR_TypeDirect::isSigned() const {
-    return isInList(spec, { I8, I32, I64 });
+    return isInList(spec, I8, I32, I64);
 }
 
 bool IR_TypeDirect::isUnsigned() const {
-    return isInList(spec, { U8, U32, U64 });
+    return isInList(spec, U8, U32, U64);
 }
 
 int IR_TypeDirect::getBytesSize() const {

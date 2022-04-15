@@ -121,9 +121,9 @@ private:
     void insertCompoundStatement(AST_CompoundStmt const &stmt);
     void insertLabeledStatement(const AST_LabeledStmt &stmt);
 
-    static bool isGeneralNumOp(AST_Binop::OpType op);
-    static bool isIntegerNumOp(AST_Binop::OpType op);
-    static bool isComparsionOp(AST_Binop::OpType op);
+    static constexpr bool isGeneralNumOp(AST_Binop::OpType op);
+    static constexpr bool isIntegerNumOp(AST_Binop::OpType op);
+    static constexpr bool isComparsionOp(AST_Binop::OpType op);
 
     // Expresions generator
 

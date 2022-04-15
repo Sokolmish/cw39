@@ -99,7 +99,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     // TODO: refactor this function
 
     auto resType = IR_TypeDirect::VOID;
-    if (isInList(typeSpec, { ast_ts::T_INT, ast_ts::T_VOID })) { // Void here because it is default value
+    if (isInList(typeSpec, ast_ts::T_INT, ast_ts::T_VOID)) { // Void here because it is default value
         if (sign == ast_ts::T_UNSIGNED) {
             if (longCnt != 0)
                 resType = IR_TypeDirect::U64;
@@ -118,7 +118,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
             semanticError(spec[0]->loc, "Char types cannot have size modificators");
         resType = sign == ast_ts::T_UNSIGNED ? IR_TypeDirect::U8 : IR_TypeDirect::I8;
     }
-    else if (isInList(typeSpec, { ast_ts::T_FLOAT, ast_ts::T_DOUBLE })) {
+    else if (isInList(typeSpec, ast_ts::T_FLOAT, ast_ts::T_DOUBLE)) {
         if (sign != ast_ts::T_VOID)
             semanticError(spec[0]->loc, "Float point types cannot have signedness");
         if (longCnt != 0)
