@@ -28,37 +28,75 @@ static void writeOut(std::string const &path, std::string const &data) {
     }
 }
 
+enum class CompilationLevel {
+    NONE = 0,
+    PREPROCESS,
+    PARSE,
+    GENERATE,
+    OPTIMIZE,
+    MATERIALIZE,
+    EXTERNAL,
+};
+
+static CompilationLevel getCompilationLvl(CLIArgs const &args) {
+    if (args.outLLVM())
+        return CompilationLevel::MATERIALIZE;
+    else if (args.outIR() || args.outCFG())
+        return CompilationLevel::OPTIMIZE;
+    else if (args.outRawIR() || args.outRawCFG())
+        return CompilationLevel::GENERATE;
+    else if (args.outAST())
+        return CompilationLevel::PARSE;
+    else if (args.outPreproc())
+        return CompilationLevel::PREPROCESS;
+    else
+        return CompilationLevel::NONE;
+}
+
 int main(int argc, char **argv) {
     CLIArgs args(argc, argv);
 
-    if (args.unmatched().empty())
+    auto compilationLvl = getCompilationLvl(args);
+    if (compilationLvl == CompilationLevel::NONE)
+        return 0;
+
+    if (args.inputFiles().empty())
         generalError("No input files");
-    std::string path = args.unmatched().at(0);
+    if (args.inputFiles().size() > 1)
+        generalError("Cannot compile more than 1 file");
+    std::string path = args.inputFiles()[0];
 
     Preprocessor preproc(path);
     std::string text = preproc.getText();
     auto ctx = preproc.getContext();
 
-    if (args.count("preproc")) {
-        writeOut(args.getString("preproc"), text);
+    if (args.outPreproc()) {
+        writeOut(*args.outPreproc(), text);
     }
+
+    if (compilationLvl <= CompilationLevel::PREPROCESS)
+        return 0;
 
     auto parser = std::make_unique<CoreDriver>(*ctx, text);
     auto ast = parser->getTransUnit();
-
-    if (args.count("ast")) {
+    if (args.outAST()) {
         ast_set_pctx_ptr(ctx.get());
-        writeOut(args.getString("ast"), ast->getTreeNode()->printHor());
+        writeOut(*args.outAST(), ast->getTreeNode()->printHor());
         ast_set_pctx_ptr(nullptr);
     }
 
+    if (compilationLvl <= CompilationLevel::PARSE)
+        return 0;
+
     auto gen = std::make_unique<IR_Generator>(*parser, *ctx);
     auto rawCfg = gen->getCfg();
+    if (args.outRawIR())
+        writeOut(*args.outRawIR(), rawCfg->printIR());
+    if (args.outRawCFG())
+        writeOut(*args.outRawCFG(), rawCfg->drawCFG());
 
-    if (args.count("ir-raw"))
-        writeOut(args.getString("ir-raw"), rawCfg->printIR());
-    if (args.count("cfg-raw"))
-        writeOut(args.getString("cfg-raw"), rawCfg->drawCFG());
+    if (compilationLvl <= CompilationLevel::GENERATE)
+        return 0;
 
     ControlFlowGraph optCfg;
     optCfg = VarsVirtualizer(*rawCfg).moveCfg();
@@ -67,15 +105,21 @@ int main(int argc, char **argv) {
     optCfg = CopyPropagator(std::move(optCfg)).moveCfg();
     optCfg = TailrecEliminator(std::move(optCfg)).moveCfg();
 
-    if (args.count("ir"))
-        writeOut(args.getString("ir"), optCfg.printIR());
-    if (args.count("cfg"))
-        writeOut(args.getString("cfg"), optCfg.drawCFG());
+    if (args.outIR())
+        writeOut(*args.outIR(), optCfg.printIR());
+    if (args.outCFG())
+        writeOut(*args.outCFG(), optCfg.drawCFG());
 
-    if (args.count("llvm")) {
-        IR2LLVM materializer(optCfg);
-        writeOut(args.getString("llvm"), materializer.getRes());
+    if (compilationLvl <= CompilationLevel::OPTIMIZE)
+        return 0;
+
+    IR2LLVM materializer(optCfg);
+    if (args.outLLVM()) {
+        writeOut(*args.outLLVM(), materializer.getRes());
     }
+
+    if (compilationLvl <= CompilationLevel::MATERIALIZE)
+        return 0;
 
     return 0;
 }
