@@ -182,7 +182,7 @@ std::map<uint64_t, std::string> const& ControlFlowGraph::getStrings() const {
 }
 
 void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited,
-                                      std::function<void(int)> const &action) {
+                                      std::function<void(int)> const &action) const {
     if (visited.contains(blockId))
         return;
     visited.insert(blockId);

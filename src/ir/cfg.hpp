@@ -76,7 +76,8 @@ public:
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& getStructs() const;
     std::map<uint64_t, std::string> const& getStrings() const;
 
-    void traverseBlocks(int blockId, std::set<int> &visited, std::function<void(int)> const &action);
+    void traverseBlocks(int blockId, std::set<int> &visited,
+                        std::function<void(int)> const &action) const;
 
     [[nodiscard]] std::string printIR() const;
     [[nodiscard]] std::string drawCFG() const;
