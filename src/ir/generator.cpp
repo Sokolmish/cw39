@@ -2,7 +2,7 @@
 #include "constants_folder.hpp"
 
 IR_Generator::IR_Generator(CoreDriver &parser, ParsingContext &ctx) : ctx(ctx) {
-    cfg = std::make_unique<ControlFlowGraph>();
+    iunit = std::make_unique<IntermediateUnit>();
     genTransUnit(parser);
 }
 
@@ -31,8 +31,8 @@ void IR_Generator::deselectBlock() {
     selectedBlock = nullptr;
 }
 
-std::shared_ptr<ControlFlowGraph> IR_Generator::getCfg() const {
-    return cfg;
+std::shared_ptr<IntermediateUnit> IR_Generator::getIR() const {
+    return iunit;
 }
 
 
@@ -101,7 +101,7 @@ std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::u
     else {
         std::optional<IRval> res = {};
         if (ret)
-            res = cfg->createReg(std::move(ret));
+            res = iunit->createReg(std::move(ret));
         return emitNode(res, std::move(expr));
     }
 }
@@ -193,14 +193,14 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
                 semanticError(singleDecl->initializer->loc, "Prototypes cannot be initialized");
 
             // TODO
-            auto funcIdent = getDeclaredIdent(*singleDecl->declarator);
-            auto fun = cfg->createPrototype(ctx.getIdentById(funcIdent),
-                                            IR_StorageSpecifier::EXTERN, varType);
+            string_id_t funcIdent = getDeclaredIdent(*singleDecl->declarator);
+            auto &fun = iunit->createPrototype(ctx.getIdentById(funcIdent),
+                                               IR_StorageSpecifier::EXTERN, varType);
             functions.emplace(funcIdent, fun.getId());
             continue; // break?
         }
 
-        auto ident = getDeclaredIdent(*singleDecl->declarator);
+        string_id_t ident = getDeclaredIdent(*singleDecl->declarator);
         if (globals.contains(ident)) // TODO: check in functions (not only there)
             semanticError(singleDecl->loc, "Global variable already declared");
 
@@ -212,7 +212,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             semanticError(singleDecl->loc, "Global variable should be initialized with constant value");
 
         auto ptrType = std::make_shared<IR_TypePtr>(varType);
-        IRval res = cfg->createGlobal(ctx.getIdentById(ident), ptrType, initVal);
+        IRval res = iunit->createGlobal(ctx.getIdentById(ident), ptrType, initVal);
         globals.emplace(ident, res);
     }
 }
@@ -246,15 +246,17 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
         storage = storageSpecFromAst(def.specifiers->storage_specifier);
     fullType = getType(*def.specifiers, *def.decl);
 
-    int fspec = ControlFlowGraph::Function::FSPEC_NONE;
+    int fspec = IntermediateUnit::Function::FSPEC_NONE;
     if (def.specifiers->is_inline)
-        fspec = fspec | ControlFlowGraph::Function::INLINE;
+        fspec = fspec | IntermediateUnit::Function::INLINE;
 
-    auto funcIdent = getDeclaredIdent(*def.decl);
-    auto fun = cfg->createFunction(ctx.getIdentById(funcIdent), storage, fspec, fullType);
-    functions.emplace(funcIdent, fun.getId());
-    selectBlock(cfg->block(fun.getEntryBlockId()));
-    curFuncId = fun.getId();
+    string_id_t funcIdent = getDeclaredIdent(*def.decl);
+
+    curFunc = &iunit->createFunction(ctx.getIdentById(funcIdent), storage, fspec, fullType);
+    functions.emplace(funcIdent, curFunc->getId());
+    IR_Block &entryBlock = curFunc->cfg.createBlock();
+    curFunc->cfg.entryBlockId = entryBlock.id;
+    selectBlock(entryBlock);
 
     auto declArgs = getDeclaredFuncArgs(*def.decl);
     int curArgNum = 0;
@@ -270,15 +272,16 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     }
 
     fillBlock(*def.body);
-    curFuncId = -1;
-    variables.decreaseLevel();
 
     for (auto const &[block, label, loc] : danglingGotos) {
         auto it = labels.find(label);
         if (it == labels.end())
             semanticError(loc, "Unknown label");
-        cfg->linkBlocks(cfg->block(block), cfg->block(it->second));
+        curFunc->cfg.linkBlocks(block, it->second);
     }
+
+    curFunc = nullptr;
+    variables.decreaseLevel();
     labels.clear();
     danglingGotos.clear();
 }
@@ -296,7 +299,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
 
         // Ureachable code
         if (selectedBlock == nullptr) {
-            IR_Block &unreachBlock = cfg->createBlock();
+            IR_Block &unreachBlock = curFunc->cfg.createBlock();
             selectBlock(unreachBlock);
         }
     }
@@ -328,7 +331,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         }
         else { // Do not create allocations inside loops
             IR_Block &cur = curBlock();
-            selectBlock(cfg->block(topmostLoop->before));
+            selectBlock(curFunc->cfg.block(topmostLoop->before));
             var = emitAlloc(ptrType, varType);
             selectBlock(cur);
         }
@@ -387,18 +390,18 @@ void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
     IRval cond = evalExpr(*stmt.condition);
     curBlock().setTerminator(IR_ExprTerminator::BRANCH, cond);
 
-    IR_Block &blockTrue = cfg->createBlock();
+    IR_Block &blockTrue = curFunc->cfg.createBlock();
     IR_Block *blockFalse = nullptr;
     IR_Block *blockAfter = nullptr;
 
-    cfg->linkBlocks(curBlock(), blockTrue);
+    curFunc->cfg.linkBlocks(curBlock(), blockTrue);
     if (stmt.else_body) {
-        blockFalse = &cfg->createBlock();
-        cfg->linkBlocks(curBlock(), *blockFalse);
+        blockFalse = &curFunc->cfg.createBlock();
+        curFunc->cfg.linkBlocks(curBlock(), *blockFalse);
     }
     else {
-        blockAfter = &cfg->createBlock();
-        cfg->linkBlocks(curBlock(), *blockAfter);
+        blockAfter = &curFunc->cfg.createBlock();
+        curFunc->cfg.linkBlocks(curBlock(), *blockAfter);
     }
 
     // Fill 'true' block
@@ -411,8 +414,8 @@ void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
     // Link with 'after' block, if 'true' block not terminated
     if (selectedBlock != nullptr) { // !curBlock().termNode.has_value()
         if (!blockAfter)
-            blockAfter = &cfg->createBlock();
-        cfg->linkBlocks(curBlock(), *blockAfter);
+            blockAfter = &curFunc->cfg.createBlock();
+        curFunc->cfg.linkBlocks(curBlock(), *blockAfter);
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
     }
 
@@ -427,8 +430,8 @@ void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
         // Link with 'after' block, if 'else' block not terminated
         if (selectedBlock != nullptr) { // !curBlock().termNode.has_value()
             if (!blockAfter)
-                blockAfter = &cfg->createBlock();
-            cfg->linkBlocks(curBlock(), *blockAfter);
+                blockAfter = &curFunc->cfg.createBlock();
+            curFunc->cfg.linkBlocks(curBlock(), *blockAfter);
             curBlock().setTerminator(IR_ExprTerminator::JUMP);
         }
     }
@@ -444,8 +447,8 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     IRval condVal = evalExpr(*stmt.condition);
 
     IR_Block &entryBlock = curBlock();
-    IR_Block &switchedBlock = cfg->createBlock();
-    IR_Block &blockAfter = cfg->createBlock();
+    IR_Block &switchedBlock = curFunc->cfg.createBlock();
+    IR_Block &blockAfter = curFunc->cfg.createBlock();
 
     if (stmt.body->type != AST_Stmt::COMPOUND)
         semanticError(stmt.body->loc, "Switch statement can only has compound statement child");
@@ -458,7 +461,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     selectBlock(switchedBlock);
     fillBlock(dynamic_cast<AST_CompoundStmt const &>(*stmt.body));
     if (selectedBlock != nullptr)
-        cfg->linkBlocks(curBlock(), blockAfter);
+        curFunc->cfg.linkBlocks(curBlock(), blockAfter);
 
     // TODO: use corresponding LLVM instruction instead or use binsearch
     auto nearestSwitch = getNearestSwitch();
@@ -471,19 +474,19 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
 
         IRval eqCond = emitOp(IR_TypeDirect::getI1(), IR_ExprOper::EQ, { condVal, label.val });
         curBlock().setTerminator(IR_ExprTerminator::BRANCH, eqCond);
-        cfg->linkBlocks(curBlock(), cfg->block(label.block));
-        IR_Block &nextCaseBlock = cfg->createBlock();
-        cfg->linkBlocks(curBlock(), nextCaseBlock);
+        curFunc->cfg.linkBlocks(curBlock(), curFunc->cfg.block(label.block));
+        IR_Block &nextCaseBlock = curFunc->cfg.createBlock();
+        curFunc->cfg.linkBlocks(curBlock(), nextCaseBlock);
         selectBlock(nextCaseBlock);
     }
 
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
     if (nearestSwitch->defaultBlock.has_value()) {
-        IR_Block &defaultBlock = cfg->block(nearestSwitch->defaultBlock.value());
-        cfg->linkBlocks(curBlock(), defaultBlock);
+        IR_Block &defaultBlock = curFunc->cfg.block(nearestSwitch->defaultBlock.value());
+        curFunc->cfg.linkBlocks(curBlock(), defaultBlock);
     }
     else {
-        cfg->linkBlocks(curBlock(), blockAfter);
+        curFunc->cfg.linkBlocks(curBlock(), blockAfter);
     }
 
     activeControls.pop_back();
@@ -495,9 +498,9 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
 }
 
 void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
-    IR_Block &blockCond = cfg->createBlock();
-    IR_Block &blockLoop = cfg->createBlock();
-    IR_Block &blockAfter = cfg->createBlock();
+    IR_Block &blockCond = curFunc->cfg.createBlock();
+    IR_Block &blockLoop = curFunc->cfg.createBlock();
+    IR_Block &blockAfter = curFunc->cfg.createBlock();
 
     IR_Block &blockBefore = curBlock();
 
@@ -518,9 +521,9 @@ void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
     // Make jump to condition
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
     if (stmt.type == AST_IterStmt::DO_LOOP)
-        cfg->linkBlocks(curBlock(), blockLoop);
+        curFunc->cfg.linkBlocks(curBlock(), blockLoop);
     else
-        cfg->linkBlocks(curBlock(), blockCond);
+        curFunc->cfg.linkBlocks(curBlock(), blockCond);
 
     // Create condition
     selectBlock(blockCond);
@@ -528,15 +531,15 @@ void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
     // In 'for' loops condition can be absent
     IRval cond = condNode ? evalExpr(*condNode) : IRval::createVal(IR_TypeDirect::getI32(), 1);
     curBlock().setTerminator(IR_ExprTerminator::BRANCH, cond);
-    cfg->linkBlocks(curBlock(), blockLoop);
-    cfg->linkBlocks(curBlock(), blockAfter);
+    curFunc->cfg.linkBlocks(curBlock(), blockLoop);
+    curFunc->cfg.linkBlocks(curBlock(), blockAfter);
 
     // Create last action
     if (stmt.type == AST_IterStmt::FOR_LOOP) {
         if (stmt.getForLoopControls().action) {
-            auto &blockLastAct = cfg->createBlock();
+            auto &blockLastAct = curFunc->cfg.createBlock();
             blockLastAct.setTerminator(IR_ExprTerminator::JUMP);
-            cfg->linkBlocks(blockLastAct, blockCond);
+            curFunc->cfg.linkBlocks(blockLastAct, blockCond);
             selectBlock(blockLastAct);
             evalExpr(*stmt.getForLoopControls().action);
 
@@ -569,7 +572,7 @@ void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
     // Terminate body
     if (selectedBlock != nullptr) {
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeControls.back().getLoop().skip));
+        curFunc->cfg.linkBlocks(curBlock().id, activeControls.back().getLoop().skip);
     }
     selectBlock(blockAfter);
 
@@ -581,7 +584,7 @@ void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
 void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
     if (stmt.type == AST_JumpStmt::J_RET) {
         auto const &arg = stmt.getExpr();
-        auto funcType = cfg->getFunction(curFuncId).getFuncType();
+        auto funcType = curFunc->getFuncType();
         if (arg) {
             auto retVal = evalExpr(*arg);
             if (!funcType->ret->equal(*retVal.getType()))
@@ -599,7 +602,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         if (activeControls.empty())
             semanticError(stmt.loc, "Break keyword outside of loop or switch");
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(activeControls.back().getExit()));
+        curFunc->cfg.linkBlocks(curBlock().id, activeControls.back().getExit());
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_CONTINUE) {
@@ -607,16 +610,16 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         if (!nearestLoop.has_value())
             semanticError(stmt.loc, "Continue keyword outside of loop");
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
-        cfg->linkBlocks(curBlock(), cfg->block(nearestLoop->skip));
+        curFunc->cfg.linkBlocks(curBlock().id, nearestLoop->skip);
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_GOTO) {
-        cfg->getFunction(curFuncId).fspec |= ControlFlowGraph::Function::GOTOED;
+        curFunc->fspec |= IntermediateUnit::Function::GOTOED;
 
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         string_id_t label = stmt.getIdent();
         if (auto it = labels.find(label); it != labels.end())
-            cfg->linkBlocks(curBlock(), cfg->block(it->second));
+            curFunc->cfg.linkBlocks(curBlock().id, it->second);
         else
             danglingGotos.emplace_back(curBlock().id, label, stmt.loc);
         deselectBlock();
@@ -631,15 +634,15 @@ void IR_Generator::insertCompoundStatement(const AST_CompoundStmt &stmt) {
     if (stmt.body->v.empty())
         return;
 
-    auto &compoundBlock = cfg->createBlock();
-    cfg->linkBlocks(curBlock(), compoundBlock);
+    auto &compoundBlock = curFunc->cfg.createBlock();
+    curFunc->cfg.linkBlocks(curBlock(), compoundBlock);
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
     selectBlock(compoundBlock);
     fillBlock(stmt);
 
     if (selectedBlock != nullptr) {
-        auto &blockAfter = cfg->createBlock();
-        cfg->linkBlocks(curBlock(), blockAfter);
+        auto &blockAfter = curFunc->cfg.createBlock();
+        curFunc->cfg.linkBlocks(curBlock(), blockAfter);
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         selectBlock(blockAfter);
     }
@@ -648,8 +651,8 @@ void IR_Generator::insertCompoundStatement(const AST_CompoundStmt &stmt) {
 void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
     // Create new block
     if (!curBlock().getAllNodes().empty()) {
-        IR_Block &nextBlock = cfg->createBlock();
-        cfg->linkBlocks(curBlock(), nextBlock);
+        IR_Block &nextBlock = curFunc->cfg.createBlock();
+        curFunc->cfg.linkBlocks(curBlock(), nextBlock);
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         selectBlock(nextBlock);
     }

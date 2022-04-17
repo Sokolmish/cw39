@@ -6,21 +6,10 @@
 
 GraphInfo::UtilNode::UtilNode(int id, DomNode *dom) : id(id), dom(dom) {}
 
-GraphInfo::GraphInfo(ControlFlowGraph const &graph) : cfg(graph) {
-    for (auto const &[fid, func] : cfg.getFuncs()) {
-        processFunc(func.getEntryBlockId());
-    }
-    for (auto &[nodeId, node] : domData) {
-        if (node.dominatorId != -1)
-            domData.at(node.dominatorId).childrenIds.push_back(nodeId);
-    }
-}
-
-
-void GraphInfo::processFunc(int entryBlockId) {
-    auto domIt = domData.emplace(entryBlockId, DomNode()).first;
-    UtilNode node = UtilNode(entryBlockId, &domIt->second);
-    auto utilIt = utilNodes.emplace(entryBlockId, std::move(node)).first;
+GraphInfo::GraphInfo(CFGraph const &graph) : cfg(graph) {
+    auto domIt = domData.emplace(cfg.entryBlockId, DomNode()).first;
+    UtilNode unode = UtilNode(cfg.entryBlockId, &domIt->second);
+    auto utilIt = utilNodes.emplace(cfg.entryBlockId, std::move(unode)).first;
     UtilNode &newNode = utilIt->second;
     dfs(newNode);
 
@@ -30,10 +19,15 @@ void GraphInfo::processFunc(int entryBlockId) {
         return utilNodes.at(a).timeIn < utilNodes.at(b).timeIn;
     });
     dominators(funBlocksIds);
-    domData.at(entryBlockId).dominatorId = -1;
+    domData.at(cfg.entryBlockId).dominatorId = -1;
 
     funBlocksIds.clear();
     utilNodes.clear();
+
+    for (auto &[nodeId, node] : domData) {
+        if (node.dominatorId != -1)
+            domData.at(node.dominatorId).childrenIds.push_back(nodeId);
+    }
 }
 
 void GraphInfo::dfs(UtilNode &node) {
@@ -98,6 +92,7 @@ GraphInfo::UtilNode& GraphInfo::findMin(UtilNode &node) {
 }
 
 // NB: nodes must be sorted in ascending order
+// TODO: set?
 void GraphInfo::dominators(std::vector<int> &nodes) {
     for (auto &[nodeId, node] : utilNodes) {
         node.label = &node;

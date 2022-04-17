@@ -1,12 +1,12 @@
 #ifndef IR_TRANSFORMER_HPP_INCLUDED__
 #define IR_TRANSFORMER_HPP_INCLUDED__
 
-#include "ir/cfg.hpp"
+#include "ir/unit.hpp"
 
 class IRTransformer {
 public:
-    virtual ControlFlowGraph const& getCfg() = 0;
-    virtual ControlFlowGraph moveCfg() && = 0;
+    virtual CFGraph const& getCfg() = 0;
+    virtual CFGraph moveCfg() && = 0;
 };
 
 #endif /* IR_TRANSFORMER_HPP_INCLUDED__ */

@@ -2,16 +2,14 @@
 #include "utils.hpp"
 #include <bit>
 
-AlgebraicTransformer::AlgebraicTransformer(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
+AlgebraicTransformer::AlgebraicTransformer(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
     std::set<int> visited;
-    for (auto const &[fId, func] : cfg.getFuncs()) {
-        cfg.traverseBlocks(func.getEntryBlockId(), visited, [this](int blockId) {
-            auto &curBlock = cfg.block(blockId);
-            for (auto *node : curBlock.getAllNodes()) {
-                processNode(node);
-            }
-        });
-    }
+    cfg.traverseBlocks(cfg.entryBlockId, visited, [this](int blockId) {
+        auto &curBlock = cfg.block(blockId);
+        for (auto *node : curBlock.getAllNodes()) {
+            processNode(node);
+        }
+    });
 }
 
 static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
@@ -164,11 +162,11 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     }
 }
 
-ControlFlowGraph const& AlgebraicTransformer::getCfg() {
+CFGraph const& AlgebraicTransformer::getCfg() {
     return cfg;
 }
 
-ControlFlowGraph AlgebraicTransformer::moveCfg() && {
+CFGraph AlgebraicTransformer::moveCfg() && {
     return std::move(cfg);
 }
 

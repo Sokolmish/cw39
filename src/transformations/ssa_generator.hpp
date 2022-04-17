@@ -9,8 +9,14 @@
 #include "ir_transformer.hpp"
 
 class SSA_Generator : IRTransformer {
+public:
+    explicit SSA_Generator(CFGraph in_cfg);
+
+    CFGraph const& getCfg() override;
+    CFGraph moveCfg() && override;
+
 private:
-    ControlFlowGraph cfg;
+    CFGraph cfg;
 
     std::unique_ptr<GraphInfo> gInfo;
     std::map<int, int> postOrder;
@@ -28,12 +34,6 @@ private:
 
     void versionize();
     void traverseForVar(int blockId, IRval const &var);
-
-public:
-    explicit SSA_Generator(ControlFlowGraph in_cfg);
-
-    ControlFlowGraph const& getCfg() override;
-    ControlFlowGraph moveCfg() && override;
 };
 
 

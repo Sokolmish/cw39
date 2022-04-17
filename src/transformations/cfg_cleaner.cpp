@@ -7,12 +7,12 @@
 
 namespace rng = std::ranges;
 
-CfgCleaner::CfgCleaner(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {}
+CfgCleaner::CfgCleaner(CFGraph rawCfg) : cfg(std::move(rawCfg)) {}
 
-ControlFlowGraph const& CfgCleaner::getCfg() {
+CFGraph const& CfgCleaner::getCfg() {
     return cfg;
 }
-ControlFlowGraph CfgCleaner::moveCfg() && {
+CFGraph CfgCleaner::moveCfg() && {
     return std::move(cfg);
 }
 
@@ -38,49 +38,46 @@ void CfgCleaner::fixVersions() {
     std::map<IRval, std::pair<bool, int>, IRval::ComparatorIgnoreVers> versionedRegs;
 
     visited.clear();
-    for (auto const &[fId, func]: cfg.getFuncs()) {
-        cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
-            auto &curBlock = cfg.block(blockId);
-            for (IR_Node *node: curBlock.getAllNodes()) {
-                if (node->res) {
-                    int curVers = *node->res->getVersion();
-                    auto it = versionedRegs.lower_bound(*node->res);
-                    if (it != versionedRegs.end() && it->first.equalIgnoreVers(*node->res)) {
-                        if (it->second.second != curVers)
-                            it->second = std::make_pair(true, 0);
-                    }
-                    else {
-                        versionedRegs.emplace_hint(it, *node->res, std::make_pair(false, curVers));
-                    }
+    cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &versionedRegs](int blockId) {
+        auto &curBlock = cfg.block(blockId);
+        for (IR_Node *node: curBlock.getAllNodes()) {
+            if (node->res) {
+                int curVers = *node->res->getVersion();
+                auto it = versionedRegs.lower_bound(*node->res);
+                if (it != versionedRegs.end() && it->first.equalIgnoreVers(*node->res)) {
+                    if (it->second.second != curVers)
+                        it->second = std::make_pair(true, 0);
+                }
+                else {
+                    versionedRegs.emplace_hint(it, *node->res, std::make_pair(false, curVers));
                 }
             }
-        });
-    }
+        }
+    });
 
     visited.clear();
-    for (auto const &[fId, func]: cfg.getFuncs()) {
-        cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &versionedRegs](int blockId) {
-            auto &curBlock = cfg.block(blockId);
 
-            for (auto *node: curBlock.getAllNodes()) {
-                if (node->res) {
-                    auto it = versionedRegs.find(*node->res);
-                    if (it != versionedRegs.end() && !it->second.first)
-                        node->res->dropVersion();
+    cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &versionedRegs](int blockId) {
+        auto &curBlock = cfg.block(blockId);
+
+        for (auto *node: curBlock.getAllNodes()) {
+            if (node->res) {
+                auto it = versionedRegs.find(*node->res);
+                if (it != versionedRegs.end() && !it->second.first)
+                    node->res->dropVersion();
+            }
+            for (IRval *arg : node->body->getArgs()) {
+                if (arg->isUndefVersion()) {
+                    *arg = IRval::createUndef(arg->getType());
                 }
-                for (IRval *arg : node->body->getArgs()) {
-                    if (arg->isUndefVersion()) {
-                        *arg = IRval::createUndef(arg->getType());
-                    }
-                    else {
-                        auto it = versionedRegs.find(*arg);
-                        if (it != versionedRegs.end() && !it->second.first)
-                            arg->dropVersion();
-                    }
+                else {
+                    auto it = versionedRegs.find(*arg);
+                    if (it != versionedRegs.end() && !it->second.first)
+                        arg->dropVersion();
                 }
             }
-        });
-    }
+        }
+    });
 }
 
 // TODO: PHI loop dependencies
@@ -94,33 +91,29 @@ void CfgCleaner::removeUselessNodes() {
         usedRegs.clear();
 
         visited.clear();
-        for (auto const &[fId, func]: cfg.getFuncs()) {
-            cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs](int blockId) {
-                auto &curBlock = cfg.block(blockId);
-                auto refs = curBlock.getReferences();
-                usedRegs.insert(refs.begin(), refs.end());
-            });
-        }
+        cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &usedRegs](int blockId) {
+            auto &curBlock = cfg.block(blockId);
+            auto refs = curBlock.getReferences();
+            usedRegs.insert(refs.begin(), refs.end());
+        });
 
         visited.clear();
-        for (auto const &[fId, func]: cfg.getFuncs()) {
-            cfg.traverseBlocks(func.getEntryBlockId(), visited, [this, &usedRegs, &changed](int blockId) {
-                auto &curBlock = cfg.block(blockId);
-                for (IR_Node *node: curBlock.getAllNodes()) {
-                    if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
-                        changed = true;
-                        node->res = {};
+        cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &usedRegs, &changed](int blockId) {
+            auto &curBlock = cfg.block(blockId);
+            for (IR_Node *node: curBlock.getAllNodes()) {
+                if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
+                    changed = true;
+                    node->res = {};
 
-                        auto const &body = node->body;
-                        if (body->type == IR_Expr::CALL)
-                            continue;
-                        else if (body->type == IR_Expr::MEMORY && body->getMem().op == IR_ExprMem::STORE)
-                            continue;
-                        *node = IR_Node::nop();
-                    }
+                    auto const &body = node->body;
+                    if (body->type == IR_Expr::CALL)
+                        continue;
+                    else if (body->type == IR_Expr::MEMORY && body->getMem().op == IR_ExprMem::STORE)
+                        continue;
+                    *node = IR_Node::nop();
                 }
-            });
-        }
+            }
+        });
     }
 }
 
@@ -179,8 +172,7 @@ void CfgCleaner::removeTransitBlocks() {
 // tODO: refactor this
 void CfgCleaner::removeUnreachableBlocks() {
     std::set<int> visited;
-    for (auto const &[fId, func]: cfg.getFuncs())
-        cfg.traverseBlocks(func.getEntryBlockId(), visited, [](int blockId) {});
+    cfg.traverseBlocks(cfg.entryBlockId, visited, [](int blockId) {});
 
     std::set<int> toRemoveList;
     for (auto &[bId, block] : cfg.getBlocksData())
@@ -243,7 +235,7 @@ void CfgCleaner::removeUnreachableBlocks() {
 std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
     if (cfg.block(startId).prev.size() != 1)
         return {};
-    GraphInfo gInfo(cfg); // TODO: dominators for subgraph (at least function)
+    GraphInfo gInfo(cfg);
     std::set<int> res { startId };
     std::stack<int> stack;
     stack.push(startId);

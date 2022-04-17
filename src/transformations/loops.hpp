@@ -5,40 +5,43 @@
 #include <set>
 #include <map>
 #include <memory>
-#include "ir/cfg.hpp"
+#include "ir/unit.hpp"
 #include "graph_info.hpp"
 
 class Looper {
 public:
-    Looper(std::shared_ptr<ControlFlowGraph> in);
+    Looper(CFGraph const &in);
 
     void draw() const;
 
 private:
-    std::shared_ptr<ControlFlowGraph> cfg;
+    CFGraph const &cfg;
     GraphInfo gInfo;
-    std::map<int, std::vector<int>> spanningTree;
 
     struct LoopNode {
-        IR_Block &block;
+        IR_Block const &head;
         LoopNode *parent;
         std::set<int> ends;
 
-        LoopNode(IR_Block &bb);
+        std::set<int> blocks;
+
+        LoopNode(IR_Block const &bb);
     };
     std::map<int, LoopNode> loops;
 
     struct BlockInfo {
-        IR_Block &block;
+        IR_Block const &block;
         LoopNode *loop = nullptr;
 
-        BlockInfo(IR_Block &bb);
+        BlockInfo(IR_Block const &bb);
     };
     std::map<int, BlockInfo> lblocks;
 
-    void dfs1(int nodeId, LoopNode *curLoop);
-    void dfs2(int nodeId, std::vector<int> path, LoopNode *curLoop, std::set<int> ends);
-    bool isLoopNested(const LoopNode *parent, const LoopNode *child) const;
+    void findLoopsBodies();
+    std::map<int, std::vector<int>> straightPaths;
+    void dfs3(LoopNode &loop, int nodeId, std::vector<int> curPath);
+
+    void findLoopsInNormalFunc(IntermediateUnit::Function const &func);
 };
 
 #endif /* LOOPS_HPP_INCLUDED__ */

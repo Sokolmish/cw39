@@ -8,20 +8,20 @@
 // TODO: check for phi functions
 
 class VarsVirtualizer : IRTransformer {
+public:
+    explicit VarsVirtualizer(CFGraph rawCfg);
+
+    CFGraph const& getCfg() override;
+    CFGraph moveCfg() && override;
+
 private:
-    ControlFlowGraph cfg;
+    CFGraph cfg;
 
     std::map<IRval, std::optional<IRval>, IRval::ComparatorIgnoreVers> toRedudeList;
 
-    void passFunction(ControlFlowGraph::Function const &func);
+    void passFunction();
     void analyzeBlock(IR_Block const &block);
     void optimizeBlock(IR_Block &block);
-
-public:
-    explicit VarsVirtualizer(ControlFlowGraph rawCfg);
-
-    ControlFlowGraph const& getCfg() override;
-    ControlFlowGraph moveCfg() && override;
 };
 
 #endif /* VARS_VIRTUALIZER_HPP_INCLUDED__ */

@@ -1,5 +1,5 @@
-#ifndef CFG_HPP_INCLUDED__
-#define CFG_HPP_INCLUDED__
+#ifndef IR_UNIT_HPP_INCLUDED__
+#define IR_UNIT_HPP_INCLUDED__
 
 #include <vector>
 #include <memory>
@@ -9,15 +9,49 @@
 #include "nodes.hpp"
 
 
-class ControlFlowGraph {
+class IntermediateUnit;
+
+class CFGraph {
+public:
+    explicit CFGraph(IntermediateUnit *iunit);
+
+    CFGraph(CFGraph &&) noexcept = default;
+    CFGraph& operator=(CFGraph &&) noexcept = default;
+
+    CFGraph copy(IntermediateUnit *iunit) const;
+
+    IR_Block& createBlock();
+    void linkBlocks(IR_Block &prev, IR_Block &next);
+    void linkBlocks(int prevId, int nextId);
+
+    /** get block by id */
+    IR_Block& block(int id);
+    IR_Block const& block(int id) const;
+
+    std::map<int, IR_Block> const& getBlocks() const;
+    std::map<int, IR_Block>& getBlocksData();
+
+    IntermediateUnit* getParentUnit();
+
+    void traverseBlocks(int blockId, std::set<int> &visited,
+                        std::function<void(int)> const &action) const;
+
+    [[nodiscard]] std::string drawCFG() const;
+
+    int entryBlockId = -1;
+
+private:
+    IntermediateUnit *par;
+
+    std::map<int, IR_Block> blocks;
+
+//    CFGraph(CFGraph const &) = default;
+//    CFGraph& operator=(CFGraph const &) = default;
+};
+
+class IntermediateUnit {
 public:
     class Function {
-    private:
-        int id;
-        std::string name;
-        int entryBlockId;
-        friend class ControlFlowGraph;
-
     public:
         IR_StorageSpecifier storage;
         std::shared_ptr<IR_Type> fullType;
@@ -29,13 +63,22 @@ public:
         };
         int fspec;
 
-        Function clone() const;
+        CFGraph cfg;
+
+        bool isProto;
+
+        Function(IntermediateUnit *iunit, int id, std::string name, int isProto = false);
+        Function(IntermediateUnit *iunit, Function const &oth);
+        Function(Function &&) noexcept = default;
+
         int getId() const;
         std::string getName() const;
-        int getEntryBlockId() const;
         std::shared_ptr<IR_TypeFunc> getFuncType() const;
 
-        void setEntryBlockId(int id);
+    private:
+        int id;
+        std::string name;
+        friend class IntermediateUnit;
     };
 
     struct GlobalVar {
@@ -45,13 +88,11 @@ public:
         IRval init;
     };
 
-    ControlFlowGraph() = default;
-    ControlFlowGraph(ControlFlowGraph const &oth);
-    ControlFlowGraph(ControlFlowGraph &&oth) noexcept = default;
-    ControlFlowGraph& operator=(ControlFlowGraph &&oth) noexcept = default;
+    IntermediateUnit() = default;
+    IntermediateUnit(IntermediateUnit const &oth);
+    IntermediateUnit(IntermediateUnit &&oth) noexcept = default;
+    IntermediateUnit& operator=(IntermediateUnit &&oth) noexcept = default;
 
-    IR_Block& createBlock();
-    void linkBlocks(IR_Block &prev, IR_Block &next);
     Function& createFunction(std::string name, IR_StorageSpecifier stor, int fspec,
                              std::shared_ptr<IR_Type> fullType);
     Function& createPrototype(std::string name, IR_StorageSpecifier stor,
@@ -59,9 +100,6 @@ public:
     IRval createReg(std::shared_ptr<IR_Type> type);
     IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init);
 
-    /** get block by id */
-    IR_Block& block(int id);
-    IR_Block const& block(int id) const;
     Function& getFunction(int id);
     Function const& getFunction(int id) const;
 
@@ -70,14 +108,9 @@ public:
     std::map<int, Function> const& getFuncs() const;
     std::map<int, Function>& getFuncsMut();
     std::map<int, Function> const& getPrototypes() const;
-    std::map<int, IR_Block> const& getBlocks() const;
-    std::map<int, IR_Block>& getBlocksData();
     std::map<int, GlobalVar> const& getGlobals() const;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& getStructs() const;
     std::map<uint64_t, std::string> const& getStrings() const;
-
-    void traverseBlocks(int blockId, std::set<int> &visited,
-                        std::function<void(int)> const &action) const;
 
     [[nodiscard]] std::string printIR() const;
     [[nodiscard]] std::string drawCFG() const;
@@ -89,7 +122,6 @@ private:
     uint64_t stringsCounter = 0;
     int globalsCounter = 0;
 
-    std::map<int, IR_Block> blocks;
     std::map<int, Function> funcs;
     std::map<int, Function> prototypes;
     std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> structs;
@@ -97,10 +129,11 @@ private:
     std::map<int, GlobalVar> globals;
 
     friend class IR_Generator;
+    friend class CFGraph;
 
     void printExpr(std::stringstream &ss, IR_Expr const &rawExpr) const;
     void printBlock(std::stringstream &ss, IR_Block const &block) const;
     void drawBlock(std::stringstream &ss, IR_Block const &block) const;
 };
 
-#endif /* CFG_HPP_INCLUDED__ */
+#endif /* IR_UNIT_HPP_INCLUDED__ */

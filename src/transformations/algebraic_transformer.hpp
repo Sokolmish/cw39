@@ -5,15 +5,15 @@
 
 class AlgebraicTransformer : IRTransformer {
 public:
-    explicit AlgebraicTransformer(ControlFlowGraph rawCfg);
+    explicit AlgebraicTransformer(CFGraph rawCfg);
 
-    ControlFlowGraph const& getCfg() override;
-    ControlFlowGraph moveCfg() && override;
+    CFGraph const& getCfg() override;
+    CFGraph moveCfg() && override;
 
     bool isChanged() const;
 
 private:
-    ControlFlowGraph cfg;
+    CFGraph cfg;
     bool changed = false;
 
     void processNode(IR_Node *node);

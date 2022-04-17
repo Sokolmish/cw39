@@ -3,7 +3,7 @@
 #include <vector>
 #include <stack>
 
-SSA_Generator::SSA_Generator(ControlFlowGraph in_cfg) : cfg(std::move(in_cfg)) {
+SSA_Generator::SSA_Generator(CFGraph in_cfg) : cfg(std::move(in_cfg)) {
     gInfo = std::make_unique<GraphInfo>(cfg);
 
     placePhis();
@@ -18,11 +18,11 @@ SSA_Generator::SSA_Generator(ControlFlowGraph in_cfg) : cfg(std::move(in_cfg)) {
     cfg = std::move(cleaner).moveCfg();
 }
 
-ControlFlowGraph const& SSA_Generator::getCfg() {
+CFGraph const& SSA_Generator::getCfg() {
     return cfg;
 }
 
-ControlFlowGraph SSA_Generator::moveCfg() && {
+CFGraph SSA_Generator::moveCfg() && {
     return std::move(cfg);
 }
 
@@ -32,9 +32,7 @@ ControlFlowGraph SSA_Generator::moveCfg() && {
 void SSA_Generator::placePhis() {
     int counter = 0;
     std::set<int> visited;
-    for (auto const &[fId, func] : cfg.getFuncs()) {
-        makePostOrder(visited, counter, func.getEntryBlockId());
-    }
+    makePostOrder(visited, counter, cfg.entryBlockId);
 
     makeVerticesDF();
 
@@ -116,7 +114,6 @@ std::set<int> SSA_Generator::getSetDFP(const std::set<int> &S) const {
 // Versioning
 
 void SSA_Generator::versionize() {
-    // TODO: traverse blocks for functions
     // Collect variables from graph because its was not passed in CFG
     std::set<IRval, IRval::ComparatorIgnoreVers> variables;
     for (auto const &[bId, block] : cfg.getBlocks()) {
@@ -130,10 +127,7 @@ void SSA_Generator::versionize() {
         versionsCnt = 0;
         versions.clear();
         versions.push_back(-1); // In case of uninitialized variable
-
-        for (auto const &[fId, func] : cfg.getFuncs()) {
-            traverseForVar(func.getEntryBlockId(), var);
-        }
+        traverseForVar(cfg.entryBlockId, var);
     }
 }
 

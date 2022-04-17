@@ -243,20 +243,20 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     if (!ltype.isInteger())
         semanticError(loc, "Cannon perform logical operation on non-integer type");
 
-    IRval res = cfg->createReg(lhs.getType());
+    IRval res = iunit->createReg(lhs.getType());
     emitMov(res, lhs);
 
-    IR_Block &blockLong = cfg->createBlock();
-    IR_Block &blockAfter = cfg->createBlock();
+    IR_Block &blockLong = curFunc->cfg.createBlock();
+    IR_Block &blockAfter = curFunc->cfg.createBlock();
 
     curBlock().setTerminator(IR_ExprTerminator::BRANCH, lhs);
     if (op == AST_Binop::LOG_AND) {
-        cfg->linkBlocks(curBlock(), blockLong);
-        cfg->linkBlocks(curBlock(), blockAfter);
+        curFunc->cfg.linkBlocks(curBlock(), blockLong);
+        curFunc->cfg.linkBlocks(curBlock(), blockAfter);
     }
     else { // op == AST_Binop::LOG_OR
-        cfg->linkBlocks(curBlock(), blockAfter);
-        cfg->linkBlocks(curBlock(), blockLong);
+        curFunc->cfg.linkBlocks(curBlock(), blockAfter);
+        curFunc->cfg.linkBlocks(curBlock(), blockLong);
     }
 
     selectBlock(blockLong);
@@ -267,7 +267,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
 
     emitMov(res, rhs);
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
-    cfg->linkBlocks(curBlock(), blockAfter);
+    curFunc->cfg.linkBlocks(curBlock(), blockAfter);
 
     selectBlock(blockAfter);
     return res; // Maybe PHI node here?
@@ -371,7 +371,7 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
             auto funIt = functions.find(funcBase.getIdent());
             if (funIt != functions.end()) {
                 dirFuncId = funIt->second;
-                auto const &fun = cfg->getFunction(dirFuncId);
+                auto const &fun = iunit->getFunction(dirFuncId);
                 funType = fun.getFuncType();
             }
         }
@@ -645,7 +645,7 @@ IRval IR_Generator::evalPrimaryExpr(AST_Primary const &expr) {
                 // If there is no variables try to find pointer to function
                 auto fIt = functions.find(expr.getIdent());
                 if (fIt != functions.end()) {
-                    auto fType = cfg->getFunction(fIt->second).fullType;
+                    auto fType = iunit->getFunction(fIt->second).fullType;
                     auto ptrType = std::make_shared<IR_TypePtr>(fType);
                     return IRval::createFunPtr(ptrType, fIt->second);
                 }
@@ -677,7 +677,7 @@ IRval IR_Generator::evalPrimaryExpr(AST_Primary const &expr) {
             if (it->first == strId)
                 return it->second;
 
-            IRval str = IRval::createString(cfg->putString(fullStr));
+            IRval str = IRval::createString(iunit->putString(fullStr));
             strings.emplace_hint(it, strId, str);
             return str;
         }

@@ -2,12 +2,12 @@
 #define IR_2_LLVM_HPP_INCLUDED__
 
 #include <memory>
-#include "ir/cfg.hpp"
+#include "ir/unit.hpp"
 
 
 class IR2LLVM {
 public:
-    explicit IR2LLVM(ControlFlowGraph const &cfg);
+    explicit IR2LLVM(IntermediateUnit const &iunit);
 
     IR2LLVM(IR2LLVM const&) = delete;
     IR2LLVM& operator=(IR2LLVM const&) = delete;
@@ -22,7 +22,7 @@ private:
     friend class IR2LLVM_Impl;
     std::unique_ptr<IR2LLVM_Impl> impl;
 
-    ControlFlowGraph const &cfg;
+    IntermediateUnit const &iunit;
     std::string llvmIR;
 };
 

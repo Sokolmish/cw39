@@ -5,14 +5,8 @@
 #include <set>
 
 class CfgCleaner : IRTransformer {
-private:
-    ControlFlowGraph cfg;
-
-    /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
-    std::set<int> getDominatedByGiven(int startId);
-
 public:
-    explicit CfgCleaner(ControlFlowGraph rawCfg);
+    explicit CfgCleaner(CFGraph rawCfg);
 
     void removeNops();
     void fixVersions();
@@ -20,8 +14,14 @@ public:
     void removeTransitBlocks();
     void removeUnreachableBlocks();
 
-    ControlFlowGraph const& getCfg() override;
-    ControlFlowGraph moveCfg() && override;
+    CFGraph const& getCfg() override;
+    CFGraph moveCfg() && override;
+
+private:
+    CFGraph cfg;
+
+    /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
+    std::set<int> getDominatedByGiven(int startId);
 };
 
 #endif /* CFG_CLEANER_HPP_INCLUDED__ */

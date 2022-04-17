@@ -1,55 +1,41 @@
-#include "cfg.hpp"
+#include "unit.hpp"
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 #include <sstream>
 #include <stack>
 
-ControlFlowGraph::Function ControlFlowGraph::Function::clone() const {
-    auto res = ControlFlowGraph::Function();
-    res.id = id;
-    res.name = name;
-    res.entryBlockId = entryBlockId;
-    res.storage = storage;
-    res.fspec = fspec;
-    res.fullType = fullType->copy();
-    return res;
-}
+IntermediateUnit::Function::Function(IntermediateUnit *iunit, int id, std::string name, int isProto)
+        : cfg(iunit), isProto(isProto), id(id), name(std::move(name)) {}
 
-int ControlFlowGraph::Function::getId() const {
+IntermediateUnit::Function::Function(IntermediateUnit *iunit, const Function &oth)
+        : storage(oth.storage), fullType(oth.fullType->copy()), fspec(oth.fspec),
+          cfg(oth.cfg.copy(iunit)), isProto(oth.isProto), id(oth.id), name(oth.name) {}
+
+
+int IntermediateUnit::Function::getId() const {
     return id;
 }
 
-std::string ControlFlowGraph::Function::getName() const {
+std::string IntermediateUnit::Function::getName() const {
     return name;
 }
 
-int ControlFlowGraph::Function::getEntryBlockId() const {
-    return entryBlockId;
-}
-
-std::shared_ptr<IR_TypeFunc> ControlFlowGraph::Function::getFuncType() const {
+std::shared_ptr<IR_TypeFunc> IntermediateUnit::Function::getFuncType() const {
     return std::dynamic_pointer_cast<IR_TypeFunc>(fullType);
 }
 
 
-void ControlFlowGraph::Function::setEntryBlockId(int blockId) {
-    entryBlockId = blockId;
-}
-
-
-ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
+IntermediateUnit::IntermediateUnit(const IntermediateUnit &oth) {
     blocksCounter = oth.blocksCounter;
     regs_counter = oth.regs_counter;
     funcsCounter = oth.funcsCounter;
     stringsCounter = oth.stringsCounter;
     globalsCounter = oth.globalsCounter;
 
-    for (const auto &[id, block]: oth.blocks)
-        blocks.insert(blocks.end(), { id, block.copy() });
     for (const auto &[id, func]: oth.funcs)
-        funcs.emplace_hint(funcs.end(), id, func.clone());
+        funcs.emplace_hint(funcs.end(), id, Function(this, func));
     for (const auto &[id, func]: oth.prototypes)
-        prototypes.emplace_hint(prototypes.end(), id, func.clone());
+        prototypes.emplace_hint(prototypes.end(), id, Function(this, func));
     for (const auto &[id, irStruct]: oth.structs)
         structs.emplace_hint(structs.end(), id, irStruct);
     strings = oth.strings;
@@ -59,26 +45,7 @@ ControlFlowGraph::ControlFlowGraph(const ControlFlowGraph &oth) {
     }
 }
 
-IR_Block &ControlFlowGraph::createBlock() {
-    int newId = blocksCounter++;
-    auto it = blocks.emplace_hint(blocks.end(), newId, IR_Block(newId));
-    return it->second;
-}
-
-void ControlFlowGraph::linkBlocks(IR_Block &prev, IR_Block &next) {
-    prev.next.push_back(next.id);
-    next.prev.push_back(prev.id);
-}
-
-IR_Block &ControlFlowGraph::block(int id) {
-    return blocks.at(id);
-}
-
-IR_Block const& ControlFlowGraph::block(int id) const {
-    return blocks.at(id);
-}
-
-ControlFlowGraph::Function& ControlFlowGraph::getFunction(int id) {
+IntermediateUnit::Function& IntermediateUnit::getFunction(int id) {
     auto fIt = funcs.find(id);
     if (fIt != funcs.end())
         return fIt->second;
@@ -88,7 +55,7 @@ ControlFlowGraph::Function& ControlFlowGraph::getFunction(int id) {
     throw std::out_of_range("No functions with given id");
 }
 
-ControlFlowGraph::Function const& ControlFlowGraph::getFunction(int id) const {
+IntermediateUnit::Function const& IntermediateUnit::getFunction(int id) const {
     auto fIt = funcs.find(id);
     if (fIt != funcs.end())
         return fIt->second;
@@ -98,12 +65,12 @@ ControlFlowGraph::Function const& ControlFlowGraph::getFunction(int id) const {
     throw std::out_of_range("No functions with given id");
 }
 
-IRval ControlFlowGraph::createReg(std::shared_ptr<IR_Type> type) {
+IRval IntermediateUnit::createReg(std::shared_ptr<IR_Type> type) {
     return IRval::createReg(std::move(type), regs_counter++);
 }
 
 /** Expects ptr type */
-IRval ControlFlowGraph::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init) {
+IRval IntermediateUnit::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init) {
     auto newId = globalsCounter++;
     IRval newGlobal = IRval::createGlobal(std::move(type), newId);
     globals.insert({ newId, GlobalVar{
@@ -114,14 +81,9 @@ IRval ControlFlowGraph::createGlobal(std::string name, std::shared_ptr<IR_Type> 
     return newGlobal;
 }
 
-ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
-        IR_StorageSpecifier stor, int fspec, std::shared_ptr<IR_Type> fullType) {
-
-    auto &newBlock = createBlock();
-    Function func;
-    func.id = funcsCounter++;
-    func.name = std::move(name);
-    func.entryBlockId = newBlock.id;
+IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, IR_StorageSpecifier stor,
+                                                             int fspec, std::shared_ptr<IR_Type> fullType) {
+    Function func(this, funcsCounter++, std::move(name), false);
     func.storage = stor;
     func.fspec = fspec;
     func.fullType = std::move(fullType);
@@ -129,12 +91,9 @@ ControlFlowGraph::Function& ControlFlowGraph::createFunction(std::string name,
     return it->second;
 }
 
-ControlFlowGraph::Function& ControlFlowGraph::createPrototype(std::string name,
-        IR_StorageSpecifier stor, std::shared_ptr<IR_Type> fullType) {
-    Function func;
-    func.id = funcsCounter++;
-    func.name = std::move(name);
-    func.entryBlockId = -1;
+IntermediateUnit::Function& IntermediateUnit::createPrototype(std::string name, IR_StorageSpecifier stor,
+                                                              std::shared_ptr<IR_Type> fullType) {
+    Function func(this, funcsCounter++, std::move(name), true);
     func.storage = stor;
     func.fspec = Function::FuncSpec::FSPEC_NONE;
     func.fullType = std::move(fullType);
@@ -142,62 +101,42 @@ ControlFlowGraph::Function& ControlFlowGraph::createPrototype(std::string name,
     return it->second;
 }
 
-uint64_t ControlFlowGraph::putString(std::string str) {
+uint64_t IntermediateUnit::putString(std::string str) {
     uint64_t newStringId = stringsCounter++;
     strings.insert(strings.end(), { newStringId, std::move(str) });
     return newStringId;
 }
 
-const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncs() const {
+const std::map<int, IntermediateUnit::Function> &IntermediateUnit::getFuncs() const {
     return funcs;
 }
 
-std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getFuncsMut() {
+std::map<int, IntermediateUnit::Function> &IntermediateUnit::getFuncsMut() {
     return funcs;
 }
 
 
-const std::map<int, ControlFlowGraph::Function> &ControlFlowGraph::getPrototypes() const {
+const std::map<int, IntermediateUnit::Function> &IntermediateUnit::getPrototypes() const {
     return prototypes;
 }
 
-std::map<int, IR_Block> const& ControlFlowGraph::getBlocks() const {
-    return blocks;
-}
-
-std::map<int, IR_Block> &ControlFlowGraph::getBlocksData() {
-    return blocks;
-}
-
-const std::map<int, ControlFlowGraph::GlobalVar>& ControlFlowGraph::getGlobals() const {
+const std::map<int, IntermediateUnit::GlobalVar>& IntermediateUnit::getGlobals() const {
     return globals;
 }
 
-std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& ControlFlowGraph::getStructs() const {
+std::map<string_id_t, std::shared_ptr<IR_TypeStruct>> const& IntermediateUnit::getStructs() const {
     return structs;
 }
 
-std::map<uint64_t, std::string> const& ControlFlowGraph::getStrings() const {
+std::map<uint64_t, std::string> const& IntermediateUnit::getStrings() const {
     return strings;
 }
-
-void ControlFlowGraph::traverseBlocks(int blockId, std::set<int> &visited,
-                                      std::function<void(int)> const &action) const {
-    if (visited.contains(blockId))
-        return;
-    visited.insert(blockId);
-    action(blockId);
-    for (int nextId : this->block(blockId).next)
-        if (!visited.contains(nextId))
-            traverseBlocks(nextId, visited, action);
-}
-
 
 /*
  * Printers
  */
 
-void ControlFlowGraph::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) const {
+void IntermediateUnit::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) const {
     if (rawExpr.type == IR_Expr::OPERATION) {
         ss << dynamic_cast<IR_ExprOper const &>(rawExpr).to_string();
     }
@@ -228,7 +167,7 @@ void ControlFlowGraph::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) 
     }
 }
 
-void ControlFlowGraph::printBlock(std::stringstream &ss, IR_Block const &block) const {
+void IntermediateUnit::printBlock(std::stringstream &ss, IR_Block const &block) const {
     // Block header and previous blocks
     fmt::print(ss, "Block {}:", block.id);
     if (!block.prev.empty()) {
@@ -312,7 +251,7 @@ static void writeEscapified(std::stringstream &ss, std::string const &str) {
     }
 }
 
-std::string ControlFlowGraph::printIR() const {
+std::string IntermediateUnit::printIR() const {
     std::stringstream ss;
     for (auto const &[id, structDecl] : structs) {
         fmt::print(ss, "struct({}) {{ ", structDecl->structId);
@@ -340,32 +279,32 @@ std::string ControlFlowGraph::printIR() const {
     }
     fmt::print(ss, "\n");
 
-    for (auto const &[id, func] : funcs) {
-        fmt::print(ss, "func {} {} -> block {}\n", func.name,
-                   func.fullType->to_string(), func.entryBlockId);
-    }
-    fmt::print(ss, "\n");
-
-    for (auto const &[id, block] : blocks) {
-        printBlock(ss, block);
+    for (auto const &[fId, func] : funcs) {
+        fmt::print(ss, "func {} {} -> {} {{\n\n", func.name,
+                   func.fullType->to_string(), func.cfg.entryBlockId);
+        for (auto const &[bId, block] : func.cfg.getBlocks()) {
+            printBlock(ss, block);
+        }
+        fmt::print(ss, "}} ; {}\n\n", func.name);
     }
 
     return ss.str();
 }
 
-std::string ControlFlowGraph::drawCFG() const {
+std::string IntermediateUnit::drawCFG() const {
     std::stringstream ss;
 
     fmt::print(ss, "digraph{{\n"
                    "node [fontname=\"helvetica\"]\n");
+
     for (auto const &[fId, func] : funcs) {
         std::set<int> visited;
         std::stack<int> stack;
-        stack.push(func.entryBlockId);
-        visited.insert(func.entryBlockId);
+        stack.push(func.cfg.entryBlockId);
+        visited.insert(func.cfg.entryBlockId);
 
         while (!stack.empty()) {
-            IR_Block const &curBlock = this->blocks.at(stack.top());
+            IR_Block const &curBlock = func.cfg.block(stack.top());
             stack.pop();
             drawBlock(ss, curBlock);
             for (int ind = 0; int nextId : curBlock.next) {
@@ -386,11 +325,12 @@ std::string ControlFlowGraph::drawCFG() const {
             fmt::print(ss, "\n");
         }
     }
+
     fmt::print(ss, "}}\n");
     return ss.str();
 }
 
-void ControlFlowGraph::drawBlock(std::stringstream &ss, IR_Block const &block) const {
+void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) const {
     using namespace std::string_literals;
     static const std::string rightArrow = "\u2192"s; // ->
     static const std::string leftArrow = "\u2190"s;  // <-
@@ -451,4 +391,69 @@ void ControlFlowGraph::drawBlock(std::stringstream &ss, IR_Block const &block) c
     }
 
     fmt::print(ss, "block_{} [shape=rectangle,label=\"{}\"]\n", block.id, ssb.str());
+}
+
+std::string CFGraph::drawCFG() const {
+    return std::string();
+}
+
+
+CFGraph::CFGraph(IntermediateUnit *iunit) : par(iunit) {}
+
+CFGraph CFGraph::copy(IntermediateUnit *iunit) const {
+    CFGraph res(iunit);
+    res.entryBlockId = entryBlockId;
+    for (const auto &[id, block]: blocks) {
+//        res.blocks.emplace_hint(res.blocks.end(), id, block.copy());
+        res.blocks.emplace(id, block.copy());
+    }
+    return res;
+}
+
+IR_Block &CFGraph::createBlock() {
+    int newId = par->blocksCounter++;
+    auto it = blocks.emplace_hint(blocks.end(), newId, IR_Block(newId));
+    return it->second;
+}
+
+void CFGraph::linkBlocks(IR_Block &prev, IR_Block &next) {
+    prev.next.push_back(next.id);
+    next.prev.push_back(prev.id);
+}
+
+void CFGraph::linkBlocks(int prevId, int nextId) {
+    block(prevId).next.push_back(nextId);
+    block(nextId).prev.push_back(prevId);
+}
+
+
+IR_Block &CFGraph::block(int id) {
+    return blocks.at(id);
+}
+
+IR_Block const& CFGraph::block(int id) const {
+    return blocks.at(id);
+}
+
+std::map<int, IR_Block> const& CFGraph::getBlocks() const {
+    return blocks;
+}
+
+std::map<int, IR_Block> &CFGraph::getBlocksData() {
+    return blocks;
+}
+
+IntermediateUnit* CFGraph::getParentUnit() {
+    return par;
+}
+
+void CFGraph::traverseBlocks(int blockId, std::set<int> &visited,
+                             std::function<void(int)> const &action) const {
+    if (visited.contains(blockId))
+        return;
+    visited.insert(blockId);
+    action(blockId);
+    for (int nextId : this->block(blockId).next)
+        if (!visited.contains(nextId))
+            traverseBlocks(nextId, visited, action);
 }

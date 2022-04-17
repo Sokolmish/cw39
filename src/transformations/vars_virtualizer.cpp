@@ -4,11 +4,8 @@
 #include <deque>
 #include <set>
 
-VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
-    for (auto const &[id, func] : cfg.getFuncs()) {
-        toRedudeList.clear();
-        passFunction(func);
-    }
+VarsVirtualizer::VarsVirtualizer(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
+    passFunction();
 
     CfgCleaner cleaner(std::move(cfg));
     cleaner.removeNops();
@@ -17,20 +14,20 @@ VarsVirtualizer::VarsVirtualizer(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg
     cfg = std::move(cleaner).moveCfg();
 }
 
-ControlFlowGraph const& VarsVirtualizer::getCfg() {
+CFGraph const& VarsVirtualizer::getCfg() {
     return cfg;
 }
 
-ControlFlowGraph VarsVirtualizer::moveCfg() && {
+CFGraph VarsVirtualizer::moveCfg() && {
     return std::move(cfg);
 }
 
 
-void VarsVirtualizer::passFunction(const ControlFlowGraph::Function &func) {
+void VarsVirtualizer::passFunction() {
     std::deque<int> nextBlocks;
     std::set<int> visited;
 
-    nextBlocks.push_back(func.getEntryBlockId());
+    nextBlocks.push_back(cfg.entryBlockId);
     while (!nextBlocks.empty()) {
         IR_Block &curBlock = cfg.block(nextBlocks.front());
         nextBlocks.pop_front();
@@ -41,7 +38,7 @@ void VarsVirtualizer::passFunction(const ControlFlowGraph::Function &func) {
                 nextBlocks.push_back(nextId);
     }
 
-    nextBlocks.push_back(func.getEntryBlockId());
+    nextBlocks.push_back(cfg.entryBlockId);
     visited.clear();
     while (!nextBlocks.empty()) {
         IR_Block &curBlock = cfg.block(nextBlocks.front());
@@ -97,7 +94,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
             auto it = toRedudeList.find(*instr.res);
             if (it != toRedudeList.end()) {
                 auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
-                it->second = cfg.createReg(alloc.type);
+                it->second = cfg.getParentUnit()->createReg(alloc.type);
                 instr = IR_Node::nop();
                 continue;
             }

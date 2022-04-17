@@ -2,7 +2,7 @@
 #define GENERATOR_HPP_INCLUDED__
 
 #include "nodes.hpp"
-#include "cfg.hpp"
+#include "unit.hpp"
 #include "parser/parsing_context.hpp"
 #include "parser/core_driver.hpp"
 #include "utils.hpp"
@@ -18,7 +18,7 @@ class IR_Generator {
 public:
     IR_Generator(CoreDriver &parser, ParsingContext &ctx);
 
-    [[nodiscard]] std::shared_ptr<ControlFlowGraph> getCfg() const;
+    [[nodiscard]] std::shared_ptr<IntermediateUnit> getIR() const;
 
 private:
     ParsingContext &ctx;
@@ -28,14 +28,14 @@ private:
     std::map<string_id_t, int> functions; // ident -> func_id
     std::map<string_id_t, IRval> strings;
 
-    std::shared_ptr<ControlFlowGraph> cfg;
+    std::shared_ptr<IntermediateUnit> iunit;
 
     IR_Block *selectedBlock = nullptr;
     IR_Block& curBlock();
     void selectBlock(IR_Block &block);
     void deselectBlock();
 
-    int curFuncId = -1;
+    IntermediateUnit::Function *curFunc;
 
     struct IR_FuncArgument {
         string_id_t ident;

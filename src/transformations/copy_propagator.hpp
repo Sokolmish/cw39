@@ -5,8 +5,16 @@
 #include <map>
 
 class CopyPropagator : IRTransformer {
+public:
+    explicit CopyPropagator(CFGraph rawCfg);
+
+    CFGraph const& getCfg() override;
+    CFGraph moveCfg() && override;
+
+    bool isChanged() const;
+
 private:
-    ControlFlowGraph cfg;
+    CFGraph cfg;
 
     std::map<IRval, IRval, IRval::Comparator> remlacementMap;
     bool changed, globalChanged;
@@ -15,12 +23,6 @@ private:
     void foldConstants();
 
     IRval doConstOperation(IR_ExprOper const &oper);
-
-public:
-    explicit CopyPropagator(ControlFlowGraph rawCfg);
-
-    ControlFlowGraph const& getCfg() override;
-    ControlFlowGraph moveCfg() && override;
 };
 
 #endif /* COPY_PROPAGATOR_HPP_INCLUDED__ */

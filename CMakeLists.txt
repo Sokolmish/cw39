@@ -38,7 +38,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/ir/types.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/value.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/nodes.cpp
-        ${PROJECT_SOURCE_DIR}/src/ir/cfg.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir/unit.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/generator.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/types_gen.cpp
         ${PROJECT_SOURCE_DIR}/src/ir/expr_gen.cpp

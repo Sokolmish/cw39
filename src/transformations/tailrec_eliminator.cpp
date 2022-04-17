@@ -2,10 +2,9 @@
 #include "cfg_cleaner.hpp"
 #include <set>
 
-TailrecEliminator::TailrecEliminator(ControlFlowGraph rawCfg) : cfg(std::move(rawCfg)) {
-    for (auto &[id, func] : cfg.getFuncsMut()) {
-        passFunction(func);
-    }
+TailrecEliminator::TailrecEliminator(CFGraph rawCfg, int funcId)
+        : cfg(std::move(rawCfg)) {
+    passFunction(funcId);
 
     CfgCleaner cleaner(std::move(cfg));
     cleaner.removeNops();
@@ -13,35 +12,35 @@ TailrecEliminator::TailrecEliminator(ControlFlowGraph rawCfg) : cfg(std::move(ra
     cfg = std::move(cleaner).moveCfg();
 }
 
-ControlFlowGraph const& TailrecEliminator::getCfg() {
+CFGraph const& TailrecEliminator::getCfg() {
     return cfg;
 }
 
-ControlFlowGraph TailrecEliminator::moveCfg() && {
+CFGraph TailrecEliminator::moveCfg() && {
     return std::move(cfg);
 }
 
 
-void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
-    std::vector<int> tailrecBlocks = findTailCalls(func);
+void TailrecEliminator::passFunction(int funcId) {
+    std::vector<int> tailrecBlocks = findTailCalls(funcId);
     if (tailrecBlocks.empty())
         return;
 
-    IR_Block &oldHead = cfg.block(func.getEntryBlockId());
+    IR_Block &oldHead = cfg.block(cfg.entryBlockId);
 
     // NewHead is a dummy block, created because entry block cannot have predcessors
     IR_Block &newHead = cfg.createBlock();
     newHead.setTerminator(IR_ExprTerminator::JUMP);
     cfg.linkBlocks(newHead, oldHead);
-    func.setEntryBlockId(newHead.id);
+    cfg.entryBlockId = newHead.id;
 
     std::vector<IRval> newArgs;
     std::vector<IR_ExprPhi *> phis;
-    auto const &argsTypes = func.getFuncType()->args;
+    auto const &argsTypes = cfg.getParentUnit()->getFunction(funcId).getFuncType()->args;
 
     // Place phis in oldHead (there are no other phis because it was entry block)
     for (uint64_t an = 0; auto const &argType : argsTypes) {
-        IRval arg = cfg.createReg(argType);
+        IRval arg = cfg.getParentUnit()->createReg(argType);
         newArgs.push_back(arg);
 
         auto phi = std::make_unique<IR_ExprPhi>();
@@ -68,13 +67,12 @@ void TailrecEliminator::passFunction(ControlFlowGraph::Function &func) {
         i++;
     }
 
-    replaceParams(func.getEntryBlockId(), newArgs);
+    replaceParams(cfg.entryBlockId, newArgs);
 }
 
-std::vector<int> TailrecEliminator::findTailCalls(ControlFlowGraph::Function const &func) {
+std::vector<int> TailrecEliminator::findTailCalls(int funcId) {
     std::set<int> visited;
     std::vector<int> tailrecBlocks;
-    int funcId = func.getId();
 
     auto visitor = [this, funcId, &tailrecBlocks](int blockId) {
         IR_Block &curBlock = cfg.block(blockId);
@@ -107,7 +105,7 @@ std::vector<int> TailrecEliminator::findTailCalls(ControlFlowGraph::Function con
         tailrecBlocks.push_back(blockId);
     };
 
-    cfg.traverseBlocks(func.getEntryBlockId(), visited, visitor);
+    cfg.traverseBlocks(cfg.entryBlockId, visited, visitor);
     return tailrecBlocks;
 }
 

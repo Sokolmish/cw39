@@ -5,11 +5,11 @@
 #include <memory>
 #include <map>
 #include <vector>
-#include "ir/cfg.hpp"
+#include "ir/unit.hpp"
 
 class GraphInfo {
 public:
-    explicit GraphInfo(ControlFlowGraph const &graph);
+    explicit GraphInfo(CFGraph const &graph);
 
     enum ArcClass { NONE, TREE, BACK, FWD, CROSS };
     ArcClass getArcClass(int from, int to);
@@ -42,7 +42,7 @@ private:
     std::map<int, DomNode> domData;
 
     // Temporary data (used only at construction)
-    ControlFlowGraph const &cfg;
+    CFGraph const &cfg;
     int globalTime = 1;
 
     struct UtilNode {
@@ -69,7 +69,6 @@ private:
     std::vector<std::pair<UtilNode*, UtilNode*>> unprocArcs;
 
     void dfs(UtilNode &node);
-    void processFunc(int entryBlockId);
     void classifyArcs();
 
     UtilNode& findMin(UtilNode &node);

@@ -53,6 +53,16 @@ static CompilationLevel getCompilationLvl(CLIArgs const &args) {
         return CompilationLevel::NONE;
 }
 
+static void optimizeFunction(IntermediateUnit::Function &func) {
+    CFGraph cfg = std::move(func.cfg);
+    cfg = VarsVirtualizer(std::move(cfg)).moveCfg();
+    cfg = SSA_Generator(std::move(cfg)).moveCfg();
+    cfg = AlgebraicTransformer(std::move(cfg)).moveCfg();
+    cfg = CopyPropagator(std::move(cfg)).moveCfg();
+    cfg = TailrecEliminator(std::move(cfg), func.getId()).moveCfg();
+    func.cfg = std::move(cfg);
+}
+
 int main(int argc, char **argv) {
     CLIArgs args(argc, argv);
 
@@ -89,31 +99,29 @@ int main(int argc, char **argv) {
         return 0;
 
     auto gen = std::make_unique<IR_Generator>(*parser, *ctx);
-    auto rawCfg = gen->getCfg();
+    auto rawUnit = gen->getIR();
     if (args.outRawIR())
-        writeOut(*args.outRawIR(), rawCfg->printIR());
+        writeOut(*args.outRawIR(), rawUnit->printIR());
     if (args.outRawCFG())
-        writeOut(*args.outRawCFG(), rawCfg->drawCFG());
+        writeOut(*args.outRawCFG(), rawUnit->drawCFG());
 
     if (compilationLvl <= CompilationLevel::GENERATE)
         return 0;
 
-    ControlFlowGraph optCfg;
-    optCfg = VarsVirtualizer(*rawCfg).moveCfg();
-    optCfg = SSA_Generator(std::move(optCfg)).moveCfg();
-    optCfg = AlgebraicTransformer(std::move(optCfg)).moveCfg();
-    optCfg = CopyPropagator(std::move(optCfg)).moveCfg();
-    optCfg = TailrecEliminator(std::move(optCfg)).moveCfg();
+    IntermediateUnit optUnit = *rawUnit;
+    for (auto &[fId, func] : optUnit.getFuncsMut()) {
+        optimizeFunction(func);
+    }
 
     if (args.outIR())
-        writeOut(*args.outIR(), optCfg.printIR());
+        writeOut(*args.outIR(), optUnit.printIR());
     if (args.outCFG())
-        writeOut(*args.outCFG(), optCfg.drawCFG());
+        writeOut(*args.outCFG(), optUnit.drawCFG());
 
     if (compilationLvl <= CompilationLevel::OPTIMIZE)
         return 0;
 
-    IR2LLVM materializer(optCfg);
+    IR2LLVM materializer(optUnit);
     if (args.outLLVM()) {
         writeOut(*args.outLLVM(), materializer.getRes());
     }

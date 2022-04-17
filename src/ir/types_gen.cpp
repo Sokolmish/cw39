@@ -2,13 +2,13 @@
 
 std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec) {
     // Lookup for existing struct type
-    auto itFound = cfg->structs.find(spec.name);
+    auto itFound = iunit->structs.find(spec.name);
     if (!spec.body) {
-        if (itFound == cfg->structs.end())
+        if (itFound == iunit->structs.end())
             semanticError(spec.loc, "Unknown struct name");
         return itFound->second;
     }
-    else if (itFound != cfg->structs.end()) {
+    else if (itFound != iunit->structs.end()) {
         semanticError(spec.loc, "Struct with given name already has been defined");
     }
 
@@ -26,7 +26,7 @@ std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec
         }
     }
     auto resType = std::make_shared<IR_TypeStruct>(spec.name, std::move(fields));
-    cfg->structs.emplace(spec.name, resType);
+    iunit->structs.emplace(spec.name, resType);
     return resType;
 }
 

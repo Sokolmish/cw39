@@ -4,18 +4,18 @@
 #include <vector>
 #include "ir_transformer.hpp"
 
-class TailrecEliminator :IRTransformer {
+class TailrecEliminator : IRTransformer {
 public:
-    explicit TailrecEliminator(ControlFlowGraph rawCfg);
+    explicit TailrecEliminator(CFGraph rawCfg, int funcId);
 
-    ControlFlowGraph const& getCfg() override;
-    ControlFlowGraph moveCfg() && override;
+    CFGraph const& getCfg() override;
+    CFGraph moveCfg() && override;
 
 private:
-    ControlFlowGraph cfg;
+    CFGraph cfg;
 
-    void passFunction(ControlFlowGraph::Function &func);
-    std::vector<int> findTailCalls(ControlFlowGraph::Function const &func);
+    void passFunction(int funcId);
+    std::vector<int> findTailCalls(int funcId);
     void replaceParams(int entryId, const std::vector<IRval> &newArgs);
 };
 

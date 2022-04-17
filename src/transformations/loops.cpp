@@ -2,88 +2,96 @@
 #include <stack>
 #include <fmt/core.h>
 
-Looper::Looper(std::shared_ptr<ControlFlowGraph> in) : cfg(std::move(in)), gInfo(*cfg) {
-    for (auto &[bId, block] : cfg->getBlocksData()) {
-        lblocks.emplace_hint(lblocks.end(), bId, BlockInfo(block));
+Looper::BlockInfo::BlockInfo(IR_Block const &bb) : block(bb) {}
+
+Looper::LoopNode::LoopNode(IR_Block const &bb) : head(bb) {}
+
+
+Looper::Looper(CFGraph const &in) : cfg(std::move(in)), gInfo(cfg) {
+    for (auto const &[from, to] : gInfo.getArcs(GraphInfo::BACK)) {
+//        auto it = loops.lower_bound(to);
+//        if (it == loops.end() || it->first != to)
+//            it = loops.emplace_hint(it, to, cfg.block(to));
+//        it->second.ends.insert(from);
+//        if (gInfo.isDom())
     }
 
-    for (auto const &[from, to] : gInfo.getArcs(GraphInfo::TREE)) {
-        spanningTree[from].push_back(to);
-    }
+
+    // Find loops heads using back arcs
     for (auto const &[from, to] : gInfo.getArcs(GraphInfo::BACK)) {
         auto it = loops.lower_bound(to);
         if (it == loops.end() || it->first != to)
-            it = loops.emplace_hint(it, to, cfg->block(to));
+            it = loops.emplace_hint(it, to, cfg.block(to));
         it->second.ends.insert(from);
     }
 
-    for (auto const &[fId, func] : cfg->getFuncs()) {
-        dfs1(func.getEntryBlockId(), nullptr);
-    }
-    for (auto &[id, loop] : loops) {
-        dfs2(loop.block.id, {}, &loop, loop.ends);
-    }
-}
+    findLoopsBodies();
 
-void Looper::dfs1(int nodeId, LoopNode *curLoop) {
-    auto loopIt = loops.find(nodeId);
-    if (loopIt != loops.end()) {
-        loopIt->second.parent = curLoop;
-        curLoop = &loopIt->second;
-    }
+//    if (func.fspec & IntermediateUnit::Function::GOTOED) {
+//        continue; // TODO: strongly linked components
+//    }
+//    else {
+//        findLoopsInNormalFunc(func);
+//    }
 
-    auto nextIt = spanningTree.find(nodeId);
-    if (nextIt != spanningTree.end()) {
-        for (int nextId : nextIt->second) {
-            dfs1(nextId, curLoop);
-        }
-    }
-}
-
-void Looper::dfs2(int nodeId, std::vector<int> path, LoopNode *curLoop, std::set<int> ends) {
-    auto endIt = ends.find(nodeId);
-    if (endIt != ends.end()) {
-        for (auto it = path.rbegin(); it != path.rend(); it++) {
-            BlockInfo &block = lblocks.at(*it);
-            if (block.loop != nullptr && isLoopNested(block.loop, curLoop))
-                continue;
-            block.loop = curLoop;
-        }
-
-        ends.erase(endIt);
-        if (ends.empty())
-            return;
-    }
-
-    auto nextIt = spanningTree.find(nodeId);
-    if (nextIt != spanningTree.end()) {
-        path.push_back(nodeId);
-        for (int nextId : nextIt->second) {
-            dfs2(nextId, path, curLoop, ends);
-        }
-    }
-}
-
-bool Looper::isLoopNested(const LoopNode *parent, const LoopNode *child) const {
-    while (child != nullptr) {
-        if (child->block.id == parent->block.id)
-            return true;
-        child = child->parent;
-    }
-    return false;
 }
 
 void Looper::draw() const {
-    fmt::print("graph {{ ");
-    for (auto const &[id, loop] : loops) {
-//        fmt::print("{}; ", id);
-        if (loop.parent)
-            fmt::print("{} -- {}; ", loop.parent->block.id, id);
+//    fmt::print("graph {{ ");
+//    for (auto const &[id, loop] : loops) {
+////        fmt::print("{}; ", id);
+//        if (loop.parent)
+//            fmt::print("{} -- {}; ", loop.parent->head.id, id);
+//    }
+//    fmt::print("}}\n");
+    for (auto const &[lId, loop] : loops) {
+        fmt::print("loop {}:", lId);
+        for (auto const &block : loop.blocks) {
+            fmt::print(" {}", block);
+        }
+        fmt::print("\n");
     }
-    fmt::print("}}\n");
 }
 
 
-Looper::BlockInfo::BlockInfo(IR_Block &bb) : block(bb) {}
+void Looper::findLoopsBodies() {
+    for (auto const &[from, to] : gInfo.getArcs(GraphInfo::TREE))
+        straightPaths[from].push_back(to);
+    for (auto const &[from, to] : gInfo.getArcs(GraphInfo::CROSS))
+        straightPaths[from].push_back(to);
+    for (auto const &[from, to] : gInfo.getArcs(GraphInfo::FWD))
+        straightPaths[from].push_back(to);
 
-Looper::LoopNode::LoopNode(IR_Block &bb) : block(bb) {}
+    for (auto &[id, loop] : loops) {
+        dfs3(loop, loop.head.id, {});
+    }
+}
+
+void Looper::dfs3(LoopNode &loop, int nodeId, std::vector<int> curPath) {
+    if (loop.ends.contains(nodeId)) {
+        loop.blocks.insert(nodeId);
+        for (auto pathElem : curPath)
+            loop.blocks.insert(pathElem);
+        return;
+    }
+    curPath.push_back(nodeId);
+
+    auto nextIt = straightPaths.find(nodeId);
+    if (nextIt != straightPaths.end()) {
+        for (int nextId : nextIt->second) {
+            dfs3(loop, nextId, curPath);
+        }
+    }
+}
+
+void Looper::findLoopsInNormalFunc(IntermediateUnit::Function const &func) {
+    std::set<int> visited;
+
+//    for (auto &[id, loop] : loops) {
+//        loop.head;
+//    }
+
+//    cfg.traverseBlocks(func.getEntryBlockId(), visited, [](int blockId) {
+//
+//    });
+}

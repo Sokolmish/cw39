@@ -35,8 +35,6 @@ class IR2LLVM::IR2LLVM_Impl {
 public:
     IR2LLVM *parent;
 
-    std::unique_ptr<GraphInfo> gInfo;
-
     std::unique_ptr<LLVMContext> context;
     std::unique_ptr<Module> module;
     std::unique_ptr<IRBuilder<>> builder;
@@ -46,7 +44,7 @@ public:
     void createPrototypes();
 
     void createFunctions();
-    void createBlock(int id);
+    void createBlock(IR_Block const &block);
 
     void buildOperation(IR_Node const &node);
     void buildMemOp(IR_Node const &node);
@@ -78,7 +76,7 @@ public:
 
 using IR2LLVM_Impl = IR2LLVM::IR2LLVM_Impl;
 
-IR2LLVM::IR2LLVM(ControlFlowGraph const &cfg_) : cfg(cfg_) {
+IR2LLVM::IR2LLVM(IntermediateUnit const &iunit) : iunit(iunit) {
     impl = std::make_unique<IR2LLVM_Impl>(this);
 }
 
@@ -90,8 +88,6 @@ IR2LLVM::~IR2LLVM() = default;
 
 
 IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
-    gInfo = std::make_unique<GraphInfo>(parent->cfg);
-
     context = std::make_unique<LLVMContext>();
     module = std::make_unique<Module>("top", *context);
     builder = std::make_unique<IRBuilder<>>(*context);
@@ -118,12 +114,11 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
     builder.reset();
     module.reset();
     context.reset();
-    gInfo.reset();
 }
 
 
 void IR2LLVM_Impl::createTypes() {
-    for (auto const &[sId, tstruct] : parent->cfg.getStructs()) {
+    for (auto const &[sId, tstruct] : parent->iunit.getStructs()) {
         std::vector<Type*> elements;
         for (auto const &elem : tstruct->fields)
             elements.push_back(getType(*elem.irType));
@@ -134,11 +129,11 @@ void IR2LLVM_Impl::createTypes() {
 }
 
 void IR2LLVM_Impl::createGlobals() {
-    for (auto const &[sId, str] : parent->cfg.getStrings()) {
+    for (auto const &[sId, str] : parent->iunit.getStrings()) {
         Value *res = builder->CreateGlobalStringPtr(StringRef(str), fmt::format(".str{}", sId));
         strings.emplace(sId, res);
     }
-    for (auto const &[gId, global] : parent->cfg.getGlobals()) {
+    for (auto const &[gId, global] : parent->iunit.getGlobals()) {
         auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(global.type);
         auto gType = ptrType->child;
         module->getOrInsertGlobal(global.name, getType(*gType));
@@ -272,7 +267,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
 
 
 void IR2LLVM_Impl::createPrototypes() {
-    for (auto const &[fId, func] : parent->cfg.getPrototypes()) {
+    for (auto const &[fId, func] : parent->iunit.getPrototypes()) {
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
         Type *retType = getType(*irFuncType->ret);
         std::vector<Type*> args;
@@ -285,7 +280,9 @@ void IR2LLVM_Impl::createPrototypes() {
 }
 
 void IR2LLVM_Impl::createFunctions() {
-    for (auto const &[fId, func] : parent->cfg.getFuncs()) {
+    for (auto const &[fId, func] : parent->iunit.getFuncs()) {
+        GraphInfo gInfo(func.cfg);
+
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);
         Type *retType = getType(*irFuncType->ret);
         std::vector<Type *> args;
@@ -304,20 +301,20 @@ void IR2LLVM_Impl::createFunctions() {
 
         std::deque<int> queue;
         std::set<int> visited;
-        queue.push_back(func.getEntryBlockId());
+        queue.push_back(func.cfg.entryBlockId);
         while (!queue.empty()) {
             int cur = queue.front();
             queue.pop_front();
             visited.insert(cur);
-            for (int next : gInfo->getChildren(cur))
+            for (int next : gInfo.getChildren(cur))
                 queue.push_back(next);
 
-            createBlock(cur);
+            createBlock(func.cfg.block(cur));
         }
 
         // Link blocks
         for (int blockId : visited) {
-            auto const &cfgBlock = parent->cfg.block(blockId);
+            auto const &cfgBlock = func.cfg.block(blockId);
             IR_ExprTerminator const *term = cfgBlock.getTerminator();
             if (term->termType == IR_ExprTerminator::JUMP) {
                 builder->SetInsertPoint(blocksMap.at(blockId));
@@ -337,7 +334,7 @@ void IR2LLVM_Impl::createFunctions() {
 
         // Link phis
         for (int blockId : visited) {
-            auto const &cfgBlock = parent->cfg.block(blockId);
+            auto const &cfgBlock = func.cfg.block(blockId);
             for (auto const &phiNode : cfgBlock.phis) {
                 auto cfgPhiFunc = phiNode.body->getPhi();
                 PHINode *ph = unfilledPhis.at(*phiNode.res);
@@ -354,14 +351,13 @@ void IR2LLVM_Impl::createFunctions() {
     }
 }
 
-void IR2LLVM_Impl::createBlock(int id) {
-    auto const &cfgBlock = parent->cfg.block(id);
+void IR2LLVM_Impl::createBlock(IR_Block const &block) {
     BasicBlock *cur_bb =
-            BasicBlock::Create(*context, fmt::format("block_{}", id), curFunction);
-    blocksMap.emplace(id, cur_bb);
+            BasicBlock::Create(*context, fmt::format("block_{}", block.id), curFunction);
+    blocksMap.emplace(block.id, cur_bb);
     builder->SetInsertPoint(cur_bb);
 
-    for (auto const &phiNode : cfgBlock.phis) {
+    for (auto const &phiNode : block.phis) {
         PHINode *phiFunc = builder->CreatePHI(
                 getType(*phiNode.res->getType()),
                 phiNode.body->getPhi().args.size(),
@@ -370,7 +366,7 @@ void IR2LLVM_Impl::createBlock(int id) {
         regsMap.emplace(*phiNode.res, phiFunc);
     }
 
-    for (auto const &node : cfgBlock.body) {
+    for (auto const &node : block.body) {
         switch (node.body->type) {
             case IR_Expr::OPERATION: {
                 buildOperation(node);
@@ -408,9 +404,9 @@ void IR2LLVM_Impl::createBlock(int id) {
         }
     }
 
-    if (!cfgBlock.termNode.has_value())
+    if (!block.termNode.has_value())
         generalError("Unterminated block");
-    IR_ExprTerminator const *termNode = cfgBlock.getTerminator();
+    IR_ExprTerminator const *termNode = block.getTerminator();
     // Branches and jumps are handled when blocks linking
     if (termNode->termType == IR_ExprTerminator::RET) {
         if (termNode->arg.has_value())
