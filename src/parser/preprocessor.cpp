@@ -17,7 +17,6 @@ private:
     Preprocessor &par;
 
     size_t globalLine = 0;
-
     std::stack<std::string> raw;
     std::stringstream globalSS;
 
@@ -36,6 +35,8 @@ private:
     std::stack<Location> locations;
 
     std::time_t trTime;
+    std::string_view baseFilename;
+    unsigned long usrCounter;
 
     using string_constit_t = decltype(raw.top().cbegin());
 
@@ -79,6 +80,8 @@ private:
 PreprocessorImpl::PreprocessorImpl(Preprocessor &parent, std::string const &path)
         : par(parent) {
     trTime = time(nullptr);
+    baseFilename = path;
+    usrCounter = 0;
     processFile(path);
     par.finalText = globalSS.str();
 }
@@ -502,6 +505,32 @@ void PreprocessorImpl::putIdent(const std::string &ident) {
             fmt::print(globalSS, "\"{:%H:%M:%S}\"", fmt::localtime(trTime));
             return;
         }
+        else if (ident == "__TIMESTAMP__") { // "Sun Mar 27 15:24:12 2022"
+            fmt::print(globalSS, "\"{:%a %b %e %H:%M:%S %Y}\"", fmt::localtime(trTime));
+            return;
+        }
+        else if (ident == "__FILE_NAME__") {
+            std::string const &filename = locations.top().file;
+            fmt::print(globalSS, "\"{:%s}\"", basename(filename.c_str()));
+            return;
+        }
+        else if (ident == "__BASE_FILE__") {
+            fmt::print(globalSS, "\"{:%s}\"", baseFilename);
+            return;
+        }
+        else if (ident == "__COUNTER__") {
+            fmt::print(globalSS, "{}", usrCounter);
+            usrCounter++;
+            return;
+        }
+        else if (ident == "__VERSION__") {
+            fmt::print(globalSS, "\"cw39 v0.2.0\""); // TODO
+            return;
+        }
+        else if (ident == "__INCLUDE_LEVEL__") {
+            fmt::print(globalSS, "{}", raw.size() - 1);
+            return;
+        }
     }
 
     globalSS.write(ident.c_str(), ident.size());
@@ -565,6 +594,7 @@ void PreprocessorImpl::assertNoArg(string_constit_t &it) {
 
 Preprocessor::Preprocessor(std::string const &path) {
     ctx = std::make_shared<ParsingContext>(path);
+    addSystemDefines();
     PreprocessorImpl(*this, path);
 }
 
@@ -583,3 +613,54 @@ std::string Preprocessor::getText() const {
 std::shared_ptr<ParsingContext> Preprocessor::getContext() const {
     return ctx;
 }
+
+void Preprocessor::addSystemDefines() {
+    addDefine("__llvm__", "1");
+    addDefine("__CW39__", "1");
+
+#ifdef __linux__
+    addDefine("__linux__", "1");
+#endif
+#ifdef __sun // Solaris
+    addDefine("__sun", "1");
+#endif
+#ifdef __FreeBSD__
+    addDefine("__FreeBSD__", "1");
+#endif
+#ifdef __NetBSD__
+    addDefine("__NetBSD__", "1");
+#endif
+#ifdef __OpenBSD__
+    addDefine("__OpenBSD__", "1");
+#endif
+#ifdef __APPLE__
+    addDefine("__APPLE__", "1");
+#endif
+#ifdef __hpux // HP-UX
+    addDefine("__hpux", "1");
+#endif
+#ifdef __osf__ // Tru64 UNIX (formerly DEC OSF1)
+    addDefine("__osf__", "1");
+#endif
+#ifdef __sgi // Irix
+    addDefine("__sgi", "1");
+#endif
+#ifdef _AIX // AIX
+    addDefine("_AIX", "1");
+#endif
+#ifdef _WIN32
+    addDefine("_WIN32", "1");
+#endif
+
+    addDefine("__FILE__", "1");
+    addDefine("__LINE__", "1");
+    addDefine("__DATE__", "1");
+    addDefine("__TIME__", "1");
+    addDefine("__TIMESTAMP__", "1");
+    addDefine("__FILE_NAME__", "1");
+    addDefine("__BASE_FILE__", "1");
+    addDefine("__COUNTER__", "1");
+    addDefine("__VERSION__", "1");
+    addDefine("__INCLUDE_LEVEL__", "1");
+}
+

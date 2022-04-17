@@ -25,6 +25,8 @@ private:
 
     std::map<std::string, std::string> defines;
 
+    void addSystemDefines();
+
     friend class PreprocessorImpl;
 };
 
