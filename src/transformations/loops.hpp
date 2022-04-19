@@ -22,26 +22,20 @@ private:
         IR_Block const &head;
         LoopNode *parent;
         std::set<int> ends;
-
         std::set<int> blocks;
 
-        LoopNode(IR_Block const &bb);
+        LoopNode(IR_Block const &head);
     };
-    std::map<int, LoopNode> loops;
 
     struct BlockInfo {
-        IR_Block const &block;
-        LoopNode *loop = nullptr;
-
-        BlockInfo(IR_Block const &bb);
+        std::set<int> loops;
     };
+
+    std::map<int, LoopNode> loops;
     std::map<int, BlockInfo> lblocks;
 
-    void findLoopsBodies();
-    std::map<int, std::vector<int>> straightPaths;
-    void dfs3(LoopNode &loop, int nodeId, std::vector<int> curPath);
-
-    void findLoopsInNormalFunc(IntermediateUnit::Function const &func);
+    void traverseLoopBranch(LoopNode &loop, int tailId);
+    bool testLoopsRelation(LoopNode &sLoop, LoopNode &lLoop);
 };
 
 #endif /* LOOPS_HPP_INCLUDED__ */
