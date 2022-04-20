@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <variant>
-#include <optional>
 #include "types.hpp"
-
 
 class IRval {
 public:
@@ -21,13 +19,6 @@ public:
     IRval copy() const;
 
     bool equal(IRval const &oth) const;
-    /** Consider same values with different versions equal */
-    bool equalIgnoreVers(IRval const &oth) const;
-
-    static bool lessIgnoreVers(const IRval &a, const IRval &b);
-    struct ComparatorIgnoreVers {
-        bool operator()(const IRval& a, const IRval& b) const;
-    };
 
     static bool less(const IRval &a, const IRval &b);
     struct Comparator {
@@ -59,12 +50,6 @@ public:
     [[nodiscard]] std::string to_string() const;
     [[nodiscard]] std::string to_reg_name() const;
 
-    bool hasVersion() const;
-    bool isUndefVersion() const;
-    std::optional<int> getVersion() const;
-    void setVersion(int vers);
-    void dropVersion();
-
     template <class T>
     T castValTo() const {
         if (valClass == IRval::AGGREGATE)
@@ -78,14 +63,12 @@ public:
 
 
 private:
-    ValueClass valClass = ValueClass(0ULL);
+    ValueClass valClass = VAL; // ValueClass(0ULL)
     std::shared_ptr<IR_Type> type;
 
     // Aggregate vals is not part of union type for convenience reasons
     union_type val;
     std::vector<IRval> aggregateVals; // TODO: optional
-
-    std::optional<int> version = {};
 
     IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type v);
     IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, std::vector<IRval> vals);

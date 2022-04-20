@@ -33,53 +33,6 @@ void CfgCleaner::removeNops() {
     }
 }
 
-void CfgCleaner::fixVersions() {
-    std::set<int> visited;
-    std::map<IRval, std::pair<bool, int>, IRval::ComparatorIgnoreVers> versionedRegs;
-
-    visited.clear();
-    cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &versionedRegs](int blockId) {
-        auto &curBlock = cfg.block(blockId);
-        for (IR_Node *node: curBlock.getAllNodes()) {
-            if (node->res) {
-                int curVers = *node->res->getVersion();
-                auto it = versionedRegs.lower_bound(*node->res);
-                if (it != versionedRegs.end() && it->first.equalIgnoreVers(*node->res)) {
-                    if (it->second.second != curVers)
-                        it->second = std::make_pair(true, 0);
-                }
-                else {
-                    versionedRegs.emplace_hint(it, *node->res, std::make_pair(false, curVers));
-                }
-            }
-        }
-    });
-
-    visited.clear();
-
-    cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &versionedRegs](int blockId) {
-        auto &curBlock = cfg.block(blockId);
-
-        for (auto *node: curBlock.getAllNodes()) {
-            if (node->res) {
-                auto it = versionedRegs.find(*node->res);
-                if (it != versionedRegs.end() && !it->second.first)
-                    node->res->dropVersion();
-            }
-            for (IRval *arg : node->body->getArgs()) {
-                if (arg->isUndefVersion()) {
-                    *arg = IRval::createUndef(arg->getType());
-                }
-                else {
-                    auto it = versionedRegs.find(*arg);
-                    if (it != versionedRegs.end() && !it->second.first)
-                        arg->dropVersion();
-                }
-            }
-        }
-    });
-}
-
 // TODO: PHI loop dependencies
 void CfgCleaner::removeUselessNodes() {
     std::set<int> visited;

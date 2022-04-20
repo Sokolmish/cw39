@@ -1,7 +1,6 @@
 #include "value.hpp"
 #include "utils.hpp"
 #include <sstream>
-#include <cassert>
 
 IRval::IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type v) :
         valClass(vclass), type(std::move(type)), val(v) {}
@@ -116,11 +115,8 @@ std::vector<IRval> const& IRval::getAggregateVal() const {
 std::string IRval::to_string() const {
     switch (valClass) {
         case IRval::VREG:
-            return std::visit([this](auto e) -> std::string {
-                if (version.has_value())
-                    return fmt::format("%{}.{}", e, *version);
-                else
-                    return fmt::format("%{}", e);
+            return std::visit([](auto e) -> std::string {
+                return fmt::format("%{}", e);
             }, val);
 
         case IRval::VAL:
@@ -171,16 +167,12 @@ std::string IRval::to_string() const {
 std::string IRval::to_reg_name() const {
     return std::visit([this](auto e) -> std::string {
         auto prefix = isVReg() ? "vr" : "W";
-        if (version)
-            return fmt::format("{}{}.{}", prefix, e, *version);
-        else
-            return fmt::format("{}{}", prefix, e);
+        return fmt::format("{}{}", prefix, e);
     }, val);
 }
 
 IRval IRval::copy() const {
     auto res = IRval(valClass, type->copy(), val);
-    res.version = version;
 
     std::vector<IRval> newAggregateVals; // TODO: check this
     for (const auto &v : aggregateVals)
@@ -190,22 +182,9 @@ IRval IRval::copy() const {
     return res;
 }
 
+// TODO: comparison with zeroinit?
 bool IRval::equal(const IRval &oth) const {
-    return equalIgnoreVers(oth) && version == oth.version;
-}
-
-// TODO: comparsion with zeroinit?
-bool IRval::equalIgnoreVers(const IRval &oth) const {
     return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
-}
-
-bool IRval::lessIgnoreVers(const IRval &a, const IRval &b) {
-    if (a.valClass < b.valClass)
-        return true;
-    else if (a.valClass > b.valClass)
-        return false;
-    else [[likely]]
-        return a.val < b.val;
 }
 
 bool IRval::less(const IRval &a, const IRval &b) {
@@ -219,37 +198,11 @@ bool IRval::less(const IRval &a, const IRval &b) {
             return true;
         else if (is_gt(valOrd)) // a.val > b.val
             return false;
-        else if (a.version.has_value() && b.version.has_value())
-            return a.version < b.version;
         else
-            return a.version < b.version;
+            return false;
     }
-}
-
-bool IRval::ComparatorIgnoreVers::operator()(const IRval &a, const IRval &b) const {
-    return IRval::lessIgnoreVers(a, b);
 }
 
 bool IRval::Comparator::operator()(const IRval &a, const IRval &b) const {
     return IRval::less(a, b);
-}
-
-bool IRval::hasVersion() const {
-    return version.has_value();
-}
-
-bool IRval::isUndefVersion() const {
-    return version.has_value() && version.value() < 0;
-}
-
-std::optional<int> IRval::getVersion() const {
-    return version;
-}
-
-void IRval::setVersion(int vers) {
-    version = vers;
-}
-
-void IRval::dropVersion() {
-    version = {};
 }

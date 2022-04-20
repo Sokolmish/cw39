@@ -9,7 +9,6 @@ public:
     explicit CfgCleaner(CFGraph rawCfg);
 
     void removeNops();
-    void fixVersions();
     void removeUselessNodes();
     void removeTransitBlocks();
     void removeUnreachableBlocks();

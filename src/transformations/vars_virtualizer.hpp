@@ -17,7 +17,7 @@ public:
 private:
     CFGraph cfg;
 
-    std::map<IRval, std::optional<IRval>, IRval::ComparatorIgnoreVers> toRedudeList;
+    std::map<IRval, std::optional<IRval>, IRval::Comparator> toRedudeList;
 
     void passFunction();
     void analyzeBlock(IR_Block const &block);

@@ -12,7 +12,6 @@ SSA_Generator::SSA_Generator(CFGraph in_cfg) : cfg(std::move(in_cfg)) {
     gInfo.reset();
 
     CfgCleaner cleaner(std::move(cfg));
-    cleaner.fixVersions();
     cleaner.removeUselessNodes();
     cleaner.removeNops();
     cfg = std::move(cleaner).moveCfg();
@@ -37,7 +36,7 @@ void SSA_Generator::placePhis() {
     makeVerticesDF();
 
     // For each variable find, where a value assigned to it
-    std::map<IRval, std::set<int>, IRval::ComparatorIgnoreVers> varsDefSet;
+    std::map<IRval, std::set<int>, IRval::Comparator> varsDefSet;
     for (auto const &[bId, block] : cfg.getBlocks())
         for (IRval const &def : block.getDefinitions())
             varsDefSet[def].insert(bId);
@@ -115,7 +114,7 @@ std::set<int> SSA_Generator::getSetDFP(const std::set<int> &S) const {
 
 void SSA_Generator::versionize() {
     // Collect variables from graph because its was not passed in CFG
-    std::set<IRval, IRval::ComparatorIgnoreVers> variables;
+    std::set<IRval, IRval::Comparator> variables;
     for (auto const &[bId, block] : cfg.getBlocks()) {
         for (const IRval& def : block.getDefinitions())
             variables.insert(def);
@@ -124,14 +123,18 @@ void SSA_Generator::versionize() {
     }
 
     for (const IRval& var : variables) {
-        versionsCnt = 0;
-        versions.clear();
-        versions.push_back(-1); // In case of uninitialized variable
         traverseForVar(cfg.entryBlockId, var);
     }
 }
 
 void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
+    std::stack<IRval> versions; // Maybe reuse this stack for different variables?
+    versions.push(IRval::createUndef(var.getType())); // In case of uninitialized variable
+
+    // A phis results
+    std::set<IRval, IRval::Comparator> phiRess;
+    phiRess.insert(var); // Before versioning all phis retruns var
+
     enum { SSAV_REC_CALL = false, SSAV_ROLLBACK = true };
     std::stack<std::pair<int, bool>> stack;
     stack.push(std::make_pair(startBlockId, SSAV_REC_CALL));
@@ -139,8 +142,9 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
     while (!stack.empty()) {
         if (stack.top().second == SSAV_ROLLBACK) {
             int rollback = stack.top().first;
-            while (rollback--)
-                versions.pop_back();
+            while (rollback--) {
+                versions.pop();
+            }
             stack.pop();
             continue;
         }
@@ -153,9 +157,12 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
 
         // Phis
         for (auto &phiNode : curBlock.phis) {
-            if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
-                phiNode.res->setVersion(versionsCnt);
-                versions.push_back(versionsCnt++);
+            if (phiNode.res && phiNode.res->equal(var)) {
+                IRval rg = cfg.getParentUnit()->createReg(var.getType());
+                phiNode.res = rg;
+                versions.push(std::move(rg));
+
+                phiRess.insert(*phiNode.res);
                 rollbackCnt++;
                 break;
             }
@@ -164,13 +171,16 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
         // General nodes
         for (auto &node : curBlock.body) {
             for (IRval *arg : node.body->getArgs()) {
-                if (arg->equalIgnoreVers(var)) {
-                    arg->setVersion(versions.back());
+                if (arg->equal(var)) {
+                    IRval v = versions.top(); // CLion warnings...
+                    *arg = std::move(v);
                 }
             }
-            if (node.res && node.res->equalIgnoreVers(var)) {
-                node.res->setVersion(versionsCnt);
-                versions.push_back(versionsCnt++);
+            if (node.res && node.res->equal(var)) {
+                IRval rg = cfg.getParentUnit()->createReg(var.getType());
+                node.res = rg;
+                versions.push(std::move(rg));
+
                 rollbackCnt++;
             }
         }
@@ -178,8 +188,9 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
         // Terminator
         if (curBlock.termNode.has_value()) {
             auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
-            if (terminator.arg.has_value() && terminator.arg->equalIgnoreVers(var))
-                terminator.arg->setVersion(versions.back());
+            if (terminator.arg.has_value() && terminator.arg->equal(var)) {
+                terminator.arg = versions.top();
+            }
         }
 
         // Set phis args in next blocks
@@ -194,9 +205,8 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
             }
 
             for (auto &phiNode : nextBlock.phis) {
-                if (phiNode.res && phiNode.res->equalIgnoreVers(var)) {
-                    IRval phiArg = var;
-                    phiArg.setVersion(versions.back());
+                if (phiNode.res && phiRess.contains(*phiNode.res)) {
+                    IRval phiArg = versions.top();
                     auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
                     phiExpr.args.emplace(j, phiArg);
                     break;
@@ -209,3 +219,48 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
             stack.push({ domChild, SSAV_REC_CALL });
     }
 }
+
+//void test(std::vector<int *> &res) {
+//    std::stack<int> versions;
+//    versions.push(10);
+//
+//    std::vector<int> vectorData { 1, 2, 3 };
+//
+//    for (int *val : res) {
+//        *val = vectorData.back();
+//        *val = versions.top();
+//        *val = 10;
+//    }
+//}
+//
+//int getVal() {
+//    return 10;
+//}
+//
+//static std::vector<int *> vecvec;
+//void test2() {
+//    std::stack<int> versions;
+//    versions.push(10);
+//    for (int *val : vecvec) {
+////        int v = versions.top();
+////        *val = v;
+//        *val = versions.top();
+//    }
+//}
+//
+//class TestClass {
+//    std::vector<int *> vec;
+//
+//    TestClass(int *a, int *b) : vec { a, b } {}
+//
+////    int getVal();
+//
+//    void test() {
+//        std::stack<int> versions;
+//        versions.push(10);
+//        for (int *val : this->vec) {
+//            *val = versions.top();
+////            *val = getVal();
+//        }
+//    }
+//};

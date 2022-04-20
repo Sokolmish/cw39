@@ -22,9 +22,6 @@ private:
     std::map<int, int> postOrder;
     std::map<int, std::set<int>> verticesDF;
 
-    int versionsCnt = -1;
-    std::deque<int> versions;
-
     void placePhis();
     void makePostOrder(std::set<int> &visited, int &counter, int cur);
     /** Get dominance frontier for each single variable */

@@ -16,7 +16,6 @@ CopyPropagator::CopyPropagator(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
 
     CfgCleaner cleaner(std::move(cfg));
     cleaner.removeNops();
-    cleaner.fixVersions();
     cleaner.removeUselessNodes();
     cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
