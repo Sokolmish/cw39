@@ -1,15 +1,16 @@
-#include "loops.hpp"
+#include "loops_detector.hpp"
 #include <stack>
 #include <fmt/core.h>
 
-Looper::LoopNode::LoopNode(IR_Block const &head) : head(head) {}
+LoopsDetector::LoopNode::LoopNode(IR_Block const &head) : head(head) {}
 
 
-Looper::Looper(CFGraph const &in) : cfg(std::move(in)), gInfo(cfg) {
+LoopsDetector::LoopsDetector(CFGraph const &in) : cfg(std::move(in)), gInfo(cfg) {
     // Find loops heads using back arcs
     for (auto const &[from, to] : gInfo.getArcs(GraphInfo::BACK)) {
         if (!gInfo.isDom(to, from)) { // Improper loop (because of goto)
-            return; // TODO: what to do with this?
+            improperLoops = true;
+            return;
         }
 
         auto it = loops.lower_bound(to);
@@ -42,14 +43,14 @@ Looper::Looper(CFGraph const &in) : cfg(std::move(in)), gInfo(cfg) {
 
     // Set loops relations (who is nested in whom)
     for (auto const &[l1, l2] : loopsRels) {
-//        fmt::print("{} - {}\n", l1, l2);
         if (!testLoopsRelation(loops.at(l1), loops.at(l2))) {
-            fmt::print("Improper loop"); // TODO
+            improperLoops = true;
+            return;
         }
     }
 }
 
-void Looper::traverseLoopBranch(LoopNode &loop, int tailId) {
+void LoopsDetector::traverseLoopBranch(LoopNode &loop, int tailId) {
     std::set<int> visited;
     std::stack<int> stack;
 
@@ -71,20 +72,24 @@ void Looper::traverseLoopBranch(LoopNode &loop, int tailId) {
     loop.blocks.merge(visited);
 }
 
-void Looper::draw() const {
+void LoopsDetector::printInfo() const {
     for (auto &[loopId, loop] : loops) {
-        fmt::print("loop {}:", loop.head.id);
+        if (loop.parent)
+            fmt::print("loop {} (par {}):", loop.head.id, loop.parent->head.id);
+        else
+            fmt::print("loop {}:", loop.head.id);
         for (int blockId : loop.blocks)
             fmt::print(" {}", blockId);
         fmt::print("\n");
     }
 }
 
-bool Looper::testLoopsRelation(LoopNode &sLoop, LoopNode &lLoop) {
+bool LoopsDetector::testLoopsRelation(LoopNode &sLoop, LoopNode &lLoop) {
     if (sLoop.blocks.size() > lLoop.blocks.size()) {
         return testLoopsRelation(lLoop, sLoop);
     }
 
+    /* Probably this test is always true because of proper structure */
     bool test = std::includes(lLoop.blocks.cbegin(), lLoop.blocks.cend(),
                               sLoop.blocks.cbegin(), sLoop.blocks.cend());
     if (test) {
@@ -94,4 +99,16 @@ bool Looper::testLoopsRelation(LoopNode &sLoop, LoopNode &lLoop) {
     else {
         return false;
     }
+}
+
+bool LoopsDetector::hasLoops() const {
+    return !improperLoops && !loops.empty();
+}
+
+std::set<int> LoopsDetector::getBlockLoops(int blockId) const {
+    return lblocks.at(blockId).loops;
+}
+
+const std::map<int, LoopsDetector::LoopNode>& LoopsDetector::getLoops() const {
+    return loops;
 }
