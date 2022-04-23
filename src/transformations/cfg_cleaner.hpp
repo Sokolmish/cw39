@@ -11,6 +11,7 @@ public:
     void removeNops();
     void removeUselessNodes(); // Makes deep clean. Maybe also create fast clean?
     void removeTransitBlocks();
+    void removeUselessBranches();
     void removeUnreachableBlocks();
 
     CFGraph const& getCfg() override;

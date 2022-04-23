@@ -130,18 +130,17 @@ void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
 }
 
 
-// TODO: transit blocks with brach and non-empty transit blocks
-// TODO: condition with equal destinations
+// TODO: non-empty transit blocks
 void CfgCleaner::removeTransitBlocks() {
-    std::vector<int> toRemoveList;
+    removeUselessBranches();
 
+    std::vector<int> toRemoveList;
     for (auto &[bId, block] : cfg.getBlocksData()) {
         if (block.body.empty() && block.phis.empty()) {
             if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
                 if (block.next.size() != 1)
                     internalError("JUMP node with more than 1 successors");
 
-                // TODO: complex relink with changing `prev` size
                 if (block.prev.size() != 1) // Concentrating block
                     continue;
 
@@ -153,8 +152,6 @@ void CfgCleaner::removeTransitBlocks() {
                     if (rng::find(nextBlock.prev, block.prev[0]) != nextBlock.next.end())
                         continue;
                 }
-
-                // TODO: check if prev block already linked with next
 
                 // Relink previous blocks
                 for (int &refId : prevBlock.next) {
@@ -180,9 +177,24 @@ void CfgCleaner::removeTransitBlocks() {
 
     for (int id : toRemoveList)
         cfg.getBlocksData().erase(id);
+
+    // In case if some dual branches were created
+    removeUselessBranches();
 }
 
-// tODO: refactor this
+void CfgCleaner::removeUselessBranches() {
+    for (auto &[bId, block] : cfg.getBlocksData()) {
+        if (block.getTerminator()->termType == IR_ExprTerminator::BRANCH) {
+            if (block.next.at(0) == block.next.at(1)) {
+                block.next = { block.next.at(0) };
+                block.setTerminator(IR_ExprTerminator::JUMP);
+            }
+        }
+    }
+}
+
+
+// TODO: refactor this
 void CfgCleaner::removeUnreachableBlocks() {
     std::set<int> visited;
     cfg.traverseBlocks(cfg.entryBlockId, visited, [](int blockId) {});
