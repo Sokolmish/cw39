@@ -9,7 +9,7 @@ public:
     explicit CfgCleaner(CFGraph rawCfg);
 
     void removeNops();
-    void removeUselessNodes();
+    void removeUselessNodes(); // Makes deep clean. Maybe also create fast clean?
     void removeTransitBlocks();
     void removeUnreachableBlocks();
 
@@ -18,6 +18,11 @@ public:
 
 private:
     CFGraph cfg;
+
+    using RegsSet_t = std::set<IRval, IRval::Comparator>;
+    RegsSet_t getPrimaryEffectiveRegs();
+    RegsSet_t extendEffectiveRegsSet(RegsSet_t const &regsSet);
+    void removeUnusedNodes(RegsSet_t const &usedRegs);
 
     /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
     std::set<int> getDominatedByGiven(int startId);

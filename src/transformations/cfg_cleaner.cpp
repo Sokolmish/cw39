@@ -33,42 +33,102 @@ void CfgCleaner::removeNops() {
     }
 }
 
-// TODO: PHI loop dependencies
+
 void CfgCleaner::removeUselessNodes() {
-    std::set<int> visited;
+    RegsSet_t usedRegs = getPrimaryEffectiveRegs();
+    RegsSet_t extension = extendEffectiveRegsSet(usedRegs);
+    while (!extension.empty()) {
+        RegsSet_t extension2 = extendEffectiveRegsSet(extension);
+        size_t sizeBefore = usedRegs.size();
+        usedRegs.merge(extension);
+        extension = std::move(extension2);
+        if (sizeBefore == usedRegs.size())
+            break;
+    }
+    usedRegs.merge(extension); // TODO: Make this function more simplier...
+    removeUnusedNodes(usedRegs);
+}
+
+CfgCleaner::RegsSet_t CfgCleaner::getPrimaryEffectiveRegs() {
     std::set<IRval, IRval::Comparator> usedRegs;
-    bool changed = true;
 
-    while (changed) {
-        changed = false;
-        usedRegs.clear();
+    auto visitor = [this, &usedRegs](int blockId) {
+        auto &curBlock = cfg.block(blockId);
+        for (IR_Node const *node : curBlock.getAllNodes()) {
+            if (node->body->type == IR_Expr::MEMORY) {
+                auto &memExpr = node->body->getMem();
+                if (memExpr.op == IR_ExprMem::STORE) {
+                    usedRegs.insert(memExpr.addr);
+                    usedRegs.insert(memExpr.val.value());
+                }
+                // TODO: volatile read
+            }
+            else if (node->body->type == IR_Expr::CALL) {
+                auto &callExpr = node->body->getCall();
+                if (callExpr.isIndirect())
+                    usedRegs.insert(callExpr.getFuncPtr());
+                for (auto const &arg : callExpr.args) {
+                    if (arg.isVReg())
+                        usedRegs.insert(arg);
+                }
+            }
+            else if (node->body->type == IR_Expr::TERM) {
+                auto &termExpr = node->body->getTerm();
+                if (termExpr.arg)
+                    usedRegs.insert(*termExpr.arg);
+            }
+        }
+    };
 
-        visited.clear();
-        cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &usedRegs](int blockId) {
-            auto &curBlock = cfg.block(blockId);
-            auto refs = curBlock.getReferences();
-            usedRegs.insert(refs.begin(), refs.end());
-        });
+    std::set<int> visited;
+    cfg.traverseBlocks(cfg.entryBlockId, visited, visitor);
+    return usedRegs;
+}
 
-        visited.clear();
-        cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &usedRegs, &changed](int blockId) {
-            auto &curBlock = cfg.block(blockId);
-            for (IR_Node *node: curBlock.getAllNodes()) {
-                if (node->res && node->res->isVReg() && !usedRegs.contains(*node->res)) {
-                    changed = true;
+CfgCleaner::RegsSet_t CfgCleaner::extendEffectiveRegsSet(RegsSet_t const &regsSet) {
+    std::set<IRval, IRval::Comparator> extension;
+
+    auto visitor = [this, &extension, &regsSet](int blockId) {
+        auto &curBlock = cfg.block(blockId);
+        for (IR_Node const *node : curBlock.getAllNodes()) {
+            if (node->body && node->res && regsSet.contains(*node->res)) {
+                for (IRval const *arg : node->body->getArgs()) {
+                    extension.insert(*arg);
+                }
+            }
+        }
+    };
+
+    std::set<int> visited;
+    cfg.traverseBlocks(cfg.entryBlockId, visited, visitor);
+    return extension;
+}
+
+void CfgCleaner::removeUnusedNodes(RegsSet_t const &usedRegs) {
+    auto visitor = [this, &usedRegs](int blockId) {
+        auto &curBlock = cfg.block(blockId);
+        for (IR_Node *node : curBlock.getAllNodes()) {
+            // If node has needless result (none or unused) then consider to remove it
+            if (!node->res || !usedRegs.contains(*node->res)) {
+                if (isInList(node->body->type, IR_Expr::CALL, IR_Expr::TERM)) {
                     node->res = {};
-
-                    auto const &body = node->body;
-                    if (body->type == IR_Expr::CALL)
-                        continue;
-                    else if (body->type == IR_Expr::MEMORY && body->getMem().op == IR_ExprMem::STORE)
-                        continue;
+                }
+                else if (node->body->type == IR_Expr::MEMORY) {
+                    auto &memExpr = node->body->getMem();
+                    if (memExpr.op == IR_ExprMem::LOAD) // TODO: volatile read
+                        *node = IR_Node::nop();
+                }
+                else {
                     *node = IR_Node::nop();
                 }
             }
-        });
-    }
+        }
+    };
+
+    std::set<int> visited;
+    cfg.traverseBlocks(cfg.entryBlockId, visited, visitor);
 }
+
 
 // TODO: transit blocks with brach and non-empty transit blocks
 // TODO: condition with equal destinations
