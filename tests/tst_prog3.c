@@ -58,5 +58,7 @@ int main(int argc, char **argv) {
     }
 
     exit:
+
+    printf("REM: %d\n", (unsigned)atoi("20") % 16U);
     return 0;
 }

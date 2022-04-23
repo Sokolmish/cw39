@@ -12,6 +12,19 @@ AlgebraicTransformer::AlgebraicTransformer(CFGraph rawCfg) : cfg(std::move(rawCf
     });
 }
 
+CFGraph const& AlgebraicTransformer::getCfg() {
+    return cfg;
+}
+
+CFGraph AlgebraicTransformer::moveCfg() && {
+    return std::move(cfg);
+}
+
+bool AlgebraicTransformer::isChanged() const {
+    return changed;
+}
+
+
 static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
     if (!ir_val.isConstant())
         return false;
@@ -59,7 +72,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
         }
     }
 
-    // Zero division
+    // Division of 0
     if (isInList(oper.op, IR_ExprOper::DIV, IR_ExprOper::REM)) {
         if (isConstEqual(oper.args[0], 0ULL)) {
             oper.op = IR_ExprOper::MOV;
@@ -160,16 +173,21 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
             }
         }
     }
-}
 
-CFGraph const& AlgebraicTransformer::getCfg() {
-    return cfg;
-}
-
-CFGraph AlgebraicTransformer::moveCfg() && {
-    return std::move(cfg);
-}
-
-bool AlgebraicTransformer::isChanged() const {
-    return changed;
+    // Rem by power of 2
+    if (oper.op == IR_ExprOper::REM) {
+        auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[1].getType());
+        if (dirType->isUnsigned()) { // Signed REM is a bit more complex
+            if (oper.args[1].isConstant() && oper.args[1].getType()->type == IR_Type::DIRECT) {
+                uint64_t val = oper.args[1].castValTo<uint64_t>();
+                if (std::has_single_bit(val)) {
+                    uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
+                    uint64_t mask = (1 << log) - 1;
+                    oper.op = IR_ExprOper::AND;
+                    oper.args = std::vector<IRval>{ oper.args[0], IRval::createVal(dirType, mask) };
+                    changed = true;
+                }
+            }
+        }
+    }
 }
