@@ -13,7 +13,7 @@
 
 void ast_set_pctx_ptr(ParsingContext *ctx);
 
-typedef int ast_enum_t;
+using ast_enum_t = int;
 
 enum : ast_enum_t {
     AST_PRIMARY, AST_POSTFIX, AST_ARGUMENTS_LIST, AST_UNARY_OP, AST_CAST, AST_BINOP,

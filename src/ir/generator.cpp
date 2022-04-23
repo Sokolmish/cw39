@@ -465,7 +465,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
 
     // TODO: use corresponding LLVM instruction instead or use binsearch
     auto nearestSwitch = getNearestSwitch();
-    std::set<IRval, IRval::Comparator> usedCases;
+    std::set<IRval> usedCases;
     selectBlock(entryBlock);
     for (auto const &label : nearestSwitch->labels) {
         if (usedCases.contains(label.val))

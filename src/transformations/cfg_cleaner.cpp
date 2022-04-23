@@ -35,10 +35,10 @@ void CfgCleaner::removeNops() {
 
 
 void CfgCleaner::removeUselessNodes() {
-    RegsSet_t usedRegs = getPrimaryEffectiveRegs();
-    RegsSet_t extension = extendEffectiveRegsSet(usedRegs);
+    std::set<IRval> usedRegs = getPrimaryEffectiveRegs();
+    std::set<IRval> extension = extendEffectiveRegsSet(usedRegs);
     while (!extension.empty()) {
-        RegsSet_t extension2 = extendEffectiveRegsSet(extension);
+        std::set<IRval> extension2 = extendEffectiveRegsSet(extension);
         size_t sizeBefore = usedRegs.size();
         usedRegs.merge(extension);
         extension = std::move(extension2);
@@ -49,8 +49,8 @@ void CfgCleaner::removeUselessNodes() {
     removeUnusedNodes(usedRegs);
 }
 
-CfgCleaner::RegsSet_t CfgCleaner::getPrimaryEffectiveRegs() {
-    std::set<IRval, IRval::Comparator> usedRegs;
+std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
+    std::set<IRval> usedRegs;
 
     auto visitor = [this, &usedRegs](int blockId) {
         auto &curBlock = cfg.block(blockId);
@@ -85,8 +85,8 @@ CfgCleaner::RegsSet_t CfgCleaner::getPrimaryEffectiveRegs() {
     return usedRegs;
 }
 
-CfgCleaner::RegsSet_t CfgCleaner::extendEffectiveRegsSet(RegsSet_t const &regsSet) {
-    std::set<IRval, IRval::Comparator> extension;
+std::set<IRval> CfgCleaner::extendEffectiveRegsSet(std::set<IRval> const &regsSet) {
+    std::set<IRval> extension;
 
     auto visitor = [this, &extension, &regsSet](int blockId) {
         auto &curBlock = cfg.block(blockId);
@@ -104,7 +104,7 @@ CfgCleaner::RegsSet_t CfgCleaner::extendEffectiveRegsSet(RegsSet_t const &regsSe
     return extension;
 }
 
-void CfgCleaner::removeUnusedNodes(RegsSet_t const &usedRegs) {
+void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
     auto visitor = [this, &usedRegs](int blockId) {
         auto &curBlock = cfg.block(blockId);
         for (IR_Node *node : curBlock.getAllNodes()) {

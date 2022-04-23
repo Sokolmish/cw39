@@ -130,7 +130,7 @@ void CopyPropagator::foldConstants() {
                     bool isConst = true;
                     for (auto const &[pos, arg] : phiExpr.args) {
                         // TODO: also collapse on same non-const values
-                        if (!arg.isConstant() || !arg.equal(commonVal)) {
+                        if (!arg.isConstant() || arg != commonVal) {
                             isConst = false;
                             break;
                         }

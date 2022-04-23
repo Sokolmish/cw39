@@ -174,7 +174,7 @@ std::string IRval::to_reg_name() const {
 IRval IRval::copy() const {
     auto res = IRval(valClass, type->copy(), val);
 
-    std::vector<IRval> newAggregateVals; // TODO: check this
+    std::vector<IRval> newAggregateVals;
     for (const auto &v : aggregateVals)
         newAggregateVals.push_back(v.copy());
     res.aggregateVals = newAggregateVals;
@@ -183,26 +183,23 @@ IRval IRval::copy() const {
 }
 
 // TODO: comparison with zeroinit?
-bool IRval::equal(const IRval &oth) const {
+bool IRval::operator==(const IRval &oth) const {
     return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
 }
 
-bool IRval::less(const IRval &a, const IRval &b) {
-    if (a.valClass < b.valClass)
-        return true;
-    else if (a.valClass > b.valClass)
-        return false;
+std::strong_ordering IRval::operator<=>(const IRval &oth) const {
+    if (valClass < oth.valClass)
+        return std::strong_ordering::less;
+    else if (valClass > oth.valClass)
+        return std::strong_ordering::greater;
     else [[likely]] {
-        auto valOrd = a.val <=> b.val;
-        if (is_lt(valOrd)) // a.val < b.val
-            return true;
-        else if (is_gt(valOrd)) // a.val > b.val
-            return false;
+        // NOTE: partial ordering (because of float), but in favor of speed it is ignored
+        auto valOrd = val <=> oth.val;
+        if (is_lt(valOrd)) // val < oth.val
+            return std::strong_ordering::less;
+        else if (is_gt(valOrd)) // val > oth.val
+            return std::strong_ordering::greater;
         else
-            return false;
+            return std::strong_ordering::equal;
     }
-}
-
-bool IRval::Comparator::operator()(const IRval &a, const IRval &b) const {
-    return IRval::less(a, b);
 }

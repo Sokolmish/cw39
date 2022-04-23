@@ -19,10 +19,9 @@ public:
 private:
     CFGraph cfg;
 
-    using RegsSet_t = std::set<IRval, IRval::Comparator>;
-    RegsSet_t getPrimaryEffectiveRegs();
-    RegsSet_t extendEffectiveRegsSet(RegsSet_t const &regsSet);
-    void removeUnusedNodes(RegsSet_t const &usedRegs);
+    std::set<IRval> getPrimaryEffectiveRegs();
+    std::set<IRval> extendEffectiveRegsSet(std::set<IRval> const &regsSet);
+    void removeUnusedNodes(std::set<IRval> const &usedRegs);
 
     /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
     std::set<int> getDominatedByGiven(int startId);

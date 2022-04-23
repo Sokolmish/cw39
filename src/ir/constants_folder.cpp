@@ -163,8 +163,9 @@ std::optional<IRval> ConstantsFolder::foldPhi(const IR_ExprPhi &expr) {
         internalError("Empty phi");
 
     IRval const &common = expr.args.at(0);
-    for (auto const &[pos, arg] : expr.args)
-        if (!arg.equal(common))
+    for (auto const &[pos, arg] : expr.args) {
+        if (arg != common)
             return {};
+    }
     return common;
 }

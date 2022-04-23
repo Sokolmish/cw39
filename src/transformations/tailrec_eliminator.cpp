@@ -98,7 +98,7 @@ std::vector<int> TailrecEliminator::findTailCalls(int funcId) {
         if (terminator->arg.has_value()) {
             if (!lastNode.res.has_value()) // TODO: also can be tailcall
                 return;
-            if (!lastNode.res->equal(*terminator->arg))
+            if (*lastNode.res != *terminator->arg)
                 return;
         }
 

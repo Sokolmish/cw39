@@ -58,14 +58,14 @@ public:
 
     Function *curFunction = nullptr;
 
-    std::map<IRval, Value*, IRval::Comparator> regsMap;
+    std::map<IRval, Value*> regsMap;
     std::map<int, BasicBlock*> blocksMap;
     std::map<int, Value*> strings;
     std::map<int, GlobalVariable*> globals;
     std::map<int, Function*> functions;
     std::map<int, Type*> structTypes;
 
-    std::map<IRval, PHINode*, IRval::Comparator> unfilledPhis;
+    std::map<IRval, PHINode*> unfilledPhis;
 
     explicit IR2LLVM_Impl(IR2LLVM *par);
 

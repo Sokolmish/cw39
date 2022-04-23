@@ -16,7 +16,7 @@ public:
 private:
     CFGraph cfg;
 
-    std::map<IRval, IRval, IRval::Comparator> remlacementMap;
+    std::map<IRval, IRval> remlacementMap;
     bool changed, globalChanged;
 
     void propagateCopies();

@@ -18,12 +18,9 @@ public:
 
     IRval copy() const;
 
-    bool equal(IRval const &oth) const;
+    bool operator==(IRval const &oth) const;
 
-    static bool less(const IRval &a, const IRval &b);
-    struct Comparator {
-        bool operator()(const IRval& a, const IRval& b) const;
-    };
+    std::strong_ordering operator<=>(IRval const &oth) const;
 
     [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
     [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);

@@ -36,7 +36,7 @@ void SSA_Generator::placePhis() {
     makeVerticesDF();
 
     // For each variable find, where a value assigned to it
-    std::map<IRval, std::set<int>, IRval::Comparator> varsDefSet;
+    std::map<IRval, std::set<int>> varsDefSet;
     for (auto const &[bId, block] : cfg.getBlocks())
         for (IRval const &def : block.getDefinitions())
             varsDefSet[def].insert(bId);
@@ -114,7 +114,7 @@ std::set<int> SSA_Generator::getSetDFP(const std::set<int> &S) const {
 
 void SSA_Generator::versionize() {
     // Collect variables from graph because its was not passed in CFG
-    std::set<IRval, IRval::Comparator> variables;
+    std::set<IRval> variables;
     for (auto const &[bId, block] : cfg.getBlocks()) {
         for (const IRval& def : block.getDefinitions())
             variables.insert(def);
@@ -132,7 +132,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
     versions.push(IRval::createUndef(var.getType())); // In case of uninitialized variable
 
     // A phis results
-    std::set<IRval, IRval::Comparator> phiRess;
+    std::set<IRval> phiRess;
     phiRess.insert(var); // Before versioning all phis retruns var
 
     enum { SSAV_REC_CALL = false, SSAV_ROLLBACK = true };
@@ -157,7 +157,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
 
         // Phis
         for (auto &phiNode : curBlock.phis) {
-            if (phiNode.res && phiNode.res->equal(var)) {
+            if (phiNode.res == var) {
                 IRval rg = cfg.getParentUnit()->createReg(var.getType());
                 phiNode.res = rg;
                 versions.push(std::move(rg));
@@ -171,12 +171,12 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
         // General nodes
         for (auto &node : curBlock.body) {
             for (IRval *arg : node.body->getArgs()) {
-                if (arg->equal(var)) {
+                if (*arg == var) {
                     IRval v = versions.top(); // CLion warnings...
                     *arg = std::move(v);
                 }
             }
-            if (node.res && node.res->equal(var)) {
+            if (node.res == var) {
                 IRval rg = cfg.getParentUnit()->createReg(var.getType());
                 node.res = rg;
                 versions.push(std::move(rg));
@@ -188,7 +188,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
         // Terminator
         if (curBlock.termNode.has_value()) {
             auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
-            if (terminator.arg.has_value() && terminator.arg->equal(var)) {
+            if (terminator.arg == var) {
                 terminator.arg = versions.top();
             }
         }
