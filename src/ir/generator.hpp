@@ -138,7 +138,7 @@ private:
     IRval evalPostfixExpr(AST_Postfix const &expr);
     IRval evalPrimaryExpr(AST_Primary const &expr);
 
-    IRval getPtrWithOffset(IRval const &base, IRval const &index);
+    IRval getPtrWithOffset(IRval const &base, IRval const &index, bool positive);
     void doAssignment(AST_Expr const &dest, IRval const &wrValue);
     IRval doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc);
     IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right, yy::location loc);

@@ -11,8 +11,6 @@ source_filename = "top"
 
 declare i32 @printf(i8*, ...)
 
-declare i8* @memcpy(i8*, i8*, i64)
-
 declare i64 @strlen(i8*)
 
 declare i32 @atoi(i8*)

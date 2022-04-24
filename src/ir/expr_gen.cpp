@@ -29,7 +29,7 @@ std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
 
 
 /** Creates pointer to element with given index in array pointed to by base */
-IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index) {
+IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index, bool positive) {
     auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
 
     // TODO: use GEP
@@ -46,7 +46,8 @@ IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index) {
     }
 
     IRval iptr = emitCast(base, IR_TypeDirect::getU64());
-    IRval wOffset = emitOp(IR_TypeDirect::getU64(), IR_ExprOper::ADD, { iptr, scaledIndex });
+    auto finOp = positive ? IR_ExprOper::ADD : IR_ExprOper::SUB;
+    IRval wOffset = emitOp(IR_TypeDirect::getU64(), finOp, { iptr, scaledIndex });
     return emitCast(wOffset, ptrType);
 }
 
@@ -142,7 +143,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
                 if (!ptrType->child->equal(*wrValue.getType()))
                     semanticError(assignee.loc, "Cannot assign values of different types");
-                IRval finPtr = getPtrWithOffset(base, index);
+                IRval finPtr = getPtrWithOffset(base, index, true);
                 emitStore(finPtr, wrValue);
             }
             else { // base.getType()->type
@@ -160,9 +161,29 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
 
 /** Create node with specified binary operation on numbers */
 IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc) {
+    // Do pointers arithmetics
+    if (lhs.getType()->type == IR_Type::POINTER || rhs.getType()->type == IR_Type::POINTER) {
+        if (!isInList(op, AST_Binop::ADD, AST_Binop::SUB))
+            semanticError(loc, "Pointes arithmetics allows only addictions or subtractions");
+        if (lhs.getType()->type == rhs.getType()->type)
+            semanticError(loc, "Pointes arithmetics cannot be applied between two pointers");
+
+        if (rhs.getType()->type == IR_Type::POINTER) {
+            if (op == AST_Binop::SUB)
+                semanticError(loc, "Canon subtract pointer from number");
+            return doBinOp(op, rhs, lhs, loc);
+        }
+        // Now lhs is pointer
+        if (op == AST_Binop::ADD)
+            return getPtrWithOffset(lhs, rhs, true);
+        else // op == AST_Binop::SUB
+            return getPtrWithOffset(lhs, rhs, false);
+    }
+
     if (lhs.getType()->type != IR_Type::DIRECT)
         semanticError(loc, "Wrong arithmetic type");
 
+    // Cast different types
     if (!lhs.getType()->equal(*rhs.getType())) {
         auto cmnType = IR_TypeDirect::getCommonDirType(lhs.getType(), rhs.getType());
         IRval cmnLhs = emitCast(lhs, cmnType);
@@ -582,7 +603,7 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
 
             if (array.getType()->type == IR_Type::POINTER) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
-                IRval finPtr = getPtrWithOffset(array, index);
+                IRval finPtr = getPtrWithOffset(array, index, true);
                 return emitLoad(ptrType->child, finPtr);
             }
             else if (array.getType()->type == IR_Type::ARRAY) {

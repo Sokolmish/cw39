@@ -43,7 +43,7 @@ int main() {
     char *fmt = "R??: %d\n";
     char fixFmt[16];
     memcpy((void*)fixFmt, (void*)fmt, strlen(fmt) + 1);
-    char *replace = (char*)((unsigned long)fixFmt + 2);
+    char *replace = fixFmt + 2;
     *replace = 's';
     fixFmt[1UL] = 'e';
     printf(fixFmt, y);
@@ -107,7 +107,17 @@ int main() {
     printf("\n");
 
     int (*f)(int) = mysqr;
-    printf("%d\n", f(5));
+    printf("5^2 = %d\n", f(5));
+
+    int arrw4[4];
+    arrw4[0] = 3;
+    arrw4[1] = 0;
+    arrw4[2] = 0;
+    arrw4[3] = 0;
+    *(2 + arrw4) = 9;
+    *(arrw4 + 1) = 6;
+    *((arrw4 + 4) - 1) = 12;
+    printf("%d %d %d %d\n", arrw4[0], arrw4[1], arrw4[2], arrw4[3]);
 
     while (1) {
         return x + 0; // * 0
