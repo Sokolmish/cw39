@@ -126,6 +126,9 @@ IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr) {
 }
 
 IRval IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
+    if (srcVal.getType()->equal(*dst))
+        return srcVal;
+
     auto dstCopy = dst;
     auto expr = std::make_unique<IR_ExprCast>(std::move(srcVal), std::move(dst));
     return *emitNode(std::move(dstCopy), std::move(expr));

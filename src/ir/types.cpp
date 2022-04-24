@@ -66,6 +66,81 @@ std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
     return std::make_shared<IR_TypeDirect>(spec);
 }
 
+std::shared_ptr<IR_Type> IR_TypeDirect::getCommonDirType(std::shared_ptr<IR_Type> const &a,
+                                                         std::shared_ptr<IR_Type> const &b) {
+    if (a->equal(*b))
+        return a;
+
+    auto &aDir = dynamic_cast<IR_TypeDirect const &>(*a);
+    auto &bDir = dynamic_cast<IR_TypeDirect const &>(*b);
+
+    auto newRawType = aDir.copy(); // TODO: qualifiers
+    auto &newType = dynamic_cast<IR_TypeDirect &>(*newRawType);
+
+    // Float conversions
+
+    if (aDir.spec == F64 || bDir.spec == F64) {
+        newType.spec = F64;
+        return newRawType;
+    }
+    else if (aDir.spec == F32 || bDir.spec == F32) {
+        newType.spec = F32;
+        return newRawType;
+    }
+
+    // Integer conversions
+
+    if (aDir.isUnsigned() == bDir.isUnsigned()) {
+        int newSize = std::max(aDir.getBytesSize(), bDir.getBytesSize());
+        bool isUnsigned = aDir.isUnsigned();
+        switch (newSize) {
+            case 1:
+                newType.spec = isUnsigned ? U8 : I8;
+                break;
+            case 4:
+                newType.spec = isUnsigned ? U32 : I32;
+                break;
+            case 8:
+                newType.spec = isUnsigned ? U64 : I64;
+                break;
+            default:
+                internalError(fmt::format("Wrong type size: {} ({},1)", newSize, __func__));
+        }
+        return newRawType;
+    }
+    else { // Different signedness
+        if (aDir.getBytesSize() == bDir.getBytesSize()) {
+            if (aDir.isUnsigned())
+                return a->copy();
+            else
+                return b->copy();
+        }
+
+        if (aDir.getBytesSize() < bDir.getBytesSize())
+            return getCommonDirType(b, a);
+        // Now we have sizeof(aDir) > sizeof(bDIr)
+        if (aDir.isUnsigned()) {
+            return a->copy();
+        }
+        else { // aDir is signed
+            switch (aDir.getBytesSize()) {
+                case 1:
+                    newType.spec = U8;
+                    break;
+                case 4:
+                    newType.spec = U32;
+                    break;
+                case 8:
+                    newType.spec = U64;
+                    break;
+                default:
+                    internalError(fmt::format("Wrong type size: {} ({},2)", aDir.getBytesSize(), __func__));
+            }
+            return newRawType;
+        }
+    }
+}
+
 std::string IR_TypeDirect::to_string() const {
     switch (spec) {
         case IR_TypeDirect::BOOL:

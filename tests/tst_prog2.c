@@ -1,5 +1,4 @@
 int printf(const char *format, ...);
-char *memcpy(char *dest, char const *src, unsigned long n); // Void pointers are not allowed
 unsigned long strlen(const char *s);
 int atoi(const char *nptr);
 

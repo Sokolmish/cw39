@@ -208,7 +208,7 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
         : IR_Expr(CAST), arg(std::move(sourceVal)), dest(std::move(cdest)) {
     const auto &source = arg.getType();
     if (source->equal(*dest))
-        generalError("Casting equal types"); // TODO
+        generalError("Casting equal types");
 
     if (source->type == IR_Type::FUNCTION || dest->type == IR_Type::FUNCTION) {
         generalError("Function type cannot be cast"); // TODO

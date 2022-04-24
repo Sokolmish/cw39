@@ -158,12 +158,17 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
     }
 }
 
-/** Create node with specified binary operation */
+/** Create node with specified binary operation on numbers */
 IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc) {
     if (lhs.getType()->type != IR_Type::DIRECT)
         semanticError(loc, "Wrong arithmetic type");
-    if (!lhs.getType()->equal(*rhs.getType()))
-        semanticError(loc, "Cannot do binary operation on different types");
+
+    if (!lhs.getType()->equal(*rhs.getType())) {
+        auto cmnType = IR_TypeDirect::getCommonDirType(lhs.getType(), rhs.getType());
+        IRval cmnLhs = emitCast(lhs, cmnType);
+        IRval cmnRhs = emitCast(rhs, cmnType);
+        return doBinOp(op, cmnLhs, cmnRhs, loc);
+    }
 
     auto const &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
 

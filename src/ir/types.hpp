@@ -46,6 +46,10 @@ public:
     [[nodiscard]] bool isUnsigned() const;
     [[nodiscard]] int getBytesSize() const override;
 
+    /** Returns new type, which is common for given ones */
+    static std::shared_ptr<IR_Type> getCommonDirType(std::shared_ptr<IR_Type> const &a,
+                                                     std::shared_ptr<IR_Type> const &b);
+
     static std::shared_ptr<IR_TypeDirect> getVoid();
     static std::shared_ptr<IR_TypeDirect> getI1();
     static std::shared_ptr<IR_TypeDirect> getI8();

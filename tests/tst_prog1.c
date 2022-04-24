@@ -1,5 +1,5 @@
 int printf(const char *format, ...);
-char *memcpy(char *dest, char const *src, unsigned long n); // Void pointers are not allowed
+void *memcpy(void *dest, void const *src, unsigned long n);
 unsigned long strlen(const char *s);
 int atoi(const char *nptr);
 
@@ -42,8 +42,8 @@ int main() {
     y = add(x, y);
     char *fmt = "R??: %d\n";
     char fixFmt[16];
-    memcpy(fixFmt, fmt, strlen(fmt) + 1UL);
-    char *replace = (char*)((unsigned long)fixFmt + 2UL);
+    memcpy((void*)fixFmt, (void*)fmt, strlen(fmt) + 1);
+    char *replace = (char*)((unsigned long)fixFmt + 2);
     *replace = 's';
     fixFmt[1UL] = 'e';
     printf(fixFmt, y);
@@ -54,7 +54,7 @@ int main() {
     sss.field2 = 222;
     printf("%d %d\n", sss.field1, sss.field2);
 
-    printf("%f\n", 2.3 + (double)0.7f);
+    printf("%f\n", 2.3 + 0.7f);
 
     int a = 123;
     int b = -a;
