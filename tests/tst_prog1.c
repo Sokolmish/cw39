@@ -55,13 +55,14 @@ int main() {
     printf("%d %d\n", sss.field1, sss.field2);
 
     printf("%f\n", 2.3 + 0.7f);
+    printf("%f\n", 2.3f + 0.7f);
 
     int a = 123;
     int b = -a;
     printf("%d %d\n", a, b);
     char c = 'b';
     c--;
-    printf("%c\n", c);
+    printf("%c %c\n", c, c);
 
     int cnt = 10;
     while (cnt) {

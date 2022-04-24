@@ -174,6 +174,10 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             return doBinOp(op, rhs, lhs, loc);
         }
         // Now lhs is pointer
+
+        if (lhs.getType()->getBytesSize() == 0)
+            semanticError(loc, "Pointes arithmetics cannot be applied to void pointers");
+
         if (op == AST_Binop::ADD)
             return getPtrWithOffset(lhs, rhs, true);
         else // op == AST_Binop::SUB
@@ -417,14 +421,28 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
     std::vector<IRval> args;
     size_t argNum = 0;
     for (auto const &arg : argsList.children) {
-        IRval argVal = evalExpr(*arg); // TODO: promotion
+        IRval argVal = evalExpr(*arg);
 
         if (argNum < funType->args.size()) {
-            if (!argVal.getType()->equal(*funType->args[argNum])) {
-                semanticError(arg->loc, "Wrong argument type");
+            auto &argType = funType->args[argNum];
+            if (!argVal.getType()->equal(*argType)) {
+                if (argType->type == IR_Type::DIRECT && argVal.getType()->type == IR_Type::DIRECT) {
+                    auto cmnType = IR_TypeDirect::getCommonDirType(argType, argVal.getType());
+                    argVal = emitCast(std::move(argVal), cmnType);
+                }
+                else {
+                    semanticError(arg->loc, "Wrong argument type");
+                }
             }
         }
-        else if (!funType->isVariadic) {
+        else if (funType->isVariadic) { // Default g promotion
+            if (argVal.getType()->type == IR_Type::DIRECT) {
+                auto &dirType = dynamic_cast<IR_TypeDirect const &>(*argVal.getType());
+                if (dirType.spec == IR_TypeDirect::F32)
+                    argVal = emitCast(std::move(argVal), IR_TypeDirect::getF64());
+            }
+        }
+        else {
             semanticError(expr.loc, "Too manny arguments in function call");
         }
 

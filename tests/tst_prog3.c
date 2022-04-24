@@ -15,6 +15,11 @@ struct ms {
     int z;
 };
 
+void longF(long arg) {
+    printf("LONG: %ld\n", arg);
+    return;
+}
+
 int main(int argc, char **argv) {
     int arr[6] = { 10, 11, 12, 13, 14, 15 };
     int sz = 6;
@@ -60,5 +65,8 @@ int main(int argc, char **argv) {
     exit:
 
     printf("REM: %d\n", (unsigned)atoi("20") % 16U);
+
+    longF(atoi("699"));
+
     return 0;
 }
