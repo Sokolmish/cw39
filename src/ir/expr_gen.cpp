@@ -67,9 +67,13 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
         if (!destVar.has_value())
             semanticError(assignee.loc, "Unknown variable");
         auto destVarPtrType = std::dynamic_pointer_cast<IR_TypePtr>(destVar->getType());
-        if (!destVarPtrType->child->equal(*wrValue.getType()))
-            semanticError(assignee.loc, "Cannot assign values of different types");
-        emitStore(*destVar, wrValue);
+
+        IRval valToStore = wrValue;
+        if (!destVarPtrType->child->equal(*valToStore.getType())) {
+            // semanticError(assignee.loc, "Cannot assign values of different types");
+            valToStore = emitCast(std::move(valToStore), destVarPtrType->child);
+        }
+        emitStore(*destVar, std::move(valToStore));
     }
     else if (dest.node_type == AST_UNARY_OP) { // Dereference write
         auto &assignee = static_cast<AST_Unop const &>(dest);
@@ -82,10 +86,13 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
         auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
         if (ptrType->child->type == IR_Type::FUNCTION)
             semanticError(assignee.loc, "Pointer to function cannot be dereferenced");
-        if (!ptrType->child->equal(*wrValue.getType()))
-            semanticError(assignee.loc, "Cannot assign values of different types");
 
-        emitStore(ptrVal, wrValue);
+        IRval valToStore = wrValue;
+        if (!ptrType->child->equal(*valToStore.getType())) {
+            // semanticError(assignee.loc, "Cannot assign values of different types");
+            valToStore = emitCast(std::move(valToStore), ptrType->child);
+        }
+        emitStore(ptrVal, std::move(valToStore));
     }
     else if (dest.node_type == AST_POSTFIX) { // Accessors
         auto &assignee = static_cast<AST_Postfix const &>(dest);
@@ -97,12 +104,16 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             auto field = structType.getField(assignee.getIdent());
             if (field == nullptr)
                 semanticError(assignee.loc, "Structure has no such field");
-            if (!field->irType->equal(*wrValue.getType()))
-                semanticError(assignee.loc, "Cannot assign values of different types");
 
             IRval index = IRval::createVal(IR_TypeDirect::getU64(),
                                            static_cast<uint64_t>(field->index));
-            IRval res = emitInsert(base.getType(), base, wrValue, { index }); // TODO: GEP
+
+            IRval valToStore = wrValue;
+            if (!field->irType->equal(*valToStore.getType())) {
+                // semanticError(assignee.loc, "Cannot assign values of different types");
+                valToStore = emitCast(std::move(valToStore), field->irType);
+            }
+            IRval res = emitInsert(base.getType(), base, std::move(valToStore), { index }); // TODO: GEP
 
             doAssignment(*assignee.base, res);
         }
@@ -118,6 +129,8 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             auto field = structType->getField(assignee.getIdent());
             if (field == nullptr)
                 semanticError(assignee.loc, "Structure has no such field");
+
+            // TODO: types check?
 
             IRval index = IRval::createVal(IR_TypeDirect::getI32(),
                                            static_cast<int32_t>(field->index));
@@ -141,10 +154,14 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             }
             else if (base.getType()->type == IR_Type::POINTER) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
-                if (!ptrType->child->equal(*wrValue.getType()))
-                    semanticError(assignee.loc, "Cannot assign values of different types");
                 IRval finPtr = getPtrWithOffset(base, index, true);
-                emitStore(finPtr, wrValue);
+
+                IRval valToStore = wrValue;
+                if (!ptrType->child->equal(*valToStore.getType())) {
+                    // semanticError(assignee.loc, "Cannot assign values of different types");
+                    valToStore = emitCast(std::move(valToStore), ptrType->child);
+                }
+                emitStore(finPtr, std::move(valToStore));
             }
             else { // base.getType()->type
                 semanticError(assignee.loc, "Wrong type for indexation");
@@ -776,7 +793,6 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
 
 /** Get aggreagate value of given type from initializer list */
 IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const AST_InitializerList &lst) {
-    // TODO: template and constexpr
     if (type->type == IR_Type::ARRAY) {
         auto &arrType = dynamic_cast<IR_TypeArray const &>(*type);
         if (arrType.size < lst.children.size())
@@ -799,25 +815,32 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
             NOT_IMPLEMENTED("designators");
         }
 
-        auto elem = evalConstantExpr(val->getExpr());
-        if (!elem.has_value())
+        auto elemOpt = evalConstantExpr(val->getExpr());
+        if (!elemOpt.has_value())
             semanticError(val->getExpr().loc, "Non-constant value in compound literal");
+        IRval elemVal = std::move(*elemOpt);
+
         if (!val->is_compound) {
             if (type->type == IR_Type::ARRAY) {
                 auto &arrType = dynamic_cast<IR_TypeArray const &>(*type);
-                if (!elem->getType()->equal(*arrType.child))
-                    semanticError(val->getExpr().loc, "Wrong type of initializer element");
+                if (!elemVal.getType()->equal(*arrType.child)) {
+                    // semanticError(val->getExpr().loc, "Wrong type of initializer element");
+                    elemVal = emitCast(std::move(elemVal), arrType.child);
+                }
             }
             else if (type->type == IR_Type::TSTRUCT) {
                 auto &structType = dynamic_cast<IR_TypeStruct const &>(*type);
-                if (!elem->getType()->equal(*structType.fields.at(elemNum).irType))
-                    semanticError(val->getExpr().loc, "Wrong type of initializer element");
+                auto &fieldType = structType.fields.at(elemNum).irType;
+                if (!elemVal.getType()->equal(*fieldType)) {
+                    // semanticError(val->getExpr().loc, "Wrong type of initializer element");
+                    elemVal = emitCast(std::move(elemVal), fieldType);
+                }
             }
             else {
                 internalError("Compound initializer for non-aggregate type");
             }
 
-            aggrVals.push_back(*elem);
+            aggrVals.emplace_back(std::move(elemVal));
         }
         else {
             NOT_IMPLEMENTED("nested compound initializers");
@@ -825,7 +848,6 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
 
         elemNum++;
     }
-
 
     if (type->type == IR_Type::ARRAY) {
         auto &arrType = dynamic_cast<IR_TypeArray const &>(*type);

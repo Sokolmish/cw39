@@ -3,7 +3,7 @@ void *memcpy(void *dest, void const *src, unsigned long n);
 unsigned long strlen(const char *s);
 int atoi(const char *nptr);
 
-int gg = 142;
+int gg = 142U;
 
 struct TestStruct {
     int field1;
@@ -51,13 +51,13 @@ int main() {
 
     struct TestStruct sss;
     sss.field1 = 111;
-    sss.field2 = 222;
+    sss.field2 = 222U;
     printf("%d %d\n", sss.field1, sss.field2);
 
     printf("%f\n", 2.3 + 0.7f);
     printf("%f\n", 2.3f + 0.7f);
 
-    int a = 123;
+    int a = 123L;
     int b = -a;
     printf("%d %d\n", a, b);
     char c = 'b';

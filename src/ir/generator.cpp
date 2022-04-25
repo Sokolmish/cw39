@@ -358,7 +358,7 @@ IRval IR_Generator::getInitializerVal(std::shared_ptr<IR_Type> const &type, cons
     else {
         IRval res = evalExpr(init.getExpr());
         if (!res.getType()->equal(*type)) {
-            semanticError(init.loc, "Cannot initialize variable with different type");
+            res = emitCast(std::move(res), type); // Need to check if implicit conversion valid
         }
         return res;
     }

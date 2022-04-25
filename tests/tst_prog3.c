@@ -21,7 +21,7 @@ void longF(long arg) {
 }
 
 int main(int argc, char **argv) {
-    int arr[6] = { 10, 11, 12, 13, 14, 15 };
+    int arr[6] = { 10, 11, 12U, 13, 14, 15 };
     int sz = 6;
 
     for (int i = 0; i < sz; i++) {
