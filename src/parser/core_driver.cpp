@@ -17,10 +17,8 @@ void CoreDriver::parse() {
     int rc = parse();
     scan_end();
 
-    if (rc != 0) {
-        fmt::print(stderr, "Parsing failed\n");
-        exit(EXIT_FAILURE);
-    }
+    if (rc != 0)
+        throw parser_exception(fmt::format("Parsing failed with return code {}", rc), "");
 
     transUnit = std::shared_ptr<AST_TranslationUnit>(res);
     res = nullptr;
@@ -33,8 +31,10 @@ std::shared_ptr<AST_TranslationUnit> CoreDriver::getTransUnit() {
 void CoreDriver::lexer_error(const char *msg) {
     auto fixLoc = ctx.warps.getLoc(location.begin.line);
     std::string filename = ctx.warps.getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Lexer error ({}:{}:{}):\n\t{}\n",
-               filename, fixLoc.line, location.begin.column, msg);
+    std::string excMsg = fmt::format("Lexer error: {}", msg);
+    std::string excLoc = fmt::format("{}:{}:{}", filename, fixLoc.line, location.begin.column);
+    // TODO: specialized exception or at least exc location
+    throw parser_exception(std::move(excMsg), std::move(excLoc));
 }
 
 

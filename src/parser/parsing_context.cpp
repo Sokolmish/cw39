@@ -1,4 +1,5 @@
 #include "parsing_context.hpp"
+#include "utils.hpp"
 
 ParsingContext::ParsingContext(std::string topFileName)
         : warps(topFileName) {}
@@ -110,7 +111,7 @@ LinesWarpMap::LinesWarpMap(std::string newFile) {
 
 void LinesWarpMap::appendWarpLoc(int oldLine, int newLine, std::string const newFile) {
     if (oldLine <= ldata.back().oldLine)
-        throw;
+        throw cw39_internal_error("Warp loc can be appended only at the end");
     ldata.push_back(LineWarp{
             .oldLine = oldLine,
             .newLine = newLine,

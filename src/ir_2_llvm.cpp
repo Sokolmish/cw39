@@ -72,6 +72,10 @@ public:
     IR2LLVM_Impl(IR2LLVM_Impl const&) = delete;
     IR2LLVM_Impl& operator=(IR2LLVM_Impl const&) = delete;
 
+    class mat_exception : public cw39_exception {
+    public:
+        mat_exception(std::string msg) : cw39_exception("Materializer error", "", std::move(msg)) {}
+    };
 };
 
 using IR2LLVM_Impl = IR2LLVM::IR2LLVM_Impl;
@@ -169,7 +173,7 @@ Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
             case IR_TypeDirect::F64:
                 return builder->getDoubleTy();
         }
-        throw;
+        throw std::logic_error("Wrong direct type");
     }
     else if (ir_type.type == IR_Type::POINTER) {
         auto const &ptrType = dynamic_cast<IR_TypePtr const &>(ir_type);
@@ -199,13 +203,13 @@ Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
         return FunctionType::get(getType(*funType.ret), args, funType.isVariadic);
     }
     else {
-        generalError("Unknown type");
+        throw std::logic_error("Wrong ir type");
     }
 }
 
 Constant *IR2LLVM_Impl::getConstant(IRval const &val) {
     if (!val.isConstant())
-        generalError("LLVM Not a constant value");
+        throw mat_exception("Value is not constant");
     return dyn_cast<Constant>(getValue(val));
 }
 
@@ -223,7 +227,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
                     return ConstantFP::get(builder->getDoubleTy(), APFloat(val.castValTo<double>()));
             }
             else {
-                generalError("Wrong constant type");
+                throw mat_exception("Wrong constant type");
             }
         }
 
@@ -238,7 +242,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
             else if (val.getType()->type == IR_Type::ARRAY)
                 return ConstantArray::get(dyn_cast<ArrayType>(aggregateType), args);
             else
-                generalError("Wrong aggregate initializer type");
+                throw mat_exception("Wrong aggregate initializer type");
         }
 
         case IRval::FUN_PTR:
@@ -262,7 +266,7 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
         case IRval::ZEROINIT:
             return ConstantAggregateZero::get(getType(*val.getType()));
     }
-    throw;
+    throw std::logic_error("Wrong value type");
 }
 
 
@@ -368,18 +372,15 @@ void IR2LLVM_Impl::createBlock(IR_Block const &block) {
 
     for (auto const &node : block.body) {
         switch (node.body->type) {
-            case IR_Expr::OPERATION: {
+            case IR_Expr::OPERATION:
                 buildOperation(node);
                 break;
-            }
-            case IR_Expr::MEMORY: {
+            case IR_Expr::MEMORY:
                 buildMemOp(node);
                 break;
-            }
-            case IR_Expr::ACCESS: {
+            case IR_Expr::ACCESS:
                 buildAccessOp(node);
                 break;
-            }
             case IR_Expr::ALLOCATION: {
                 auto allocExpr = node.body->getAlloc();
                 std::string resName = node.res->to_reg_name();
@@ -387,25 +388,24 @@ void IR2LLVM_Impl::createBlock(IR_Block const &block) {
                 regsMap.emplace(*node.res, res);
                 break;
             }
-            case IR_Expr::CAST: {
+            case IR_Expr::CAST:
                 buildCast(node);
                 break;
-            }
-            case IR_Expr::CALL: {
+            case IR_Expr::CALL:
                 buildCall(node);
                 break;
-            }
+
             case IR_Expr::TERM:
-                generalError("LLVM Term node in general list");
+                throw mat_exception("Term node in general list");
             case IR_Expr::PHI:
-                generalError("LLVM phi node in general list");
+                throw mat_exception("Phi node in general list");
             default:
-                generalError("Wrong node type");
+                throw std::logic_error("Wrong node type");
         }
     }
 
     if (!block.termNode.has_value())
-        generalError("Unterminated block");
+        throw mat_exception("Unterminated block");
     IR_ExprTerminator const *termNode = block.getTerminator();
     // Branches and jumps are handled when blocks linking
     if (termNode->termType == IR_ExprTerminator::RET) {
@@ -430,7 +430,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFMul(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                generalError("Wrong mul types");
+                throw mat_exception("Wrong mul types");
             break;
 
         case IR_ExprOper::DIV:
@@ -443,7 +443,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFDiv(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                generalError("Wrong div types");
+                throw mat_exception("Wrong div types");
             break;
 
         case IR_ExprOper::REM:
@@ -456,7 +456,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFRem(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                generalError("Wrong div types");
+                throw mat_exception("Wrong div types");
             break;
 
         case IR_ExprOper::ADD:
@@ -465,7 +465,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFAdd(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                generalError("Wrong add types");
+                throw mat_exception("Wrong add types");
             break;
 
         case IR_ExprOper::SUB:
@@ -474,7 +474,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             else if (dirType->isFloat())
                 res = builder->CreateFSub(getValue(oper.args[0]), getValue(oper.args[1]), name);
             else
-                generalError("Wrong sub types");
+                throw mat_exception("Wrong sub types");
             break;
 
         case IR_ExprOper::SHR:
@@ -549,7 +549,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             break;
 
         default:
-            generalError("Wrong op value");
+            throw std::logic_error("Wrong op value");
     }
     regsMap.emplace(*node.res, res);
 }
@@ -569,7 +569,7 @@ void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
             break;
         }
         default:
-            generalError("Wrong op value");
+            throw std::logic_error("Wrong op value");
     }
 }
 
@@ -593,7 +593,7 @@ void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
         indices.reserve(acc.indices.size());
         for (auto const &ind : acc.indices) {
             if (ind.getValueClass() != IRval::VAL)
-                generalError("Non constant argument of EXTRACT/INSERT");
+                throw mat_exception("Non constant argument of EXTRACT/INSERT");
             indices.push_back(ind.castValTo<uint32_t>());
         }
 
@@ -605,7 +605,7 @@ void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
         regsMap.emplace(*node.res, res);
     }
     else {
-        generalError("Wrong access op type");
+        throw std::logic_error("Wrong access op type");
     }
 }
 
@@ -636,7 +636,7 @@ static auto getCastOp(IR_ExprCast::CastType op) {
         case IR_ExprCast::FPEXT:
             return &IRBuilder<>::CreateFPExt;
     }
-    generalError("Wrong cast type");
+    throw std::logic_error("Wrong cast type");
 }
 
 void IR2LLVM_Impl::buildCast(IR_Node const &node) {

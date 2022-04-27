@@ -30,12 +30,12 @@ static void writeOut(std::string const &path, std::string const &data) {
 
 enum class CompilationLevel {
     NONE = 0,
-    PREPROCESS,
-    PARSE,
-    GENERATE,
-    OPTIMIZE,
-    MATERIALIZE,
-    EXTERNAL,
+    PREPROCESS,     // files -> text
+    PARSE,          // text -> ast
+    GENERATE,       // ast -> ir
+    OPTIMIZE,       // ir -> opt ir
+    MATERIALIZE,    // opt ir -> llvm
+    SPECIALIZE,     // llvm -> asm
 };
 
 static CompilationLevel getCompilationLvl(CLIArgs const &args) {
@@ -63,17 +63,15 @@ static void optimizeFunction(IntermediateUnit::Function &func) {
     func.cfg = std::move(cfg);
 }
 
-int main(int argc, char **argv) {
-    CLIArgs args(argc, argv);
-
+static void process(CLIArgs  &args) {
     auto compilationLvl = getCompilationLvl(args);
     if (compilationLvl == CompilationLevel::NONE)
-        return 0;
+        return;
 
     if (args.inputFiles().empty())
-        generalError("No input files");
+        throw cw39_error("No input files");
     if (args.inputFiles().size() > 1)
-        generalError("Cannot compile more than 1 file");
+        throw cw39_error("Cannot compile more than 1 file");
     std::string path = args.inputFiles()[0];
 
     Preprocessor preproc(path);
@@ -85,7 +83,7 @@ int main(int argc, char **argv) {
     }
 
     if (compilationLvl <= CompilationLevel::PREPROCESS)
-        return 0;
+        return;
 
     auto parser = std::make_unique<CoreDriver>(*ctx, text);
     auto ast = parser->getTransUnit();
@@ -96,7 +94,7 @@ int main(int argc, char **argv) {
     }
 
     if (compilationLvl <= CompilationLevel::PARSE)
-        return 0;
+        return;
 
     auto gen = std::make_unique<IR_Generator>(*parser, *ctx);
     auto rawUnit = gen->getIR();
@@ -106,7 +104,7 @@ int main(int argc, char **argv) {
         writeOut(*args.outRawCFG(), rawUnit->drawCFG());
 
     if (compilationLvl <= CompilationLevel::GENERATE)
-        return 0;
+        return;
 
     IntermediateUnit optUnit = *rawUnit;
     for (auto &[fId, func] : optUnit.getFuncsMut()) {
@@ -119,7 +117,7 @@ int main(int argc, char **argv) {
         writeOut(*args.outCFG(), optUnit.drawCFG());
 
     if (compilationLvl <= CompilationLevel::OPTIMIZE)
-        return 0;
+        return;
 
     IR2LLVM materializer(optUnit);
     if (args.outLLVM()) {
@@ -129,5 +127,14 @@ int main(int argc, char **argv) {
     if (compilationLvl <= CompilationLevel::MATERIALIZE)
         return 0;
 
-    return 0;
+int main(int argc, char **argv) {
+    CLIArgs args(argc, argv);
+    try {
+        process(args);
+    }
+    catch (cw39_exception &exc) {
+        std::cerr << exc.prettyWhat();
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }

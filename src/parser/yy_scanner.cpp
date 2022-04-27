@@ -1821,19 +1821,18 @@ YY_RULE_SETUP
                         yytext[0], yytext[0]);
                     msg[sizeof(msg) - 1] = 0;
                     drv.lexer_error(msg);
-                    exit(EXIT_FAILURE);
                 }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 156 "lexer.l"
-return yy::parser::make_YYEOF (loc);
+#line 155 "lexer.l"
+return yy::parser::make_YYEOF(loc);
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 158 "lexer.l"
+#line 157 "lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1836 "yy_scanner.cpp"
+#line 1835 "yy_scanner.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3104,7 +3103,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 /* %ok-for-header */
 
-#line 158 "lexer.l"
+#line 157 "lexer.l"
 
 
 void CoreDriver::scan_begin() {

@@ -52,7 +52,7 @@ IntermediateUnit::Function& IntermediateUnit::getFunction(int id) {
     auto pIt = prototypes.find(id);
     if (pIt != prototypes.end())
         return pIt->second;
-    throw std::out_of_range("No functions with given id");
+    throw cw39_internal_error("No functions with given id");
 }
 
 IntermediateUnit::Function const& IntermediateUnit::getFunction(int id) const {
@@ -62,7 +62,7 @@ IntermediateUnit::Function const& IntermediateUnit::getFunction(int id) const {
     auto pIt = prototypes.find(id);
     if (pIt != prototypes.end())
         return pIt->second;
-    throw std::out_of_range("No functions with given id");
+    throw cw39_internal_error("No functions with given id");
 }
 
 IRval IntermediateUnit::createReg(std::shared_ptr<IR_Type> type) {
@@ -163,7 +163,7 @@ void IntermediateUnit::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) 
         fmt::print(ss, ")");
     }
     else { // TODO: PHI and term
-        throw;
+        throw cw39_not_implemented("Printing phi-functions and terminators");
     }
 }
 

@@ -18,7 +18,7 @@ std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec
     for (auto const &structDecl : spec.body->children) {
         for (auto const &singleDecl : structDecl->child->children) {
             if (singleDecl->bitwidth)
-                NOT_IMPLEMENTED("Bitwidth");
+                throw cw39_not_implemented("Bitwidth");
             auto fieldType = getType(*structDecl->type, *singleDecl->declarator);
             string_id_t fieldName = getDeclaredIdent(*singleDecl->declarator);
             fields.emplace_back(fieldName, fieldType, curIndex);
@@ -34,7 +34,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
     using ast_ts = AST_TypeSpecifier;
 
     if (spec.empty()) {
-        internalError("Empty AST_DeclSpecifiers");
+        throw cw39_internal_error("Empty AST_DeclSpecifiers");
     }
 
     if (spec[0]->spec_type == ast_ts::T_UNISTRUCT) {
@@ -42,16 +42,16 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
             semanticError(spec[0]->loc, "Struct specifier must be the only specifier");
         auto const &structSpec = dynamic_cast<AST_UStructSpec const &>(*spec[0]->v);
         if (structSpec.is_union)
-            NOT_IMPLEMENTED("Unions");
+            throw cw39_not_implemented("Unions");
         return getStructType(structSpec);
     }
     else if (spec[0]->spec_type == ast_ts::T_ENUM) {
         if (spec.size() != 1)
             semanticError(spec[0]->loc, "Enum specifier must be the only specifier");
-        NOT_IMPLEMENTED("Enums");
+        throw cw39_not_implemented("Enums");
     }
     else if (spec[0]->spec_type == ast_ts::T_NAMED) {
-        NOT_IMPLEMENTED("Named types");
+        throw cw39_not_implemented("Named types");
     }
 
     if (spec[0]->spec_type == ast_ts::T_VOID) {
@@ -129,7 +129,7 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
             resType = IR_TypeDirect::F64;
     }
     else {
-        internalError("Wrong type");
+        throw std::logic_error("Wrong type");
     }
 
     return std::make_shared<IR_TypeDirect>(resType);
@@ -163,7 +163,7 @@ std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *dec
     else {
         static_assert(! std::is_same<DeclaratorType, DeclaratorType>(),
                       "Something went wrong with codegeneration");
-        throw; // Just in case
+        throw cw39_internal_error("Something went wrong with codegeneration");
     }
 }
 
@@ -202,7 +202,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirType(AST_DirDeclarator const &decl,
         }
     }
     else {
-        internalError("Unknown direct declarator type");
+        throw std::logic_error("Unknown direct declarator type");
     }
 }
 
@@ -240,7 +240,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirAbstrType(AST_DirAbstrDeclarator co
             return getDirAbstrType(&decl->getBaseDirectDecl(), func);
         }
     }
-    internalError("Unknown direct abstract declarator type");
+    throw std::logic_error("Unknown direct abstract declarator type");
 }
 
 std::shared_ptr<IR_Type> IR_Generator::getType(AST_DeclSpecifiers const &spec, AST_Declarator const &decl) {
@@ -266,7 +266,7 @@ string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirDeclarator const &decl) 
         return getDeclaredIdentDirect(decl.getBaseDirectDecl());
     }
     else {
-        internalError("Wrong direct declarator type");
+        throw std::logic_error("Wrong direct declarator type");
     }
 }
 
@@ -315,6 +315,6 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
         return std::make_shared<IR_TypeDirect>(IR_TypeDirect::I8);
     }
     else {
-        internalError("Wrong literal type");
+        throw std::logic_error("Wrong literal type");
     }
 }

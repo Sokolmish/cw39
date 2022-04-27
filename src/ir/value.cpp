@@ -61,7 +61,7 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
         return IRval(IRval::VAL, std::move(type), static_cast<uint64_t>(0));
 
     if (type->type != IR_Type::DIRECT)
-        generalError("Cannot create default value for such type");
+        throw cw39_error("Cannot create default value for such type");
     auto spec = dynamic_cast<IR_TypeDirect &>(*type).spec;
 
     switch (spec) {
@@ -84,9 +84,9 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
         case IR_TypeDirect::F64:
             return IRval(IRval::VAL, std::move(type), static_cast<double>(0));
         case IR_TypeDirect::VOID:
-            generalError("Cannot create value of type VOID");
+            throw cw39_error("Cannot create value of type VOID");
     }
-    throw;
+    throw std::logic_error("Wrong direct value spec");
 }
 
 
@@ -161,7 +161,7 @@ std::string IRval::to_string() const {
             return ss.str();
         }
     }
-    internalError("Invalid type of IRval");
+    throw cw39_internal_error("Invalid type of IRval");
 }
 
 std::string IRval::to_reg_name() const {

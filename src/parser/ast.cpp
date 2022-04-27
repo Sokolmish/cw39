@@ -1,4 +1,5 @@
 #include "ast.hpp"
+#include "core_driver.hpp"
 #include <memory>
 #include <string>
 #include <fmt/core.h>
@@ -89,7 +90,7 @@ TreeNodeRef AST_Primary::getTreeNode() const {
         return std::get<std::unique_ptr<AST_StringsSeq>>(v)->getTreeNode();
     }
     else if (type == AST_Primary::COMPOUND) {
-        throw; // TODO: NOT IMPLEMENTED
+        throw cw39_not_implemented("Printing compound literals"); // TODO
     }
     else {
         std::string str;
@@ -364,8 +365,7 @@ static void update_type_qualifiers(AST_TypeQuals &list, AST_TypeQuals::QualType 
             list.is_volatile = true;
             return;
         default:
-            fmt::print(stderr, "Wrong qualifier: {}\n", qual);
-            throw;
+            throw std::logic_error(fmt::format("Wrong type qualifier: {}", qual));
     }
 }
 
@@ -424,10 +424,8 @@ AST_DeclSpecifiers::AST_DeclSpecifiers()
     : AST_Node(AST_DECL_SPECIFIERS), type_qualifiers(new AST_TypeQuals()) {}
 
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_storage(ast_enum_t val) {
-    if (storage_specifier != ST_NONE || val == ST_NONE) {
-        fmt::print(stderr, "Wrong storage specifier: {}\n", storage_specifier);
-        throw;
-    }
+    if (storage_specifier != ST_NONE || val == ST_NONE)
+        throw std::logic_error(fmt::format("Wrong storage specifier: {}", storage_specifier));
     storage_specifier = StorageSpec(val);
     return this;
 }
@@ -445,10 +443,8 @@ AST_DeclSpecifiers* AST_DeclSpecifiers::update_type_qual(ast_enum_t val) {
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_func_qual(ast_enum_t val) {
     if (val == AST_DeclSpecifiers::Q_INLINE)
         is_inline = true;
-    else {
-        fmt::print(stderr, "Wrong storage specifier: {}\n", storage_specifier);
-        throw;
-    }
+    else
+        throw std::logic_error(fmt::format("Wrong function qualifier: {}", val));
     return this;
 }
 
@@ -745,8 +741,7 @@ TreeNodeRef AST_DirDeclarator::getTreeNode() const {
         return node;
     }
     else {
-        fmt::print(stderr, "Wrong direct declarator type: {}\n", type);
-        throw;
+        throw std::logic_error(fmt::format("Wrong direct declarator type: {}", type));
     }
 }
 
@@ -902,8 +897,7 @@ TreeNodeRef AST_DirAbstrDeclarator::getTreeNode() const {
         return node;
     }
     else {
-        fmt::print(stderr, "Wrong direct abstract declarator type: {}\n", type);
-        throw;
+        throw std::logic_error(fmt::format("Wrong direct abstract declarator type: {}", type));
     }
 }
 
@@ -1032,18 +1026,18 @@ AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Stmt *stmt, LabelType type
     : AST_Stmt(AST_Stmt::LABEL), label(uniqify(label)), child(stmt), type(type)
 {
     if (type == AST_LabeledStmt::SIMPL)
-        throw std::runtime_error("Wrong type for simple label");
+        throw parser_exception("Wrong type for simple label", "");
     else if (type == AST_LabeledStmt::SW_CASE && !label)
-        throw std::runtime_error("'case' label without argument");
+        throw parser_exception("'case' label without argument", "");
     else if (type == AST_LabeledStmt::SW_DEFAULT && label)
-        throw std::runtime_error("'default' label with argument");
+        throw parser_exception("'default' label with argument", "");
 }
 
 AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Stmt *stmt, LabelType type)
     : AST_Stmt(AST_Stmt::LABEL), label(label), child(stmt), type(type)
 {
     if (type != AST_LabeledStmt::SIMPL)
-        throw std::runtime_error("Wrong type for switch label");
+        throw parser_exception("Wrong type for switch label", "");
 }
 
 TreeNodeRef AST_LabeledStmt::getTreeNode() const {

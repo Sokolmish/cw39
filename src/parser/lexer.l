@@ -149,10 +149,9 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
                         yytext[0], yytext[0]);
                     msg[sizeof(msg) - 1] = 0;
                     drv.lexer_error(msg);
-                    exit(EXIT_FAILURE);
                 }
 
-<<EOF>>         return yy::parser::make_YYEOF (loc);
+<<EOF>>         return yy::parser::make_YYEOF(loc);
 
 %%
 

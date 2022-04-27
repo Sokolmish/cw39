@@ -7,12 +7,8 @@ IR_Generator::IR_Generator(CoreDriver &parser, ParsingContext &ctx) : ctx(ctx) {
 }
 
 
-void IR_Generator::semanticError(yy::location loc, const std::string &msg) {
-    auto true_loc = ctx.warps.getLoc(loc.begin.line);
-    std::string filename = ctx.warps.getFilename(true_loc.filenum);
-    fmt::print(stderr, "Semantic error ({}:{}:{}):\n\t{}\n",
-               filename, true_loc.line, loc.begin.column, msg);
-    exit(EXIT_FAILURE);
+void IR_Generator::semanticError(yy::location loc, std::string msg) {
+    throw semantic_exception(ctx, loc, std::move(msg));
 }
 
 
@@ -173,7 +169,7 @@ void IR_Generator::genTransUnit(CoreDriver &parser) {
         else if (top_instr->node_type == AST_DECLARATION)
             insertGlobalDeclaration(dynamic_cast<AST_Declaration const &>(*top_instr));
         else
-            internalError("Wrong top-level instruction");
+            throw std::logic_error("Wrong top-level instruction");
     }
 }
 
@@ -232,7 +228,7 @@ static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec co
         case AST_DeclSpecifiers::ST_REGISTER:
             return IR_StorageSpecifier::REGISTER;
         default:
-            internalError("Wrong storage specifier");
+            throw std::logic_error("Wrong storage specifier");
     }
 }
 
@@ -298,7 +294,7 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
         else if (elem->node_type == AST_STATEMENT)
             insertStatement(dynamic_cast<AST_Stmt const &>(*elem));
         else
-            internalError("Wrong node in compound statement");
+            throw std::logic_error("Wrong node in compound statement");
 
         // Ureachable code
         if (selectedBlock == nullptr) {
@@ -381,7 +377,7 @@ void IR_Generator::insertStatement(const AST_Stmt &stmt) {
     else if (stmt.type == AST_Stmt::LABEL)
         insertLabeledStatement(static_cast<AST_LabeledStmt const &>(stmt));
     else
-        internalError("Wrong statement type");
+        throw std::logic_error("Wrong statement type");
 }
 
 void IR_Generator::insertIfStatement(const AST_SelectionStmt &stmt) {
@@ -518,7 +514,7 @@ void IR_Generator::insertLoopStatement(const AST_IterStmt &stmt) {
         else if (preAction.node_type == AST_DECLARATION)
             insertDeclaration(dynamic_cast<AST_Declaration const &>(preAction));
         else
-            internalError("Wrong for-loop pre action type");
+            throw std::logic_error("Wrong for-loop pre action type");
     }
 
     // Make jump to condition
@@ -628,7 +624,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         deselectBlock();
     }
     else {
-        internalError("Wrong jump statement");
+        throw std::logic_error("Wrong jump statement");
     }
 }
 
@@ -687,8 +683,19 @@ void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
         nearestSwitch->defaultBlock = curBlock().id;
     }
     else {
-        internalError("Wrong label type");
+        throw std::logic_error("Wrong label type");
     }
 
     insertStatement(*stmt.child);
+}
+
+
+IR_Generator::semantic_exception::semantic_exception(ParsingContext &ctx, yy::location const &loc,
+                                                     std::string msg)
+        : cw39_exception("Semantic error", formLoc(ctx, loc), std::move(msg)) {}
+
+std::string IR_Generator::semantic_exception::formLoc(ParsingContext &ctx_, yy::location const &loc) const {
+    auto trueLoc = ctx_.warps.getLoc(loc.begin.line);
+    std::string filename = ctx_.warps.getFilename(trueLoc.filenum);
+    return fmt::format("{}:{}:{}", filename, trueLoc.line, loc.begin.column);
 }

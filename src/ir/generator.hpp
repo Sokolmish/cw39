@@ -101,8 +101,6 @@ private:
     IRval emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> indices);
     IRval emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices);
 
-    [[noreturn]] void semanticError(yy::location loc, std::string const &msg);
-
     // Control generator
 
     void genTransUnit(CoreDriver &parser);
@@ -167,6 +165,18 @@ private:
     string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArgs(AST_Declarator const &decl);
+
+    // Errors
+
+    [[noreturn]] void semanticError(yy::location loc, std::string msg);
+
+    class semantic_exception : public cw39_exception {
+    public:
+        semantic_exception(ParsingContext &ctx, yy::location const &loc, std::string msg);
+
+    private:
+        std::string formLoc(ParsingContext &ctx, yy::location const &loc) const;
+    };
 };
 
 #endif /* GENERATOR_HPP_INCLUDED__ */

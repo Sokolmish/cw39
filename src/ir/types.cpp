@@ -52,7 +52,7 @@ int IR_TypeDirect::getBytesSize() const {
         case F64:
             return 8;
     }
-    throw;
+    throw std::logic_error("Wrong direct type");
 }
 
 bool IR_TypeDirect::equal(const IR_Type &rhs) const {
@@ -104,7 +104,7 @@ std::shared_ptr<IR_Type> IR_TypeDirect::getCommonDirType(std::shared_ptr<IR_Type
                 newType.spec = isUnsigned ? U64 : I64;
                 break;
             default:
-                internalError(fmt::format("Wrong type size: {} ({},1)", newSize, __func__));
+                throw cw39_internal_error(fmt::format("Wrong type size: {}", newSize));
         }
         return newRawType;
     }
@@ -134,7 +134,7 @@ std::shared_ptr<IR_Type> IR_TypeDirect::getCommonDirType(std::shared_ptr<IR_Type
                     newType.spec = U64;
                     break;
                 default:
-                    internalError(fmt::format("Wrong type size: {} ({},2)", aDir.getBytesSize(), __func__));
+                    throw cw39_internal_error(fmt::format("Wrong type size: {}", aDir.getBytesSize()));
             }
             return newRawType;
         }
@@ -164,7 +164,7 @@ std::string IR_TypeDirect::to_string() const {
         case IR_TypeDirect::VOID:
             return "void";
     }
-    throw;
+    throw std::logic_error("Wrong direct type");
 }
 
 

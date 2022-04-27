@@ -4,14 +4,20 @@
 #include <string>
 #include <map>
 #include <memory>
-
 #include "yy_parser.hpp"
 #include "parsing_context.hpp"
+#include "utils.hpp"
 
 using yyscan_t = void*;
 
 #define YY_DECL yy::parser::symbol_type yycore_lex(yyscan_t yyscanner, CoreDriver& drv)
 YY_DECL;
+
+class parser_exception : public cw39_exception {
+public:
+    parser_exception(std::string msg, std::string loc) // TODO: location ewerywhere
+            : cw39_exception("Parser error", std::move(loc), std::move(msg)) {}
+};
 
 class CoreDriver {
 public:
@@ -22,7 +28,7 @@ public:
 private:
     void scan_begin();
     void scan_end();
-    void lexer_error(const char *msg);
+    [[noreturn]] void lexer_error(const char *msg);
 
     void parse();
 

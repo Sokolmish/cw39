@@ -1,7 +1,7 @@
 #include "constants_folder.hpp"
 #include "utils.hpp"
 
-std::optional<IRval> ConstantsFolder::foldExpr(const IR_Expr &expr) {
+std::optional<IRval> ConstantsFolder::foldExpr(IR_Expr const &expr) {
     switch (expr.type) {
         case IR_Expr::OPERATION:
             return foldOper(dynamic_cast<IR_ExprOper const &>(expr));
@@ -18,7 +18,7 @@ std::optional<IRval> ConstantsFolder::foldExpr(const IR_Expr &expr) {
             return {};
 
         default:
-            internalError("Wrong IR expression type");
+            throw std::logic_error("Wrong IR expression type");
     }
 }
 
@@ -43,7 +43,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
                 case IR_ExprOper::DIV:
                     return IRval::createVal(expr.args[0].getType(), l / r);
                 default:
-                    internalError("Wrong general arithmetic operation");
+                    throw cw39_internal_error("Wrong general arithmetic operation");
             }
         }, expr.args[0].getVal());
     }
@@ -69,7 +69,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
                 case IR_ExprOper::LE:
                     return IRval::createVal(IR_TypeDirect::getI1(), static_cast<int8_t>(l <= r));
                 default:
-                    internalError("Wrong comparsion operation");
+                    throw cw39_internal_error("Wrong comparsion operation");
             }
         }, expr.args[0].getVal());
     }
@@ -94,7 +94,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
                 case IR_ExprOper::OR:
                     return IRval::createVal(expr.args[0].getType(), l | r);
                 default:
-                    internalError("Wrong integer operation");
+                    throw cw39_internal_error("Wrong integer operation");
             }
         }, intVariant);
     }
@@ -152,15 +152,15 @@ std::optional<IRval> ConstantsFolder::foldCast(const IR_ExprCast &expr) {
             return IRval::createVal(IR_TypeDirect::getF64(), expr.arg.castValTo<double>());
 
         case IR_TypeDirect::VOID:
-            internalError("Cast to void is prohibited");
+            throw cw39_internal_error("Cast to void is prohibited"); // ???
         default:
-            internalError("Wrong direct type");
+            throw std::logic_error("Wrong direct type");
     }
 }
 
 std::optional<IRval> ConstantsFolder::foldPhi(const IR_ExprPhi &expr) {
     if (expr.args.empty())
-        internalError("Empty phi");
+        throw cw39_internal_error("Empty phi function");
 
     IRval const &common = expr.args.at(0);
     for (auto const &[pos, arg] : expr.args) {

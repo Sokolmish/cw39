@@ -215,7 +215,7 @@ std::string GraphInfo::drawArcsClasses() const {
                 fstr = "{}->{}[style=\"dashed,bold\",color=darkgreen,constraint=false]; ";
                 break;
             default:
-                internalError("Smth went wrong");
+                throw cw39_internal_error("Wrong arc class");
         }
         fmt::print(ss, fstr, arc.first, arc.second);
     }

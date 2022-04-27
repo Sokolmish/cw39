@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cctype>
 #include "yy_parser.hpp"
+#include "core_driver.hpp"
 
 static char unescapeChar(char ch) {
     // TODO: '\xhh'
@@ -41,7 +42,7 @@ void check_typedef(AST_Declaration *decl) {
 
 AST_TypeName* get_def_type(string_id_t id) {
     (void)id;
-    throw; // TODO
+    throw cw39_not_implemented("Typedef"); // TODO
 }
 
 
@@ -88,10 +89,8 @@ AST_Literal_t get_integer(const char *str) {
             res.longCnt = 1;
         else if (sf == IntSuff::LL && !res.longCnt)
             res.longCnt = 2;
-        else {
-            fprintf(stderr, "Bad integer suffix: %s\n", suff);
-            exit(EXIT_FAILURE); // TODO: error
-        }
+        else
+            throw parser_exception(fmt::format("Bad integer suffix: {}", suff), "");
     }
 
     // TODO: overflow
@@ -120,30 +119,25 @@ AST_Literal_t get_float(const char *str, size_t len) {
         .val = { 0ULL },
     };
 
-    char *tmpStr = strdup(str);
-
+    std::string tmpStr(str);
     if (tolower(tmpStr[len - 1]) == 'f') {
         res.isFloat = 1;
-        tmpStr[len - 1] = '\0';
+        tmpStr.pop_back();
+//        tmpStr[len - 1] = '\0';
     }
     else if (tolower(tmpStr[len - 1]) == 'l') {
-        free(tmpStr);
-        fprintf(stderr, "Long double is not implemented\n");
-        exit(EXIT_FAILURE); // TODO: error
+        throw parser_exception("Long double is not supported", "");
     }
 
-    char *endptr;
+    char *endptr = nullptr;
     if (res.isFloat)
-        res.val.vf32 = strtof(tmpStr, &endptr);
+        res.val.vf32 = strtof(tmpStr.c_str(), &endptr);
     else
-        res.val.vf64 = strtod(tmpStr, &endptr);
+        res.val.vf64 = strtod(tmpStr.c_str(), &endptr);
     if (*endptr != '\0') {
-        free(tmpStr);
-        fprintf(stderr, "Wrong floating-point literal\n");
-        exit(EXIT_FAILURE); // TODO: error
+        throw parser_exception(fmt::format("Wrong floating-point literal: '{}'", tmpStr), "");
     }
 
-    free(tmpStr);
     return res;
 }
 
@@ -160,10 +154,8 @@ AST_Literal_t get_charval(const char *str, size_t len) {
         res.val.v_char = str[1];
     }
     else {
-        if (str[1] != '\\' || len != 4) {
-            fprintf(stderr, "Wrong character literal\n");
-            exit(EXIT_FAILURE); // TODO: error
-        }
+        if (str[1] != '\\' || len != 4)
+            throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
         res.val.v_char = unescapeChar(str[2]);
     }
 

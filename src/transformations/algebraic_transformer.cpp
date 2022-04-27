@@ -80,7 +80,7 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
             changed = true;
         }
         else if (isConstEqual(oper.args[1], 0ULL)) {
-            generalError("Division by zero");
+            throw cw39_error("Division by zero");
         }
     }
 

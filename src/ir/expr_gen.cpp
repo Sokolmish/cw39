@@ -150,7 +150,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
 //
 //                curBlock().addNode(IR_Node(std::make_unique<IR_ExprOper>(
 //                        IR_ExprOper::INSERT, std::vector<IRval>{ base, index, wrValue })));
-                internalError("Something went wrong");
+                throw cw39_internal_error("Something went wrong");
             }
             else if (base.getType()->type == IR_Type::POINTER) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
@@ -225,7 +225,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             case AST_Binop::DIV:
                 return emitOp(lhs.getType(), IR_ExprOper::DIV, { lhs, rhs });
             default:
-                internalError("Wrong general arithmetic operation");
+                throw cw39_internal_error("Wrong general arithmetic operation");
         }
     }
     else if (isIntegerNumOp(op)) {
@@ -246,7 +246,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             case AST_Binop::BIT_OR:
                 return emitOp(lhs.getType(), IR_ExprOper::OR, { lhs, rhs });
             default:
-                internalError("Wrong general arithmetic operation");
+                throw cw39_internal_error("Wrong general arithmetic operation");
         }
     }
     else if (isComparsionOp(op)) {
@@ -268,11 +268,11 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             case AST_Binop::LOG_OR:
                 return emitOp(IR_TypeDirect::getI1(), IR_ExprOper::LOR, { lhs, rhs });
             default:
-                internalError("Wrong comparsion operation");
+                throw cw39_internal_error("Wrong comparsion operation");
         }
     }
     else {
-        internalError("Wrong binary operation");
+        throw cw39_internal_error("Wrong binary operation");
     }
 }
 
@@ -280,7 +280,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
 IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right,
                                    yy::location loc) {
     if (op != AST_Binop::LOG_AND && op != AST_Binop::LOG_OR)
-        internalError("Wrong short-logic operation");
+        throw cw39_internal_error("Wrong short-logic operation");
 
     IRval lhs = evalExpr(left);
 
@@ -487,7 +487,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             return evalAssignmentExpr(static_cast<AST_Assignment const &>(node));
 
         case AST_TERNARY:
-            NOT_IMPLEMENTED("ternary");
+            throw cw39_not_implemented("Ternary operator");
 
         case AST_BINOP:
             return evalBinopExpr(static_cast<AST_Binop const &>(node));
@@ -505,7 +505,7 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
             return evalPrimaryExpr(static_cast<AST_Primary const &>(node));
 
         default:
-            internalError("Wrong node type in expression");
+            throw cw39_internal_error("Wrong node type in expression");
     }
 }
 
@@ -523,7 +523,7 @@ IRval IR_Generator::evalAssignmentExpr(AST_Assignment const &expr) {
         IRval lhsVal = evalExpr(*expr.lhs);
         auto binOp = expr.toBinop();
         if (!binOp.has_value())
-            internalError("Wrong assignment type");
+            throw std::logic_error("Wrong assignment type");
         rhsVal = doBinOp(binOp.value(), lhsVal, rhsVal, expr.loc);
     }
     doAssignment(*expr.lhs, rhsVal);
@@ -555,7 +555,7 @@ IRval IR_Generator::evalUnopExpr(AST_Unop const &expr) {
                 return IRval::createVal(IR_TypeDirect::getU64(), bytesSize);
             }
             else {
-                NOT_IMPLEMENTED("Sizeof expression");
+                throw cw39_not_implemented("Sizeof expression");
             }
         }
 
@@ -609,7 +609,7 @@ IRval IR_Generator::evalUnopExpr(AST_Unop const &expr) {
         }
 
         default: {
-            internalError("Unknown unary operator");
+            throw std::logic_error("Wrong unary operator");
         }
     }
 }
@@ -644,7 +644,7 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
             else if (array.getType()->type == IR_Type::ARRAY) {
                 // At generation stage one can't get array value directly
                 // Pointers to first array's element can be eleminated at opt stage
-                internalError("Something went wrong");
+                throw cw39_internal_error("Something went wrong");
             }
             else {
                 semanticError(expr.base->loc, "Indexation cannot be performed on non-array type");
@@ -687,7 +687,7 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
         }
 
         default: {
-            internalError("Wrong postfix expression");
+            throw std::logic_error("Wrong postfix expression");
         }
     }
 }
@@ -749,7 +749,7 @@ IRval IR_Generator::evalPrimaryExpr(AST_Primary const &expr) {
         }
 
         default: {
-            internalError("Wrong primary expr type");
+            throw std::logic_error("Wrong primary expr type");
         }
     }
 }
@@ -786,7 +786,7 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
         }
 
         default: {
-            internalError("Wrong literal type");
+            throw std::logic_error("Wrong literal type");
         }
     }
 }
@@ -805,14 +805,14 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
     }
     else {
         // TODO: Compound with single value
-        NOT_IMPLEMENTED("Compound initializer for non-aggregate type");
+        throw cw39_not_implemented("Compound initializer for non-aggregate type");
     }
 
     std::vector<IRval> aggrVals;
     size_t elemNum = 0;
     for (auto const &[val, designator] : lst.children) {
         if (designator) {
-            NOT_IMPLEMENTED("designators");
+            throw cw39_not_implemented("Designators");
         }
 
         auto elemOpt = evalConstantExpr(val->getExpr());
@@ -837,13 +837,13 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
                 }
             }
             else {
-                internalError("Compound initializer for non-aggregate type");
+                throw cw39_internal_error("Compound initializer for non-aggregate type");
             }
 
             aggrVals.emplace_back(std::move(elemVal));
         }
         else {
-            NOT_IMPLEMENTED("nested compound initializers");
+            throw cw39_not_implemented("nested compound initializers");
         }
 
         elemNum++;
@@ -864,7 +864,7 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
         }
     }
     else {
-        internalError("Compound initializer for non-aggregate type");
+        throw cw39_internal_error("Compound initializer for non-aggregate type");
     }
 
     return IRval::createAggregate(type, std::move(aggrVals));

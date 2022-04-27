@@ -139,7 +139,7 @@ void CfgCleaner::removeTransitBlocks() {
         if (block.body.empty() && block.phis.empty()) {
             if (block.getTerminator()->termType == IR_ExprTerminator::JUMP) {
                 if (block.next.size() != 1)
-                    internalError("JUMP node with more than 1 successors");
+                    throw cw39_internal_error("JUMP node with more than 1 successors");
 
                 if (block.prev.size() != 1) // Concentrating block
                     continue;

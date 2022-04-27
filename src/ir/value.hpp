@@ -4,6 +4,7 @@
 #include <memory>
 #include <variant>
 #include "types.hpp"
+#include "utils.hpp"
 
 class IRval {
 public:
@@ -50,7 +51,7 @@ public:
     template <class T>
     T castValTo() const {
         if (valClass == IRval::AGGREGATE)
-            throw std::runtime_error("Cannot cast aggregate value");
+            throw cw39_internal_error("Cannot cast aggregate value");
         return std::visit([](auto const &arg) -> T {
             return static_cast<T>(arg);
         }, val);

@@ -6,6 +6,7 @@
 #include <fmt/ostream.h>
 #include <fmt/core.h>
 #include <fmt/chrono.h>
+#include <utils.hpp>
 
 #include "directives_hashtable.cpp"
 
@@ -74,6 +75,16 @@ private:
 
     [[noreturn]] void printError(std::string const &msg);
     void printWarn(std::string const &msg);
+
+
+    class pc_exception : public cw39_exception {
+    public:
+        pc_exception(std::string msg);
+        pc_exception(Location const &loc, std::string msg);
+
+    private:
+        std::string formLoc(Location const &loc);
+    };
 };
 
 
@@ -86,15 +97,23 @@ PreprocessorImpl::PreprocessorImpl(Preprocessor &parent, std::string const &path
     par.finalText = globalSS.str();
 }
 
+
+PreprocessorImpl::pc_exception::pc_exception(std::string msg)
+        : cw39_exception("Preprocessor error", "", std::move(msg)) {}
+
+PreprocessorImpl::pc_exception::pc_exception(Location const &loc, std::string msg)
+        : cw39_exception("Preprocessor error", formLoc(loc), std::move(msg)) {}
+
+std::string PreprocessorImpl::pc_exception::formLoc(const PreprocessorImpl::Location &loc) {
+    return fmt::format("{}:{}", loc.file, loc.line);
+}
+
+
 void PreprocessorImpl::printError(std::string const &msg) {
-    if (!locations.empty()) {
-        auto const &loc = locations.top();
-        fmt::print(stderr, "Error ({}:{}): {}\n", loc.file, loc.line, msg);
-    }
-    else {
-        fmt::print(stderr, "Error: {}\n", msg);
-    }
-    exit(EXIT_FAILURE);
+    if (!locations.empty())
+        throw pc_exception(locations.top(), msg);
+    else
+        throw pc_exception(msg);
 }
 
 void PreprocessorImpl::printWarn(std::string const &msg) {

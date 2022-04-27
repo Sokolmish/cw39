@@ -9,24 +9,40 @@
 #include <fmt/core.h>
 #include <exception>
 
+#include <source_location>
+#include <experimental/source_location> // Because of CLion bug
 
-// TODO: use source_location
+class cw39_exception : public std::exception {
+public:
+    cw39_exception(std::string excClass, std::string loc, std::string msg);
+    const char* what() const noexcept override;
+    std::string prettyWhat() const;
 
-[[noreturn]] inline void internalError(const std::string &msg) {
-    throw std::runtime_error(fmt::format("[INTERNAL] {}\n", msg));
-}
+private:
+    std::string excClass;
+    std::string loc;
+    std::string msg;
+};
 
-[[noreturn]] inline void generalError(const std::string &msg) {
-//    throw std::runtime_error(fmt::format("Error: {}\n", msg));
-    fmt::print(stderr, "Error: {}\n", msg);
-    exit(EXIT_FAILURE);
-}
+class cw39_internal_error : public cw39_exception {
+public:
+    using source_location = std::source_location; // Because of CLion bug
+    cw39_internal_error(std::string msg, source_location const &l = source_location::current());
 
-[[noreturn]] inline void notImplemented(int line, const std::string &msg = "") {
-    throw std::runtime_error(fmt::format("Not implemented ({}): {}\n", line, msg));
-}
+private:
+    std::string formLoc(source_location const &loc) const;
+};
 
-#define NOT_IMPLEMENTED(msg) notImplemented(__LINE__, __FILE__ " " msg)
+class cw39_not_implemented : public cw39_internal_error {
+public:
+    using source_location = std::source_location; // Because of CLion bug
+    cw39_not_implemented(std::string const &msg, source_location const &l = source_location::current());
+};
+
+class cw39_error : public cw39_exception {
+public:
+    cw39_error(std::string msg);
+};
 
 
 template <typename T, typename... Us>
@@ -36,7 +52,7 @@ constexpr inline bool isInList(T const &val, Us const&&... elems) {
 
 
 template <typename K, typename V>
-class VariablesStack {
+class VariablesStack { // TODO: move it somewhere else
 private:
     std::list<std::map<K, V>> data;
     int level = 0;
@@ -53,7 +69,7 @@ public:
 
     void decreaseLevel() {
         if (level == 0)
-            internalError("Attemt to decrease level of empty VariablesStack");
+            throw std::logic_error("Attemt to decrease level of empty VariablesStack");
         data.pop_back();
         level--;
     }
@@ -84,15 +100,15 @@ struct variant_cast_proxy {
 
     template <class... ToArgs>
     operator std::variant<ToArgs...>() const {
-        return std::visit(
-                [](auto &&arg) -> std::variant<ToArgs...> {
-                    static_assert((std::is_convertible_v<Args, std::variant<ToArgs...>> || ...),
-                                  "No possible variant that could be converted exists");
-                    if constexpr (std::is_convertible_v<decltype(arg), std::variant<ToArgs...>>)
-                        return arg;
-                    else
-                        throw std::runtime_error("bad variant cast");
-                }, v);
+        auto visitor = [](auto &&arg) -> std::variant<ToArgs...> {
+            static_assert((std::is_convertible_v<Args, std::variant<ToArgs...>> || ...),
+                          "No possible variant that could be converted exists");
+            if constexpr (std::is_convertible_v<decltype(arg), std::variant<ToArgs...>>)
+                return arg;
+            else
+                throw std::logic_error("Bad variant cast");
+        };
+        return std::visit(std::move(visitor), v);
     }
 };
 
