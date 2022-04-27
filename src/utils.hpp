@@ -1,14 +1,9 @@
 #ifndef UTILS_HPP_INCLUDED__
 #define UTILS_HPP_INCLUDED__
 
-#include <initializer_list>
-#include <list>
-#include <map>
-#include <optional>
 #include <variant>
 #include <fmt/core.h>
 #include <exception>
-
 #include <source_location>
 #include <experimental/source_location> // Because of CLion bug
 
@@ -49,48 +44,6 @@ template <typename T, typename... Us>
 constexpr inline bool isInList(T const &val, Us const&&... elems) {
     return ((val == elems) || ...);
 }
-
-
-template <typename K, typename V>
-class VariablesStack { // TODO: move it somewhere else
-private:
-    std::list<std::map<K, V>> data;
-    int level = 0;
-
-public:
-    VariablesStack() {
-        increaseLevel();
-    }
-
-    void increaseLevel() {
-        data.push_back(std::map<K, V>());
-        level++;
-    }
-
-    void decreaseLevel() {
-        if (level == 0)
-            throw std::logic_error("Attemt to decrease level of empty VariablesStack");
-        data.pop_back();
-        level--;
-    }
-
-    std::optional<V> get(K const &key) const {
-        for (auto lay = data.rbegin(); lay != data.rend(); ++lay) {
-            auto it = lay->find(key);
-            if (it != lay->end())
-                return it->second;
-        }
-        return {};
-    }
-
-    void put(K const &key, V const &val) {
-        data.back().emplace(key, val);
-    }
-
-    bool hasOnTop(K const &key) {
-        return data.back().contains(key);
-    }
-};
 
 
 // https://stackoverflow.com/questions/61046705/casting-a-variant-to-super-set-variant-or-a-subset-variant

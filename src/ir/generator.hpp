@@ -12,7 +12,48 @@
 #include <stack>
 #include <memory>
 #include <optional>
+#include <list>
 #include <fmt/core.h>
+
+
+template <typename K, typename V>
+class VariablesStack {
+public:
+    VariablesStack() {
+        increaseLevel();
+    }
+
+    void increaseLevel() {
+        data.push_back(std::map<K, V>());
+    }
+
+    void decreaseLevel() {
+        if (data.empty())
+            throw std::logic_error("Attemt to decrease level of empty VariablesStack");
+        data.pop_back();
+    }
+
+    std::optional<V> get(K const &key) const {
+        for (auto lay = data.rbegin(); lay != data.rend(); ++lay) {
+            auto it = lay->find(key);
+            if (it != lay->end())
+                return it->second;
+        }
+        return {};
+    }
+
+    void put(K const &key, V const &val) {
+        data.back().emplace(key, val);
+    }
+
+    bool hasOnTop(K const &key) {
+        return data.back().contains(key);
+    }
+
+private:
+    std::list<std::map<K, V>> data;
+};
+
 
 class IR_Generator {
 public:
