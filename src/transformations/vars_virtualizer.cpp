@@ -4,7 +4,7 @@
 #include <deque>
 #include <set>
 
-VarsVirtualizer::VarsVirtualizer(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
+VarsVirtualizer::VarsVirtualizer(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
     passFunction();
 
     CfgCleaner cleaner(std::move(cfg));
@@ -13,15 +13,6 @@ VarsVirtualizer::VarsVirtualizer(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
     cleaner.removeTransitBlocks();
     cfg = std::move(cleaner).moveCfg();
 }
-
-CFGraph const& VarsVirtualizer::getCfg() {
-    return cfg;
-}
-
-CFGraph VarsVirtualizer::moveCfg() && {
-    return std::move(cfg);
-}
-
 
 void VarsVirtualizer::passFunction() {
     std::deque<int> nextBlocks;

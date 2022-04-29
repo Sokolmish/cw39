@@ -3,7 +3,7 @@
 #include <vector>
 #include <stack>
 
-SSA_Generator::SSA_Generator(CFGraph in_cfg) : cfg(std::move(in_cfg)) {
+SSA_Generator::SSA_Generator(CFGraph in_cfg) : IRTransformer(std::move(in_cfg)) {
     gInfo = std::make_unique<GraphInfo>(cfg);
 
     placePhis();
@@ -16,15 +16,6 @@ SSA_Generator::SSA_Generator(CFGraph in_cfg) : cfg(std::move(in_cfg)) {
     cleaner.removeNops();
     cfg = std::move(cleaner).moveCfg();
 }
-
-CFGraph const& SSA_Generator::getCfg() {
-    return cfg;
-}
-
-CFGraph SSA_Generator::moveCfg() && {
-    return std::move(cfg);
-}
-
 
 // PHIs placing
 

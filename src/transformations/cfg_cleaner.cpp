@@ -7,15 +7,7 @@
 
 namespace rng = std::ranges;
 
-CfgCleaner::CfgCleaner(CFGraph rawCfg) : cfg(std::move(rawCfg)) {}
-
-CFGraph const& CfgCleaner::getCfg() {
-    return cfg;
-}
-CFGraph CfgCleaner::moveCfg() && {
-    return std::move(cfg);
-}
-
+CfgCleaner::CfgCleaner(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {}
 
 void CfgCleaner::removeNops() {
     for (auto const &[bId, block] : cfg.getBlocks()) {

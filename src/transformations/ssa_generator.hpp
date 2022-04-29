@@ -8,16 +8,11 @@
 #include "graph_info.hpp"
 #include "ir_transformer.hpp"
 
-class SSA_Generator : IRTransformer {
+class SSA_Generator : public IRTransformer {
 public:
     explicit SSA_Generator(CFGraph in_cfg);
 
-    CFGraph const& getCfg() override;
-    CFGraph moveCfg() && override;
-
 private:
-    CFGraph cfg;
-
     std::unique_ptr<GraphInfo> gInfo;
     std::map<int, int> postOrder;
     std::map<int, std::set<int>> verticesDF;
@@ -32,6 +27,5 @@ private:
     void versionize();
     void traverseForVar(int blockId, IRval const &var);
 };
-
 
 #endif /* SSA_GENERATOR_HPP_INCLUDED__ */

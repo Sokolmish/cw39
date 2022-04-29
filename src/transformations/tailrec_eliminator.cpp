@@ -2,8 +2,7 @@
 #include "cfg_cleaner.hpp"
 #include <set>
 
-TailrecEliminator::TailrecEliminator(CFGraph rawCfg, int funcId)
-        : cfg(std::move(rawCfg)) {
+TailrecEliminator::TailrecEliminator(CFGraph rawCfg, int funcId) : IRTransformer(std::move(rawCfg)) {
     passFunction(funcId);
 
     CfgCleaner cleaner(std::move(cfg));
@@ -11,15 +10,6 @@ TailrecEliminator::TailrecEliminator(CFGraph rawCfg, int funcId)
     cleaner.removeUselessNodes();
     cfg = std::move(cleaner).moveCfg();
 }
-
-CFGraph const& TailrecEliminator::getCfg() {
-    return cfg;
-}
-
-CFGraph TailrecEliminator::moveCfg() && {
-    return std::move(cfg);
-}
-
 
 void TailrecEliminator::passFunction(int funcId) {
     std::vector<int> tailrecBlocks = findTailCalls(funcId);

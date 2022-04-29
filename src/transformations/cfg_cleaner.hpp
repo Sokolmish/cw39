@@ -4,7 +4,7 @@
 #include "ir_transformer.hpp"
 #include <set>
 
-class CfgCleaner : IRTransformer {
+class CfgCleaner : public IRTransformer {
 public:
     explicit CfgCleaner(CFGraph rawCfg);
 
@@ -14,12 +14,7 @@ public:
     void removeUselessBranches();
     void removeUnreachableBlocks();
 
-    CFGraph const& getCfg() override;
-    CFGraph moveCfg() && override;
-
 private:
-    CFGraph cfg;
-
     std::set<IRval> getPrimaryEffectiveRegs();
     std::set<IRval> extendEffectiveRegsSet(std::set<IRval> const &regsSet);
     void removeUnusedNodes(std::set<IRval> const &usedRegs);

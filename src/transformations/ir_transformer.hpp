@@ -5,8 +5,29 @@
 
 class IRTransformer {
 public:
-    virtual CFGraph const& getCfg() = 0;
-    virtual CFGraph moveCfg() && = 0;
+    IRTransformer(CFGraph cfg) : cfg(std::move(cfg)) {}
+
+    CFGraph const& getCfg() const {
+        return cfg;
+    };
+
+    CFGraph moveCfg() && {
+        return std::move(cfg);
+    };
+
+    bool isPassEffective() const {
+        return pass_changed;
+    }
+
+protected:
+    CFGraph cfg;
+
+    void setPassChanged() { // TODO: use it in all transformers
+        pass_changed = true;
+    }
+
+private:
+    bool pass_changed = false;
 };
 
 #endif /* IR_TRANSFORMER_HPP_INCLUDED__ */

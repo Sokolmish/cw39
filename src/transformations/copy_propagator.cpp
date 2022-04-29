@@ -5,9 +5,8 @@
 #include "ir/constants_folder.hpp"
 
 
-CopyPropagator::CopyPropagator(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
+CopyPropagator::CopyPropagator(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
     changed = true;
-    globalChanged = true;
     while (changed) {
         changed = false;
         propagateCopies();
@@ -21,19 +20,6 @@ CopyPropagator::CopyPropagator(CFGraph rawCfg) : cfg(std::move(rawCfg)) {
     cleaner.removeTransitBlocks();
     cfg = std::move(cleaner).moveCfg();
 }
-
-CFGraph const& CopyPropagator::getCfg() {
-    return cfg;
-}
-
-CFGraph CopyPropagator::moveCfg() && {
-    return std::move(cfg);
-}
-
-bool CopyPropagator::isChanged() const {
-    return globalChanged;
-}
-
 
 void CopyPropagator::propagateCopies() {
     std::set<int> visited;
@@ -54,7 +40,7 @@ void CopyPropagator::propagateCopies() {
                     auto oper = dynamic_cast<IR_ExprOper &>(*node->body);
                     if (oper.op == IR_ExprOper::MOV) {
                         changed = true;
-                        globalChanged = true;
+                        setPassChanged();
                         remlacementMap.emplace(*node->res, oper.args.at(0));
                         *node = IR_Node::nop();
                     }
@@ -65,7 +51,7 @@ void CopyPropagator::propagateCopies() {
                         auto it = remlacementMap.find(*arg);
                         if (it != remlacementMap.end()) {
                             changed = true;
-                            globalChanged = true;
+                            setPassChanged();
                             *arg = it->second;
                         }
                     }
@@ -107,7 +93,7 @@ void CopyPropagator::foldConstants() {
                         continue;
 
                     changed = true;
-                    globalChanged = true;
+                    setPassChanged();
                     IRval newVal = doConstOperation(operExpr);
                     operExpr.op = IR_ExprOper::MOV;
                     operExpr.args = { newVal };
@@ -119,7 +105,7 @@ void CopyPropagator::foldConstants() {
                         continue;
 
 //                        changed = true;
-//                        globalChanged = true;
+//                        setPassChanged();
                     // TODO
                 }
                 else if (node->body->type == IR_Expr::PHI) {
@@ -139,7 +125,7 @@ void CopyPropagator::foldConstants() {
                         continue;
 
                     changed = true;
-                    globalChanged = true;
+                    setPassChanged();
                     node->body = std::make_unique<IR_ExprOper>(
                             IR_ExprOper::MOV, std::vector<IRval>{ commonVal });
                 }

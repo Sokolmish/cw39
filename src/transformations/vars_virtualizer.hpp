@@ -7,16 +7,11 @@
 
 // TODO: check for phi functions
 
-class VarsVirtualizer : IRTransformer {
+class VarsVirtualizer : public IRTransformer {
 public:
     explicit VarsVirtualizer(CFGraph rawCfg);
 
-    CFGraph const& getCfg() override;
-    CFGraph moveCfg() && override;
-
 private:
-    CFGraph cfg;
-
     std::map<IRval, std::optional<IRval>> toRedudeList;
 
     void passFunction();

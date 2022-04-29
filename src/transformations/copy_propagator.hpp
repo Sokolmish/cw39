@@ -4,20 +4,13 @@
 #include "ir_transformer.hpp"
 #include <map>
 
-class CopyPropagator : IRTransformer {
+class CopyPropagator : public IRTransformer {
 public:
     explicit CopyPropagator(CFGraph rawCfg);
 
-    CFGraph const& getCfg() override;
-    CFGraph moveCfg() && override;
-
-    bool isChanged() const;
-
 private:
-    CFGraph cfg;
-
     std::map<IRval, IRval> remlacementMap;
-    bool changed, globalChanged;
+    bool changed;
 
     void propagateCopies();
     void foldConstants();
