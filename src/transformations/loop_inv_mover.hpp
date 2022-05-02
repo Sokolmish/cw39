@@ -2,7 +2,7 @@
 #define LOOP_INV_MOVER_HPP_INCLUDED__
 
 #include "ir_transformer.hpp"
-#include "loops_detector.hpp"
+#include "graph_info.hpp"
 
 class LoopInvMover : public IRTransformer {
 public:

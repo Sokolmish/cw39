@@ -46,7 +46,6 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/ir/constants_folder.cpp
 
         ${PROJECT_SOURCE_DIR}/src/transformations/graph_info.cpp
-        ${PROJECT_SOURCE_DIR}/src/transformations/loops_detector.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/vars_virtualizer.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/ssa_generator.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/cfg_cleaner.cpp

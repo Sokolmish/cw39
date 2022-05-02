@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <set>
 #include <vector>
 #include "ir/unit.hpp"
 
@@ -72,7 +73,45 @@ private:
     void classifyArcs();
 
     UtilNode& findMin(UtilNode &node);
-    void dominators(std::vector<int> &nodes);
+    void dominators(std::vector<int> const &nodes);
+};
+
+class LoopsDetector  {
+public:
+    struct LoopNode {
+        IR_Block const &head;
+        std::set<int> ends;
+        std::set<int> blocks;
+
+        LoopNode *parent = nullptr;
+        std::vector<LoopNode*> children;
+
+        LoopNode(IR_Block const &head);
+    };
+
+    LoopsDetector(CFGraph const &in);
+
+    bool hasLoops() const;
+    std::set<int> getBlockLoops(int blockId) const;
+    std::map<int, LoopNode> const& getLoops() const;
+
+    void printInfo() const;
+
+private:
+    struct BlockInfo {
+        std::set<int> loops;
+    };
+
+    CFGraph const &cfg;
+    GraphInfo gInfo;
+
+    bool improperLoops = false;
+
+    std::map<int, LoopNode> loops; // Loop ID is its head block ID
+    std::map<int, BlockInfo> lblocks;
+
+    void traverseLoopBranch(LoopNode &loop, int tailId);
+    bool testLoopsRelation(LoopNode &sLoop, LoopNode &lLoop);
 };
 
 #endif /* GRAPH_INFO_HPP_INCLUDED__ */
