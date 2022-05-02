@@ -53,6 +53,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/transformations/copy_propagator.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/algebraic_transformer.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/tailrec_eliminator.cpp
+        ${PROJECT_SOURCE_DIR}/src/transformations/loop_inv_mover.cpp
 
         ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
         )

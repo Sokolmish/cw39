@@ -14,6 +14,7 @@
 #include "transformations/algebraic_transformer.hpp"
 #include "transformations/copy_propagator.hpp"
 #include "transformations/tailrec_eliminator.hpp"
+#include "transformations/loop_inv_mover.hpp"
 
 #include "ir_2_llvm.hpp"
 
@@ -60,6 +61,7 @@ static void optimizeFunction(IntermediateUnit::Function &func) {
     cfg = AlgebraicTransformer(std::move(cfg)).moveCfg();
     cfg = CopyPropagator(std::move(cfg)).moveCfg();
     cfg = TailrecEliminator(std::move(cfg), func.getId()).moveCfg();
+    cfg = LoopInvMover(std::move(cfg)).moveCfg();
     func.cfg = std::move(cfg);
 }
 

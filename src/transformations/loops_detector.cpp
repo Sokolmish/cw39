@@ -94,6 +94,7 @@ bool LoopsDetector::testLoopsRelation(LoopNode &sLoop, LoopNode &lLoop) {
                               sLoop.blocks.cbegin(), sLoop.blocks.cend());
     if (test) {
         sLoop.parent = &lLoop;
+        lLoop.children.push_back(&sLoop);
         return true;
     }
     else {

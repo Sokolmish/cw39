@@ -12,9 +12,11 @@ class LoopsDetector  {
 public:
     struct LoopNode {
         IR_Block const &head;
-        LoopNode *parent = nullptr;
         std::set<int> ends;
         std::set<int> blocks;
+
+        LoopNode *parent = nullptr;
+        std::vector<LoopNode*> children;
 
         LoopNode(IR_Block const &head);
     };
