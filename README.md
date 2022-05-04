@@ -68,6 +68,25 @@ Each of following options can accept optional argument with path (e.g. `--llvm=.
 - `--ir-raw` - print IR before optimizations (i.e. right after generation)
 - `--cfg-raw` - print CFG representation before optimizations in the [dot](https://graphviz.org/) language
 - `--llvm` - print final LLVM assembler code
+- `--asm` - print assmbly code (only in Unix-based systems)
+
+### External programs customization
+
+This compiler uses some external programs via fork-exec calls.
+This behaviour available only on Unix-based systems and disabled for other ones.
+
+One can specify names for used executables via environment variables listed below.
+
+- `CW39_LLC` - name of llc from LLVM toolchain (default: `llc`)
+
+For example:
+
+```sh
+export CW39_LLC=llc-13
+cw39 --asm ./test.c
+# Or
+CW39_LLC=llc-13 cw39 --asm ./test.c
+```
 
 ## Examples
 

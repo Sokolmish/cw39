@@ -55,6 +55,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/transformations/loop_inv_mover.cpp
 
         ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
+        ${PROJECT_SOURCE_DIR}/src/ext_process.cpp
         )
 
 set(PROJ_INCLUDES

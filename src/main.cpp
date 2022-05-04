@@ -17,6 +17,7 @@
 #include "transformations/loop_inv_mover.hpp"
 
 #include "ir_2_llvm.hpp"
+#include "ext_process.hpp"
 
 /** If path is not empty then write to it, else write to stdout */
 static void writeOut(std::string const &path, std::string const &data) {
@@ -36,10 +37,12 @@ enum class CompilationLevel {
     GENERATE,       // ast -> ir
     OPTIMIZE,       // ir -> opt ir
     MATERIALIZE,    // opt ir -> llvm
-    SPECIALIZE,     // llvm -> asm
+    COMPILE,        // llvm -> asm
 };
 
 static CompilationLevel getCompilationLvl(CLIArgs const &args) {
+    if (args.outASM())
+        return CompilationLevel::COMPILE;
     if (args.outLLVM())
         return CompilationLevel::MATERIALIZE;
     else if (args.outIR() || args.outCFG())
@@ -127,7 +130,18 @@ static void process(CLIArgs  &args) {
     }
 
     if (compilationLvl <= CompilationLevel::MATERIALIZE)
-        return 0;
+        return;
+
+    if (args.outASM()) {
+        ExtProcess llc_proc(args.get_llc_name(), {}); // TODO: catch output
+        llc_proc.sendString(materializer.getRes());
+        llc_proc.closeFd();
+        llc_proc.wait();
+    }
+
+    if (compilationLvl <= CompilationLevel::COMPILE)
+        return;
+}
 
 int main(int argc, char **argv) {
     CLIArgs args(argc, argv);

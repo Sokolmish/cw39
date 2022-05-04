@@ -18,8 +18,11 @@ public:
     std::optional<std::string> outIR() const;
     std::optional<std::string> outCFG() const;
     std::optional<std::string> outLLVM() const;
+    std::optional<std::string> outASM() const;
 
     std::vector<std::string> inputFiles() const;
+
+    std::string get_llc_name() const;
 
     ~CLIArgs(); // For unique_ptr to implementation
     class CLIArgs_Impl;
