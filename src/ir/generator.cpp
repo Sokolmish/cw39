@@ -579,9 +579,10 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         auto const &arg = stmt.getExpr();
         auto funcType = curFunc->getFuncType();
         if (arg) {
-            auto retVal = evalExpr(*arg);
-            if (!funcType->ret->equal(*retVal.getType()))
-                semanticError(stmt.loc, "Wrong return value type");
+            IRval retVal = evalExpr(*arg);
+            if (!funcType->ret->equal(*retVal.getType())) {
+                retVal = emitCast(std::move(retVal), funcType->ret); // Need to check if implicit conversion valid
+            }
             curBlock().setTerminator(IR_ExprTerminator::RET, retVal);
         }
         else {
