@@ -100,9 +100,7 @@ static void process(CLIArgs  &args) {
     auto parser = std::make_unique<CoreDriver>(*ctx, text, parserDebugFlags);
     std::shared_ptr<AbstractSyntaxTree> ast = parser->getAST();
     if (args.outAST()) {
-        ast_set_pctx_ptr(ctx.get());
-        writeOut(*args.outAST(), ast->top->getTreeNode()->printHor());
-        ast_set_pctx_ptr(nullptr);
+        writeOut(*args.outAST(), ast->top->getTreeNode(*ctx)->printHor());
     }
 
     if (compilationLvl <= CompilationLevel::PARSE)
@@ -161,3 +159,9 @@ int main(int argc, char **argv) {
     }
     return EXIT_SUCCESS;
 }
+
+//void test(int *out) {
+//    std::stack<int> ssa_versions;
+//    ssa_versions.push(10);
+//    *out = ssa_versions.top();
+//}

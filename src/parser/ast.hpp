@@ -11,8 +11,6 @@
 #include "yy_location.hpp"
 #include "parsing_context.hpp"
 
-void ast_set_pctx_ptr(ParsingContext *ctx);
-
 using ast_enum_t = int;
 
 enum : ast_enum_t {
@@ -45,7 +43,7 @@ struct AST_Node {
 
     void setLoc(yy::location loc);
 
-    [[nodiscard]] virtual TreeNodeRef getTreeNode() const = 0;
+    [[nodiscard]] virtual TreeNodeRef getTreeNode(ParsingContext const &pctx) const = 0;
 };
 
 struct AST_UStructSpec;
@@ -72,7 +70,7 @@ struct AST_StringsSeq : public AST_Node {
 
     AST_StringsSeq();
     AST_StringsSeq* append(string_id_t str);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Primary : public AST_Expr {
@@ -94,7 +92,7 @@ struct AST_Primary : public AST_Expr {
     AST_Expr const& getExpr() const;
     CompoundLiteral const& getCompound() const;
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_ArgumentsList : public AST_Node {
@@ -102,7 +100,7 @@ struct AST_ArgumentsList : public AST_Node {
 
     AST_ArgumentsList();
     AST_ArgumentsList* append(AST_Expr *arg);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Postfix : public AST_Expr {
@@ -118,7 +116,7 @@ struct AST_Postfix : public AST_Expr {
     AST_ArgumentsList const& getArgsList() const;
     string_id_t getIdent() const;
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Unop : public AST_Expr {
@@ -131,7 +129,7 @@ struct AST_Unop : public AST_Expr {
 
     AST_Unop(OpType op, AST_Expr *child);
     AST_Unop(OpType op, AST_TypeName *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Cast : public AST_Expr {
@@ -139,7 +137,7 @@ struct AST_Cast : public AST_Expr {
     AST_Expr *child;
 
     AST_Cast(AST_TypeName *type, AST_Expr *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Binop : public AST_Expr {
@@ -158,14 +156,14 @@ struct AST_Binop : public AST_Expr {
     AST_Expr *lhs, *rhs;
 
     AST_Binop(OpType op, AST_Expr *lhs, AST_Expr *rhs);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Ternary : public AST_Expr {
     AST_Expr *cond, *v_true, *v_false;
 
     AST_Ternary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Assignment : public AST_Expr {
@@ -182,7 +180,7 @@ struct AST_Assignment : public AST_Expr {
     std::optional<AST_Binop::OpType> toBinop() const;
 
     AST_Assignment(OpType op, AST_Expr *lhs, AST_Expr *rhs);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_CommaExpression : public AST_Expr {
@@ -190,7 +188,7 @@ struct AST_CommaExpression : public AST_Expr {
 
     explicit AST_CommaExpression(AST_Expr *expr);
     AST_CommaExpression* append(AST_Expr *expr);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 
@@ -205,7 +203,7 @@ struct AST_TypeQuals : public AST_Node {
     AST_TypeQuals();
     explicit AST_TypeQuals(QualType init_qual);
     AST_TypeQuals* update(QualType new_qual);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_TypeSpecifier : public AST_Node {
@@ -226,7 +224,7 @@ struct AST_TypeSpecifier : public AST_Node {
     explicit AST_TypeSpecifier(AST_UStructSpec *spec);
     explicit AST_TypeSpecifier(AST_TypeName *spec);
     explicit AST_TypeSpecifier(AST_EnumSpecifier *spec);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_DeclSpecifiers : public AST_Node {
@@ -250,7 +248,7 @@ struct AST_DeclSpecifiers : public AST_Node {
     AST_DeclSpecifiers* update_type_spec(AST_TypeSpecifier *val);
     AST_DeclSpecifiers* update_type_qual(ast_enum_t val);
     AST_DeclSpecifiers* update_func_qual(ast_enum_t val);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_SpecsQualsList : public AST_Node {
@@ -261,7 +259,7 @@ struct AST_SpecsQualsList : public AST_Node {
     AST_SpecsQualsList(AST_TypeSpecifier* type, AST_TypeQuals *quals);
     AST_SpecsQualsList* append_qual(AST_TypeQuals::QualType qual);
     AST_SpecsQualsList* append_spec(AST_TypeSpecifier* type);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_StructDeclarator : public AST_Node {
@@ -269,7 +267,7 @@ struct AST_StructDeclarator : public AST_Node {
     AST_Expr *bitwidth;
 
     AST_StructDeclarator(AST_Declarator *decl, AST_Expr *width);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_StructDeclaratorList : public AST_Node {
@@ -277,7 +275,7 @@ struct AST_StructDeclaratorList : public AST_Node {
 
     explicit AST_StructDeclaratorList(AST_StructDeclarator *init);
     AST_StructDeclaratorList* append(AST_StructDeclarator *decl);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_StructDeclaration : public AST_Node {
@@ -285,7 +283,7 @@ struct AST_StructDeclaration : public AST_Node {
     AST_StructDeclaratorList *child;
 
     AST_StructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_StructDeclarationList : public AST_Node {
@@ -293,7 +291,7 @@ struct AST_StructDeclarationList : public AST_Node {
 
     explicit AST_StructDeclarationList(AST_StructDeclaration *init);
     AST_StructDeclarationList* append(AST_StructDeclaration *decl);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_UStructSpec : public AST_Node {
@@ -302,7 +300,7 @@ struct AST_UStructSpec : public AST_Node {
     AST_StructDeclarationList *body;
 
     AST_UStructSpec(bool is_union, string_id_t name, AST_StructDeclarationList *body);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Enumerator : public AST_Node {
@@ -310,7 +308,7 @@ struct AST_Enumerator : public AST_Node {
     AST_Expr *val;
 
     AST_Enumerator(string_id_t name, AST_Expr *val);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_EnumeratorList : public AST_Node {
@@ -318,7 +316,7 @@ struct AST_EnumeratorList : public AST_Node {
 
     explicit AST_EnumeratorList(AST_Enumerator *init);
     AST_EnumeratorList* append(AST_Enumerator *enumer);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_EnumSpecifier : public AST_Node {
@@ -326,7 +324,7 @@ struct AST_EnumSpecifier : public AST_Node {
     AST_EnumeratorList *body;
 
     AST_EnumSpecifier(string_id_t name, AST_EnumeratorList *body);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 
@@ -339,7 +337,7 @@ struct AST_InitDeclarator : public AST_Node {
     AST_Initializer *initializer;
 
     AST_InitDeclarator(AST_Declarator *decl, AST_Initializer *init);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_InitDeclaratorList : public AST_Node {
@@ -347,7 +345,7 @@ struct AST_InitDeclaratorList : public AST_Node {
 
     explicit AST_InitDeclaratorList(AST_InitDeclarator *init);
     AST_InitDeclaratorList* append(AST_InitDeclarator *decl);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Declaration : public AST_Node {
@@ -355,7 +353,7 @@ struct AST_Declaration : public AST_Node {
     AST_InitDeclaratorList *child;
 
     AST_Declaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_DirDeclarator : public AST_Node {
@@ -372,7 +370,7 @@ struct AST_DirDeclarator : public AST_Node {
     AST_DirDeclarator const& getBaseDirectDecl() const;
     AST_Declarator const& getBaseDecl() const;
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Pointer : public AST_Node {
@@ -380,7 +378,7 @@ struct AST_Pointer : public AST_Node {
     AST_Pointer *child;
 
     AST_Pointer(AST_TypeQuals *qual, AST_Pointer *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Declarator : public AST_Node {
@@ -388,7 +386,7 @@ struct AST_Declarator : public AST_Node {
     AST_Pointer *ptr;
 
     AST_Declarator(AST_DirDeclarator *decl, AST_Pointer *ptr);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_ParameterDeclaration : public AST_Node {
@@ -396,7 +394,7 @@ struct AST_ParameterDeclaration : public AST_Node {
     AST_Declarator *child; // Declarator
 
     AST_ParameterDeclaration(AST_DeclSpecifiers *spec, AST_Declarator *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_ParameterList : public AST_Node {
@@ -404,7 +402,7 @@ struct AST_ParameterList : public AST_Node {
 
     explicit AST_ParameterList(AST_ParameterDeclaration *init);
     AST_ParameterList* append(AST_ParameterDeclaration *decl);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_ParameterTypeList : public AST_Node {
@@ -412,7 +410,7 @@ struct AST_ParameterTypeList : public AST_Node {
     bool has_ellipsis;
 
     AST_ParameterTypeList(AST_ParameterList *child, bool ellipsis);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_TypeName : public AST_Node {
@@ -420,7 +418,7 @@ struct AST_TypeName : public AST_Node {
     AST_AbstrDeclarator *declarator;
 
     AST_TypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_DirAbstrDeclarator : public AST_Node {
@@ -435,7 +433,7 @@ struct AST_DirAbstrDeclarator : public AST_Node {
     AST_DirAbstrDeclarator const& getBaseDirectDecl() const;
     AST_AbstrDeclarator const& getBaseDecl() const;
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_AbstrDeclarator : public AST_Node {
@@ -443,7 +441,7 @@ struct AST_AbstrDeclarator : public AST_Node {
     AST_Pointer *ptr;
 
     AST_AbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 
@@ -457,7 +455,7 @@ struct AST_Designator : public AST_Node {
 
     explicit AST_Designator(AST_Expr *val);
     explicit AST_Designator(string_id_t field);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_InitializerList : public AST_Node {
@@ -466,14 +464,14 @@ struct AST_InitializerList : public AST_Node {
         AST_Designator *designator;
 
         AST_InitializerListElem(AST_Initializer *v, AST_Designator *desig);
-        [[nodiscard]] TreeNodeRef getTreeNode() const;
+        [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const;
     };
 
     std::vector<AST_InitializerListElem> children;
 
     AST_InitializerList(AST_Initializer *init_v, AST_Designator *init_desig);
     AST_InitializerList* append(AST_Initializer *val, AST_Designator *desig);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_Initializer : public AST_Node {
@@ -485,7 +483,7 @@ struct AST_Initializer : public AST_Node {
 
     explicit AST_Initializer(AST_InitializerList *nest);
     explicit AST_Initializer(AST_Expr *val);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 
@@ -507,7 +505,7 @@ struct AST_LabeledStmt : public AST_Stmt {
 
     AST_LabeledStmt(AST_Expr *label, AST_Stmt *stmt, LabelType type);
     AST_LabeledStmt(string_id_t label, AST_Stmt *stmt, LabelType type);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 
     string_id_t getIdent() const;
     AST_Expr const& getExpr() const;
@@ -518,21 +516,21 @@ struct AST_BlockItemList : public AST_Node {
 
     AST_BlockItemList();
     AST_BlockItemList* append(AST_Node *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_CompoundStmt : public AST_Stmt {
     AST_BlockItemList *body;
 
     explicit AST_CompoundStmt(AST_BlockItemList *body);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_ExprStmt : public AST_Stmt {
     AST_Expr *child;
 
     explicit AST_ExprStmt(AST_Expr *child);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_SelectionStmt : public AST_Stmt {
@@ -543,7 +541,7 @@ struct AST_SelectionStmt : public AST_Stmt {
 
     explicit AST_SelectionStmt(bool sw);
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_IterStmt : public AST_Stmt {
@@ -552,7 +550,7 @@ struct AST_IterStmt : public AST_Stmt {
         AST_ExprStmt *cond;
         AST_Expr *action;
 
-        [[nodiscard]] TreeNodeRef getTreeNode() const;
+        [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const;
     };
 
     enum LoopType : ast_enum_t { WHILE_LOOP, DO_LOOP, FOR_LOOP } type;
@@ -564,7 +562,7 @@ struct AST_IterStmt : public AST_Stmt {
     AST_Expr* getCond() const;
     ForLoopControls const& getForLoopControls() const;
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_JumpStmt : public AST_Stmt {
@@ -580,7 +578,7 @@ struct AST_JumpStmt : public AST_Stmt {
     AST_Expr* getExpr() const;
     string_id_t getIdent() const;
 
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 
@@ -594,7 +592,7 @@ struct AST_FunctionDef : public AST_Node {
     AST_CompoundStmt *body;
 
     AST_FunctionDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 struct AST_TranslationUnit : public AST_Node {
@@ -602,7 +600,7 @@ struct AST_TranslationUnit : public AST_Node {
 
     AST_TranslationUnit();
     AST_TranslationUnit* append(AST_Node *node);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
+    [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
 // Implemented in utils.cpp
