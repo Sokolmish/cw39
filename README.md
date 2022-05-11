@@ -59,7 +59,7 @@ Both scripts don't expect arguments and should be executed from project root (wh
 cw39 [options] <input_file>
 ```
 
-### Options
+### Main options
 
 Each of following options can accept optional argument with path (e.g. `--llvm=./out.ll`). In this case output will be written into specified file. Otherwise, it will be written into stdout. Without any of these options, compiler will print nothing but errors.
 
@@ -71,6 +71,11 @@ Each of following options can accept optional argument with path (e.g. `--llvm=.
 - `--cfg-raw` - print CFG representation before optimizations in the [dot](https://graphviz.org/) language
 - `--llvm` - print final LLVM assembler code
 - `--asm` - print assmbly code (only in Unix-based systems)
+
+### Debug options
+
+- `--tr-scan` - enable scanner debug mode
+- `--tr-parser` - enable parser debug mode
 
 ### External programs customization
 

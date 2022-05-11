@@ -90,7 +90,12 @@ static void process(CLIArgs  &args) {
     if (compilationLvl <= CompilationLevel::PREPROCESS)
         return;
 
-    auto parser = std::make_unique<CoreDriver>(*ctx, text);
+    int parserDebugFlags = 0;
+    if (args.isScannerTracing())
+        parserDebugFlags |= CoreDriver::TRACE_SCANNER;
+    if (args.isParserTracing())
+        parserDebugFlags |= CoreDriver::TRACE_PARSER;
+    auto parser = std::make_unique<CoreDriver>(*ctx, text, parserDebugFlags);
     auto ast = parser->getTransUnit();
     if (args.outAST()) {
         ast_set_pctx_ptr(ctx.get());

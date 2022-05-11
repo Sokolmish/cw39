@@ -2,10 +2,10 @@
 #include <fmt/core.h>
 #include <cctype>
 
-CoreDriver::CoreDriver(ParsingContext &ctx, std::string program)
+CoreDriver::CoreDriver(ParsingContext &ctx, std::string program, int flags)
         : ctx(ctx), text(std::move(program)) {
-    trace_parsing = false;
-    trace_scanning = false;
+    trace_parsing = (flags & TRACE_PARSER) != 0;
+    trace_scanning = (flags & TRACE_SCANNER) != 0;
 
     if (text.empty() || isStringWhitespace(text))
         throw cw39_error("Cannot compile empty or whitespace file");

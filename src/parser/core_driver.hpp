@@ -21,7 +21,12 @@ public:
 
 class CoreDriver {
 public:
-    CoreDriver(ParsingContext &ctx, std::string program);
+    enum ParserDebugFlags {
+        TRACE_SCANNER = 0x1,
+        TRACE_PARSER  = 0x2,
+    };
+
+    CoreDriver(ParsingContext &ctx, std::string program, int debugFlags);
 
     std::shared_ptr<AST_TranslationUnit> getTransUnit();
 

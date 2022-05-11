@@ -20,6 +20,9 @@ public:
     std::optional<std::string> outLLVM() const;
     std::optional<std::string> outASM() const;
 
+    bool isScannerTracing() const;
+    bool isParserTracing() const;
+
     std::vector<std::string> inputFiles() const;
 
     std::string get_llc_name() const;
