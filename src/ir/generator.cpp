@@ -7,12 +7,6 @@ IR_Generator::IR_Generator(AbstractSyntaxTree const &ast, ParsingContext &ctx) :
 }
 
 
-void IR_Generator::semanticError(yy::location loc, std::string msg) {
-    throw semantic_exception(ctx, loc, std::move(msg));
-}
-
-
-
 IR_Block &IR_Generator::curBlock() {
     return *selectedBlock;
 }
@@ -689,13 +683,17 @@ void IR_Generator::insertLabeledStatement(const AST_LabeledStmt &stmt) {
     insertStatement(*stmt.child);
 }
 
+// Semantic exception
 
-IR_Generator::semantic_exception::semantic_exception(ParsingContext &ctx, yy::location const &loc,
-                                                     std::string msg)
-        : cw39_exception("Semantic error", formLoc(ctx, loc), std::move(msg)) {}
+void IR_Generator::semanticError(yy::location loc, std::string msg) {
+    throw semantic_exception(ctx, std::move(loc), std::move(msg));
+}
 
-std::string IR_Generator::semantic_exception::formLoc(ParsingContext &ctx_, yy::location const &loc) const {
-    auto trueLoc = ctx_.warps.getLoc(loc.begin.line);
-    std::string filename = ctx_.warps.getFilename(trueLoc.filenum);
+static std::string formExcLoc(ParsingContext const &ctx, yy::location const &loc) {
+    auto trueLoc = ctx.warps.getLoc(loc.begin.line);
+    std::string filename = ctx.warps.getFilename(trueLoc.filenum);
     return fmt::format("{}:{}:{}", filename, trueLoc.line, loc.begin.column);
 }
+
+IR_Generator::semantic_exception::semantic_exception(ParsingContext &ctx, yy::location const &loc, std::string msg)
+        : cw39_exception("Semantic error", formExcLoc(ctx, loc), std::move(msg)) {}

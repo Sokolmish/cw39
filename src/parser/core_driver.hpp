@@ -31,28 +31,22 @@ public:
     std::shared_ptr<AbstractSyntaxTree> getAST();
 
 private:
-    static bool isStringWhitespace(std::string const &str);
-
-    void scan_begin();
-    void scan_end();
-
-    [[noreturn]] void lexer_error(std::string msg);
-
-    void parse();
+    ParsingContext &ctx;
+    std::shared_ptr<AbstractSyntaxTree> ast;
+    std::string text;
+    yy::location location; // TODO: fix tracking
 
     bool trace_parsing;
     bool trace_scanning;
 
-    ParsingContext &ctx;
-
-    std::string text;
-
-    yy::location location; // TODO: fix tracking
-
-    std::shared_ptr<AbstractSyntaxTree> ast;
-
     yyscan_t scanner;
     void *bufState;
+
+    void scan_begin();
+    void scan_end();
+    void parse();
+
+    [[noreturn]] void lexer_error(std::string msg);
 
     friend class yy::parser;
     friend YY_DECL;

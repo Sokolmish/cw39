@@ -159,9 +159,3 @@ int main(int argc, char **argv) {
     }
     return EXIT_SUCCESS;
 }
-
-//void test(int *out) {
-//    std::stack<int> ssa_versions;
-//    ssa_versions.push(10);
-//    *out = ssa_versions.top();
-//}

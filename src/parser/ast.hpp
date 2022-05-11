@@ -28,9 +28,6 @@ enum : ast_enum_t {
 };
 
 struct AST_Node {
-    AST_Node(AST_Node const &) = delete;
-    AST_Node& operator=(AST_Node const &) = delete;
-
     struct AST_Location {
         int line, col; // NOTE: Raw location
     };
@@ -40,6 +37,9 @@ struct AST_Node {
 
     explicit AST_Node(int type);
     virtual ~AST_Node() = default;
+
+    AST_Node(AST_Node const &) = delete;
+    AST_Node& operator=(AST_Node const &) = delete;
 
     void setLoc(yy::location loc);
 
@@ -55,7 +55,6 @@ struct AST_InitializerList;
 struct AST_Initializer;
 struct AST_ParameterTypeList;
 struct AST_Stmt;
-
 
 // =================================================
 //                    Expressions
@@ -612,12 +611,7 @@ class AbstractSyntaxTree {
 public:
     AbstractSyntaxTree() = default;
 
-    struct AST_Location {
-        int line, col; // NOTE: Raw location
-    };
-
     AST_TranslationUnit *top = nullptr;
-
 
     // Expressions
 

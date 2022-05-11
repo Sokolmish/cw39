@@ -2,8 +2,12 @@
 #include <fmt/core.h>
 #include <cctype>
 
+static bool isStringWhitespace(const std::string &str) {
+    return std::all_of(str.begin(), str.end(), isspace);
+}
+
 CoreDriver::CoreDriver(ParsingContext &ctx, std::string program, int flags)
-        : ctx(ctx), text(std::move(program)), ast(std::make_shared<AbstractSyntaxTree>()) {
+        : ctx(ctx), ast(std::make_shared<AbstractSyntaxTree>()), text(std::move(program)) {
     trace_parsing = (flags & TRACE_PARSER) != 0;
     trace_scanning = (flags & TRACE_SCANNER) != 0;
 
@@ -11,10 +15,6 @@ CoreDriver::CoreDriver(ParsingContext &ctx, std::string program, int flags)
         throw cw39_error("Cannot compile empty or whitespace file");
 
     parse();
-}
-
-bool CoreDriver::isStringWhitespace(const std::string &str) {
-    return std::all_of(str.begin(), str.end(), isspace);
 }
 
 void CoreDriver::parse() {
@@ -36,8 +36,8 @@ std::shared_ptr<AbstractSyntaxTree> CoreDriver::getAST() {
 void CoreDriver::lexer_error(std::string msg) {
     auto fixLoc = ctx.warps.getLoc(location.begin.line);
     std::string filename = ctx.warps.getFilename(fixLoc.filenum);
-    std::string excMsg = fmt::format("Lexer error: {}", std::move(msg));
     std::string excLoc = fmt::format("{}:{}:{}", filename, fixLoc.line, location.begin.column);
+    std::string excMsg = fmt::format("Lexer error: {}", std::move(msg));
     throw parser_exception(std::move(excMsg), std::move(excLoc));
 }
 

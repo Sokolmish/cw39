@@ -214,9 +214,6 @@ private:
     class semantic_exception : public cw39_exception {
     public:
         semantic_exception(ParsingContext &ctx, yy::location const &loc, std::string msg);
-
-    private:
-        std::string formLoc(ParsingContext &ctx, yy::location const &loc) const;
     };
 };
 
