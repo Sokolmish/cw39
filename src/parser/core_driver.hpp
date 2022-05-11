@@ -44,7 +44,6 @@ private:
 
     void scan_begin();
     void scan_end();
-    void parse();
 
     [[noreturn]] void lexer_error(std::string msg);
 

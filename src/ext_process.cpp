@@ -37,9 +37,6 @@ void ExtProcess::createProcess() {
         for (size_t i = 0; i < args.size(); i++)
             argv[i + 1] = const_cast<char *>(args[i].c_str());
 
-        char buf[50];
-        read(fd[0], buf, 40);
-
         if (execvp(name.c_str(), argv.get()) < 0)
             throw cw39_error(fmt::format("execvp '{}': {}", name, strerror(errno)));
     }

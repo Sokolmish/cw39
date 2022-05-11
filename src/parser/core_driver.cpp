@@ -14,10 +14,6 @@ CoreDriver::CoreDriver(ParsingContext &ctx, std::string program, int flags)
     if (text.empty() || isStringWhitespace(text))
         throw cw39_error("Cannot compile empty or whitespace file");
 
-    parse();
-}
-
-void CoreDriver::parse() {
     location.initialize(nullptr);
     scan_begin();
     yy::parser parse(scanner, *this);
