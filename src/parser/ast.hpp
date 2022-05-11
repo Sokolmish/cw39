@@ -46,15 +46,6 @@ struct AST_Node {
     void setLoc(yy::location loc);
 
     [[nodiscard]] virtual TreeNodeRef getTreeNode() const = 0;
-
-protected:
-    template <typename T>
-    using uniq = std::unique_ptr<T>;
-
-    template <typename T>
-    static std::unique_ptr<T> uniqify(T *raw) {
-        return std::unique_ptr<T>(raw);
-    }
 };
 
 struct AST_UStructSpec;
@@ -86,14 +77,16 @@ struct AST_StringsSeq : public AST_Node {
 
 struct AST_Primary : public AST_Expr {
     struct CompoundLiteral {
-        std::unique_ptr<AST_TypeName> compType = nullptr;
-        std::unique_ptr<AST_InitializerList> val = nullptr;
+        AST_TypeName *compType = nullptr;
+        AST_InitializerList *val = nullptr;
     };
 
     enum PrimType : ast_enum_t { IDENT, EXPR, STR, CONST, COMPOUND } type;
     std::variant<
-        uniq<AST_Expr>, uniq<AST_StringsSeq>, string_id_t, AST_Literal, CompoundLiteral
+        AST_Expr*, AST_StringsSeq*, string_id_t, AST_Literal, CompoundLiteral
     > v;
+
+    explicit AST_Primary(PrimType type);
 
     string_id_t getIdent() const;
     AST_StringsSeq const& getString() const;
@@ -101,20 +94,11 @@ struct AST_Primary : public AST_Expr {
     AST_Expr const& getExpr() const;
     CompoundLiteral const& getCompound() const;
 
-    static AST_Primary* makeIdent(string_id_t id);
-    static AST_Primary* makeExpr(AST_Expr *expr);
-    static AST_Primary* makeStr(AST_StringsSeq *str);
-    static AST_Primary* makeConst(AST_Literal val);
-    static AST_Primary* makeCompound(AST_TypeName *compType, AST_InitializerList *init_lst);
-
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
-    explicit AST_Primary(PrimType type);
 };
 
 struct AST_ArgumentsList : public AST_Node {
-    std::vector<uniq<AST_Expr>> children;
+    std::vector<AST_Expr*> children;
 
     AST_ArgumentsList();
     AST_ArgumentsList* append(AST_Expr *arg);
@@ -125,22 +109,16 @@ struct AST_Postfix : public AST_Expr {
     enum OpType : ast_enum_t {
         CALL, POST_INC, POST_DEC, INDEXATION, DIR_ACCESS, PTR_ACCESS
     } op;
-    uniq<AST_Expr> base = nullptr;
-    std::variant<uniq<AST_Node>, string_id_t> arg; // Expr ArgumentsList
+    AST_Expr *base = nullptr;
+    std::variant<AST_Node*, string_id_t> arg; // Expr ArgumentsList
+
+    explicit AST_Postfix(OpType type);
 
     AST_Expr const& getExpr() const; // TODO: getArgExpr
     AST_ArgumentsList const& getArgsList() const;
     string_id_t getIdent() const;
 
-    static AST_Postfix* makeArr(AST_Expr *base, AST_Expr *size);
-    static AST_Postfix* makeCall(AST_Expr *base, AST_ArgumentsList *args);
-    static AST_Postfix* makeAccesor(AST_Expr *base, string_id_t member, bool is_ptr);
-    static AST_Postfix* makeIncdec(AST_Expr *base, bool is_dec);
-
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
-    explicit AST_Postfix(OpType type);
 };
 
 struct AST_Unop : public AST_Expr {
@@ -149,7 +127,7 @@ struct AST_Unop : public AST_Expr {
         ADDR_OF, DEREF, UN_PLUS, UN_MINUS, UN_NEG, UN_NOT,
         SIZEOF_OP,
     } op;
-    uniq<AST_Node> child; // Expr TypeName
+    AST_Node *child; // Expr TypeName
 
     AST_Unop(OpType op, AST_Expr *child);
     AST_Unop(OpType op, AST_TypeName *child);
@@ -157,8 +135,8 @@ struct AST_Unop : public AST_Expr {
 };
 
 struct AST_Cast : public AST_Expr {
-    uniq<AST_TypeName> type_name;
-    uniq<AST_Expr> child;
+    AST_TypeName *type_name;
+    AST_Expr *child;
 
     AST_Cast(AST_TypeName *type, AST_Expr *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -177,14 +155,14 @@ struct AST_Binop : public AST_Expr {
         LOG_AND, LOG_OR,
         LT, GT, LE, GE, EQ, NE,
     } op;
-    uniq<AST_Expr> lhs, rhs;
+    AST_Expr *lhs, *rhs;
 
     AST_Binop(OpType op, AST_Expr *lhs, AST_Expr *rhs);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_Ternary : public AST_Expr {
-    uniq<AST_Expr> cond, v_true, v_false;
+    AST_Expr *cond, *v_true, *v_false;
 
     AST_Ternary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -199,7 +177,7 @@ struct AST_Assignment : public AST_Expr {
     enum OpType : ast_enum_t {
         DIRECT, MUL, DIV, REM, ADD, SUB, SHL, SHR, AND, XOR, OR
     } op;
-    uniq<AST_Expr> lhs, rhs;
+    AST_Expr *lhs, *rhs;
 
     std::optional<AST_Binop::OpType> toBinop() const;
 
@@ -208,7 +186,7 @@ struct AST_Assignment : public AST_Expr {
 };
 
 struct AST_CommaExpression : public AST_Expr {
-    std::vector<uniq<AST_Expr>> children;
+    std::vector<AST_Expr*> children;
 
     explicit AST_CommaExpression(AST_Expr *expr);
     AST_CommaExpression* append(AST_Expr *expr);
@@ -242,7 +220,7 @@ struct AST_TypeSpecifier : public AST_Node {
         T_SIGNED, T_UNSIGNED, T_FLOAT, T_DOUBLE,
         T_UNISTRUCT, T_ENUM, T_NAMED,
     } spec_type;
-    uniq<AST_Node> v; // AST_StructOrUsionSpec AST_TypeName AST_EnumSpecifier
+    AST_Node *v; // AST_StructOrUsionSpec AST_TypeName AST_EnumSpecifier
 
     explicit AST_TypeSpecifier(TypeSpec type);
     explicit AST_TypeSpecifier(AST_UStructSpec *spec);
@@ -263,11 +241,11 @@ struct AST_DeclSpecifiers : public AST_Node {
     enum FuncQual : ast_enum_t { Q_INLINE };
 
     StorageSpec storage_specifier = ST_NONE;
-    std::vector<uniq<AST_TypeSpecifier>> type_specifiers;
-    uniq<AST_TypeQuals> type_qualifiers;
+    std::vector<AST_TypeSpecifier*> type_specifiers;
+    AST_TypeQuals *type_qualifiers;
     bool is_inline = false;
 
-    AST_DeclSpecifiers();
+    explicit AST_DeclSpecifiers(AST_TypeQuals *quals);
     AST_DeclSpecifiers* update_storage(ast_enum_t val);
     AST_DeclSpecifiers* update_type_spec(AST_TypeSpecifier *val);
     AST_DeclSpecifiers* update_type_qual(ast_enum_t val);
@@ -276,26 +254,26 @@ struct AST_DeclSpecifiers : public AST_Node {
 };
 
 struct AST_SpecsQualsList : public AST_Node {
-    std::vector<uniq<AST_TypeSpecifier>> type_specifiers;
-    uniq<AST_TypeQuals> type_qualifiers = nullptr;
+    std::vector<AST_TypeSpecifier*> type_specifiers;
+    AST_TypeQuals *type_qualifiers = nullptr;
 
-    explicit AST_SpecsQualsList(AST_TypeQuals::QualType qual);
-    explicit AST_SpecsQualsList(AST_TypeSpecifier* type);
+    AST_SpecsQualsList(AST_TypeQuals::QualType qual, AST_TypeQuals *quals);
+    AST_SpecsQualsList(AST_TypeSpecifier* type, AST_TypeQuals *quals);
     AST_SpecsQualsList* append_qual(AST_TypeQuals::QualType qual);
     AST_SpecsQualsList* append_spec(AST_TypeSpecifier* type);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_StructDeclarator : public AST_Node {
-    uniq<AST_Declarator> declarator;
-    uniq<AST_Expr> bitwidth;
+    AST_Declarator *declarator;
+    AST_Expr *bitwidth;
 
     AST_StructDeclarator(AST_Declarator *decl, AST_Expr *width);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_StructDeclaratorList : public AST_Node {
-    std::vector<uniq<AST_StructDeclarator>> children;
+    std::vector<AST_StructDeclarator*> children;
 
     explicit AST_StructDeclaratorList(AST_StructDeclarator *init);
     AST_StructDeclaratorList* append(AST_StructDeclarator *decl);
@@ -303,15 +281,15 @@ struct AST_StructDeclaratorList : public AST_Node {
 };
 
 struct AST_StructDeclaration : public AST_Node {
-    uniq<AST_SpecsQualsList> type;
-    uniq<AST_StructDeclaratorList> child;
+    AST_SpecsQualsList *type;
+    AST_StructDeclaratorList *child;
 
     AST_StructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_StructDeclarationList : public AST_Node {
-    std::vector<uniq<AST_StructDeclaration>> children;
+    std::vector<AST_StructDeclaration*> children;
 
     explicit AST_StructDeclarationList(AST_StructDeclaration *init);
     AST_StructDeclarationList* append(AST_StructDeclaration *decl);
@@ -321,7 +299,7 @@ struct AST_StructDeclarationList : public AST_Node {
 struct AST_UStructSpec : public AST_Node {
     bool is_union;
     string_id_t name;
-    uniq<AST_StructDeclarationList> body;
+    AST_StructDeclarationList *body;
 
     AST_UStructSpec(bool is_union, string_id_t name, AST_StructDeclarationList *body);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -329,14 +307,14 @@ struct AST_UStructSpec : public AST_Node {
 
 struct AST_Enumerator : public AST_Node {
     string_id_t name;
-    uniq<AST_Expr> val;
+    AST_Expr *val;
 
     AST_Enumerator(string_id_t name, AST_Expr *val);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_EnumeratorList : public AST_Node {
-    std::vector<uniq<AST_Enumerator>> v;
+    std::vector<AST_Enumerator*> v;
 
     explicit AST_EnumeratorList(AST_Enumerator *init);
     AST_EnumeratorList* append(AST_Enumerator *enumer);
@@ -345,7 +323,7 @@ struct AST_EnumeratorList : public AST_Node {
 
 struct AST_EnumSpecifier : public AST_Node {
     string_id_t name;
-    uniq<AST_EnumeratorList> body;
+    AST_EnumeratorList *body;
 
     AST_EnumSpecifier(string_id_t name, AST_EnumeratorList *body);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -357,15 +335,15 @@ struct AST_EnumSpecifier : public AST_Node {
 // =================================================
 
 struct AST_InitDeclarator : public AST_Node {
-    uniq<AST_Declarator> declarator;
-    uniq<AST_Initializer> initializer;
+    AST_Declarator *declarator;
+    AST_Initializer *initializer;
 
     AST_InitDeclarator(AST_Declarator *decl, AST_Initializer *init);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_InitDeclaratorList : public AST_Node {
-    std::vector<uniq<AST_InitDeclarator>> v;
+    std::vector<AST_InitDeclarator*> v;
 
     explicit AST_InitDeclaratorList(AST_InitDeclarator *init);
     AST_InitDeclaratorList* append(AST_InitDeclarator *decl);
@@ -373,8 +351,8 @@ struct AST_InitDeclaratorList : public AST_Node {
 };
 
 struct AST_Declaration : public AST_Node {
-    uniq<AST_DeclSpecifiers> specifiers;
-    uniq<AST_InitDeclaratorList> child;
+    AST_DeclSpecifiers *specifiers;
+    AST_InitDeclaratorList *child;
 
     AST_Declaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -382,53 +360,47 @@ struct AST_Declaration : public AST_Node {
 
 struct AST_DirDeclarator : public AST_Node {
     enum DeclType : ast_enum_t { NAME, NESTED, ARRAY, FUNC } type;
-    std::variant<string_id_t, uniq<AST_Node>> base; // DirectDeclarator Declarator
+    std::variant<string_id_t, AST_Node*> base; // DirectDeclarator Declarator
 
-    uniq<AST_TypeQuals> arr_type_qual = nullptr;
-    uniq<AST_Expr> arr_size = nullptr;
-    uniq<AST_ParameterTypeList> func_args = nullptr;
+    AST_TypeQuals *arr_type_qual = nullptr;
+    AST_Expr *arr_size = nullptr;
+    AST_ParameterTypeList *func_args = nullptr;
+
+    explicit AST_DirDeclarator(DeclType dtype);
 
     string_id_t getIdent() const;
     AST_DirDeclarator const& getBaseDirectDecl() const;
     AST_Declarator const& getBaseDecl() const;
 
-    static AST_DirDeclarator* makeIdent(string_id_t ident);
-    static AST_DirDeclarator* makeNested(AST_Declarator *decl);
-    static AST_DirDeclarator* makeArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz);
-    static AST_DirDeclarator* makeFunc(AST_DirDeclarator *base, AST_ParameterTypeList *args);
-
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
-    explicit AST_DirDeclarator(DeclType dtype);
 };
 
 struct AST_Pointer : public AST_Node {
-    uniq<AST_TypeQuals> qualifiers;
-    uniq<AST_Pointer> child;
+    AST_TypeQuals *qualifiers;
+    AST_Pointer *child;
 
     AST_Pointer(AST_TypeQuals *qual, AST_Pointer *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_Declarator : public AST_Node {
-    uniq<AST_DirDeclarator> direct;
-    uniq<AST_Pointer> ptr;
+    AST_DirDeclarator *direct;
+    AST_Pointer *ptr;
 
     AST_Declarator(AST_DirDeclarator *decl, AST_Pointer *ptr);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_ParameterDeclaration : public AST_Node {
-    uniq<AST_DeclSpecifiers> specifiers;
-    uniq<AST_Declarator> child; // Declarator
+    AST_DeclSpecifiers *specifiers;
+    AST_Declarator *child; // Declarator
 
     AST_ParameterDeclaration(AST_DeclSpecifiers *spec, AST_Declarator *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_ParameterList : public AST_Node {
-    std::vector<uniq<AST_ParameterDeclaration>> v;
+    std::vector<AST_ParameterDeclaration*> v;
 
     explicit AST_ParameterList(AST_ParameterDeclaration *init);
     AST_ParameterList* append(AST_ParameterDeclaration *decl);
@@ -436,7 +408,7 @@ struct AST_ParameterList : public AST_Node {
 };
 
 struct AST_ParameterTypeList : public AST_Node {
-    uniq<AST_ParameterList> v;
+    AST_ParameterList *v;
     bool has_ellipsis;
 
     AST_ParameterTypeList(AST_ParameterList *child, bool ellipsis);
@@ -444,8 +416,8 @@ struct AST_ParameterTypeList : public AST_Node {
 };
 
 struct AST_TypeName : public AST_Node {
-    uniq<AST_SpecsQualsList> qual;
-    uniq<AST_AbstrDeclarator> declarator;
+    AST_SpecsQualsList *qual;
+    AST_AbstrDeclarator *declarator;
 
     AST_TypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -453,26 +425,22 @@ struct AST_TypeName : public AST_Node {
 
 struct AST_DirAbstrDeclarator : public AST_Node {
     enum DeclType : ast_enum_t { NESTED, ARRAY, FUNC } type;
-    uniq<AST_Node> base = nullptr;
+    AST_Node *base = nullptr;
 
-    uniq<AST_Expr> arr_size = nullptr;
-    uniq<AST_ParameterTypeList> func_args = nullptr;
+    AST_Expr *arr_size = nullptr;
+    AST_ParameterTypeList *func_args = nullptr;
+
+    explicit AST_DirAbstrDeclarator(DeclType dtype);
 
     AST_DirAbstrDeclarator const& getBaseDirectDecl() const;
     AST_AbstrDeclarator const& getBaseDecl() const;
 
-    static AST_DirAbstrDeclarator* makeNested(AST_Node *decl);
-    static AST_DirAbstrDeclarator* makeArr(AST_Node *base, AST_Expr *sz);
-    static AST_DirAbstrDeclarator* makeFunc(AST_Node *base, AST_ParameterTypeList *args);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
-    explicit AST_DirAbstrDeclarator(DeclType dtype);
 };
 
 struct AST_AbstrDeclarator : public AST_Node {
-    uniq<AST_DirAbstrDeclarator> direct;
-    uniq<AST_Pointer> ptr;
+    AST_DirAbstrDeclarator *direct;
+    AST_Pointer *ptr;
 
     AST_AbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -484,7 +452,7 @@ struct AST_AbstrDeclarator : public AST_Node {
 // =================================================
 
 struct AST_Designator : public AST_Node {
-    std::variant<uniq<AST_Expr>, string_id_t> val;
+    std::variant<AST_Expr*, string_id_t> val;
     bool is_index; // indexation or field name
 
     explicit AST_Designator(AST_Expr *val);
@@ -494,8 +462,8 @@ struct AST_Designator : public AST_Node {
 
 struct AST_InitializerList : public AST_Node {
     struct AST_InitializerListElem {
-        uniq<AST_Initializer> val;
-        uniq<AST_Designator> designator;
+        AST_Initializer *val;
+        AST_Designator *designator;
 
         AST_InitializerListElem(AST_Initializer *v, AST_Designator *desig);
         [[nodiscard]] TreeNodeRef getTreeNode() const;
@@ -510,7 +478,7 @@ struct AST_InitializerList : public AST_Node {
 
 struct AST_Initializer : public AST_Node {
     bool is_compound;
-    uniq<AST_Node> val; // AST_InitializerList AST_Expr
+    AST_Node *val; // AST_InitializerList AST_Expr
 
     AST_Expr const& getExpr() const;
     AST_InitializerList const& getInitList() const;
@@ -533,8 +501,8 @@ struct AST_Stmt : public AST_Node {
 };
 
 struct AST_LabeledStmt : public AST_Stmt {
-    std::variant<uniq<AST_Expr>, string_id_t> label;
-    uniq<AST_Stmt> child;
+    std::variant<AST_Expr*, string_id_t> label;
+    AST_Stmt *child;
     enum LabelType : ast_enum_t { SIMPL, SW_CASE, SW_DEFAULT } type;
 
     AST_LabeledStmt(AST_Expr *label, AST_Stmt *stmt, LabelType type);
@@ -546,7 +514,7 @@ struct AST_LabeledStmt : public AST_Stmt {
 };
 
 struct AST_BlockItemList : public AST_Node {
-    std::vector<uniq<AST_Node>> v; // Declaration Statement
+    std::vector<AST_Node*> v; // Declaration Statement
 
     AST_BlockItemList();
     AST_BlockItemList* append(AST_Node *child);
@@ -554,14 +522,14 @@ struct AST_BlockItemList : public AST_Node {
 };
 
 struct AST_CompoundStmt : public AST_Stmt {
-    uniq<AST_BlockItemList> body;
+    AST_BlockItemList *body;
 
     explicit AST_CompoundStmt(AST_BlockItemList *body);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_ExprStmt : public AST_Stmt {
-    uniq<AST_Expr> child;
+    AST_Expr *child;
 
     explicit AST_ExprStmt(AST_Expr *child);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -569,54 +537,47 @@ struct AST_ExprStmt : public AST_Stmt {
 
 struct AST_SelectionStmt : public AST_Stmt {
     bool is_switch;
-    uniq<AST_Expr> condition = nullptr;
-    uniq<AST_Stmt> body = nullptr;
-    uniq<AST_Stmt> else_body = nullptr;
+    AST_Expr *condition = nullptr;
+    AST_Stmt *body = nullptr;
+    AST_Stmt *else_body = nullptr;
 
-    static AST_SelectionStmt* get_if(AST_Expr *cond, AST_Stmt *body, AST_Stmt *else_body);
-    static AST_SelectionStmt* get_switch(AST_Expr *cond, AST_Stmt *body);
-    [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
     explicit AST_SelectionStmt(bool sw);
+
+    [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_IterStmt : public AST_Stmt {
     struct ForLoopControls {
-        uniq<AST_Node> decl;
-        uniq<AST_ExprStmt> cond;
-        uniq<AST_Expr> action;
+        AST_Node *decl;
+        AST_ExprStmt *cond;
+        AST_Expr *action;
 
         [[nodiscard]] TreeNodeRef getTreeNode() const;
     };
 
     enum LoopType : ast_enum_t { WHILE_LOOP, DO_LOOP, FOR_LOOP } type;
-    uniq<AST_Stmt> body;
-    std::variant<uniq<AST_Expr>, ForLoopControls> control;
+    AST_Stmt *body;
+    std::variant<AST_Expr*, ForLoopControls> control;
 
-    std::unique_ptr<AST_Expr> const& getCond() const;
+    AST_IterStmt(LoopType ltype, AST_Stmt *body);
+
+    AST_Expr* getCond() const;
     ForLoopControls const& getForLoopControls() const;
 
-    static AST_IterStmt* makeWhile(AST_Stmt *body, AST_Expr *ctl, bool is_do);
-    static AST_IterStmt* makeFor(AST_Stmt *body, AST_Node *decl, AST_ExprStmt *cond, AST_Expr *act);
-
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
-
-private:
-    AST_IterStmt(LoopType ltype, AST_Stmt *body);
 };
 
 struct AST_JumpStmt : public AST_Stmt {
     enum JumpType : ast_enum_t {
         J_GOTO, J_CONTINUE, J_BREAK, J_RET
     } type;
-    std::variant<uniq<AST_Expr>, string_id_t> arg;
+    std::variant<AST_Expr*, string_id_t> arg;
 
     explicit AST_JumpStmt(JumpType jtype);
     AST_JumpStmt(JumpType jtype, AST_Expr *arg);
     AST_JumpStmt(JumpType jtype, string_id_t arg);
 
-    std::unique_ptr<AST_Expr> const& getExpr() const;
+    AST_Expr* getExpr() const;
     string_id_t getIdent() const;
 
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
@@ -628,16 +589,16 @@ struct AST_JumpStmt : public AST_Stmt {
 // =================================================
 
 struct AST_FunctionDef : public AST_Node {
-    uniq<AST_DeclSpecifiers> specifiers;
-    uniq<AST_Declarator> decl;
-    uniq<AST_CompoundStmt> body;
+    AST_DeclSpecifiers *specifiers;
+    AST_Declarator *decl;
+    AST_CompoundStmt *body;
 
     AST_FunctionDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body);
     [[nodiscard]] TreeNodeRef getTreeNode() const override;
 };
 
 struct AST_TranslationUnit : public AST_Node {
-    std::vector<uniq<AST_Node>> children;
+    std::vector<AST_Node*> children;
 
     AST_TranslationUnit();
     AST_TranslationUnit* append(AST_Node *node);
@@ -647,5 +608,157 @@ struct AST_TranslationUnit : public AST_Node {
 // Implemented in utils.cpp
 void check_typedef(AST_Declaration *decl);
 AST_TypeName* get_def_type(string_id_t id);
+
+
+class AbstractSyntaxTree {
+public:
+    AbstractSyntaxTree() = default;
+
+    struct AST_Location {
+        int line, col; // NOTE: Raw location
+    };
+
+    AST_TranslationUnit *top = nullptr;
+
+
+    // Expressions
+
+    AST_Primary* mkPrimIdent(string_id_t id);
+    AST_Primary* mkPrimExpr(AST_Expr *expr);
+    AST_Primary* mkPrimStr(AST_StringsSeq *str);
+    AST_Primary* mkPrimConst(AST_Literal val);
+    AST_Primary* mkPrimCompound(AST_TypeName *compType, AST_InitializerList *init_lst);
+
+    AST_StringsSeq* mkStringsSeq();
+
+    AST_Postfix* mkPostfArr(AST_Expr *base, AST_Expr *size);
+    AST_Postfix* mkPostfCall(AST_Expr *base, AST_ArgumentsList *args);
+    AST_Postfix* mkPostfAccesor(AST_Expr *base, string_id_t member, bool is_ptr);
+    AST_Postfix* mkPostfIncdec(AST_Expr *base, bool is_dec);
+
+    AST_ArgumentsList* mkArgsLst();
+
+    AST_Unop* mkUnop(AST_Unop::OpType op, AST_Expr *child);
+    AST_Unop* mkUnop(AST_Unop::OpType op, AST_TypeName *child);
+
+    AST_Binop* mkBinop(AST_Binop::OpType op, AST_Expr *lhs, AST_Expr *rhs);
+
+    AST_Cast* mkCastop(AST_TypeName *type, AST_Expr *child);
+
+    AST_Ternary* mkTernary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf);
+
+    AST_Assignment* mkAssign(AST_Assignment::OpType op, AST_Expr *lhs, AST_Expr *rhs);
+
+    AST_CommaExpression* mkCommaExpr(AST_Expr *expr);
+
+    // Specifiers
+
+    AST_TypeQuals* mkTypeQuals();
+    AST_TypeQuals* mkTypeQuals(AST_TypeQuals::QualType init_qual);
+
+    AST_TypeSpecifier* mkTypeSpec(AST_TypeSpecifier::TypeSpec type);
+    AST_TypeSpecifier* mkTypeSpec(AST_UStructSpec *spec);
+    AST_TypeSpecifier* mkTypeSpec(AST_TypeName *spec);
+    AST_TypeSpecifier* mkTypeSpec(AST_EnumSpecifier *spec);
+
+    AST_DeclSpecifiers* mkDeclSpecs();
+
+    AST_SpecsQualsList* mkSpecQualLst(AST_TypeQuals::QualType qual);
+    AST_SpecsQualsList* mkSpecQualLst(AST_TypeSpecifier* type);
+
+    AST_StructDeclarator* mkStructDeclarator(AST_Declarator *decl, AST_Expr *width);
+
+    AST_StructDeclaratorList* mkStructDeclaratorLst(AST_StructDeclarator *init);
+
+    AST_StructDeclaration* mkStructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child);
+
+    AST_StructDeclarationList* mkStructDeclarationLst(AST_StructDeclaration *init);
+
+    AST_UStructSpec* mkUstructSpec(bool is_union, string_id_t name, AST_StructDeclarationList *body);
+
+    AST_Enumerator* mkEnumer(string_id_t name, AST_Expr *val);
+
+    AST_EnumeratorList* mkEnumLst(AST_Enumerator *init);
+
+    AST_EnumSpecifier* mkEnumSpec(string_id_t name, AST_EnumeratorList *body);
+
+    // Declarations
+
+    AST_InitDeclarator* mkInitDeclarator(AST_Declarator *decl, AST_Initializer *init);
+
+    AST_InitDeclaratorList* mkInitDeclaratorLst(AST_InitDeclarator *init);
+
+    AST_Declaration* mkDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
+
+    AST_DirDeclarator* mkDirDeclIdent(string_id_t ident);
+    AST_DirDeclarator* mkDirDeclNested(AST_Declarator *decl);
+    AST_DirDeclarator* mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz);
+    AST_DirDeclarator* mkDirDeclFunc(AST_DirDeclarator *base, AST_ParameterTypeList *args);
+
+    AST_Pointer* mkPointer(AST_TypeQuals *qual, AST_Pointer *child);
+
+    AST_Declarator* mkDeclarator(AST_DirDeclarator *decl, AST_Pointer *ptr);
+
+    AST_ParameterDeclaration* mkParamDecl(AST_DeclSpecifiers *spec, AST_Declarator *child);
+
+    AST_ParameterList* mkParamLst(AST_ParameterDeclaration *init);
+
+    AST_ParameterTypeList* mkParamTypeLst(AST_ParameterList *child, bool ellipsis);
+
+    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl);
+
+    AST_DirAbstrDeclarator* mkDirAbstrDeclNested(AST_Node *decl);
+    AST_DirAbstrDeclarator* mkDirAbstrDeclArr(AST_Node *base, AST_Expr *sz);
+    AST_DirAbstrDeclarator* mkDirAbstrDeclFunc(AST_Node *base, AST_ParameterTypeList *args);
+
+    AST_AbstrDeclarator* mkAbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer);
+
+    // Initializers
+
+    AST_Designator* mkDesignator(AST_Expr *val);
+    AST_Designator* mkDesignator(string_id_t field);
+
+    AST_InitializerList* mkInitializerLst(AST_Initializer *init_v, AST_Designator *init_desig);
+
+    AST_Initializer* mkInitializer(AST_InitializerList *nest);
+    AST_Initializer* mkInitializer(AST_Expr *val);
+
+    // Statements
+
+    AST_LabeledStmt* mkLabelStmt(AST_Expr *label, AST_Stmt *stmt, AST_LabeledStmt::LabelType type);
+    AST_LabeledStmt* mkLabelStmt(string_id_t label, AST_Stmt *stmt, AST_LabeledStmt::LabelType type);
+
+    AST_BlockItemList* mkBlockItemLst();
+
+    AST_CompoundStmt* mkCompoundStmt(AST_BlockItemList *body);
+
+    AST_ExprStmt* mkExprStmt(AST_Expr *child);
+
+    AST_SelectionStmt* mkIfStmt(AST_Expr *cond, AST_Stmt *body, AST_Stmt *else_body);
+    AST_SelectionStmt* mkSwitchStmt(AST_Expr *cond, AST_Stmt *body);
+
+    AST_IterStmt* makeWhileStmt(AST_Stmt *body, AST_Expr *ctl, bool is_do);
+    AST_IterStmt* makeForStmt(AST_Stmt *body, AST_Node *decl, AST_ExprStmt *cond, AST_Expr *act);
+
+    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype);
+    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, AST_Expr *arg);
+    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, string_id_t arg);
+
+    // Top-level elements
+
+    AST_FunctionDef* mkFunDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body);
+
+    AST_TranslationUnit* mkTransUnit();
+
+private:
+    std::vector<std::unique_ptr<AST_Node>> nodes;
+
+    template <typename T, typename ...Us>
+    T* mkNode(Us&&... args) {
+        T *node = new T(std::forward<Us>(args)...);
+        nodes.emplace_back(std::unique_ptr<AST_Node>(node));
+        return node;
+    }
+};
 
 #endif /* PARSER_AST_H_INCLUDED__ */

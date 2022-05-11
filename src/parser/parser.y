@@ -149,42 +149,42 @@
     /* Expressions */
 
 primary_expr
-    : IDENTIFIER                                { $$ = AST_Primary::makeIdent($1); SL($$, @$); }
-    | CONSTANT                                  { $$ = AST_Primary::makeConst($1); SL($$, @$); }
-    | strings_seq                               { $$ = AST_Primary::makeStr($1); SL($$, @$); }
-    | "(" expr ")"                              { $$ = AST_Primary::makeExpr($2); SL($$, @$); }
-    | "(" type_name ")" "{" init_lst "}"        { $$ = AST_Primary::makeCompound($2, $5); SL($$, @$); }
-    | "(" type_name ")" "{" init_lst "," "}"    { $$ = AST_Primary::makeCompound($2, $5); SL($$, @$); }
+    : IDENTIFIER                                { $$ = drv.ast->mkPrimIdent($1); SL($$, @$); }
+    | CONSTANT                                  { $$ = drv.ast->mkPrimConst($1); SL($$, @$); }
+    | strings_seq                               { $$ = drv.ast->mkPrimStr($1); SL($$, @$); }
+    | "(" expr ")"                              { $$ = drv.ast->mkPrimExpr($2); SL($$, @$); }
+    | "(" type_name ")" "{" init_lst "}"        { $$ = drv.ast->mkPrimCompound($2, $5); SL($$, @$); }
+    | "(" type_name ")" "{" init_lst "," "}"    { $$ = drv.ast->mkPrimCompound($2, $5); SL($$, @$); }
     ;
 
 strings_seq
-    : STRING_LITERAL                            { $$ = (new AST_StringsSeq())->append($1); SL($$, @$); }
+    : STRING_LITERAL                            { $$ = drv.ast->mkStringsSeq()->append($1); SL($$, @$); }
     | strings_seq STRING_LITERAL                { $$ = $1->append($2); }
     ;
 
 postfix_expr
     : primary_expr                              { $$ = $1; }
-    | postfix_expr "[" expr "]"                 { $$ = AST_Postfix::makeArr($1, $3); SL($$, @$); }
-    | postfix_expr "(" ")"                      { $$ = AST_Postfix::makeCall($1, nullptr); SL($$, @$); }
-    | postfix_expr "(" arg_expr_lst ")"         { $$ = AST_Postfix::makeCall($1, $3); SL($$, @$); }
-    | postfix_expr "." IDENTIFIER               { $$ = AST_Postfix::makeAccesor($1, $3, false); SL($$, @$); }
-    | postfix_expr PTR_OP IDENTIFIER            { $$ = AST_Postfix::makeAccesor($1, $3, true); SL($$, @$); }
-    | postfix_expr INC_OP                       { $$ = AST_Postfix::makeIncdec($1, false); SL($$, @$); }
-    | postfix_expr DEC_OP                       { $$ = AST_Postfix::makeIncdec($1, true); SL($$, @$); }
+    | postfix_expr "[" expr "]"                 { $$ = drv.ast->mkPostfArr($1, $3); SL($$, @$); }
+    | postfix_expr "(" ")"                      { $$ = drv.ast->mkPostfCall($1, nullptr); SL($$, @$); }
+    | postfix_expr "(" arg_expr_lst ")"         { $$ = drv.ast->mkPostfCall($1, $3); SL($$, @$); }
+    | postfix_expr "." IDENTIFIER               { $$ = drv.ast->mkPostfAccesor($1, $3, false); SL($$, @$); }
+    | postfix_expr PTR_OP IDENTIFIER            { $$ = drv.ast->mkPostfAccesor($1, $3, true); SL($$, @$); }
+    | postfix_expr INC_OP                       { $$ = drv.ast->mkPostfIncdec($1, false); SL($$, @$); }
+    | postfix_expr DEC_OP                       { $$ = drv.ast->mkPostfIncdec($1, true); SL($$, @$); }
     ;
 
 arg_expr_lst
-    : assign_expr                               { $$ = (new AST_ArgumentsList())->append($1); SL($$, @$); }
+    : assign_expr                               { $$ = drv.ast->mkArgsLst()->append($1); SL($$, @$); }
     | arg_expr_lst "," assign_expr              { $$ = $1->append($3); };
     ;
 
 unary_expr
     : postfix_expr                              { $$ = $1; }
-    | INC_OP unary_expr                         { $$ = new AST_Unop(AST_Unop::PRE_INC, $2); SL($$, @$); }
-    | DEC_OP unary_expr                         { $$ = new AST_Unop(AST_Unop::PRE_DEC, $2); SL($$, @$); }
-    | unary_operator cast_expr                  { $$ = new AST_Unop(AST_Unop::OpType($1), $2); SL($$, @$); }
-    | SIZEOF unary_expr                         { $$ = new AST_Unop(AST_Unop::SIZEOF_OP, $2); SL($$, @$); }
-    | SIZEOF "(" type_name ")"                  { $$ = new AST_Unop(AST_Unop::SIZEOF_OP, $3); SL($$, @$); }
+    | INC_OP unary_expr                         { $$ = drv.ast->mkUnop(AST_Unop::PRE_INC, $2); SL($$, @$); }
+    | DEC_OP unary_expr                         { $$ = drv.ast->mkUnop(AST_Unop::PRE_DEC, $2); SL($$, @$); }
+    | unary_operator cast_expr                  { $$ = drv.ast->mkUnop(AST_Unop::OpType($1), $2); SL($$, @$); }
+    | SIZEOF unary_expr                         { $$ = drv.ast->mkUnop(AST_Unop::SIZEOF_OP, $2); SL($$, @$); }
+    | SIZEOF "(" type_name ")"                  { $$ = drv.ast->mkUnop(AST_Unop::SIZEOF_OP, $3); SL($$, @$); }
     ;
 
 unary_operator
@@ -198,75 +198,75 @@ unary_operator
 
 cast_expr
     : unary_expr                                { $$ = $1; }
-    | "(" type_name ")" cast_expr               { $$ = new AST_Cast($2, $4); SL($$, @$); }
+    | "(" type_name ")" cast_expr               { $$ = drv.ast->mkCastop($2, $4); SL($$, @$); }
     ;
 
 mult_expr
     : cast_expr                                 { $$ = $1; }
-    | mult_expr "*" cast_expr                   { $$ = new AST_Binop(AST_Binop::MUL, $1, $3); SL($$, @$); }
-    | mult_expr "/" cast_expr                   { $$ = new AST_Binop(AST_Binop::DIV, $1, $3); SL($$, @$); }
-    | mult_expr "%" cast_expr                   { $$ = new AST_Binop(AST_Binop::REM, $1, $3); SL($$, @$); }
+    | mult_expr "*" cast_expr                   { $$ = drv.ast->mkBinop(AST_Binop::MUL, $1, $3); SL($$, @$); }
+    | mult_expr "/" cast_expr                   { $$ = drv.ast->mkBinop(AST_Binop::DIV, $1, $3); SL($$, @$); }
+    | mult_expr "%" cast_expr                   { $$ = drv.ast->mkBinop(AST_Binop::REM, $1, $3); SL($$, @$); }
     ;
 
 add_expr
     : mult_expr                                 { $$ = $1; }
-    | add_expr "+" mult_expr                    { $$ = new AST_Binop(AST_Binop::ADD, $1, $3); SL($$, @$); }
-    | add_expr "-" mult_expr                    { $$ = new AST_Binop(AST_Binop::SUB, $1, $3); SL($$, @$); }
+    | add_expr "+" mult_expr                    { $$ = drv.ast->mkBinop(AST_Binop::ADD, $1, $3); SL($$, @$); }
+    | add_expr "-" mult_expr                    { $$ = drv.ast->mkBinop(AST_Binop::SUB, $1, $3); SL($$, @$); }
     ;
 
 shift_expr
     : add_expr                                  { $$ = $1; }
-    | shift_expr LEFT_OP add_expr               { $$ = new AST_Binop(AST_Binop::SHL, $1, $3); SL($$, @$); }
-    | shift_expr RIGHT_OP add_expr              { $$ = new AST_Binop(AST_Binop::SHR, $1, $3); SL($$, @$); }
+    | shift_expr LEFT_OP add_expr               { $$ = drv.ast->mkBinop(AST_Binop::SHL, $1, $3); SL($$, @$); }
+    | shift_expr RIGHT_OP add_expr              { $$ = drv.ast->mkBinop(AST_Binop::SHR, $1, $3); SL($$, @$); }
     ;
 
 rel_expr
     : shift_expr                                { $$ = $1; }
-    | rel_expr "<" shift_expr                   { $$ = new AST_Binop(AST_Binop::LT, $1, $3); SL($$, @$); }
-    | rel_expr ">" shift_expr                   { $$ = new AST_Binop(AST_Binop::GT, $1, $3); SL($$, @$); }
-    | rel_expr LE_OP shift_expr                 { $$ = new AST_Binop(AST_Binop::LE, $1, $3); SL($$, @$); }
-    | rel_expr GE_OP shift_expr                 { $$ = new AST_Binop(AST_Binop::GE, $1, $3); SL($$, @$); }
+    | rel_expr "<" shift_expr                   { $$ = drv.ast->mkBinop(AST_Binop::LT, $1, $3); SL($$, @$); }
+    | rel_expr ">" shift_expr                   { $$ = drv.ast->mkBinop(AST_Binop::GT, $1, $3); SL($$, @$); }
+    | rel_expr LE_OP shift_expr                 { $$ = drv.ast->mkBinop(AST_Binop::LE, $1, $3); SL($$, @$); }
+    | rel_expr GE_OP shift_expr                 { $$ = drv.ast->mkBinop(AST_Binop::GE, $1, $3); SL($$, @$); }
     ;
 
 eq_expr
     : rel_expr                                  { $$ = $1; }
-    | eq_expr EQ_OP rel_expr                    { $$ = new AST_Binop(AST_Binop::EQ, $1, $3); SL($$, @$); }
-    | eq_expr NE_OP rel_expr                    { $$ = new AST_Binop(AST_Binop::NE, $1, $3); SL($$, @$); }
+    | eq_expr EQ_OP rel_expr                    { $$ = drv.ast->mkBinop(AST_Binop::EQ, $1, $3); SL($$, @$); }
+    | eq_expr NE_OP rel_expr                    { $$ = drv.ast->mkBinop(AST_Binop::NE, $1, $3); SL($$, @$); }
     ;
 
 and_expr
     : eq_expr                                   { $$ = $1; }
-    | and_expr "&" eq_expr                      { $$ = new AST_Binop(AST_Binop::BIT_AND, $1, $3); SL($$, @$); }
+    | and_expr "&" eq_expr                      { $$ = drv.ast->mkBinop(AST_Binop::BIT_AND, $1, $3); SL($$, @$); }
     ;
 
 xor_expr
     : and_expr                                  { $$ = $1; }
-    | xor_expr "^" and_expr                     { $$ = new AST_Binop(AST_Binop::BIT_XOR, $1, $3); SL($$, @$); }
+    | xor_expr "^" and_expr                     { $$ = drv.ast->mkBinop(AST_Binop::BIT_XOR, $1, $3); SL($$, @$); }
     ;
 
 or_expr
     : xor_expr                                  { $$ = $1; }
-    | or_expr "|" xor_expr                      { $$ = new AST_Binop(AST_Binop::BIT_OR, $1, $3); SL($$, @$); }
+    | or_expr "|" xor_expr                      { $$ = drv.ast->mkBinop(AST_Binop::BIT_OR, $1, $3); SL($$, @$); }
     ;
 
 land_expr
     : or_expr                                   { $$ = $1; }
-    | land_expr AND_OP or_expr                  { $$ = new AST_Binop(AST_Binop::LOG_AND, $1, $3); SL($$, @$); }
+    | land_expr AND_OP or_expr                  { $$ = drv.ast->mkBinop(AST_Binop::LOG_AND, $1, $3); SL($$, @$); }
     ;
 
 lor_expr
     : land_expr                                 { $$ = $1; }
-    | lor_expr OR_OP land_expr                  { $$ = new AST_Binop(AST_Binop::LOG_OR, $1, $3); SL($$, @$); }
+    | lor_expr OR_OP land_expr                  { $$ = drv.ast->mkBinop(AST_Binop::LOG_OR, $1, $3); SL($$, @$); }
     ;
 
 ternary_expr
     : lor_expr                                  { $$ = $1; }
-    | lor_expr "?" expr ":" ternary_expr        { $$ = new AST_Ternary($1, $3, $5); SL($$, @$); }
+    | lor_expr "?" expr ":" ternary_expr        { $$ = drv.ast->mkTernary($1, $3, $5); SL($$, @$); }
     ;
 
 assign_expr
     : ternary_expr                              { $$ = $1; }
-    | unary_expr assign_op assign_expr          { $$ = new AST_Assignment(AST_Assignment::OpType($2), $1, $3); SL($$, @$); }
+    | unary_expr assign_op assign_expr          { $$ = drv.ast->mkAssign(AST_Assignment::OpType($2), $1, $3); SL($$, @$); }
     ;
 
 assign_op
@@ -295,13 +295,13 @@ const_expr
     /* Specifiers */
 
 decl_specs
-    : storage_class_specifier                   { $$ = (new AST_DeclSpecifiers())->update_storage($1); SL($$, @$); }
+    : storage_class_specifier                   { $$ = drv.ast->mkDeclSpecs()->update_storage($1); SL($$, @$); }
     | storage_class_specifier decl_specs        { $$ = $2->update_storage($1); }
-    | type_specifier                            { $$ = (new AST_DeclSpecifiers())->update_type_spec($1); SL($$, @$); }
+    | type_specifier                            { $$ = drv.ast->mkDeclSpecs()->update_type_spec($1); SL($$, @$); }
     | type_specifier decl_specs                 { $$ = $2->update_type_spec($1); }
-    | type_qual                                 { $$ = (new AST_DeclSpecifiers())->update_type_qual($1); SL($$, @$); }
+    | type_qual                                 { $$ = drv.ast->mkDeclSpecs()->update_type_qual($1); SL($$, @$); }
     | type_qual decl_specs                      { $$ = $2->update_type_qual($1); }
-    | function_specifier                        { $$ = (new AST_DeclSpecifiers())->update_func_qual($1); SL($$, @$); }
+    | function_specifier                        { $$ = drv.ast->mkDeclSpecs()->update_func_qual($1); SL($$, @$); }
     | function_specifier decl_specs             { $$ = $2->update_func_qual($1); }
     ;
 
@@ -314,18 +314,18 @@ storage_class_specifier
     ;
 
 type_specifier
-    : VOID                      { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_VOID); }
-    | CHAR                      { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_CHAR); }
-    | SHORT                     { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_SHORT); }
-    | INT                       { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_INT); }
-    | LONG                      { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_LONG); }
-    | FLOAT                     { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_FLOAT); }
-    | DOUBLE                    { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_DOUBLE); }
-    | SIGNED                    { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_SIGNED); }
-    | UNSIGNED                  { $$ = new AST_TypeSpecifier(AST_TypeSpecifier::T_UNSIGNED); }
-    | ustruct_spec              { $$ = new AST_TypeSpecifier($1); }
-    | enum_specifier            { $$ = new AST_TypeSpecifier($1); }
-    | TYPE_NAME                 { $$ = new AST_TypeSpecifier(get_def_type($1)); }
+    : VOID                      { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_VOID); SL($$, @$); }
+    | CHAR                      { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_CHAR); SL($$, @$); }
+    | SHORT                     { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_SHORT); SL($$, @$); }
+    | INT                       { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_INT); SL($$, @$); }
+    | LONG                      { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_LONG); SL($$, @$); }
+    | FLOAT                     { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_FLOAT); SL($$, @$); }
+    | DOUBLE                    { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_DOUBLE); SL($$, @$); }
+    | SIGNED                    { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_SIGNED); SL($$, @$); }
+    | UNSIGNED                  { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_UNSIGNED); SL($$, @$); }
+    | ustruct_spec              { $$ = drv.ast->mkTypeSpec($1); SL($$, @$); }
+    | enum_specifier            { $$ = drv.ast->mkTypeSpec($1); SL($$, @$); }
+    | TYPE_NAME                 { $$ = drv.ast->mkTypeSpec(get_def_type($1)); SL($$, @$); }
     ;
 
 type_qual
@@ -339,9 +339,9 @@ function_specifier
     ;
 
 ustruct_spec
-    : ustruct IDENTIFIER "{" struct_decls_lst "}"   { $$ = new AST_UStructSpec($1, $2, $4); SL($$, @$); }
-    | ustruct "{" struct_decls_lst "}"              { $$ = new AST_UStructSpec($1, NO_IDENT_ID, $3); SL($$, @$); }
-    | ustruct IDENTIFIER                            { $$ = new AST_UStructSpec($1, $2, nullptr); SL($$, @$); }
+    : ustruct IDENTIFIER "{" struct_decls_lst "}"   { $$ = drv.ast->mkUstructSpec($1, $2, $4); SL($$, @$); }
+    | ustruct "{" struct_decls_lst "}"              { $$ = drv.ast->mkUstructSpec($1, NO_IDENT_ID, $3); SL($$, @$); }
+    | ustruct IDENTIFIER                            { $$ = drv.ast->mkUstructSpec($1, $2, nullptr); SL($$, @$); }
     ;
 
 ustruct
@@ -350,150 +350,149 @@ ustruct
     ;
 
 struct_decls_lst
-    : struct_declaration                            { $$ = new AST_StructDeclarationList($1); SL($$, @$); }
+    : struct_declaration                            { $$ = drv.ast->mkStructDeclarationLst($1); SL($$, @$); }
     | struct_decls_lst struct_declaration           { $$ = $1->append($2); }
     ;
 
 struct_declaration
-    : spec_qual_lst struct_declarator_list ";"      { $$ = new AST_StructDeclaration($1, $2); SL($$, @$); }
+    : spec_qual_lst struct_declarator_list ";"      { $$ = drv.ast->mkStructDeclaration($1, $2); SL($$, @$); }
     ;
 
 spec_qual_lst
     : type_specifier spec_qual_lst      { $$ = $2->append_spec($1); }
-    | type_specifier                    { $$ = new AST_SpecsQualsList($1); SL($$, @$); }
+    | type_specifier                    { $$ = drv.ast->mkSpecQualLst($1); SL($$, @$); }
     | type_qual spec_qual_lst           { $$ = $2->append_qual(AST_TypeQuals::QualType($1)); }
-    | type_qual                         { $$ = new AST_SpecsQualsList(AST_TypeQuals::QualType($1)); SL($$, @$); }
+    | type_qual                         { $$ = drv.ast->mkSpecQualLst(AST_TypeQuals::QualType($1)); SL($$, @$); }
     ;
 
 struct_declarator_list
-    : struct_declarator                                 { $$ = new AST_StructDeclaratorList($1); SL($$, @$); }
+    : struct_declarator                                 { $$ = drv.ast->mkStructDeclaratorLst($1); SL($$, @$); }
     | struct_declarator_list "," struct_declarator      { $$ = $1->append($3); }
     ;
 
 struct_declarator
-    : declarator                                        { $$ = new AST_StructDeclarator($1, nullptr); SL($$, @$); }
-    | ":" const_expr                                    { $$ = new AST_StructDeclarator(nullptr, $2); SL($$, @$); }
-    | declarator ":" const_expr                         { $$ = new AST_StructDeclarator($1, $3); SL($$, @$); }
+    : declarator                                        { $$ = drv.ast->mkStructDeclarator($1, nullptr); SL($$, @$); }
+    | ":" const_expr                                    { $$ = drv.ast->mkStructDeclarator(nullptr, $2); SL($$, @$); }
+    | declarator ":" const_expr                         { $$ = drv.ast->mkStructDeclarator($1, $3); SL($$, @$); }
     ;
 
 enum_specifier
-    : ENUM "{" enumerator_list "}"                      { $$ = new AST_EnumSpecifier(NO_IDENT_ID, $3); SL($$, @$); }
-    | ENUM IDENTIFIER "{" enumerator_list "}"           { $$ = new AST_EnumSpecifier($2, $4); SL($$, @$); }
-    | ENUM "{" enumerator_list "," "}"                  { $$ = new AST_EnumSpecifier(NO_IDENT_ID, $3); SL($$, @$); }
-    | ENUM IDENTIFIER "{" enumerator_list "," "}"       { $$ = new AST_EnumSpecifier($2, $4); SL($$, @$); }
-    | ENUM IDENTIFIER                                   { $$ = new AST_EnumSpecifier($2, nullptr); SL($$, @$); }
+    : ENUM "{" enumerator_list "}"                      { $$ = drv.ast->mkEnumSpec(NO_IDENT_ID, $3); SL($$, @$); }
+    | ENUM IDENTIFIER "{" enumerator_list "}"           { $$ = drv.ast->mkEnumSpec($2, $4); SL($$, @$); }
+    | ENUM "{" enumerator_list "," "}"                  { $$ = drv.ast->mkEnumSpec(NO_IDENT_ID, $3); SL($$, @$); }
+    | ENUM IDENTIFIER "{" enumerator_list "," "}"       { $$ = drv.ast->mkEnumSpec($2, $4); SL($$, @$); }
+    | ENUM IDENTIFIER                                   { $$ = drv.ast->mkEnumSpec($2, nullptr); SL($$, @$); }
     ;
 
 enumerator_list
-    : enumerator                                        { $$ = new AST_EnumeratorList($1); SL($$, @$); }
+    : enumerator                                        { $$ = drv.ast->mkEnumLst($1); SL($$, @$); }
     | enumerator_list "," enumerator                    { $$ = $1->append($3); }
     ;
 
 enumerator
-    : IDENTIFIER                                        { $$ = new AST_Enumerator($1, nullptr); SL($$, @$); }
-    | IDENTIFIER "=" const_expr                         { $$ = new AST_Enumerator($1, $3); SL($$, @$); }
+    : IDENTIFIER                                        { $$ = drv.ast->mkEnumer($1, nullptr); SL($$, @$); }
+    | IDENTIFIER "=" const_expr                         { $$ = drv.ast->mkEnumer($1, $3); SL($$, @$); }
     ;
 
 
     /* Declarations */
 
 declaration
-    : decl_specs ";"                                    { $$ = new AST_Declaration($1, nullptr); SL($$, @$); }
-    | decl_specs init_decltor_list ";"                  { $$ = new AST_Declaration($1, $2); SL($$, @$); }
+    : decl_specs ";"                                    { $$ = drv.ast->mkDeclaration($1, nullptr); SL($$, @$); }
+    | decl_specs init_decltor_list ";"                  { $$ = drv.ast->mkDeclaration($1, $2); SL($$, @$); }
     ;
 
 init_decltor_list
-    : init_decltor                                      { $$ = new AST_InitDeclaratorList($1); SL($$, @$); }
+    : init_decltor                                      { $$ = drv.ast->mkInitDeclaratorLst($1); SL($$, @$); }
     | init_decltor_list "," init_decltor                { $$ = $1->append($3); }
     ;
 
 init_decltor
-    : declarator                                        { $$ = new AST_InitDeclarator($1, nullptr); SL($$, @$); }
-    | declarator "=" initializer                        { $$ = new AST_InitDeclarator($1, $3); SL($$, @$); }
+    : declarator                                        { $$ = drv.ast->mkInitDeclarator($1, nullptr); SL($$, @$); }
+    | declarator "=" initializer                        { $$ = drv.ast->mkInitDeclarator($1, $3); SL($$, @$); }
     ;
 
 declarator
-    : pointer dir_decltor               { $$ = new AST_Declarator($2, $1); SL($$, @$); }
-    | dir_decltor                       { $$ = new AST_Declarator($1, nullptr); SL($$, @$); }
+    : pointer dir_decltor               { $$ = drv.ast->mkDeclarator($2, $1); SL($$, @$); }
+    | dir_decltor                       { $$ = drv.ast->mkDeclarator($1, nullptr); SL($$, @$); }
     ;
 
 pointer
-    : "*"                               { $$ = new AST_Pointer(nullptr, nullptr); SL($$, @$); }
-    | "*" type_qual_lst                 { $$ = new AST_Pointer($2, nullptr); SL($$, @$); }
-    | "*" pointer                       { $$ = new AST_Pointer(nullptr, $2); SL($$, @$); }
-    | "*" type_qual_lst pointer         { $$ = new AST_Pointer($2, $3); SL($$, @$); }
+    : "*"                               { $$ = drv.ast->mkPointer(nullptr, nullptr); SL($$, @$); }
+    | "*" type_qual_lst                 { $$ = drv.ast->mkPointer($2, nullptr); SL($$, @$); }
+    | "*" pointer                       { $$ = drv.ast->mkPointer(nullptr, $2); SL($$, @$); }
+    | "*" type_qual_lst pointer         { $$ = drv.ast->mkPointer($2, $3); SL($$, @$); }
     ;
 
 dir_decltor
-    : IDENTIFIER                                        { $$ = AST_DirDeclarator::makeIdent($1); SL($$, @$); }
-    | "(" declarator ")"                                { $$ = AST_DirDeclarator::makeNested($2); SL($$, @$); }
-    | dir_decltor "[" type_qual_lst assign_expr "]"     { $$ = AST_DirDeclarator::makeArr($1, $3, $4); SL($$, @$); }
-    | dir_decltor "[" type_qual_lst "]"                 { $$ = AST_DirDeclarator::makeArr($1, $3, nullptr); SL($$, @$); }
-    | dir_decltor "[" assign_expr "]"                   { $$ = AST_DirDeclarator::makeArr($1, nullptr, $3); SL($$, @$); }
-    | dir_decltor "[" "]"                               { $$ = AST_DirDeclarator::makeArr($1, nullptr, nullptr); SL($$, @$); }
-    | dir_decltor "(" param_type_lst ")"                { $$ = AST_DirDeclarator::makeFunc($1, $3); SL($$, @$); }
-    | dir_decltor "(" ")"                               { $$ = AST_DirDeclarator::makeFunc($1, nullptr); SL($$, @$); }
+    : IDENTIFIER                                        { $$ = drv.ast->mkDirDeclIdent($1); SL($$, @$); }
+    | "(" declarator ")"                                { $$ = drv.ast->mkDirDeclNested($2); SL($$, @$); }
+    | dir_decltor "[" type_qual_lst assign_expr "]"     { $$ = drv.ast->mkDirDeclArr($1, $3, $4); SL($$, @$); }
+    | dir_decltor "[" type_qual_lst "]"                 { $$ = drv.ast->mkDirDeclArr($1, $3, nullptr); SL($$, @$); }
+    | dir_decltor "[" assign_expr "]"                   { $$ = drv.ast->mkDirDeclArr($1, nullptr, $3); SL($$, @$); }
+    | dir_decltor "[" "]"                               { $$ = drv.ast->mkDirDeclArr($1, nullptr, nullptr); SL($$, @$); }
+    | dir_decltor "(" param_type_lst ")"                { $$ = drv.ast->mkDirDeclFunc($1, $3); SL($$, @$); }
+    | dir_decltor "(" ")"                               { $$ = drv.ast->mkDirDeclFunc($1, nullptr); SL($$, @$); }
     ;
 
 type_qual_lst
-    : type_qual                     { $$ = new AST_TypeQuals(AST_TypeQuals::QualType($1)); SL($$, @$); }
+    : type_qual                     { $$ = drv.ast->mkTypeQuals(AST_TypeQuals::QualType($1)); SL($$, @$); }
     | type_qual_lst type_qual       { $$ = $1->update(AST_TypeQuals::QualType($2)); }
     ;
 
 param_type_lst
-    : param_lst                     { $$ = new AST_ParameterTypeList($1, false); SL($$, @$); }
-    | param_lst "," ELLIPSIS        { $$ = new AST_ParameterTypeList($1, true); SL($$, @$); }
+    : param_lst                     { $$ = drv.ast->mkParamTypeLst($1, false); SL($$, @$); }
+    | param_lst "," ELLIPSIS        { $$ = drv.ast->mkParamTypeLst($1, true); SL($$, @$); }
     ;
 
 param_lst
-    : parameter_declaration                     { $$ = new AST_ParameterList($1); SL($$, @$); }
+    : parameter_declaration                     { $$ = drv.ast->mkParamLst($1); SL($$, @$); }
     | param_lst "," parameter_declaration       { $$ = $1->append($3); }
     ;
 
 parameter_declaration
-    : decl_specs declarator                     { $$ = new AST_ParameterDeclaration($1, $2); SL($$, @$); }
-    | decl_specs                                { $$ = new AST_ParameterDeclaration($1, nullptr); SL($$, @$); }
+    : decl_specs declarator                     { $$ = drv.ast->mkParamDecl($1, $2); SL($$, @$); }
+    | decl_specs                                { $$ = drv.ast->mkParamDecl($1, nullptr); SL($$, @$); }
     ;
 
 type_name
-    : spec_qual_lst                             { $$ = new AST_TypeName($1, nullptr); SL($$, @$); }
-    | spec_qual_lst abstr_decltor               { $$ = new AST_TypeName($1, $2); SL($$, @$); }
+    : spec_qual_lst                             { $$ = drv.ast->mkTypeName($1, nullptr); SL($$, @$); }
+    | spec_qual_lst abstr_decltor               { $$ = drv.ast->mkTypeName($1, $2); SL($$, @$); }
     ;
 
 abstr_decltor
-    : dir_abstr_decltor                         { $$ = new AST_AbstrDeclarator($1, nullptr); SL($$, @$); }
-    | pointer dir_abstr_decltor                 { $$ = new AST_AbstrDeclarator($2, $1); SL($$, @$); }
-    | pointer                                   { $$ = new AST_AbstrDeclarator(nullptr, $1); SL($$, @$); }
+    : dir_abstr_decltor                         { $$ = drv.ast->mkAbstrDeclarator($1, nullptr); SL($$, @$); }
+    | pointer dir_abstr_decltor                 { $$ = drv.ast->mkAbstrDeclarator($2, $1); SL($$, @$); }
+    | pointer                                   { $$ = drv.ast->mkAbstrDeclarator(nullptr, $1); SL($$, @$); }
     ;
-    /*     pointer   {  $$ = new AST_AbstrDeclarator(nullptr, $1); } */
 
 dir_abstr_decltor
-    : "(" abstr_decltor ")"                         { $$ = AST_DirAbstrDeclarator::makeNested($2); SL($$, @$); }
-    | dir_abstr_decltor "[" "]"                     { $$ = AST_DirAbstrDeclarator::makeArr($1, nullptr); SL($$, @$); }
-    | dir_abstr_decltor "[" assign_expr "]"         { $$ = AST_DirAbstrDeclarator::makeArr($1, $3); SL($$, @$); }
-    | dir_abstr_decltor "(" ")"                     { $$ = AST_DirAbstrDeclarator::makeFunc($1, nullptr); SL($$, @$); }
-    | dir_abstr_decltor "(" param_type_lst ")"      { $$ = AST_DirAbstrDeclarator::makeFunc($1, $3); SL($$, @$); }
+    : "(" abstr_decltor ")"                         { $$ = drv.ast->mkDirAbstrDeclNested($2); SL($$, @$); }
+    | dir_abstr_decltor "[" "]"                     { $$ = drv.ast->mkDirAbstrDeclArr($1, nullptr); SL($$, @$); }
+    | dir_abstr_decltor "[" assign_expr "]"         { $$ = drv.ast->mkDirAbstrDeclArr($1, $3); SL($$, @$); }
+    | dir_abstr_decltor "(" ")"                     { $$ = drv.ast->mkDirAbstrDeclFunc($1, nullptr); SL($$, @$); }
+    | dir_abstr_decltor "(" param_type_lst ")"      { $$ = drv.ast->mkDirAbstrDeclFunc($1, $3); SL($$, @$); }
     ;
 
 
     /* Initializers */
 
 initializer
-    : assign_expr                                   { $$ = new AST_Initializer($1); SL($$, @$); }
-    | "{" init_lst "}"                              { $$ = new AST_Initializer($2); SL($$, @$); }
-    | "{" init_lst "," "}"                          { $$ = new AST_Initializer($2); SL($$, @$); }
+    : assign_expr                                   { $$ = drv.ast->mkInitializer($1); SL($$, @$); }
+    | "{" init_lst "}"                              { $$ = drv.ast->mkInitializer($2); SL($$, @$); }
+    | "{" init_lst "," "}"                          { $$ = drv.ast->mkInitializer($2); SL($$, @$); }
     ;
 
 init_lst
-    : initializer                                   { $$ = new AST_InitializerList($1, nullptr); SL($$, @$); }
-    | designator "=" initializer                    { $$ = new AST_InitializerList($3, $1); SL($$, @$); }
+    : initializer                                   { $$ = drv.ast->mkInitializerLst($1, nullptr); SL($$, @$); }
+    | designator "=" initializer                    { $$ = drv.ast->mkInitializerLst($3, $1); SL($$, @$); }
     | init_lst "," initializer                      { $$ = $1->append($3, nullptr); }
     | init_lst "," designator "=" initializer       { $$ = $1->append($5, $3); }
     ;
 
 designator
-    : "[" const_expr "]"                            { $$ = new AST_Designator($2); SL($$, @$); }
-    | "." IDENTIFIER                                { $$ = new AST_Designator($2); SL($$, @$); }
+    : "[" const_expr "]"                            { $$ = drv.ast->mkDesignator($2); SL($$, @$); }
+    | "." IDENTIFIER                                { $$ = drv.ast->mkDesignator($2); SL($$, @$); }
     ;
 
 
@@ -509,58 +508,58 @@ stmt
     ;
 
 label_stmt
-    : IDENTIFIER ":" stmt           { $$ = new AST_LabeledStmt($1, $3, AST_LabeledStmt::SIMPL); SL($$, @$); }
-    | CASE const_expr ":" stmt      { $$ = new AST_LabeledStmt($2, $4, AST_LabeledStmt::SW_CASE); SL($$, @$); }
-    | DEFAULT ":" stmt              { $$ = new AST_LabeledStmt(nullptr, $3, AST_LabeledStmt::SW_DEFAULT); SL($$, @$); }
+    : IDENTIFIER ":" stmt           { $$ = drv.ast->mkLabelStmt($1, $3, AST_LabeledStmt::SIMPL); SL($$, @$); }
+    | CASE const_expr ":" stmt      { $$ = drv.ast->mkLabelStmt($2, $4, AST_LabeledStmt::SW_CASE); SL($$, @$); }
+    | DEFAULT ":" stmt              { $$ = drv.ast->mkLabelStmt(nullptr, $3, AST_LabeledStmt::SW_DEFAULT); SL($$, @$); }
     ;
 
 compound_stmt
-    : "{" "}"                       { $$ = new AST_CompoundStmt(new AST_BlockItemList()); SL($$, @$); }
-    | "{" block_items "}"           { $$ = new AST_CompoundStmt($2); SL($$, @$); }
+    : "{" "}"                       { $$ = drv.ast->mkCompoundStmt(new AST_BlockItemList()); SL($$, @$); }
+    | "{" block_items "}"           { $$ = drv.ast->mkCompoundStmt($2); SL($$, @$); }
     ;
 
 block_items
-    : declaration                   { $$ = (new AST_BlockItemList())->append($1); SL($$, @$); }
-    | stmt                          { $$ = (new AST_BlockItemList())->append($1); SL($$, @$); }
+    : declaration                   { $$ = drv.ast->mkBlockItemLst()->append($1); SL($$, @$); }
+    | stmt                          { $$ = drv.ast->mkBlockItemLst()->append($1); SL($$, @$); }
     | block_items declaration       { $$ = $1->append($2); }
     | block_items stmt              { $$ = $1->append($2); }
     ;
 
 expr_stmt
-    : ";"                           { $$ = new AST_ExprStmt(nullptr); SL($$, @$); }
-    | expr ";"                      { $$ = new AST_ExprStmt($1); SL($$, @$); }
+    : ";"                           { $$ = drv.ast->mkExprStmt(nullptr); SL($$, @$); }
+    | expr ";"                      { $$ = drv.ast->mkExprStmt($1); SL($$, @$); }
     ;
 
 select_stmt
-    : IF "(" expr ")" stmt %prec IFX        { $$ = AST_SelectionStmt::get_if($3, $5, nullptr); SL($$, @$); }
-    | IF "(" expr ")" stmt ELSE stmt        { $$ = AST_SelectionStmt::get_if($3, $5, $7); SL($$, @$); }
-    | SWITCH "(" expr ")" stmt              { $$ = AST_SelectionStmt::get_switch($3, $5); SL($$, @$); }
+    : IF "(" expr ")" stmt %prec IFX        { $$ = drv.ast->mkIfStmt($3, $5, nullptr); SL($$, @$); }
+    | IF "(" expr ")" stmt ELSE stmt        { $$ = drv.ast->mkIfStmt($3, $5, $7); SL($$, @$); }
+    | SWITCH "(" expr ")" stmt              { $$ = drv.ast->mkSwitchStmt($3, $5); SL($$, @$); }
     ;
 
 loop_stmt
-    : WHILE "(" expr ")" stmt                       { $$ = AST_IterStmt::makeWhile($5, $3, false); SL($$, @$); }
-    | DO stmt WHILE "(" expr ")" ";"                { $$ = AST_IterStmt::makeWhile($2, $5, true); SL($$, @$); }
-    | FOR "(" expr_stmt expr_stmt ")" stmt          { $$ = AST_IterStmt::makeFor($6, $3, $4, nullptr); SL($$, @$); }
-    | FOR "(" expr_stmt expr_stmt expr ")" stmt     { $$ = AST_IterStmt::makeFor($7, $3, $4, $5); SL($$, @$); }
-    | FOR "(" declaration expr_stmt ")" stmt        { $$ = AST_IterStmt::makeFor($6, $3, $4, nullptr); SL($$, @$); }
-    | FOR "(" declaration expr_stmt expr ")" stmt   { $$ = AST_IterStmt::makeFor($7, $3, $4, $5); SL($$, @$); }
+    : WHILE "(" expr ")" stmt                       { $$ = drv.ast->makeWhileStmt($5, $3, false); SL($$, @$); }
+    | DO stmt WHILE "(" expr ")" ";"                { $$ = drv.ast->makeWhileStmt($2, $5, true); SL($$, @$); }
+    | FOR "(" expr_stmt expr_stmt ")" stmt          { $$ = drv.ast->makeForStmt($6, $3, $4, nullptr); SL($$, @$); }
+    | FOR "(" expr_stmt expr_stmt expr ")" stmt     { $$ = drv.ast->makeForStmt($7, $3, $4, $5); SL($$, @$); }
+    | FOR "(" declaration expr_stmt ")" stmt        { $$ = drv.ast->makeForStmt($6, $3, $4, nullptr); SL($$, @$); }
+    | FOR "(" declaration expr_stmt expr ")" stmt   { $$ = drv.ast->makeForStmt($7, $3, $4, $5); SL($$, @$); }
     ;
 
 jmp_stmt
-    : GOTO IDENTIFIER ";"       { $$ = new AST_JumpStmt(AST_JumpStmt::J_GOTO, $2); SL($$, @$); }
-    | CONTINUE ";"              { $$ = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); SL($$, @$); }
-    | BREAK ";"                 { $$ = new AST_JumpStmt(AST_JumpStmt::J_BREAK); SL($$, @$); }
-    | RETURN ";"                { $$ = new AST_JumpStmt(AST_JumpStmt::J_RET); SL($$, @$); }
-    | RETURN expr ";"           { $$ = new AST_JumpStmt(AST_JumpStmt::J_RET, $2); SL($$, @$); }
+    : GOTO IDENTIFIER ";"       { $$ = drv.ast->mkJumpStmt(AST_JumpStmt::J_GOTO, $2); SL($$, @$); }
+    | CONTINUE ";"              { $$ = drv.ast->mkJumpStmt(AST_JumpStmt::J_CONTINUE); SL($$, @$); }
+    | BREAK ";"                 { $$ = drv.ast->mkJumpStmt(AST_JumpStmt::J_BREAK); SL($$, @$); }
+    | RETURN ";"                { $$ = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET); SL($$, @$); }
+    | RETURN expr ";"           { $$ = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET, $2); SL($$, @$); }
     ;
 
 
     /* Top-level elements */
 
 trans_unit
-    : func_def                      { $$ = drv.res = (new AST_TranslationUnit())->append($1); SL($$, @$); }
+    : func_def                      { $$ = drv.ast->mkTransUnit()->append($1); SL($$, @$); }
     | declaration                   {
-                                        $$ = drv.res = (new AST_TranslationUnit())->append($1);
+                                        $$ = drv.ast->mkTransUnit()->append($1);
                                         check_typedef($1);
                                         SL($$, @$);
                                     }
@@ -569,7 +568,7 @@ trans_unit
     ;
 
 func_def
-    : decl_specs declarator compound_stmt       { $$ = new AST_FunctionDef($1, $2, $3); SL($$, @$); }
+    : decl_specs declarator compound_stmt       { $$ = drv.ast->mkFunDef($1, $2, $3); SL($$, @$); }
     ;
 
 %%

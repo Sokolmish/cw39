@@ -98,17 +98,17 @@ static void process(CLIArgs  &args) {
     if (args.isParserTracing())
         parserDebugFlags |= CoreDriver::TRACE_PARSER;
     auto parser = std::make_unique<CoreDriver>(*ctx, text, parserDebugFlags);
-    auto ast = parser->getTransUnit();
+    std::shared_ptr<AbstractSyntaxTree> ast = parser->getAST();
     if (args.outAST()) {
         ast_set_pctx_ptr(ctx.get());
-        writeOut(*args.outAST(), ast->getTreeNode()->printHor());
+        writeOut(*args.outAST(), ast->top->getTreeNode()->printHor());
         ast_set_pctx_ptr(nullptr);
     }
 
     if (compilationLvl <= CompilationLevel::PARSE)
         return;
 
-    auto gen = std::make_unique<IR_Generator>(*parser, *ctx);
+    auto gen = std::make_unique<IR_Generator>(*ast, *ctx);
     auto rawUnit = gen->getIR();
     if (args.outRawIR())
         writeOut(*args.outRawIR(), rawUnit->printIR());

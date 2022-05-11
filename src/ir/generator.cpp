@@ -1,9 +1,9 @@
 #include "generator.hpp"
 #include "constants_folder.hpp"
 
-IR_Generator::IR_Generator(CoreDriver &parser, ParsingContext &ctx) : ctx(ctx) {
+IR_Generator::IR_Generator(AbstractSyntaxTree const &ast, ParsingContext &ctx) : ctx(ctx) {
     iunit = std::make_unique<IntermediateUnit>();
-    genTransUnit(parser);
+    genTransUnit(*ast.top);
 }
 
 
@@ -162,8 +162,8 @@ IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vecto
 
 // Generator
 
-void IR_Generator::genTransUnit(CoreDriver &parser) {
-    for (const auto &top_instr: parser.getTransUnit()->children) {
+void IR_Generator::genTransUnit(AST_TranslationUnit const &tunit) {
+    for (auto const &top_instr: tunit.children) {
         if (top_instr->node_type == AST_FUNC_DEF)
             createFunction(dynamic_cast<AST_FunctionDef &>(*top_instr));
         else if (top_instr->node_type == AST_DECLARATION)

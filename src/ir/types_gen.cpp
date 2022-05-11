@@ -144,7 +144,7 @@ std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *dec
     }
 
     std::shared_ptr<IR_Type> lastPtr = std::move(base);
-    for (auto curAstPtr = decl->ptr.get(); curAstPtr; curAstPtr = curAstPtr->child.get()) {
+    for (auto curAstPtr = decl->ptr; curAstPtr; curAstPtr = curAstPtr->child) {
         auto newPtr = std::make_shared<IR_TypePtr>(std::move(lastPtr));
         if (decl->ptr->qualifiers) {
             newPtr->is_const = decl->ptr->qualifiers->is_const;
@@ -155,10 +155,10 @@ std::shared_ptr<IR_Type> IR_Generator::getIndirectType(DeclaratorType const *dec
     }
 
     if constexpr (std::is_same<DeclaratorType, AST_Declarator>()) {
-        return getDirType(*decl->direct.get(), std::move(lastPtr));
+        return getDirType(*decl->direct, std::move(lastPtr));
     }
     else if constexpr (std::is_same<DeclaratorType, AST_AbstrDeclarator>()) {
-        return getDirAbstrType(decl->direct.get(), std::move(lastPtr));
+        return getDirAbstrType(decl->direct, std::move(lastPtr));
     }
     else {
         static_assert(! std::is_same<DeclaratorType, DeclaratorType>(),
@@ -252,7 +252,7 @@ std::shared_ptr<IR_Type> IR_Generator::getType(AST_SpecsQualsList const &spec, A
 }
 
 std::shared_ptr<IR_Type> IR_Generator::getType(AST_TypeName const &typeName) {
-    return getIndirectType(typeName.declarator.get(), getPrimaryType(typeName.qual->type_specifiers));
+    return getIndirectType(typeName.declarator, getPrimaryType(typeName.qual->type_specifiers));
 }
 
 string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirDeclarator const &decl) {

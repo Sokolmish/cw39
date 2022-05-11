@@ -548,7 +548,7 @@ IRval IR_Generator::evalCastExpr(AST_Cast const &expr) {
 IRval IR_Generator::evalUnopExpr(AST_Unop const &expr) {
     switch (expr.op) {
         case AST_Unop::SIZEOF_OP: {
-            auto typeName = dynamic_cast<AST_TypeName *>(expr.child.get());
+            auto typeName = dynamic_cast<AST_TypeName *>(expr.child);
             if (typeName != nullptr) {
                 auto irType = getType(*typeName);
                 uint64_t bytesSize = irType->getBytesSize();

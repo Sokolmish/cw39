@@ -3,7 +3,7 @@
 #include <cctype>
 
 CoreDriver::CoreDriver(ParsingContext &ctx, std::string program, int flags)
-        : ctx(ctx), text(std::move(program)) {
+        : ctx(ctx), text(std::move(program)), ast(std::make_shared<AbstractSyntaxTree>()) {
     trace_parsing = (flags & TRACE_PARSER) != 0;
     trace_scanning = (flags & TRACE_SCANNER) != 0;
 
@@ -27,13 +27,10 @@ void CoreDriver::parse() {
 
     if (rc != 0)
         throw parser_exception(fmt::format("Parsing failed with return code {}", rc), "");
-
-    transUnit = std::shared_ptr<AST_TranslationUnit>(res);
-    res = nullptr;
 }
 
-std::shared_ptr<AST_TranslationUnit> CoreDriver::getTransUnit() {
-    return transUnit;
+std::shared_ptr<AbstractSyntaxTree> CoreDriver::getAST() {
+    return ast;
 }
 
 void CoreDriver::lexer_error(std::string msg) {

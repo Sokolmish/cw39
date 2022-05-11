@@ -28,7 +28,7 @@ public:
 
     CoreDriver(ParsingContext &ctx, std::string program, int debugFlags);
 
-    std::shared_ptr<AST_TranslationUnit> getTransUnit();
+    std::shared_ptr<AbstractSyntaxTree> getAST();
 
 private:
     static bool isStringWhitespace(std::string const &str);
@@ -49,8 +49,7 @@ private:
 
     yy::location location; // TODO: fix tracking
 
-    AST_TranslationUnit *res;
-    std::shared_ptr<AST_TranslationUnit> transUnit;
+    std::shared_ptr<AbstractSyntaxTree> ast;
 
     yyscan_t scanner;
     void *bufState;

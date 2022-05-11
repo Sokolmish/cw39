@@ -57,7 +57,7 @@ private:
 
 class IR_Generator {
 public:
-    IR_Generator(CoreDriver &parser, ParsingContext &ctx);
+    IR_Generator(AbstractSyntaxTree const &ast, ParsingContext &ctx);
 
     [[nodiscard]] std::shared_ptr<IntermediateUnit> getIR() const;
 
@@ -144,7 +144,7 @@ private:
 
     // Control generator
 
-    void genTransUnit(CoreDriver &parser);
+    void genTransUnit(AST_TranslationUnit const &tunit);
 
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
@@ -192,7 +192,7 @@ private:
     // Types generator
 
     std::shared_ptr<IR_Type> getStructType(AST_UStructSpec const &spec);
-    typedef std::vector<std::unique_ptr<AST_TypeSpecifier>> TypeSpecifiers;
+    typedef std::vector<AST_TypeSpecifier*> TypeSpecifiers;
     std::shared_ptr<IR_Type> getPrimaryType(TypeSpecifiers const &spec);
     template <typename DeclaratorType>
     std::shared_ptr<IR_Type> getIndirectType(DeclaratorType const *decl, std::shared_ptr<IR_Type> base);

@@ -1525,43 +1525,43 @@ namespace yy {
             {
   case 2: // primary_expr: IDENTIFIER
 #line 152 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Primary::makeIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1530 "yy_parser.cpp"
     break;
 
   case 3: // primary_expr: CONSTANT
 #line 153 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Primary::makeConst(yystack_[0].value.as < AST_Literal > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimConst(yystack_[0].value.as < AST_Literal > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1536 "yy_parser.cpp"
     break;
 
   case 4: // primary_expr: strings_seq
 #line 154 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Primary::makeStr(yystack_[0].value.as < AST_StringsSeq * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimStr(yystack_[0].value.as < AST_StringsSeq * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1542 "yy_parser.cpp"
     break;
 
   case 5: // primary_expr: "(" expr ")"
 #line 155 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Primary::makeExpr(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimExpr(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1548 "yy_parser.cpp"
     break;
 
   case 6: // primary_expr: "(" type_name ")" "{" init_lst "}"
 #line 156 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Primary::makeCompound(yystack_[4].value.as < AST_TypeName * > (), yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimCompound(yystack_[4].value.as < AST_TypeName * > (), yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1554 "yy_parser.cpp"
     break;
 
   case 7: // primary_expr: "(" type_name ")" "{" init_lst "," "}"
 #line 157 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Primary::makeCompound(yystack_[5].value.as < AST_TypeName * > (), yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimCompound(yystack_[5].value.as < AST_TypeName * > (), yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1560 "yy_parser.cpp"
     break;
 
   case 8: // strings_seq: STRING_LITERAL
 #line 161 "parser.y"
-                                                { yylhs.value.as < AST_StringsSeq * > () = (new AST_StringsSeq())->append(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_StringsSeq * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_StringsSeq * > () = drv.ast->mkStringsSeq()->append(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_StringsSeq * > (), yylhs.location); }
 #line 1566 "yy_parser.cpp"
     break;
 
@@ -1579,49 +1579,49 @@ namespace yy {
 
   case 11: // postfix_expr: postfix_expr "[" expr "]"
 #line 167 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeArr(yystack_[3].value.as < AST_Expr * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfArr(yystack_[3].value.as < AST_Expr * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1584 "yy_parser.cpp"
     break;
 
   case 12: // postfix_expr: postfix_expr "(" ")"
 #line 168 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeCall(yystack_[2].value.as < AST_Expr * > (), nullptr); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfCall(yystack_[2].value.as < AST_Expr * > (), nullptr); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1590 "yy_parser.cpp"
     break;
 
   case 13: // postfix_expr: postfix_expr "(" arg_expr_lst ")"
 #line 169 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeCall(yystack_[3].value.as < AST_Expr * > (), yystack_[1].value.as < AST_ArgumentsList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfCall(yystack_[3].value.as < AST_Expr * > (), yystack_[1].value.as < AST_ArgumentsList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1596 "yy_parser.cpp"
     break;
 
   case 14: // postfix_expr: postfix_expr "." IDENTIFIER
 #line 170 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeAccesor(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < string_id_t > (), false); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfAccesor(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < string_id_t > (), false); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1602 "yy_parser.cpp"
     break;
 
   case 15: // postfix_expr: postfix_expr PTR_OP IDENTIFIER
 #line 171 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeAccesor(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < string_id_t > (), true); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfAccesor(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < string_id_t > (), true); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1608 "yy_parser.cpp"
     break;
 
   case 16: // postfix_expr: postfix_expr INC_OP
 #line 172 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeIncdec(yystack_[1].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfIncdec(yystack_[1].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1614 "yy_parser.cpp"
     break;
 
   case 17: // postfix_expr: postfix_expr DEC_OP
 #line 173 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = AST_Postfix::makeIncdec(yystack_[1].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfIncdec(yystack_[1].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1620 "yy_parser.cpp"
     break;
 
   case 18: // arg_expr_lst: assign_expr
 #line 177 "parser.y"
-                                                { yylhs.value.as < AST_ArgumentsList * > () = (new AST_ArgumentsList())->append(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ArgumentsList * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_ArgumentsList * > () = drv.ast->mkArgsLst()->append(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ArgumentsList * > (), yylhs.location); }
 #line 1626 "yy_parser.cpp"
     break;
 
@@ -1639,31 +1639,31 @@ namespace yy {
 
   case 21: // unary_expr: INC_OP unary_expr
 #line 183 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Unop(AST_Unop::PRE_INC, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::PRE_INC, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1644 "yy_parser.cpp"
     break;
 
   case 22: // unary_expr: DEC_OP unary_expr
 #line 184 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Unop(AST_Unop::PRE_DEC, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::PRE_DEC, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1650 "yy_parser.cpp"
     break;
 
   case 23: // unary_expr: unary_operator cast_expr
 #line 185 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Unop(AST_Unop::OpType(yystack_[1].value.as < short > ()), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::OpType(yystack_[1].value.as < short > ()), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1656 "yy_parser.cpp"
     break;
 
   case 24: // unary_expr: SIZEOF unary_expr
 #line 186 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Unop(AST_Unop::SIZEOF_OP, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::SIZEOF_OP, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1662 "yy_parser.cpp"
     break;
 
   case 25: // unary_expr: SIZEOF "(" type_name ")"
 #line 187 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Unop(AST_Unop::SIZEOF_OP, yystack_[1].value.as < AST_TypeName * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::SIZEOF_OP, yystack_[1].value.as < AST_TypeName * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1668 "yy_parser.cpp"
     break;
 
@@ -1711,7 +1711,7 @@ namespace yy {
 
   case 33: // cast_expr: "(" type_name ")" cast_expr
 #line 201 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Cast(yystack_[2].value.as < AST_TypeName * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkCastop(yystack_[2].value.as < AST_TypeName * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1716 "yy_parser.cpp"
     break;
 
@@ -1723,19 +1723,19 @@ namespace yy {
 
   case 35: // mult_expr: mult_expr "*" cast_expr
 #line 206 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::MUL, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::MUL, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1728 "yy_parser.cpp"
     break;
 
   case 36: // mult_expr: mult_expr "/" cast_expr
 #line 207 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::DIV, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::DIV, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1734 "yy_parser.cpp"
     break;
 
   case 37: // mult_expr: mult_expr "%" cast_expr
 #line 208 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::REM, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::REM, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1740 "yy_parser.cpp"
     break;
 
@@ -1747,13 +1747,13 @@ namespace yy {
 
   case 39: // add_expr: add_expr "+" mult_expr
 #line 213 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::ADD, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::ADD, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1752 "yy_parser.cpp"
     break;
 
   case 40: // add_expr: add_expr "-" mult_expr
 #line 214 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::SUB, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::SUB, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1758 "yy_parser.cpp"
     break;
 
@@ -1765,13 +1765,13 @@ namespace yy {
 
   case 42: // shift_expr: shift_expr LEFT_OP add_expr
 #line 219 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::SHL, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::SHL, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1770 "yy_parser.cpp"
     break;
 
   case 43: // shift_expr: shift_expr RIGHT_OP add_expr
 #line 220 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::SHR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::SHR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1776 "yy_parser.cpp"
     break;
 
@@ -1783,25 +1783,25 @@ namespace yy {
 
   case 45: // rel_expr: rel_expr "<" shift_expr
 #line 225 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::LT, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LT, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1788 "yy_parser.cpp"
     break;
 
   case 46: // rel_expr: rel_expr ">" shift_expr
 #line 226 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::GT, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::GT, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1794 "yy_parser.cpp"
     break;
 
   case 47: // rel_expr: rel_expr LE_OP shift_expr
 #line 227 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::LE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1800 "yy_parser.cpp"
     break;
 
   case 48: // rel_expr: rel_expr GE_OP shift_expr
 #line 228 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::GE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::GE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1806 "yy_parser.cpp"
     break;
 
@@ -1813,13 +1813,13 @@ namespace yy {
 
   case 50: // eq_expr: eq_expr EQ_OP rel_expr
 #line 233 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::EQ, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::EQ, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1818 "yy_parser.cpp"
     break;
 
   case 51: // eq_expr: eq_expr NE_OP rel_expr
 #line 234 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::NE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::NE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1824 "yy_parser.cpp"
     break;
 
@@ -1831,7 +1831,7 @@ namespace yy {
 
   case 53: // and_expr: and_expr "&" eq_expr
 #line 239 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::BIT_AND, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::BIT_AND, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1836 "yy_parser.cpp"
     break;
 
@@ -1843,7 +1843,7 @@ namespace yy {
 
   case 55: // xor_expr: xor_expr "^" and_expr
 #line 244 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::BIT_XOR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::BIT_XOR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1848 "yy_parser.cpp"
     break;
 
@@ -1855,7 +1855,7 @@ namespace yy {
 
   case 57: // or_expr: or_expr "|" xor_expr
 #line 249 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::BIT_OR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::BIT_OR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1860 "yy_parser.cpp"
     break;
 
@@ -1867,7 +1867,7 @@ namespace yy {
 
   case 59: // land_expr: land_expr AND_OP or_expr
 #line 254 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::LOG_AND, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LOG_AND, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1872 "yy_parser.cpp"
     break;
 
@@ -1879,7 +1879,7 @@ namespace yy {
 
   case 61: // lor_expr: lor_expr OR_OP land_expr
 #line 259 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Binop(AST_Binop::LOG_OR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LOG_OR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1884 "yy_parser.cpp"
     break;
 
@@ -1891,7 +1891,7 @@ namespace yy {
 
   case 63: // ternary_expr: lor_expr "?" expr ":" ternary_expr
 #line 264 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Ternary(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkTernary(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1896 "yy_parser.cpp"
     break;
 
@@ -1903,7 +1903,7 @@ namespace yy {
 
   case 65: // assign_expr: unary_expr assign_op assign_expr
 #line 269 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = new AST_Assignment(AST_Assignment::OpType(yystack_[1].value.as < short > ()), yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkAssign(AST_Assignment::OpType(yystack_[1].value.as < short > ()), yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1908 "yy_parser.cpp"
     break;
 
@@ -1993,7 +1993,7 @@ namespace yy {
 
   case 80: // decl_specs: storage_class_specifier
 #line 298 "parser.y"
-                                                { yylhs.value.as < AST_DeclSpecifiers * > () = (new AST_DeclSpecifiers())->update_storage(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_storage(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 1998 "yy_parser.cpp"
     break;
 
@@ -2005,7 +2005,7 @@ namespace yy {
 
   case 82: // decl_specs: type_specifier
 #line 300 "parser.y"
-                                                { yylhs.value.as < AST_DeclSpecifiers * > () = (new AST_DeclSpecifiers())->update_type_spec(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_type_spec(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 2010 "yy_parser.cpp"
     break;
 
@@ -2017,7 +2017,7 @@ namespace yy {
 
   case 84: // decl_specs: type_qual
 #line 302 "parser.y"
-                                                { yylhs.value.as < AST_DeclSpecifiers * > () = (new AST_DeclSpecifiers())->update_type_qual(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_type_qual(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 2022 "yy_parser.cpp"
     break;
 
@@ -2029,7 +2029,7 @@ namespace yy {
 
   case 86: // decl_specs: function_specifier
 #line 304 "parser.y"
-                                                { yylhs.value.as < AST_DeclSpecifiers * > () = (new AST_DeclSpecifiers())->update_func_qual(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_func_qual(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 2034 "yy_parser.cpp"
     break;
 
@@ -2071,73 +2071,73 @@ namespace yy {
 
   case 93: // type_specifier: VOID
 #line 317 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_VOID); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_VOID); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2076 "yy_parser.cpp"
     break;
 
   case 94: // type_specifier: CHAR
 #line 318 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_CHAR); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_CHAR); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2082 "yy_parser.cpp"
     break;
 
   case 95: // type_specifier: SHORT
 #line 319 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_SHORT); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_SHORT); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2088 "yy_parser.cpp"
     break;
 
   case 96: // type_specifier: INT
 #line 320 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_INT); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_INT); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2094 "yy_parser.cpp"
     break;
 
   case 97: // type_specifier: LONG
 #line 321 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_LONG); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_LONG); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2100 "yy_parser.cpp"
     break;
 
   case 98: // type_specifier: FLOAT
 #line 322 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_FLOAT); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_FLOAT); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2106 "yy_parser.cpp"
     break;
 
   case 99: // type_specifier: DOUBLE
 #line 323 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_DOUBLE); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_DOUBLE); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2112 "yy_parser.cpp"
     break;
 
   case 100: // type_specifier: SIGNED
 #line 324 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_SIGNED); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_SIGNED); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2118 "yy_parser.cpp"
     break;
 
   case 101: // type_specifier: UNSIGNED
 #line 325 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(AST_TypeSpecifier::T_UNSIGNED); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_UNSIGNED); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2124 "yy_parser.cpp"
     break;
 
   case 102: // type_specifier: ustruct_spec
 #line 326 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(yystack_[0].value.as < AST_UStructSpec * > ()); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(yystack_[0].value.as < AST_UStructSpec * > ()); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2130 "yy_parser.cpp"
     break;
 
   case 103: // type_specifier: enum_specifier
 #line 327 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(yystack_[0].value.as < AST_EnumSpecifier * > ()); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(yystack_[0].value.as < AST_EnumSpecifier * > ()); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2136 "yy_parser.cpp"
     break;
 
   case 104: // type_specifier: TYPE_NAME
 #line 328 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = new AST_TypeSpecifier(get_def_type(yystack_[0].value.as < string_id_t > ())); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(get_def_type(yystack_[0].value.as < string_id_t > ())); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2142 "yy_parser.cpp"
     break;
 
@@ -2167,19 +2167,19 @@ namespace yy {
 
   case 109: // ustruct_spec: ustruct IDENTIFIER "{" struct_decls_lst "}"
 #line 342 "parser.y"
-                                                    { yylhs.value.as < AST_UStructSpec * > () = new AST_UStructSpec(yystack_[4].value.as < short > (), yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
+                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[4].value.as < short > (), yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
 #line 2172 "yy_parser.cpp"
     break;
 
   case 110: // ustruct_spec: ustruct "{" struct_decls_lst "}"
 #line 343 "parser.y"
-                                                    { yylhs.value.as < AST_UStructSpec * > () = new AST_UStructSpec(yystack_[3].value.as < short > (), NO_IDENT_ID, yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
+                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[3].value.as < short > (), NO_IDENT_ID, yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
 #line 2178 "yy_parser.cpp"
     break;
 
   case 111: // ustruct_spec: ustruct IDENTIFIER
 #line 344 "parser.y"
-                                                    { yylhs.value.as < AST_UStructSpec * > () = new AST_UStructSpec(yystack_[1].value.as < short > (), yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
+                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[1].value.as < short > (), yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
 #line 2184 "yy_parser.cpp"
     break;
 
@@ -2197,7 +2197,7 @@ namespace yy {
 
   case 114: // struct_decls_lst: struct_declaration
 #line 353 "parser.y"
-                                                    { yylhs.value.as < AST_StructDeclarationList * > () = new AST_StructDeclarationList(yystack_[0].value.as < AST_StructDeclaration * > ()); SL(yylhs.value.as < AST_StructDeclarationList * > (), yylhs.location); }
+                                                    { yylhs.value.as < AST_StructDeclarationList * > () = drv.ast->mkStructDeclarationLst(yystack_[0].value.as < AST_StructDeclaration * > ()); SL(yylhs.value.as < AST_StructDeclarationList * > (), yylhs.location); }
 #line 2202 "yy_parser.cpp"
     break;
 
@@ -2209,7 +2209,7 @@ namespace yy {
 
   case 116: // struct_declaration: spec_qual_lst struct_declarator_list ";"
 #line 358 "parser.y"
-                                                    { yylhs.value.as < AST_StructDeclaration * > () = new AST_StructDeclaration(yystack_[2].value.as < AST_SpecsQualsList * > (), yystack_[1].value.as < AST_StructDeclaratorList * > ()); SL(yylhs.value.as < AST_StructDeclaration * > (), yylhs.location); }
+                                                    { yylhs.value.as < AST_StructDeclaration * > () = drv.ast->mkStructDeclaration(yystack_[2].value.as < AST_SpecsQualsList * > (), yystack_[1].value.as < AST_StructDeclaratorList * > ()); SL(yylhs.value.as < AST_StructDeclaration * > (), yylhs.location); }
 #line 2214 "yy_parser.cpp"
     break;
 
@@ -2221,7 +2221,7 @@ namespace yy {
 
   case 118: // spec_qual_lst: type_specifier
 #line 363 "parser.y"
-                                        { yylhs.value.as < AST_SpecsQualsList * > () = new AST_SpecsQualsList(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_SpecsQualsList * > () = drv.ast->mkSpecQualLst(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
 #line 2226 "yy_parser.cpp"
     break;
 
@@ -2233,13 +2233,13 @@ namespace yy {
 
   case 120: // spec_qual_lst: type_qual
 #line 365 "parser.y"
-                                        { yylhs.value.as < AST_SpecsQualsList * > () = new AST_SpecsQualsList(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_SpecsQualsList * > () = drv.ast->mkSpecQualLst(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
 #line 2238 "yy_parser.cpp"
     break;
 
   case 121: // struct_declarator_list: struct_declarator
 #line 369 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclaratorList * > () = new AST_StructDeclaratorList(yystack_[0].value.as < AST_StructDeclarator * > ()); SL(yylhs.value.as < AST_StructDeclaratorList * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_StructDeclaratorList * > () = drv.ast->mkStructDeclaratorLst(yystack_[0].value.as < AST_StructDeclarator * > ()); SL(yylhs.value.as < AST_StructDeclaratorList * > (), yylhs.location); }
 #line 2244 "yy_parser.cpp"
     break;
 
@@ -2251,55 +2251,55 @@ namespace yy {
 
   case 123: // struct_declarator: declarator
 #line 374 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclarator * > () = new AST_StructDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
 #line 2256 "yy_parser.cpp"
     break;
 
   case 124: // struct_declarator: ":" const_expr
 #line 375 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclarator * > () = new AST_StructDeclarator(nullptr, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(nullptr, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
 #line 2262 "yy_parser.cpp"
     break;
 
   case 125: // struct_declarator: declarator ":" const_expr
 #line 376 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclarator * > () = new AST_StructDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
 #line 2268 "yy_parser.cpp"
     break;
 
   case 126: // enum_specifier: ENUM "{" enumerator_list "}"
 #line 380 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = new AST_EnumSpecifier(NO_IDENT_ID, yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(NO_IDENT_ID, yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2274 "yy_parser.cpp"
     break;
 
   case 127: // enum_specifier: ENUM IDENTIFIER "{" enumerator_list "}"
 #line 381 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = new AST_EnumSpecifier(yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2280 "yy_parser.cpp"
     break;
 
   case 128: // enum_specifier: ENUM "{" enumerator_list "," "}"
 #line 382 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = new AST_EnumSpecifier(NO_IDENT_ID, yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(NO_IDENT_ID, yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2286 "yy_parser.cpp"
     break;
 
   case 129: // enum_specifier: ENUM IDENTIFIER "{" enumerator_list "," "}"
 #line 383 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = new AST_EnumSpecifier(yystack_[4].value.as < string_id_t > (), yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[4].value.as < string_id_t > (), yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2292 "yy_parser.cpp"
     break;
 
   case 130: // enum_specifier: ENUM IDENTIFIER
 #line 384 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = new AST_EnumSpecifier(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2298 "yy_parser.cpp"
     break;
 
   case 131: // enumerator_list: enumerator
 #line 388 "parser.y"
-                                                        { yylhs.value.as < AST_EnumeratorList * > () = new AST_EnumeratorList(yystack_[0].value.as < AST_Enumerator * > ()); SL(yylhs.value.as < AST_EnumeratorList * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_EnumeratorList * > () = drv.ast->mkEnumLst(yystack_[0].value.as < AST_Enumerator * > ()); SL(yylhs.value.as < AST_EnumeratorList * > (), yylhs.location); }
 #line 2304 "yy_parser.cpp"
     break;
 
@@ -2311,31 +2311,31 @@ namespace yy {
 
   case 133: // enumerator: IDENTIFIER
 #line 393 "parser.y"
-                                                        { yylhs.value.as < AST_Enumerator * > () = new AST_Enumerator(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_Enumerator * > () = drv.ast->mkEnumer(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
 #line 2316 "yy_parser.cpp"
     break;
 
   case 134: // enumerator: IDENTIFIER "=" const_expr
 #line 394 "parser.y"
-                                                        { yylhs.value.as < AST_Enumerator * > () = new AST_Enumerator(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_Enumerator * > () = drv.ast->mkEnumer(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
 #line 2322 "yy_parser.cpp"
     break;
 
   case 135: // declaration: decl_specs ";"
 #line 401 "parser.y"
-                                                        { yylhs.value.as < AST_Declaration * > () = new AST_Declaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
 #line 2328 "yy_parser.cpp"
     break;
 
   case 136: // declaration: decl_specs init_decltor_list ";"
 #line 402 "parser.y"
-                                                        { yylhs.value.as < AST_Declaration * > () = new AST_Declaration(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_InitDeclaratorList * > ()); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_InitDeclaratorList * > ()); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
 #line 2334 "yy_parser.cpp"
     break;
 
   case 137: // init_decltor_list: init_decltor
 #line 406 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclaratorList * > () = new AST_InitDeclaratorList(yystack_[0].value.as < AST_InitDeclarator * > ()); SL(yylhs.value.as < AST_InitDeclaratorList * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_InitDeclaratorList * > () = drv.ast->mkInitDeclaratorLst(yystack_[0].value.as < AST_InitDeclarator * > ()); SL(yylhs.value.as < AST_InitDeclaratorList * > (), yylhs.location); }
 #line 2340 "yy_parser.cpp"
     break;
 
@@ -2347,103 +2347,103 @@ namespace yy {
 
   case 139: // init_decltor: declarator
 #line 411 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclarator * > () = new AST_InitDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_InitDeclarator * > () = drv.ast->mkInitDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
 #line 2352 "yy_parser.cpp"
     break;
 
   case 140: // init_decltor: declarator "=" initializer
 #line 412 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclarator * > () = new AST_InitDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Initializer * > ()); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_InitDeclarator * > () = drv.ast->mkInitDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Initializer * > ()); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
 #line 2358 "yy_parser.cpp"
     break;
 
   case 141: // declarator: pointer dir_decltor
 #line 416 "parser.y"
-                                        { yylhs.value.as < AST_Declarator * > () = new AST_Declarator(yystack_[0].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_Declarator * > () = drv.ast->mkDeclarator(yystack_[0].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
 #line 2364 "yy_parser.cpp"
     break;
 
   case 142: // declarator: dir_decltor
 #line 417 "parser.y"
-                                        { yylhs.value.as < AST_Declarator * > () = new AST_Declarator(yystack_[0].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_Declarator * > () = drv.ast->mkDeclarator(yystack_[0].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
 #line 2370 "yy_parser.cpp"
     break;
 
   case 143: // pointer: "*"
 #line 421 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = new AST_Pointer(nullptr, nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(nullptr, nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2376 "yy_parser.cpp"
     break;
 
   case 144: // pointer: "*" type_qual_lst
 #line 422 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = new AST_Pointer(yystack_[0].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(yystack_[0].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2382 "yy_parser.cpp"
     break;
 
   case 145: // pointer: "*" pointer
 #line 423 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = new AST_Pointer(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2388 "yy_parser.cpp"
     break;
 
   case 146: // pointer: "*" type_qual_lst pointer
 #line 424 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = new AST_Pointer(yystack_[1].value.as < AST_TypeQuals * > (), yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(yystack_[1].value.as < AST_TypeQuals * > (), yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2394 "yy_parser.cpp"
     break;
 
   case 147: // dir_decltor: IDENTIFIER
 #line 428 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2400 "yy_parser.cpp"
     break;
 
   case 148: // dir_decltor: "(" declarator ")"
 #line 429 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeNested(yystack_[1].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclNested(yystack_[1].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2406 "yy_parser.cpp"
     break;
 
   case 149: // dir_decltor: dir_decltor "[" type_qual_lst assign_expr "]"
 #line 430 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeArr(yystack_[4].value.as < AST_DirDeclarator * > (), yystack_[2].value.as < AST_TypeQuals * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[4].value.as < AST_DirDeclarator * > (), yystack_[2].value.as < AST_TypeQuals * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2412 "yy_parser.cpp"
     break;
 
   case 150: // dir_decltor: dir_decltor "[" type_qual_lst "]"
 #line 431 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeArr(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2418 "yy_parser.cpp"
     break;
 
   case 151: // dir_decltor: dir_decltor "[" assign_expr "]"
 #line 432 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeArr(yystack_[3].value.as < AST_DirDeclarator * > (), nullptr, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[3].value.as < AST_DirDeclarator * > (), nullptr, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2424 "yy_parser.cpp"
     break;
 
   case 152: // dir_decltor: dir_decltor "[" "]"
 #line 433 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeArr(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr, nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr, nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2430 "yy_parser.cpp"
     break;
 
   case 153: // dir_decltor: dir_decltor "(" param_type_lst ")"
 #line 434 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeFunc(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclFunc(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2436 "yy_parser.cpp"
     break;
 
   case 154: // dir_decltor: dir_decltor "(" ")"
 #line 435 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = AST_DirDeclarator::makeFunc(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclFunc(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2442 "yy_parser.cpp"
     break;
 
   case 155: // type_qual_lst: type_qual
 #line 439 "parser.y"
-                                    { yylhs.value.as < AST_TypeQuals * > () = new AST_TypeQuals(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_TypeQuals * > (), yylhs.location); }
+                                    { yylhs.value.as < AST_TypeQuals * > () = drv.ast->mkTypeQuals(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_TypeQuals * > (), yylhs.location); }
 #line 2448 "yy_parser.cpp"
     break;
 
@@ -2455,19 +2455,19 @@ namespace yy {
 
   case 157: // param_type_lst: param_lst
 #line 444 "parser.y"
-                                    { yylhs.value.as < AST_ParameterTypeList * > () = new AST_ParameterTypeList(yystack_[0].value.as < AST_ParameterList * > (), false); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
+                                    { yylhs.value.as < AST_ParameterTypeList * > () = drv.ast->mkParamTypeLst(yystack_[0].value.as < AST_ParameterList * > (), false); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
 #line 2460 "yy_parser.cpp"
     break;
 
   case 158: // param_type_lst: param_lst "," ELLIPSIS
 #line 445 "parser.y"
-                                    { yylhs.value.as < AST_ParameterTypeList * > () = new AST_ParameterTypeList(yystack_[2].value.as < AST_ParameterList * > (), true); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
+                                    { yylhs.value.as < AST_ParameterTypeList * > () = drv.ast->mkParamTypeLst(yystack_[2].value.as < AST_ParameterList * > (), true); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
 #line 2466 "yy_parser.cpp"
     break;
 
   case 159: // param_lst: parameter_declaration
 #line 449 "parser.y"
-                                                { yylhs.value.as < AST_ParameterList * > () = new AST_ParameterList(yystack_[0].value.as < AST_ParameterDeclaration * > ()); SL(yylhs.value.as < AST_ParameterList * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_ParameterList * > () = drv.ast->mkParamLst(yystack_[0].value.as < AST_ParameterDeclaration * > ()); SL(yylhs.value.as < AST_ParameterList * > (), yylhs.location); }
 #line 2472 "yy_parser.cpp"
     break;
 
@@ -2479,326 +2479,326 @@ namespace yy {
 
   case 161: // parameter_declaration: decl_specs declarator
 #line 454 "parser.y"
-                                                { yylhs.value.as < AST_ParameterDeclaration * > () = new AST_ParameterDeclaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), yystack_[0].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_ParameterDeclaration * > () = drv.ast->mkParamDecl(yystack_[1].value.as < AST_DeclSpecifiers * > (), yystack_[0].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
 #line 2484 "yy_parser.cpp"
     break;
 
   case 162: // parameter_declaration: decl_specs
 #line 455 "parser.y"
-                                                { yylhs.value.as < AST_ParameterDeclaration * > () = new AST_ParameterDeclaration(yystack_[0].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_ParameterDeclaration * > () = drv.ast->mkParamDecl(yystack_[0].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
 #line 2490 "yy_parser.cpp"
     break;
 
   case 163: // type_name: spec_qual_lst
 #line 459 "parser.y"
-                                                { yylhs.value.as < AST_TypeName * > () = new AST_TypeName(yystack_[0].value.as < AST_SpecsQualsList * > (), nullptr); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_TypeName * > () = drv.ast->mkTypeName(yystack_[0].value.as < AST_SpecsQualsList * > (), nullptr); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
 #line 2496 "yy_parser.cpp"
     break;
 
   case 164: // type_name: spec_qual_lst abstr_decltor
 #line 460 "parser.y"
-                                                { yylhs.value.as < AST_TypeName * > () = new AST_TypeName(yystack_[1].value.as < AST_SpecsQualsList * > (), yystack_[0].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_TypeName * > () = drv.ast->mkTypeName(yystack_[1].value.as < AST_SpecsQualsList * > (), yystack_[0].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
 #line 2502 "yy_parser.cpp"
     break;
 
   case 165: // abstr_decltor: dir_abstr_decltor
 #line 464 "parser.y"
-                                                { yylhs.value.as < AST_AbstrDeclarator * > () = new AST_AbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
 #line 2508 "yy_parser.cpp"
     break;
 
   case 166: // abstr_decltor: pointer dir_abstr_decltor
 #line 465 "parser.y"
-                                                { yylhs.value.as < AST_AbstrDeclarator * > () = new AST_AbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
 #line 2514 "yy_parser.cpp"
     break;
 
   case 167: // abstr_decltor: pointer
 #line 466 "parser.y"
-                                                { yylhs.value.as < AST_AbstrDeclarator * > () = new AST_AbstrDeclarator(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
+                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
 #line 2520 "yy_parser.cpp"
     break;
 
   case 168: // dir_abstr_decltor: "(" abstr_decltor ")"
-#line 471 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = AST_DirAbstrDeclarator::makeNested(yystack_[1].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+#line 470 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclNested(yystack_[1].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2526 "yy_parser.cpp"
     break;
 
   case 169: // dir_abstr_decltor: dir_abstr_decltor "[" "]"
-#line 472 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = AST_DirAbstrDeclarator::makeArr(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+#line 471 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclArr(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2532 "yy_parser.cpp"
     break;
 
   case 170: // dir_abstr_decltor: dir_abstr_decltor "[" assign_expr "]"
-#line 473 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = AST_DirAbstrDeclarator::makeArr(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+#line 472 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclArr(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2538 "yy_parser.cpp"
     break;
 
   case 171: // dir_abstr_decltor: dir_abstr_decltor "(" ")"
-#line 474 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = AST_DirAbstrDeclarator::makeFunc(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+#line 473 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclFunc(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2544 "yy_parser.cpp"
     break;
 
   case 172: // dir_abstr_decltor: dir_abstr_decltor "(" param_type_lst ")"
-#line 475 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = AST_DirAbstrDeclarator::makeFunc(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+#line 474 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclFunc(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2550 "yy_parser.cpp"
     break;
 
   case 173: // initializer: assign_expr
-#line 482 "parser.y"
-                                                    { yylhs.value.as < AST_Initializer * > () = new AST_Initializer(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
+#line 481 "parser.y"
+                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
 #line 2556 "yy_parser.cpp"
     break;
 
   case 174: // initializer: "{" init_lst "}"
-#line 483 "parser.y"
-                                                    { yylhs.value.as < AST_Initializer * > () = new AST_Initializer(yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
+#line 482 "parser.y"
+                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
 #line 2562 "yy_parser.cpp"
     break;
 
   case 175: // initializer: "{" init_lst "," "}"
-#line 484 "parser.y"
-                                                    { yylhs.value.as < AST_Initializer * > () = new AST_Initializer(yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
+#line 483 "parser.y"
+                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
 #line 2568 "yy_parser.cpp"
     break;
 
   case 176: // init_lst: initializer
-#line 488 "parser.y"
-                                                    { yylhs.value.as < AST_InitializerList * > () = new AST_InitializerList(yystack_[0].value.as < AST_Initializer * > (), nullptr); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
+#line 487 "parser.y"
+                                                    { yylhs.value.as < AST_InitializerList * > () = drv.ast->mkInitializerLst(yystack_[0].value.as < AST_Initializer * > (), nullptr); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
 #line 2574 "yy_parser.cpp"
     break;
 
   case 177: // init_lst: designator "=" initializer
-#line 489 "parser.y"
-                                                    { yylhs.value.as < AST_InitializerList * > () = new AST_InitializerList(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
+#line 488 "parser.y"
+                                                    { yylhs.value.as < AST_InitializerList * > () = drv.ast->mkInitializerLst(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
 #line 2580 "yy_parser.cpp"
     break;
 
   case 178: // init_lst: init_lst "," initializer
-#line 490 "parser.y"
+#line 489 "parser.y"
                                                     { yylhs.value.as < AST_InitializerList * > () = yystack_[2].value.as < AST_InitializerList * > ()->append(yystack_[0].value.as < AST_Initializer * > (), nullptr); }
 #line 2586 "yy_parser.cpp"
     break;
 
   case 179: // init_lst: init_lst "," designator "=" initializer
-#line 491 "parser.y"
+#line 490 "parser.y"
                                                     { yylhs.value.as < AST_InitializerList * > () = yystack_[4].value.as < AST_InitializerList * > ()->append(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); }
 #line 2592 "yy_parser.cpp"
     break;
 
   case 180: // designator: "[" const_expr "]"
-#line 495 "parser.y"
-                                                    { yylhs.value.as < AST_Designator * > () = new AST_Designator(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
+#line 494 "parser.y"
+                                                    { yylhs.value.as < AST_Designator * > () = drv.ast->mkDesignator(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
 #line 2598 "yy_parser.cpp"
     break;
 
   case 181: // designator: "." IDENTIFIER
-#line 496 "parser.y"
-                                                    { yylhs.value.as < AST_Designator * > () = new AST_Designator(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
+#line 495 "parser.y"
+                                                    { yylhs.value.as < AST_Designator * > () = drv.ast->mkDesignator(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
 #line 2604 "yy_parser.cpp"
     break;
 
   case 182: // stmt: label_stmt
-#line 503 "parser.y"
+#line 502 "parser.y"
                                     { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_LabeledStmt * > (); }
 #line 2610 "yy_parser.cpp"
     break;
 
   case 183: // stmt: compound_stmt
-#line 504 "parser.y"
+#line 503 "parser.y"
                                     { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_CompoundStmt * > (); }
 #line 2616 "yy_parser.cpp"
     break;
 
   case 184: // stmt: expr_stmt
-#line 505 "parser.y"
+#line 504 "parser.y"
                                     { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_ExprStmt * > (); }
 #line 2622 "yy_parser.cpp"
     break;
 
   case 185: // stmt: select_stmt
-#line 506 "parser.y"
+#line 505 "parser.y"
                                     { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_SelectionStmt * > (); }
 #line 2628 "yy_parser.cpp"
     break;
 
   case 186: // stmt: loop_stmt
-#line 507 "parser.y"
+#line 506 "parser.y"
                                     { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_IterStmt * > (); }
 #line 2634 "yy_parser.cpp"
     break;
 
   case 187: // stmt: jmp_stmt
-#line 508 "parser.y"
+#line 507 "parser.y"
                                     { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_JumpStmt * > (); }
 #line 2640 "yy_parser.cpp"
     break;
 
   case 188: // label_stmt: IDENTIFIER ":" stmt
-#line 512 "parser.y"
-                                    { yylhs.value.as < AST_LabeledStmt * > () = new AST_LabeledStmt(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SIMPL); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
+#line 511 "parser.y"
+                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SIMPL); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
 #line 2646 "yy_parser.cpp"
     break;
 
   case 189: // label_stmt: CASE const_expr ":" stmt
-#line 513 "parser.y"
-                                    { yylhs.value.as < AST_LabeledStmt * > () = new AST_LabeledStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_CASE); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
+#line 512 "parser.y"
+                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_CASE); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
 #line 2652 "yy_parser.cpp"
     break;
 
   case 190: // label_stmt: DEFAULT ":" stmt
-#line 514 "parser.y"
-                                    { yylhs.value.as < AST_LabeledStmt * > () = new AST_LabeledStmt(nullptr, yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_DEFAULT); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
+#line 513 "parser.y"
+                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(nullptr, yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_DEFAULT); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
 #line 2658 "yy_parser.cpp"
     break;
 
   case 191: // compound_stmt: "{" "}"
-#line 518 "parser.y"
-                                    { yylhs.value.as < AST_CompoundStmt * > () = new AST_CompoundStmt(new AST_BlockItemList()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
+#line 517 "parser.y"
+                                    { yylhs.value.as < AST_CompoundStmt * > () = drv.ast->mkCompoundStmt(new AST_BlockItemList()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
 #line 2664 "yy_parser.cpp"
     break;
 
   case 192: // compound_stmt: "{" block_items "}"
-#line 519 "parser.y"
-                                    { yylhs.value.as < AST_CompoundStmt * > () = new AST_CompoundStmt(yystack_[1].value.as < AST_BlockItemList * > ()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
+#line 518 "parser.y"
+                                    { yylhs.value.as < AST_CompoundStmt * > () = drv.ast->mkCompoundStmt(yystack_[1].value.as < AST_BlockItemList * > ()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
 #line 2670 "yy_parser.cpp"
     break;
 
   case 193: // block_items: declaration
-#line 523 "parser.y"
-                                    { yylhs.value.as < AST_BlockItemList * > () = (new AST_BlockItemList())->append(yystack_[0].value.as < AST_Declaration * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
+#line 522 "parser.y"
+                                    { yylhs.value.as < AST_BlockItemList * > () = drv.ast->mkBlockItemLst()->append(yystack_[0].value.as < AST_Declaration * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
 #line 2676 "yy_parser.cpp"
     break;
 
   case 194: // block_items: stmt
-#line 524 "parser.y"
-                                    { yylhs.value.as < AST_BlockItemList * > () = (new AST_BlockItemList())->append(yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
+#line 523 "parser.y"
+                                    { yylhs.value.as < AST_BlockItemList * > () = drv.ast->mkBlockItemLst()->append(yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
 #line 2682 "yy_parser.cpp"
     break;
 
   case 195: // block_items: block_items declaration
-#line 525 "parser.y"
+#line 524 "parser.y"
                                     { yylhs.value.as < AST_BlockItemList * > () = yystack_[1].value.as < AST_BlockItemList * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); }
 #line 2688 "yy_parser.cpp"
     break;
 
   case 196: // block_items: block_items stmt
-#line 526 "parser.y"
+#line 525 "parser.y"
                                     { yylhs.value.as < AST_BlockItemList * > () = yystack_[1].value.as < AST_BlockItemList * > ()->append(yystack_[0].value.as < AST_Stmt * > ()); }
 #line 2694 "yy_parser.cpp"
     break;
 
   case 197: // expr_stmt: ";"
-#line 530 "parser.y"
-                                    { yylhs.value.as < AST_ExprStmt * > () = new AST_ExprStmt(nullptr); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
+#line 529 "parser.y"
+                                    { yylhs.value.as < AST_ExprStmt * > () = drv.ast->mkExprStmt(nullptr); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
 #line 2700 "yy_parser.cpp"
     break;
 
   case 198: // expr_stmt: expr ";"
-#line 531 "parser.y"
-                                    { yylhs.value.as < AST_ExprStmt * > () = new AST_ExprStmt(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
+#line 530 "parser.y"
+                                    { yylhs.value.as < AST_ExprStmt * > () = drv.ast->mkExprStmt(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
 #line 2706 "yy_parser.cpp"
     break;
 
   case 199: // select_stmt: IF "(" expr ")" stmt
-#line 535 "parser.y"
-                                            { yylhs.value.as < AST_SelectionStmt * > () = AST_SelectionStmt::get_if(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), nullptr); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
+#line 534 "parser.y"
+                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkIfStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), nullptr); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
 #line 2712 "yy_parser.cpp"
     break;
 
   case 200: // select_stmt: IF "(" expr ")" stmt ELSE stmt
-#line 536 "parser.y"
-                                            { yylhs.value.as < AST_SelectionStmt * > () = AST_SelectionStmt::get_if(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Stmt * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
+#line 535 "parser.y"
+                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkIfStmt(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Stmt * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
 #line 2718 "yy_parser.cpp"
     break;
 
   case 201: // select_stmt: SWITCH "(" expr ")" stmt
-#line 537 "parser.y"
-                                            { yylhs.value.as < AST_SelectionStmt * > () = AST_SelectionStmt::get_switch(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
+#line 536 "parser.y"
+                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkSwitchStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
 #line 2724 "yy_parser.cpp"
     break;
 
   case 202: // loop_stmt: WHILE "(" expr ")" stmt
-#line 541 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = AST_IterStmt::makeWhile(yystack_[0].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+#line 540 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeWhileStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2730 "yy_parser.cpp"
     break;
 
   case 203: // loop_stmt: DO stmt WHILE "(" expr ")" ";"
-#line 542 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = AST_IterStmt::makeWhile(yystack_[5].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+#line 541 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeWhileStmt(yystack_[5].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2736 "yy_parser.cpp"
     break;
 
   case 204: // loop_stmt: FOR "(" expr_stmt expr_stmt ")" stmt
-#line 543 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = AST_IterStmt::makeFor(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+#line 542 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2742 "yy_parser.cpp"
     break;
 
   case 205: // loop_stmt: FOR "(" expr_stmt expr_stmt expr ")" stmt
-#line 544 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = AST_IterStmt::makeFor(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_ExprStmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+#line 543 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_ExprStmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2748 "yy_parser.cpp"
     break;
 
   case 206: // loop_stmt: FOR "(" declaration expr_stmt ")" stmt
-#line 545 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = AST_IterStmt::makeFor(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_Declaration * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+#line 544 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_Declaration * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2754 "yy_parser.cpp"
     break;
 
   case 207: // loop_stmt: FOR "(" declaration expr_stmt expr ")" stmt
-#line 546 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = AST_IterStmt::makeFor(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_Declaration * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+#line 545 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_Declaration * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2760 "yy_parser.cpp"
     break;
 
   case 208: // jmp_stmt: GOTO IDENTIFIER ";"
-#line 550 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = new AST_JumpStmt(AST_JumpStmt::J_GOTO, yystack_[1].value.as < string_id_t > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+#line 549 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_GOTO, yystack_[1].value.as < string_id_t > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2766 "yy_parser.cpp"
     break;
 
   case 209: // jmp_stmt: CONTINUE ";"
-#line 551 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = new AST_JumpStmt(AST_JumpStmt::J_CONTINUE); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+#line 550 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_CONTINUE); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2772 "yy_parser.cpp"
     break;
 
   case 210: // jmp_stmt: BREAK ";"
-#line 552 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = new AST_JumpStmt(AST_JumpStmt::J_BREAK); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+#line 551 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_BREAK); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2778 "yy_parser.cpp"
     break;
 
   case 211: // jmp_stmt: RETURN ";"
-#line 553 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = new AST_JumpStmt(AST_JumpStmt::J_RET); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+#line 552 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2784 "yy_parser.cpp"
     break;
 
   case 212: // jmp_stmt: RETURN expr ";"
-#line 554 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = new AST_JumpStmt(AST_JumpStmt::J_RET, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+#line 553 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2790 "yy_parser.cpp"
     break;
 
   case 213: // trans_unit: func_def
-#line 561 "parser.y"
-                                    { yylhs.value.as < AST_TranslationUnit * > () = drv.res = (new AST_TranslationUnit())->append(yystack_[0].value.as < AST_FunctionDef * > ()); SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location); }
+#line 560 "parser.y"
+                                    { yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_FunctionDef * > ()); SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location); }
 #line 2796 "yy_parser.cpp"
     break;
 
   case 214: // trans_unit: declaration
-#line 562 "parser.y"
+#line 561 "parser.y"
                                     {
-                                        yylhs.value.as < AST_TranslationUnit * > () = drv.res = (new AST_TranslationUnit())->append(yystack_[0].value.as < AST_Declaration * > ());
+                                        yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_Declaration * > ());
                                         check_typedef(yystack_[0].value.as < AST_Declaration * > ());
                                         SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location);
                                     }
@@ -2806,20 +2806,20 @@ namespace yy {
     break;
 
   case 215: // trans_unit: trans_unit func_def
-#line 567 "parser.y"
+#line 566 "parser.y"
                                     { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_FunctionDef * > ()); }
 #line 2812 "yy_parser.cpp"
     break;
 
   case 216: // trans_unit: trans_unit declaration
-#line 568 "parser.y"
+#line 567 "parser.y"
                                     { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); check_typedef(yystack_[0].value.as < AST_Declaration * > ()); }
 #line 2818 "yy_parser.cpp"
     break;
 
   case 217: // func_def: decl_specs declarator compound_stmt
-#line 572 "parser.y"
-                                                { yylhs.value.as < AST_FunctionDef * > () = new AST_FunctionDef(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_CompoundStmt * > ()); SL(yylhs.value.as < AST_FunctionDef * > (), yylhs.location); }
+#line 571 "parser.y"
+                                                { yylhs.value.as < AST_FunctionDef * > () = drv.ast->mkFunDef(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_CompoundStmt * > ()); SL(yylhs.value.as < AST_FunctionDef * > (), yylhs.location); }
 #line 2824 "yy_parser.cpp"
     break;
 
@@ -3813,12 +3813,12 @@ namespace yy {
      384,   388,   389,   393,   394,   401,   402,   406,   407,   411,
      412,   416,   417,   421,   422,   423,   424,   428,   429,   430,
      431,   432,   433,   434,   435,   439,   440,   444,   445,   449,
-     450,   454,   455,   459,   460,   464,   465,   466,   471,   472,
-     473,   474,   475,   482,   483,   484,   488,   489,   490,   491,
-     495,   496,   503,   504,   505,   506,   507,   508,   512,   513,
-     514,   518,   519,   523,   524,   525,   526,   530,   531,   535,
-     536,   537,   541,   542,   543,   544,   545,   546,   550,   551,
-     552,   553,   554,   561,   562,   567,   568,   572
+     450,   454,   455,   459,   460,   464,   465,   466,   470,   471,
+     472,   473,   474,   481,   482,   483,   487,   488,   489,   490,
+     494,   495,   502,   503,   504,   505,   506,   507,   511,   512,
+     513,   517,   518,   522,   523,   524,   525,   529,   530,   534,
+     535,   536,   540,   541,   542,   543,   544,   545,   549,   550,
+     551,   552,   553,   560,   561,   566,   567,   571
   };
 
   void
@@ -3852,5 +3852,5 @@ namespace yy {
 } // yy
 #line 3854 "yy_parser.cpp"
 
-#line 575 "parser.y"
+#line 574 "parser.y"
 
