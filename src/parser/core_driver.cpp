@@ -36,12 +36,11 @@ std::shared_ptr<AST_TranslationUnit> CoreDriver::getTransUnit() {
     return transUnit;
 }
 
-void CoreDriver::lexer_error(const char *msg) {
+void CoreDriver::lexer_error(std::string msg) {
     auto fixLoc = ctx.warps.getLoc(location.begin.line);
     std::string filename = ctx.warps.getFilename(fixLoc.filenum);
-    std::string excMsg = fmt::format("Lexer error: {}", msg);
+    std::string excMsg = fmt::format("Lexer error: {}", std::move(msg));
     std::string excLoc = fmt::format("{}:{}:{}", filename, fixLoc.line, location.begin.column);
-    // TODO: specialized exception or at least exc location
     throw parser_exception(std::move(excMsg), std::move(excLoc));
 }
 
@@ -49,9 +48,6 @@ void CoreDriver::lexer_error(const char *msg) {
 void yy::parser::error(const location_type &loc, const std::string &msg) {
     auto fixLoc = drv.ctx.warps.getLoc(loc.begin.line);
     std::string filename = drv.ctx.warps.getFilename(fixLoc.filenum);
-    fmt::print(stderr, "Parsing error ({}:{}:{}):\n\t{}\n",
-               filename, fixLoc.line, loc.begin.column, msg);
-
-//    std::cerr << loc << ": " << msg << '\n';
-//    exit(EXIT_FAILURE);
+    std::string excLoc = fmt::format("{}:{}:{}", filename, fixLoc.line, loc.begin.column);
+    throw parser_exception(msg, std::move(excLoc));
 }

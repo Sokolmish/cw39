@@ -143,12 +143,8 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 \n+             { loc.lines(yyleng); loc.step(); }
 
 .               {
-                    char msg[64];
-                    snprintf(msg, sizeof(msg),
-                        "Unexpected symbol '%c' (0x%02hhX)\n",
-                        yytext[0], yytext[0]);
-                    msg[sizeof(msg) - 1] = 0;
-                    drv.lexer_error(msg);
+                    char ch = yytext[0];
+                    drv.lexer_error(fmt::format("Unexpected symbol '{:c}' (0x{:02X})", ch, ch));
                 }
 
 <<EOF>>         return yy::parser::make_YYEOF(loc);

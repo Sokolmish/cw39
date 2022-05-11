@@ -35,7 +35,8 @@ private:
 
     void scan_begin();
     void scan_end();
-    [[noreturn]] void lexer_error(const char *msg);
+
+    [[noreturn]] void lexer_error(std::string msg);
 
     void parse();
 

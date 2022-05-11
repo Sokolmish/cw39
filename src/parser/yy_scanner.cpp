@@ -1815,24 +1815,20 @@ case 92:
 YY_RULE_SETUP
 #line 146 "lexer.l"
 {
-                    char msg[64];
-                    snprintf(msg, sizeof(msg),
-                        "Unexpected symbol '%c' (0x%02hhX)\n",
-                        yytext[0], yytext[0]);
-                    msg[sizeof(msg) - 1] = 0;
-                    drv.lexer_error(msg);
+                    char ch = yytext[0];
+                    drv.lexer_error(fmt::format("Unexpected symbol '{:c}' (0x{:02X})", ch, ch));
                 }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 155 "lexer.l"
+#line 151 "lexer.l"
 return yy::parser::make_YYEOF(loc);
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 157 "lexer.l"
+#line 153 "lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1835 "yy_scanner.cpp"
+#line 1831 "yy_scanner.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3103,7 +3099,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 /* %ok-for-header */
 
-#line 157 "lexer.l"
+#line 153 "lexer.l"
 
 
 void CoreDriver::scan_begin() {
