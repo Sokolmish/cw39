@@ -295,7 +295,7 @@ std::string IntermediateUnit::drawCFG() const {
     std::stringstream ss;
 
     fmt::print(ss, "digraph{{\n"
-                   "node [fontname=\"helvetica\"]\n");
+                   "node [fontname=\"helvetica\",shape=box]\n");
 
     for (auto const &[fId, func] : funcs) {
         std::set<int> visited;
@@ -308,7 +308,7 @@ std::string IntermediateUnit::drawCFG() const {
             stack.pop();
             drawBlock(ss, curBlock);
             for (int ind = 0; int nextId : curBlock.next) {
-                fmt::print(ss, "block_{} -> block_{}", curBlock.id, nextId);
+                fmt::print(ss, "bl{} -> bl{}", curBlock.id, nextId);
 //                if (curBlock.next.size() == 2) {
 //                    fmt::print(ss, "[dir=both, arrowtail={}]",
 //                               ind == 0 ? "noneodot" : "noneobox");
@@ -338,8 +338,7 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) c
 
     std::stringstream ssb;
 
-    fmt::print(ssb, "block_{}:\\l", block.id);
-    fmt::print(ssb, "--------------------\\l");
+    fmt::print(ssb, "block {}\\n\\n", block.id);
 
     // PHIs
     for (auto const &[phiRes, phiFunc]: block.phis) {
@@ -349,7 +348,7 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) c
         }
         if (phiRes)
             fmt::print(ssb, "{} {} ", phiRes->to_string(), leftArrow);
-        fmt::print(ssb, "{}( ", phiSign);
+        fmt::print(ssb, "{} ( ", phiSign);
         auto const &phiExpr = dynamic_cast<IR_ExprPhi const &>(*phiFunc);
         for (auto const &[index, val]: phiExpr.args)
             fmt::print(ssb, "{}[ b{} ] ", val.to_string(), block.prev.at(index));
@@ -390,7 +389,7 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) c
         fmt::print(ssb, "; Unknown terminator\\l");
     }
 
-    fmt::print(ss, "block_{} [shape=rectangle,label=\"{}\"]\n", block.id, ssb.str());
+    fmt::print(ss, "bl{} [label=\"{}\"]\n", block.id, ssb.str());
 }
 
 std::string CFGraph::drawCFG() const {
