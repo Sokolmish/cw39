@@ -1,12 +1,20 @@
 #include "core_driver.hpp"
 #include <fmt/core.h>
+#include <cctype>
 
 CoreDriver::CoreDriver(ParsingContext &ctx, std::string program)
         : ctx(ctx), text(std::move(program)) {
     trace_parsing = false;
     trace_scanning = false;
 
+    if (text.empty() || isStringWhitespace(text))
+        throw cw39_error("Cannot compile empty or whitespace file");
+
     parse();
+}
+
+bool CoreDriver::isStringWhitespace(const std::string &str) {
+    return std::all_of(str.begin(), str.end(), isspace);
 }
 
 void CoreDriver::parse() {

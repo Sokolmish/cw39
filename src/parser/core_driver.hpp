@@ -26,6 +26,8 @@ public:
     std::shared_ptr<AST_TranslationUnit> getTransUnit();
 
 private:
+    static bool isStringWhitespace(std::string const &str);
+
     void scan_begin();
     void scan_end();
     [[noreturn]] void lexer_error(const char *msg);
