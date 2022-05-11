@@ -29,7 +29,7 @@ struct IR_Type {
     virtual std::string to_string() const = 0;
 };
 
-class IR_TypeDirect : public IR_Type {
+class IR_TypeDirect final : public IR_Type {
 public:
     enum DirType {
         VOID, BOOL, I8, U8, I32, U32, I64, U64, F32, F64
@@ -66,7 +66,7 @@ private:
     static std::shared_ptr<IR_TypeDirect> staticTypes[10];
 };
 
-struct IR_TypeStruct : IR_Type {
+struct IR_TypeStruct final : IR_Type {
     struct StructField {
         string_id_t fieldName;
         std::shared_ptr<IR_Type> irType;
@@ -87,7 +87,7 @@ struct IR_TypeStruct : IR_Type {
     StructField const* getField(string_id_t id) const;
 };
 
-struct IR_TypePtr : public IR_Type {
+struct IR_TypePtr final : public IR_Type {
     std::shared_ptr<IR_Type> child;
     bool is_const = false;
     bool is_restrict = false;
@@ -100,7 +100,7 @@ struct IR_TypePtr : public IR_Type {
     std::string to_string() const override;
 };
 
-struct IR_TypeArray : public IR_Type {
+struct IR_TypeArray final : public IR_Type {
     std::shared_ptr<IR_Type> child;
     uint64_t size;
 
@@ -111,7 +111,7 @@ struct IR_TypeArray : public IR_Type {
     std::string to_string() const override;
 };
 
-struct IR_TypeFunc : public IR_Type {
+struct IR_TypeFunc final : public IR_Type {
     std::shared_ptr<IR_Type> ret;
     std::vector<std::shared_ptr<IR_Type>> args;
     bool isVariadic;

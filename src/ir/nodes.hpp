@@ -45,7 +45,7 @@ struct IR_Expr {
     IR_ExprPhi const& getPhi() const;
 };
 
-struct IR_ExprOper : public IR_Expr {
+struct IR_ExprOper final : public IR_Expr {
     enum IR_Ops {
         MUL, DIV, REM, ADD, SUB, SHR, SHL,
         XOR, AND, OR, LAND, LOR,
@@ -62,7 +62,7 @@ struct IR_ExprOper : public IR_Expr {
     std::string to_string() const;
 };
 
-struct IR_ExprMem : public IR_Expr {
+struct IR_ExprMem final : public IR_Expr {
     enum MemOps { LOAD, STORE };
 
     MemOps op;
@@ -76,7 +76,7 @@ struct IR_ExprMem : public IR_Expr {
     std::string to_string() const;
 };
 
-struct IR_ExprAccess : public IR_Expr {
+struct IR_ExprAccess final : public IR_Expr {
     enum AccessOps { EXTRACT, INSERT, GEP };
 
     AccessOps op;
@@ -91,7 +91,7 @@ struct IR_ExprAccess : public IR_Expr {
     std::string to_string() const;
 };
 
-struct IR_ExprAlloc : public IR_Expr {
+struct IR_ExprAlloc final : public IR_Expr {
     std::shared_ptr<IR_Type> type;
     size_t size;
     bool isOnHeap = false;
@@ -103,7 +103,7 @@ struct IR_ExprAlloc : public IR_Expr {
     std::string to_string() const;
 };
 
-struct IR_ExprCast : public IR_Expr {
+struct IR_ExprCast final : public IR_Expr {
     IRval arg;
     std::shared_ptr<IR_Type> dest;
 
@@ -120,7 +120,7 @@ struct IR_ExprCast : public IR_Expr {
     std::string to_string() const;
 };
 
-struct IR_ExprCall : public IR_Expr {
+struct IR_ExprCall final : public IR_Expr {
     std::variant<int, IRval> callee;
     std::vector<IRval> args;
 
@@ -135,7 +135,7 @@ struct IR_ExprCall : public IR_Expr {
     IRval getFuncPtr() const;
 };
 
-struct IR_ExprTerminator : public IR_Expr {
+struct IR_ExprTerminator final : public IR_Expr {
     enum TermType { RET, BRANCH, JUMP } termType;
     std::optional<IRval> arg;
 
@@ -145,7 +145,7 @@ struct IR_ExprTerminator : public IR_Expr {
     std::vector<IRval*> getArgs() override;
 };
 
-struct IR_ExprPhi : public IR_Expr {
+struct IR_ExprPhi final : public IR_Expr {
     /** Key is position of argument */
     std::map<int, IRval> args;
 
