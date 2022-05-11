@@ -12,6 +12,7 @@
 #include "transformations/vars_virtualizer.hpp"
 #include "transformations/ssa_generator.hpp"
 #include "transformations/algebraic_transformer.hpp"
+#include "transformations/common_subexpr_elim.hpp"
 #include "transformations/copy_propagator.hpp"
 #include "transformations/tailrec_eliminator.hpp"
 #include "transformations/loop_inv_mover.hpp"
@@ -62,6 +63,7 @@ static void optimizeFunction(IntermediateUnit::Function &func) {
     cfg = VarsVirtualizer(std::move(cfg)).moveCfg();
     cfg = SSA_Generator(std::move(cfg)).moveCfg();
     cfg = AlgebraicTransformer(std::move(cfg)).moveCfg();
+    cfg = CommonSubexprElim(std::move(cfg)).moveCfg();
     cfg = CopyPropagator(std::move(cfg)).moveCfg();
     cfg = TailrecEliminator(std::move(cfg), func.getId()).moveCfg();
     cfg = LoopInvMover(std::move(cfg)).moveCfg();
