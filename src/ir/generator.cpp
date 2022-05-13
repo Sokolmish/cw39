@@ -178,6 +178,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
 
     for (const auto &singleDecl : decl.child->v) {
         auto varType = getType(*decl.specifiers, *singleDecl->declarator);
+        string_id_t ident = getDeclaredIdent(*singleDecl->declarator);
 
         // Function prototype
         if (varType->type == IR_Type::FUNCTION) {
@@ -186,31 +187,12 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             if (singleDecl->initializer)
                 semanticError(singleDecl->initializer->loc, "Prototypes cannot be initialized");
 
-            IR_StorageSpecifier funStorage = IR_StorageSpecifier::EXTERN;
-            switch (decl.specifiers->storage_specifier) {
-                case AST_DeclSpecifiers::ST_NONE:
-                case AST_DeclSpecifiers::ST_EXTERN:
-                    funStorage = IR_StorageSpecifier::EXTERN;
-                    break;
-                case AST_DeclSpecifiers::ST_STATIC:
-                    funStorage = IR_StorageSpecifier::STATIC;
-                    break;
-                case AST_DeclSpecifiers::ST_AUTO:
-                    semanticError(decl.loc, "Function cannot has 'auto' storage specifier");
-                case AST_DeclSpecifiers::ST_REGISTER:
-                    semanticError(decl.loc, "Function cannot has 'register' storage specifier");
-                case AST_DeclSpecifiers::ST_TYPEDEF:
-                    throw cw39_internal_error("Typedef in wrong context");
-            }
-
-            string_id_t funcIdent = getDeclaredIdent(*singleDecl->declarator);
-
-            auto &fun = iunit->createPrototype(ctx.getIdentById(funcIdent), funStorage, varType);
-            functions.emplace(funcIdent, fun.getId());
+            auto linkage = getGlobalLinkage(decl.specifiers->storage_specifier, decl.loc);
+            auto &fun = iunit->createPrototype(ctx.getIdentById(ident), linkage, varType);
+            functions.emplace(ident, fun.getId());
             continue; // break?
         }
 
-        string_id_t ident = getDeclaredIdent(*singleDecl->declarator);
         if (globals.contains(ident)) // TODO: check in functions (not only there)
             semanticError(singleDecl->loc, "Global variable already declared");
 
@@ -243,30 +225,27 @@ static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec co
     }
 }
 
+static int getFspec(AST_DeclSpecifiers const &declSpec) {
+    int fspec = IntermediateUnit::Function::FSPEC_NONE;
+    if (declSpec.is_inline)
+        fspec = fspec | IntermediateUnit::Function::FSPEC_INLINE;
+    if (declSpec.is_pure)
+        fspec = fspec | IntermediateUnit::Function::FSPEC_PURE;
+    if (declSpec.is_fconst)
+        fspec = fspec | IntermediateUnit::Function::FSPEC_FCONST;
+    return fspec;
+}
+
 /** Create function definition */
 void IR_Generator::createFunction(AST_FunctionDef const &def) {
     variables.increaseLevel();
 
-    IR_StorageSpecifier storage;
-    std::shared_ptr<IR_Type> fullType;
-
-    if (def.specifiers->storage_specifier == AST_DeclSpecifiers::ST_NONE)
-        storage = IR_StorageSpecifier::EXTERN;
-    else
-        storage = storageSpecFromAst(def.specifiers->storage_specifier);
-    fullType = getType(*def.specifiers, *def.decl);
-
-    int fspec = IntermediateUnit::Function::FSPEC_NONE;
-    if (def.specifiers->is_inline)
-        fspec = fspec | IntermediateUnit::Function::FSPEC_INLINE;
-    if (def.specifiers->is_pure)
-        fspec = fspec | IntermediateUnit::Function::FSPEC_PURE;
-    if (def.specifiers->is_fconst)
-        fspec = fspec | IntermediateUnit::Function::FSPEC_FCONST;
-
     string_id_t funcIdent = getDeclaredIdent(*def.decl);
+    auto fullType = getType(*def.specifiers, *def.decl);
+    auto linkage = getGlobalLinkage(def.specifiers->storage_specifier, def.loc);
+    int fspec = getFspec(*def.specifiers);
 
-    curFunc = &iunit->createFunction(ctx.getIdentById(funcIdent), storage, fspec, fullType);
+    curFunc = &iunit->createFunction(ctx.getIdentById(funcIdent), linkage, fspec, fullType);
     functions.emplace(funcIdent, curFunc->getId());
     IR_Block &entryBlock = curFunc->cfg.createBlock();
     curFunc->cfg.entryBlockId = entryBlock.id;

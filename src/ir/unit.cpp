@@ -81,8 +81,8 @@ IRval IntermediateUnit::createGlobal(std::string name, std::shared_ptr<IR_Type> 
     return newGlobal;
 }
 
-IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, IR_StorageSpecifier stor,
-                                                             int fspec, std::shared_ptr<IR_Type> fullType) {
+IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, Linkage stor, int fspec,
+                                                             std::shared_ptr<IR_Type> fullType) {
     Function func(this, funcsCounter++, std::move(name), false);
     func.storage = stor;
     func.fspec = fspec;
@@ -91,7 +91,7 @@ IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, I
     return it->second;
 }
 
-IntermediateUnit::Function& IntermediateUnit::createPrototype(std::string name, IR_StorageSpecifier stor,
+IntermediateUnit::Function& IntermediateUnit::createPrototype(std::string name, Linkage stor,
                                                               std::shared_ptr<IR_Type> fullType) {
     Function func(this, funcsCounter++, std::move(name), true);
     func.storage = stor;

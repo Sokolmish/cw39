@@ -269,16 +269,14 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
     throw std::logic_error("Wrong value type");
 }
 
-static GlobalValue::LinkageTypes getLinkageType(IR_StorageSpecifier::Specs spec) {
-    switch (spec) {
-        case IR_StorageSpecifier::EXTERN:
+static GlobalValue::LinkageTypes getLinkageType(IntermediateUnit::Linkage linkage) {
+    switch (linkage) {
+        case IntermediateUnit::Linkage::EXTERN:
             return Function::ExternalLinkage;
-        case IR_StorageSpecifier::STATIC:
+        case IntermediateUnit::Linkage::STATIC:
             return Function::InternalLinkage;
-        case IR_StorageSpecifier::AUTO:
-            throw cw39_internal_error("Not a linkage type: 'auto'");
-        case IR_StorageSpecifier::REGISTER:
-            throw cw39_internal_error("Not a linkage type: 'register'");
+        case IntermediateUnit::Linkage::WEAK:
+            return Function::WeakAnyLinkage;
     }
     throw cw39_internal_error("Unknown linkage type");
 }
@@ -291,7 +289,7 @@ void IR2LLVM_Impl::createPrototypes() {
         for (auto const &arg : irFuncType->args)
             args.push_back(getType(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
-        GlobalValue::LinkageTypes linkage = getLinkageType(func.storage.spec);
+        auto linkage = getLinkageType(func.storage);
         auto prototype = Function::Create(ftype, linkage, func.getName(), *module);
         functions.emplace(fId, prototype);
     }
@@ -307,7 +305,7 @@ void IR2LLVM_Impl::createFunctions() {
         for (auto const &arg : irFuncType->args)
             args.push_back(getType(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
-        GlobalValue::LinkageTypes linkage = getLinkageType(func.storage.spec);
+        auto linkage = getLinkageType(func.storage);
 
         curFunction = Function::Create(ftype, linkage, func.getName(), *module);
         functions.emplace(fId, curFunction);

@@ -51,9 +51,11 @@ private:
 
 class IntermediateUnit {
 public:
+    enum class Linkage { EXTERN, STATIC, WEAK };
+
     class Function {
     public:
-        IR_StorageSpecifier storage; // TODO: convert to linkage (extern, static, weak)
+        Linkage storage;
         std::shared_ptr<IR_Type> fullType;
 
         enum FuncSpec : int {
@@ -95,10 +97,8 @@ public:
     IntermediateUnit(IntermediateUnit &&oth) noexcept = default;
     IntermediateUnit& operator=(IntermediateUnit &&oth) noexcept = default;
 
-    Function& createFunction(std::string name, IR_StorageSpecifier stor, int fspec,
-                             std::shared_ptr<IR_Type> fullType);
-    Function& createPrototype(std::string name, IR_StorageSpecifier stor,
-                              std::shared_ptr<IR_Type> fullType);
+    Function& createFunction(std::string name, Linkage stor, int fspec, std::shared_ptr<IR_Type> fullType);
+    Function& createPrototype(std::string name, Linkage stor, std::shared_ptr<IR_Type> fullType);
     IRval createReg(std::shared_ptr<IR_Type> type);
     IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init);
 

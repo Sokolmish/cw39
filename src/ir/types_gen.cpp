@@ -318,3 +318,21 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
         throw std::logic_error("Wrong literal type");
     }
 }
+
+IntermediateUnit::Linkage IR_Generator::getGlobalLinkage(AST_DeclSpecifiers::StorageSpec spec,
+                                                         yy::location const &loc) {
+    switch (spec) {
+        case AST_DeclSpecifiers::ST_NONE:
+        case AST_DeclSpecifiers::ST_EXTERN:
+            return IntermediateUnit::Linkage::EXTERN;
+        case AST_DeclSpecifiers::ST_STATIC:
+            return IntermediateUnit::Linkage::STATIC;
+        case AST_DeclSpecifiers::ST_AUTO:
+            semanticError(loc, "Global declaration cannot has 'auto' storage specifier");
+        case AST_DeclSpecifiers::ST_REGISTER:
+            semanticError(loc, "Global declaration cannot has 'register' storage specifier");
+        case AST_DeclSpecifiers::ST_TYPEDEF:
+            throw cw39_internal_error("Typedef in wrong context");
+    }
+    throw cw39_internal_error("Unknown storage specifier");
+}

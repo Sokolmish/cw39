@@ -206,6 +206,7 @@ private:
     string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
     string_id_t getDeclaredIdent(AST_Declarator const &decl);
     std::vector<IR_FuncArgument> getDeclaredFuncArgs(AST_Declarator const &decl);
+    IntermediateUnit::Linkage getGlobalLinkage(AST_DeclSpecifiers::StorageSpec spec, yy::location const &loc);
 
     // Errors
 
