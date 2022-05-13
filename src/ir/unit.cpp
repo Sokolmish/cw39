@@ -41,7 +41,7 @@ IntermediateUnit::IntermediateUnit(const IntermediateUnit &oth) {
     strings = oth.strings;
     for (const auto &[id, global]: oth.globals) {
         globals.emplace_hint(globals.end(), id, GlobalVar{
-                global.id, global.name, global.type->copy(), global.init.copy() });
+                global.id, global.name, global.type->copy(), global.init.copy(), global.storage });
     }
 }
 
@@ -70,18 +70,20 @@ IRval IntermediateUnit::createReg(std::shared_ptr<IR_Type> type) {
 }
 
 /** Expects ptr type */
-IRval IntermediateUnit::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init) {
+IRval IntermediateUnit::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init, VarLinkage stor) {
     auto newId = globalsCounter++;
     IRval newGlobal = IRval::createGlobal(std::move(type), newId);
     globals.insert({ newId, GlobalVar{
             .id = newId,
             .name = std::move(name),
             .type = newGlobal.getType(),
-            .init = std::move(init) }});
+            .init = std::move(init),
+            .storage = stor,
+    }});
     return newGlobal;
 }
 
-IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, Linkage stor, int fspec,
+IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, FunLinkage stor, int fspec,
                                                              std::shared_ptr<IR_Type> fullType) {
     Function func(this, funcsCounter++, std::move(name), false);
     func.storage = stor;
@@ -91,7 +93,7 @@ IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, L
     return it->second;
 }
 
-IntermediateUnit::Function& IntermediateUnit::createPrototype(std::string name, Linkage stor,
+IntermediateUnit::Function& IntermediateUnit::createPrototype(std::string name, FunLinkage stor,
                                                               std::shared_ptr<IR_Type> fullType) {
     Function func(this, funcsCounter++, std::move(name), true);
     func.storage = stor;

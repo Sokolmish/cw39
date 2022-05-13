@@ -169,7 +169,7 @@ void IR_Generator::genTransUnit(AST_TranslationUnit const &tunit) {
 }
 
 /** Insert global variable declaration, new struct type or function prototype */
-void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
+void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
     // Save struct type if such is there
     if (!decl.child) {
         getPrimaryType(decl.specifiers->type_specifiers);
@@ -187,7 +187,7 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             if (singleDecl->initializer)
                 semanticError(singleDecl->initializer->loc, "Prototypes cannot be initialized");
 
-            auto linkage = getGlobalLinkage(decl.specifiers->storage_specifier, decl.loc);
+            auto linkage = getFunLinkage(decl.specifiers->storage_specifier, decl.loc);
             auto &fun = iunit->createPrototype(ctx.getIdentById(ident), linkage, varType);
             functions.emplace(ident, fun.getId());
             continue; // break?
@@ -204,7 +204,14 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             semanticError(singleDecl->loc, "Global variable should be initialized with constant value");
 
         auto ptrType = std::make_shared<IR_TypePtr>(varType);
-        IRval res = iunit->createGlobal(ctx.getIdentById(ident), ptrType, initVal);
+
+        auto linkage = getGVarLinkage(decl.specifiers->storage_specifier, decl.loc);
+        if (linkage == IntermediateUnit::VarLinkage::DEFAULT && !singleDecl->initializer)
+            linkage =  IntermediateUnit::VarLinkage::TENTATIVE;
+        if (linkage == IntermediateUnit::VarLinkage::EXTERN && singleDecl->initializer)
+            linkage =  IntermediateUnit::VarLinkage::DEFAULT;
+
+        IRval res = iunit->createGlobal(ctx.getIdentById(ident), ptrType, initVal, linkage);
         globals.emplace(ident, res);
     }
 }
@@ -242,7 +249,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
 
     string_id_t funcIdent = getDeclaredIdent(*def.decl);
     auto fullType = getType(*def.specifiers, *def.decl);
-    auto linkage = getGlobalLinkage(def.specifiers->storage_specifier, def.loc);
+    auto linkage = getFunLinkage(def.specifiers->storage_specifier, def.loc);
     int fspec = getFspec(*def.specifiers);
 
     curFunc = &iunit->createFunction(ctx.getIdentById(funcIdent), linkage, fspec, fullType);

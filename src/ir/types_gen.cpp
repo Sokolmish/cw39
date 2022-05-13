@@ -319,14 +319,33 @@ std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
     }
 }
 
-IntermediateUnit::Linkage IR_Generator::getGlobalLinkage(AST_DeclSpecifiers::StorageSpec spec,
+IntermediateUnit::FunLinkage IR_Generator::getFunLinkage(AST_DeclSpecifiers::StorageSpec spec,
                                                          yy::location const &loc) {
     switch (spec) {
         case AST_DeclSpecifiers::ST_NONE:
         case AST_DeclSpecifiers::ST_EXTERN:
-            return IntermediateUnit::Linkage::EXTERN;
+            return IntermediateUnit::FunLinkage::EXTERN;
         case AST_DeclSpecifiers::ST_STATIC:
-            return IntermediateUnit::Linkage::STATIC;
+            return IntermediateUnit::FunLinkage::STATIC;
+        case AST_DeclSpecifiers::ST_AUTO:
+            semanticError(loc, "Function declaration cannot has 'auto' storage specifier");
+        case AST_DeclSpecifiers::ST_REGISTER:
+            semanticError(loc, "Function declaration cannot has 'register' storage specifier");
+        case AST_DeclSpecifiers::ST_TYPEDEF:
+            throw cw39_internal_error("Typedef in wrong context");
+    }
+    throw cw39_internal_error("Unknown storage specifier");
+}
+
+IntermediateUnit::VarLinkage IR_Generator::getGVarLinkage(AST_DeclSpecifiers::StorageSpec spec,
+                                                         yy::location const &loc) {
+    switch (spec) {
+        case AST_DeclSpecifiers::ST_NONE:
+            return IntermediateUnit::VarLinkage::DEFAULT;
+        case AST_DeclSpecifiers::ST_EXTERN:
+            return IntermediateUnit::VarLinkage::EXTERN;
+        case AST_DeclSpecifiers::ST_STATIC:
+            return IntermediateUnit::VarLinkage::STATIC;
         case AST_DeclSpecifiers::ST_AUTO:
             semanticError(loc, "Global declaration cannot has 'auto' storage specifier");
         case AST_DeclSpecifiers::ST_REGISTER:

@@ -51,11 +51,12 @@ private:
 
 class IntermediateUnit {
 public:
-    enum class Linkage { EXTERN, STATIC, WEAK };
+    enum class FunLinkage { EXTERN, STATIC, WEAK };
+    enum class VarLinkage { DEFAULT, EXTERN, STATIC, TENTATIVE, WEAK };
 
     class Function {
     public:
-        Linkage storage;
+        FunLinkage storage;
         std::shared_ptr<IR_Type> fullType;
 
         enum FuncSpec : int {
@@ -90,6 +91,7 @@ public:
         std::string name;
         std::shared_ptr<IR_Type> type;
         IRval init;
+        VarLinkage storage;
     };
 
     IntermediateUnit() = default;
@@ -97,10 +99,10 @@ public:
     IntermediateUnit(IntermediateUnit &&oth) noexcept = default;
     IntermediateUnit& operator=(IntermediateUnit &&oth) noexcept = default;
 
-    Function& createFunction(std::string name, Linkage stor, int fspec, std::shared_ptr<IR_Type> fullType);
-    Function& createPrototype(std::string name, Linkage stor, std::shared_ptr<IR_Type> fullType);
+    Function& createFunction(std::string name, FunLinkage stor, int fspec, std::shared_ptr<IR_Type> fullType);
+    Function& createPrototype(std::string name, FunLinkage stor, std::shared_ptr<IR_Type> fullType);
     IRval createReg(std::shared_ptr<IR_Type> type);
-    IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init);
+    IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init, VarLinkage stor);
 
     Function& getFunction(int id);
     Function const& getFunction(int id) const;

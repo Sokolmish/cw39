@@ -1,5 +1,14 @@
 int printf(const char *format, ...);
 
+//extern int ex;
+int ten;
+static int st;
+int def = 10;
+
+int f() {
+    return ten + def + st;
+}
+
 static int rec(int x) {
     if (x < 1)
         return 0;
@@ -9,5 +18,6 @@ static int rec(int x) {
 
 int main() {
     rec(5);
+    f();
     return 0;
 }

@@ -100,7 +100,7 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
     //   when creating types or globals without active insert point in builder,
     //   so there is a dummy function, that will be erased later
     Function *dummyFunc = Function::Create(FunctionType::get(builder->getVoidTy(), false),
-                                           Function::InternalLinkage, "__dummy_func", *module);
+                                           Function::PrivateLinkage, "__dummy_func", *module);
     BasicBlock *dummyEntryBlock = BasicBlock::Create(*context, "__dummy_block", dummyFunc);
     builder->SetInsertPoint(dummyEntryBlock);
     builder->CreateRet(nullptr);
@@ -132,6 +132,22 @@ void IR2LLVM_Impl::createTypes() {
     }
 }
 
+static std::optional<GlobalValue::LinkageTypes> getVarLinkageType(IntermediateUnit::VarLinkage linkage) {
+    switch (linkage) {
+        case IntermediateUnit::VarLinkage::DEFAULT:
+            return {};
+        case IntermediateUnit::VarLinkage::EXTERN:
+            return GlobalValue::ExternalLinkage;
+        case IntermediateUnit::VarLinkage::STATIC:
+            return GlobalValue::InternalLinkage;
+        case IntermediateUnit::VarLinkage::WEAK:
+            return GlobalValue::WeakAnyLinkage;
+        case IntermediateUnit::VarLinkage::TENTATIVE:
+            return GlobalValue::CommonLinkage;
+    }
+    throw cw39_internal_error("Unknown linkage type");
+}
+
 void IR2LLVM_Impl::createGlobals() {
     for (auto const &[sId, str] : parent->iunit.getStrings()) {
         Value *res = builder->CreateGlobalStringPtr(StringRef(str), fmt::format(".str{}", sId));
@@ -142,9 +158,17 @@ void IR2LLVM_Impl::createGlobals() {
         auto gType = ptrType->child;
         module->getOrInsertGlobal(global.name, getType(*gType));
         GlobalVariable *gVar = module->getNamedGlobal(global.name);
-        gVar->setLinkage(GlobalValue::InternalLinkage);
-        gVar->setAlignment(Align(8));
-        gVar->setInitializer(getConstant(global.init));
+
+        auto linkage = getVarLinkageType(global.storage);
+        if (linkage.has_value())
+            gVar->setLinkage(*linkage);
+
+        if (global.storage == IntermediateUnit::VarLinkage::EXTERN)
+            gVar->setExternallyInitialized(true);
+        else
+            gVar->setInitializer(getConstant(global.init));
+
+        // gVar->setAlignment(Align(8));
         gVar->setConstant(false);
 
         globals.emplace(gId, gVar);
@@ -269,14 +293,14 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
     throw std::logic_error("Wrong value type");
 }
 
-static GlobalValue::LinkageTypes getLinkageType(IntermediateUnit::Linkage linkage) {
+static GlobalValue::LinkageTypes getFunLinkageType(IntermediateUnit::FunLinkage linkage) {
     switch (linkage) {
-        case IntermediateUnit::Linkage::EXTERN:
-            return Function::ExternalLinkage;
-        case IntermediateUnit::Linkage::STATIC:
-            return Function::InternalLinkage;
-        case IntermediateUnit::Linkage::WEAK:
-            return Function::WeakAnyLinkage;
+        case IntermediateUnit::FunLinkage::EXTERN:
+            return GlobalValue::ExternalLinkage;
+        case IntermediateUnit::FunLinkage::STATIC:
+            return GlobalValue::InternalLinkage;
+        case IntermediateUnit::FunLinkage::WEAK:
+            return GlobalValue::WeakAnyLinkage;
     }
     throw cw39_internal_error("Unknown linkage type");
 }
@@ -289,7 +313,7 @@ void IR2LLVM_Impl::createPrototypes() {
         for (auto const &arg : irFuncType->args)
             args.push_back(getType(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
-        auto linkage = getLinkageType(func.storage);
+        auto linkage = getFunLinkageType(func.storage);
         auto prototype = Function::Create(ftype, linkage, func.getName(), *module);
         functions.emplace(fId, prototype);
     }
@@ -305,7 +329,7 @@ void IR2LLVM_Impl::createFunctions() {
         for (auto const &arg : irFuncType->args)
             args.push_back(getType(*arg));
         auto ftype = FunctionType::get(retType, args, irFuncType->isVariadic);
-        auto linkage = getLinkageType(func.storage);
+        auto linkage = getFunLinkageType(func.storage);
 
         curFunction = Function::Create(ftype, linkage, func.getName(), *module);
         functions.emplace(fId, curFunction);
