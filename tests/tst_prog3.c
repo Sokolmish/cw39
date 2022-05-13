@@ -17,7 +17,6 @@ struct ms {
 
 void longF(long arg) {
     printf("LONG: %ld\n", arg);
-    return;
 }
 
 int main(int argc, char **argv) {

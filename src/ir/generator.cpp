@@ -163,7 +163,7 @@ void IR_Generator::genTransUnit(AST_TranslationUnit const &tunit) {
         else if (top_instr->node_type == AST_DECLARATION)
             insertGlobalDeclaration(dynamic_cast<AST_Declaration const &>(*top_instr));
         else
-            throw std::logic_error("Wrong top-level instruction");
+            throw std::logic_error("Wrong top-level node");
     }
 }
 
@@ -266,6 +266,15 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
 
     fillBlock(*def.body);
 
+    if (selectedBlock) { // No terminator
+        if (curFunc->getFuncType()->ret->equal(*IR_TypeDirect::getVoid())) {
+            selectedBlock->setTerminator(IR_ExprTerminator::RET);
+        }
+        else {
+            semanticError(def.body->loc, "Control reaches end of non-void function");
+        }
+    }
+
     for (auto const &[block, label, loc] : danglingGotos) {
         auto it = labels.find(label);
         if (it == labels.end())
@@ -283,18 +292,16 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
 void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
     variables.increaseLevel();
     for (auto const &elem: compStmt.body->v) {
+        if (selectedBlock == nullptr) { // Definitly ureachable code
+            selectBlock(curFunc->cfg.createBlock());
+        }
+
         if (elem->node_type == AST_DECLARATION)
             insertDeclaration(dynamic_cast<AST_Declaration const &>(*elem));
         else if (elem->node_type == AST_STATEMENT)
             insertStatement(dynamic_cast<AST_Stmt const &>(*elem));
         else
             throw std::logic_error("Wrong node in compound statement");
-
-        // Ureachable code
-        if (selectedBlock == nullptr) {
-            IR_Block &unreachBlock = curFunc->cfg.createBlock();
-            selectBlock(unreachBlock);
-        }
     }
     variables.decreaseLevel();
 }
@@ -456,7 +463,7 @@ void IR_Generator::insertSwitchStatement(const AST_SelectionStmt &stmt) {
     if (selectedBlock != nullptr)
         curFunc->cfg.linkBlocks(curBlock(), blockAfter);
 
-    // TODO: use corresponding LLVM instruction instead or use binsearch
+    // Maybe use corresponding LLVM instruction instead or use binsearch
     auto nearestSwitch = getNearestSwitch();
     std::set<IRval> usedCases;
     selectBlock(entryBlock);
