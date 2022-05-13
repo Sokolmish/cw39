@@ -26,10 +26,10 @@ std::shared_ptr<IntermediateUnit> IR_Generator::getIR() const {
 }
 
 
-IR_Generator::ControlStructData::ControlStructData(IR_Generator::ControlStructData::LoopBlocks loop)
+IR_Generator::ControlStructData::ControlStructData(ControlStructData::LoopBlocks loop)
         : data(loop) {}
 
-IR_Generator::ControlStructData::ControlStructData(IR_Generator::ControlStructData::SwitchBlocks sw)
+IR_Generator::ControlStructData::ControlStructData(ControlStructData::SwitchBlocks sw)
         : data(std::move(sw)) {}
 
 bool IR_Generator::ControlStructData::isLoop() const {
@@ -40,11 +40,11 @@ int IR_Generator::ControlStructData::getExit() const {
     return std::visit([](auto const &e){ return e.exit; }, data);
 }
 
-IR_Generator::ControlStructData::LoopBlocks &IR_Generator::ControlStructData::getLoop() {
+IR_Generator::ControlStructData::LoopBlocks& IR_Generator::ControlStructData::getLoop() {
     return std::get<LoopBlocks>(data);
 }
 
-IR_Generator::ControlStructData::SwitchBlocks &IR_Generator::ControlStructData::getSwitch() {
+IR_Generator::ControlStructData::SwitchBlocks& IR_Generator::ControlStructData::getSwitch() {
     return std::get<SwitchBlocks>(data);
 }
 
@@ -66,7 +66,7 @@ std::optional<IR_Generator::ControlStructData::LoopBlocks> IR_Generator::getNear
         return it->getLoop();
 }
 
-IR_Generator::ControlStructData::SwitchBlocks *IR_Generator::getNearestSwitch() {
+IR_Generator::ControlStructData::SwitchBlocks* IR_Generator::getNearestSwitch() {
     auto it = std::find_if(activeControls.rbegin(), activeControls.rend(),
                            [](ControlStructData const &a) { return !a.isLoop(); });
     if (it == activeControls.rend())
@@ -75,6 +75,7 @@ IR_Generator::ControlStructData::SwitchBlocks *IR_Generator::getNearestSwitch() 
         return &it->getSwitch();
 }
 
+// Emitters
 
 std::optional<IRval> IR_Generator::emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr) {
     // TODO: check if in global context

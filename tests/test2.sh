@@ -26,12 +26,12 @@ run_testcase() {
     local args="$@"
 
     $CC_ref -o $ref_exe $file
-    local ref_rc=$($ref_exe $args >$ref_out 2>&1; echo $?)
+    local ref_rc="$($ref_exe $args >$ref_out 2>&1; echo $?)"
 
-    local tst_rc=$($CC_tst --llvm $file | lli-13 - $args >$tst_out 2>&1; echo $?)
+    local tst_rc="$($CC_tst --llvm $file | lli-13 - $args >$tst_out 2>&1; echo $?)"
 
     if [[ "$ref_rc" != "$tst_rc" ]]; then
-        echo "${fail_str} Test '$file': Exit codes differs"
+        echo "${fail_str} Test '$file': Exit codes differs ($ref_rc, $tst_rc)"
         return 1
     fi
 
