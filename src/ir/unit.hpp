@@ -53,7 +53,7 @@ class IntermediateUnit {
 public:
     class Function {
     public:
-        IR_StorageSpecifier storage;
+        IR_StorageSpecifier storage; // TODO: convert to linkage (extern, static, weak)
         std::shared_ptr<IR_Type> fullType;
 
         enum FuncSpec : int {

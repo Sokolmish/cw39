@@ -185,10 +185,26 @@ void IR_Generator::insertGlobalDeclaration(const AST_Declaration &decl) {
             if (singleDecl->initializer)
                 semanticError(singleDecl->initializer->loc, "Prototypes cannot be initialized");
 
-            // TODO
+            IR_StorageSpecifier funStorage = IR_StorageSpecifier::EXTERN;
+            switch (decl.specifiers->storage_specifier) {
+                case AST_DeclSpecifiers::ST_NONE:
+                case AST_DeclSpecifiers::ST_EXTERN:
+                    funStorage = IR_StorageSpecifier::EXTERN;
+                    break;
+                case AST_DeclSpecifiers::ST_STATIC:
+                    funStorage = IR_StorageSpecifier::STATIC;
+                    break;
+                case AST_DeclSpecifiers::ST_AUTO:
+                    semanticError(decl.loc, "Function cannot has 'auto' storage specifier");
+                case AST_DeclSpecifiers::ST_REGISTER:
+                    semanticError(decl.loc, "Function cannot has 'register' storage specifier");
+                case AST_DeclSpecifiers::ST_TYPEDEF:
+                    throw cw39_internal_error("Typedef in wrong context");
+            }
+
             string_id_t funcIdent = getDeclaredIdent(*singleDecl->declarator);
-            auto &fun = iunit->createPrototype(ctx.getIdentById(funcIdent),
-                                               IR_StorageSpecifier::EXTERN, varType);
+
+            auto &fun = iunit->createPrototype(ctx.getIdentById(funcIdent), funStorage, varType);
             functions.emplace(funcIdent, fun.getId());
             continue; // break?
         }

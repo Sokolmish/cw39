@@ -1,6 +1,6 @@
 int printf(const char *format, ...);
 
-int rec(int x) {
+static int rec(int x) {
     if (x < 1)
         return 0;
     printf("%d\n", x);
