@@ -61,6 +61,7 @@
 %token XOR_ASSIGN OR_ASSIGN SIZEOF
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER INLINE RESTRICT
+%token EXT_PURE EXT_FCONST
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
 %token STRUCT UNION ENUM ELLIPSIS
 %token CASE DEFAULT IF SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
@@ -336,6 +337,8 @@ type_qual
 
 function_specifier
     : INLINE                    { $$ = AST_DeclSpecifiers::Q_INLINE; }
+    | EXT_PURE                  { $$ = AST_DeclSpecifiers::Q_PURE; }
+    | EXT_FCONST                { $$ = AST_DeclSpecifiers::Q_FCONST; }
     ;
 
 ustruct_spec

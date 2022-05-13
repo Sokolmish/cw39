@@ -667,38 +667,40 @@ namespace yy {
     CORE_TOK_REGISTER = 308,       // REGISTER
     CORE_TOK_INLINE = 309,         // INLINE
     CORE_TOK_RESTRICT = 310,       // RESTRICT
-    CORE_TOK_CHAR = 311,           // CHAR
-    CORE_TOK_SHORT = 312,          // SHORT
-    CORE_TOK_INT = 313,            // INT
-    CORE_TOK_LONG = 314,           // LONG
-    CORE_TOK_SIGNED = 315,         // SIGNED
-    CORE_TOK_UNSIGNED = 316,       // UNSIGNED
-    CORE_TOK_FLOAT = 317,          // FLOAT
-    CORE_TOK_DOUBLE = 318,         // DOUBLE
-    CORE_TOK_CONST = 319,          // CONST
-    CORE_TOK_VOLATILE = 320,       // VOLATILE
-    CORE_TOK_VOID = 321,           // VOID
-    CORE_TOK_STRUCT = 322,         // STRUCT
-    CORE_TOK_UNION = 323,          // UNION
-    CORE_TOK_ENUM = 324,           // ENUM
-    CORE_TOK_ELLIPSIS = 325,       // ELLIPSIS
-    CORE_TOK_CASE = 326,           // CASE
-    CORE_TOK_DEFAULT = 327,        // DEFAULT
-    CORE_TOK_IF = 328,             // IF
-    CORE_TOK_SWITCH = 329,         // SWITCH
-    CORE_TOK_WHILE = 330,          // WHILE
-    CORE_TOK_DO = 331,             // DO
-    CORE_TOK_FOR = 332,            // FOR
-    CORE_TOK_GOTO = 333,           // GOTO
-    CORE_TOK_CONTINUE = 334,       // CONTINUE
-    CORE_TOK_BREAK = 335,          // BREAK
-    CORE_TOK_RETURN = 336,         // RETURN
-    CORE_TOK_IFX = 337,            // IFX
-    CORE_TOK_ELSE = 338,           // ELSE
-    CORE_TOK_IDENTIFIER = 339,     // IDENTIFIER
-    CORE_TOK_TYPE_NAME = 340,      // TYPE_NAME
-    CORE_TOK_CONSTANT = 341,       // CONSTANT
-    CORE_TOK_STRING_LITERAL = 342  // STRING_LITERAL
+    CORE_TOK_EXT_PURE = 311,       // EXT_PURE
+    CORE_TOK_EXT_FCONST = 312,     // EXT_FCONST
+    CORE_TOK_CHAR = 313,           // CHAR
+    CORE_TOK_SHORT = 314,          // SHORT
+    CORE_TOK_INT = 315,            // INT
+    CORE_TOK_LONG = 316,           // LONG
+    CORE_TOK_SIGNED = 317,         // SIGNED
+    CORE_TOK_UNSIGNED = 318,       // UNSIGNED
+    CORE_TOK_FLOAT = 319,          // FLOAT
+    CORE_TOK_DOUBLE = 320,         // DOUBLE
+    CORE_TOK_CONST = 321,          // CONST
+    CORE_TOK_VOLATILE = 322,       // VOLATILE
+    CORE_TOK_VOID = 323,           // VOID
+    CORE_TOK_STRUCT = 324,         // STRUCT
+    CORE_TOK_UNION = 325,          // UNION
+    CORE_TOK_ENUM = 326,           // ENUM
+    CORE_TOK_ELLIPSIS = 327,       // ELLIPSIS
+    CORE_TOK_CASE = 328,           // CASE
+    CORE_TOK_DEFAULT = 329,        // DEFAULT
+    CORE_TOK_IF = 330,             // IF
+    CORE_TOK_SWITCH = 331,         // SWITCH
+    CORE_TOK_WHILE = 332,          // WHILE
+    CORE_TOK_DO = 333,             // DO
+    CORE_TOK_FOR = 334,            // FOR
+    CORE_TOK_GOTO = 335,           // GOTO
+    CORE_TOK_CONTINUE = 336,       // CONTINUE
+    CORE_TOK_BREAK = 337,          // BREAK
+    CORE_TOK_RETURN = 338,         // RETURN
+    CORE_TOK_IFX = 339,            // IFX
+    CORE_TOK_ELSE = 340,           // ELSE
+    CORE_TOK_IDENTIFIER = 341,     // IDENTIFIER
+    CORE_TOK_TYPE_NAME = 342,      // TYPE_NAME
+    CORE_TOK_CONSTANT = 343,       // CONSTANT
+    CORE_TOK_STRING_LITERAL = 344  // STRING_LITERAL
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -715,7 +717,7 @@ namespace yy {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 88, ///< Number of tokens.
+        YYNTOKENS = 90, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // "end of file"
         S_YYerror = 1,                           // error
@@ -773,102 +775,104 @@ namespace yy {
         S_REGISTER = 53,                         // REGISTER
         S_INLINE = 54,                           // INLINE
         S_RESTRICT = 55,                         // RESTRICT
-        S_CHAR = 56,                             // CHAR
-        S_SHORT = 57,                            // SHORT
-        S_INT = 58,                              // INT
-        S_LONG = 59,                             // LONG
-        S_SIGNED = 60,                           // SIGNED
-        S_UNSIGNED = 61,                         // UNSIGNED
-        S_FLOAT = 62,                            // FLOAT
-        S_DOUBLE = 63,                           // DOUBLE
-        S_CONST = 64,                            // CONST
-        S_VOLATILE = 65,                         // VOLATILE
-        S_VOID = 66,                             // VOID
-        S_STRUCT = 67,                           // STRUCT
-        S_UNION = 68,                            // UNION
-        S_ENUM = 69,                             // ENUM
-        S_ELLIPSIS = 70,                         // ELLIPSIS
-        S_CASE = 71,                             // CASE
-        S_DEFAULT = 72,                          // DEFAULT
-        S_IF = 73,                               // IF
-        S_SWITCH = 74,                           // SWITCH
-        S_WHILE = 75,                            // WHILE
-        S_DO = 76,                               // DO
-        S_FOR = 77,                              // FOR
-        S_GOTO = 78,                             // GOTO
-        S_CONTINUE = 79,                         // CONTINUE
-        S_BREAK = 80,                            // BREAK
-        S_RETURN = 81,                           // RETURN
-        S_IFX = 82,                              // IFX
-        S_ELSE = 83,                             // ELSE
-        S_IDENTIFIER = 84,                       // IDENTIFIER
-        S_TYPE_NAME = 85,                        // TYPE_NAME
-        S_CONSTANT = 86,                         // CONSTANT
-        S_STRING_LITERAL = 87,                   // STRING_LITERAL
-        S_YYACCEPT = 88,                         // $accept
-        S_primary_expr = 89,                     // primary_expr
-        S_strings_seq = 90,                      // strings_seq
-        S_postfix_expr = 91,                     // postfix_expr
-        S_arg_expr_lst = 92,                     // arg_expr_lst
-        S_unary_expr = 93,                       // unary_expr
-        S_unary_operator = 94,                   // unary_operator
-        S_cast_expr = 95,                        // cast_expr
-        S_mult_expr = 96,                        // mult_expr
-        S_add_expr = 97,                         // add_expr
-        S_shift_expr = 98,                       // shift_expr
-        S_rel_expr = 99,                         // rel_expr
-        S_eq_expr = 100,                         // eq_expr
-        S_and_expr = 101,                        // and_expr
-        S_xor_expr = 102,                        // xor_expr
-        S_or_expr = 103,                         // or_expr
-        S_land_expr = 104,                       // land_expr
-        S_lor_expr = 105,                        // lor_expr
-        S_ternary_expr = 106,                    // ternary_expr
-        S_assign_expr = 107,                     // assign_expr
-        S_assign_op = 108,                       // assign_op
-        S_expr = 109,                            // expr
-        S_const_expr = 110,                      // const_expr
-        S_decl_specs = 111,                      // decl_specs
-        S_storage_class_specifier = 112,         // storage_class_specifier
-        S_type_specifier = 113,                  // type_specifier
-        S_type_qual = 114,                       // type_qual
-        S_function_specifier = 115,              // function_specifier
-        S_ustruct_spec = 116,                    // ustruct_spec
-        S_ustruct = 117,                         // ustruct
-        S_struct_decls_lst = 118,                // struct_decls_lst
-        S_struct_declaration = 119,              // struct_declaration
-        S_spec_qual_lst = 120,                   // spec_qual_lst
-        S_struct_declarator_list = 121,          // struct_declarator_list
-        S_struct_declarator = 122,               // struct_declarator
-        S_enum_specifier = 123,                  // enum_specifier
-        S_enumerator_list = 124,                 // enumerator_list
-        S_enumerator = 125,                      // enumerator
-        S_declaration = 126,                     // declaration
-        S_init_decltor_list = 127,               // init_decltor_list
-        S_init_decltor = 128,                    // init_decltor
-        S_declarator = 129,                      // declarator
-        S_pointer = 130,                         // pointer
-        S_dir_decltor = 131,                     // dir_decltor
-        S_type_qual_lst = 132,                   // type_qual_lst
-        S_param_type_lst = 133,                  // param_type_lst
-        S_param_lst = 134,                       // param_lst
-        S_parameter_declaration = 135,           // parameter_declaration
-        S_type_name = 136,                       // type_name
-        S_abstr_decltor = 137,                   // abstr_decltor
-        S_dir_abstr_decltor = 138,               // dir_abstr_decltor
-        S_initializer = 139,                     // initializer
-        S_init_lst = 140,                        // init_lst
-        S_designator = 141,                      // designator
-        S_stmt = 142,                            // stmt
-        S_label_stmt = 143,                      // label_stmt
-        S_compound_stmt = 144,                   // compound_stmt
-        S_block_items = 145,                     // block_items
-        S_expr_stmt = 146,                       // expr_stmt
-        S_select_stmt = 147,                     // select_stmt
-        S_loop_stmt = 148,                       // loop_stmt
-        S_jmp_stmt = 149,                        // jmp_stmt
-        S_trans_unit = 150,                      // trans_unit
-        S_func_def = 151                         // func_def
+        S_EXT_PURE = 56,                         // EXT_PURE
+        S_EXT_FCONST = 57,                       // EXT_FCONST
+        S_CHAR = 58,                             // CHAR
+        S_SHORT = 59,                            // SHORT
+        S_INT = 60,                              // INT
+        S_LONG = 61,                             // LONG
+        S_SIGNED = 62,                           // SIGNED
+        S_UNSIGNED = 63,                         // UNSIGNED
+        S_FLOAT = 64,                            // FLOAT
+        S_DOUBLE = 65,                           // DOUBLE
+        S_CONST = 66,                            // CONST
+        S_VOLATILE = 67,                         // VOLATILE
+        S_VOID = 68,                             // VOID
+        S_STRUCT = 69,                           // STRUCT
+        S_UNION = 70,                            // UNION
+        S_ENUM = 71,                             // ENUM
+        S_ELLIPSIS = 72,                         // ELLIPSIS
+        S_CASE = 73,                             // CASE
+        S_DEFAULT = 74,                          // DEFAULT
+        S_IF = 75,                               // IF
+        S_SWITCH = 76,                           // SWITCH
+        S_WHILE = 77,                            // WHILE
+        S_DO = 78,                               // DO
+        S_FOR = 79,                              // FOR
+        S_GOTO = 80,                             // GOTO
+        S_CONTINUE = 81,                         // CONTINUE
+        S_BREAK = 82,                            // BREAK
+        S_RETURN = 83,                           // RETURN
+        S_IFX = 84,                              // IFX
+        S_ELSE = 85,                             // ELSE
+        S_IDENTIFIER = 86,                       // IDENTIFIER
+        S_TYPE_NAME = 87,                        // TYPE_NAME
+        S_CONSTANT = 88,                         // CONSTANT
+        S_STRING_LITERAL = 89,                   // STRING_LITERAL
+        S_YYACCEPT = 90,                         // $accept
+        S_primary_expr = 91,                     // primary_expr
+        S_strings_seq = 92,                      // strings_seq
+        S_postfix_expr = 93,                     // postfix_expr
+        S_arg_expr_lst = 94,                     // arg_expr_lst
+        S_unary_expr = 95,                       // unary_expr
+        S_unary_operator = 96,                   // unary_operator
+        S_cast_expr = 97,                        // cast_expr
+        S_mult_expr = 98,                        // mult_expr
+        S_add_expr = 99,                         // add_expr
+        S_shift_expr = 100,                      // shift_expr
+        S_rel_expr = 101,                        // rel_expr
+        S_eq_expr = 102,                         // eq_expr
+        S_and_expr = 103,                        // and_expr
+        S_xor_expr = 104,                        // xor_expr
+        S_or_expr = 105,                         // or_expr
+        S_land_expr = 106,                       // land_expr
+        S_lor_expr = 107,                        // lor_expr
+        S_ternary_expr = 108,                    // ternary_expr
+        S_assign_expr = 109,                     // assign_expr
+        S_assign_op = 110,                       // assign_op
+        S_expr = 111,                            // expr
+        S_const_expr = 112,                      // const_expr
+        S_decl_specs = 113,                      // decl_specs
+        S_storage_class_specifier = 114,         // storage_class_specifier
+        S_type_specifier = 115,                  // type_specifier
+        S_type_qual = 116,                       // type_qual
+        S_function_specifier = 117,              // function_specifier
+        S_ustruct_spec = 118,                    // ustruct_spec
+        S_ustruct = 119,                         // ustruct
+        S_struct_decls_lst = 120,                // struct_decls_lst
+        S_struct_declaration = 121,              // struct_declaration
+        S_spec_qual_lst = 122,                   // spec_qual_lst
+        S_struct_declarator_list = 123,          // struct_declarator_list
+        S_struct_declarator = 124,               // struct_declarator
+        S_enum_specifier = 125,                  // enum_specifier
+        S_enumerator_list = 126,                 // enumerator_list
+        S_enumerator = 127,                      // enumerator
+        S_declaration = 128,                     // declaration
+        S_init_decltor_list = 129,               // init_decltor_list
+        S_init_decltor = 130,                    // init_decltor
+        S_declarator = 131,                      // declarator
+        S_pointer = 132,                         // pointer
+        S_dir_decltor = 133,                     // dir_decltor
+        S_type_qual_lst = 134,                   // type_qual_lst
+        S_param_type_lst = 135,                  // param_type_lst
+        S_param_lst = 136,                       // param_lst
+        S_parameter_declaration = 137,           // parameter_declaration
+        S_type_name = 138,                       // type_name
+        S_abstr_decltor = 139,                   // abstr_decltor
+        S_dir_abstr_decltor = 140,               // dir_abstr_decltor
+        S_initializer = 141,                     // initializer
+        S_init_lst = 142,                        // init_lst
+        S_designator = 143,                      // designator
+        S_stmt = 144,                            // stmt
+        S_label_stmt = 145,                      // label_stmt
+        S_compound_stmt = 146,                   // compound_stmt
+        S_block_items = 147,                     // block_items
+        S_expr_stmt = 148,                       // expr_stmt
+        S_select_stmt = 149,                     // select_stmt
+        S_loop_stmt = 150,                       // loop_stmt
+        S_jmp_stmt = 151,                        // jmp_stmt
+        S_trans_unit = 152,                      // trans_unit
+        S_func_def = 153                         // func_def
       };
     };
 
@@ -2963,6 +2967,36 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_EXT_PURE (location_type l)
+      {
+        return symbol_type (token::CORE_TOK_EXT_PURE, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_EXT_PURE (const location_type& l)
+      {
+        return symbol_type (token::CORE_TOK_EXT_PURE, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_EXT_FCONST (location_type l)
+      {
+        return symbol_type (token::CORE_TOK_EXT_FCONST, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_EXT_FCONST (const location_type& l)
+      {
+        return symbol_type (token::CORE_TOK_EXT_FCONST, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_CHAR (location_type l)
       {
         return symbol_type (token::CORE_TOK_CHAR, std::move (l));
@@ -3784,9 +3818,9 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1345,     ///< Last index in yytable_.
+      yylast_ = 1420,     ///< Last index in yytable_.
       yynnts_ = 64,  ///< Number of nonterminal symbols.
-      yyfinal_ = 51 ///< Termination state number.
+      yyfinal_ = 53 ///< Termination state number.
     };
 
 
@@ -3840,10 +3874,10 @@ switch (yykind)
       55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
       65,    66,    67,    68,    69,    70,    71,    72,    73,    74,
       75,    76,    77,    78,    79,    80,    81,    82,    83,    84,
-      85,    86,    87
+      85,    86,    87,    88,    89
     };
     // Last valid token kind.
-    const int code_max = 342;
+    const int code_max = 344;
 
     if (t <= 0)
       return symbol_kind::S_YYEOF;
@@ -4351,7 +4385,7 @@ switch (yykind)
 
 
 } // yy
-#line 4355 "yy_parser.hpp"
+#line 4389 "yy_parser.hpp"
 
 
 

@@ -67,6 +67,8 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "void"                      return yy::parser::make_VOID(loc);
 "volatile"                  return yy::parser::make_VOLATILE(loc);
 "while"                     return yy::parser::make_WHILE(loc);
+"__fconst"                  return yy::parser::make_EXT_FCONST(loc);
+"__pure"                    return yy::parser::make_EXT_PURE(loc);
 
 {L}({L}|{D})*               {
                                 IdentType type;

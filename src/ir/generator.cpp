@@ -241,7 +241,11 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
 
     int fspec = IntermediateUnit::Function::FSPEC_NONE;
     if (def.specifiers->is_inline)
-        fspec = fspec | IntermediateUnit::Function::INLINE;
+        fspec = fspec | IntermediateUnit::Function::FSPEC_INLINE;
+    if (def.specifiers->is_pure)
+        fspec = fspec | IntermediateUnit::Function::FSPEC_PURE;
+    if (def.specifiers->is_fconst)
+        fspec = fspec | IntermediateUnit::Function::FSPEC_FCONST;
 
     string_id_t funcIdent = getDeclaredIdent(*def.decl);
 
@@ -615,7 +619,7 @@ void IR_Generator::insertJumpStatement(const AST_JumpStmt &stmt) {
         deselectBlock();
     }
     else if (stmt.type == AST_JumpStmt::J_GOTO) {
-        curFunc->fspec |= IntermediateUnit::Function::GOTOED;
+        curFunc->fspec |= IntermediateUnit::Function::FSPEC_GOTOED;
 
         curBlock().setTerminator(IR_ExprTerminator::JUMP);
         string_id_t label = stmt.getIdent();

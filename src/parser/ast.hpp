@@ -235,12 +235,14 @@ struct AST_DeclSpecifiers final : public AST_Node {
     enum StorageSpec : ast_enum_t {
         ST_NONE, ST_EXTERN, ST_STATIC, ST_AUTO, ST_REGISTER, ST_TYPEDEF
     };
-    enum FuncQual : ast_enum_t { Q_INLINE };
+    enum FuncQual : ast_enum_t { Q_INLINE, Q_PURE, Q_FCONST };
 
     StorageSpec storage_specifier = ST_NONE;
     std::vector<AST_TypeSpecifier*> type_specifiers;
     AST_TypeQuals *type_qualifiers;
     bool is_inline = false;
+    bool is_pure = false;
+    bool is_fconst = false;
 
     explicit AST_DeclSpecifiers(AST_TypeQuals *quals);
     AST_DeclSpecifiers* update_storage(ast_enum_t val);

@@ -1,3 +1,8 @@
+#ifdef __GNUC__
+#define __pure
+#define __fconst
+#endif
+
 int printf(const char *format, ...);
 void *memcpy(void *dest, void const *src, unsigned long n);
 unsigned long strlen(const char *s);
@@ -16,14 +21,14 @@ void store555(int *addr) {
     return;
 }
 
-int add(int a, int b) {
+__pure int add(int a, int b) {
     if (a == b) {
         b = a;
     }
     return a + b;
 }
 
-int mysqr(int x) {
+__fconst int mysqr(int x) {
     return x * x;
 }
 

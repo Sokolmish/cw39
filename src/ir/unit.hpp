@@ -57,9 +57,11 @@ public:
         std::shared_ptr<IR_Type> fullType;
 
         enum FuncSpec : int {
-            FSPEC_NONE = 0,
-            INLINE = 0x1,
-            GOTOED = 0x2,
+            FSPEC_NONE   = 0,
+            FSPEC_INLINE = 0x1,
+            FSPEC_FCONST = 0x2,
+            FSPEC_PURE   = 0x4,
+            FSPEC_GOTOED = 0x8,
         };
         int fspec;
 

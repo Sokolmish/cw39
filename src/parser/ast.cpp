@@ -502,6 +502,10 @@ AST_DeclSpecifiers* AST_DeclSpecifiers::update_type_qual(ast_enum_t val) {
 AST_DeclSpecifiers* AST_DeclSpecifiers::update_func_qual(ast_enum_t val) {
     if (val == AST_DeclSpecifiers::Q_INLINE)
         is_inline = true;
+    else if (val == AST_DeclSpecifiers::Q_PURE)
+        is_pure = true;
+    else if (val == AST_DeclSpecifiers::Q_FCONST)
+        is_fconst = true;
     else
         throw std::logic_error(fmt::format("Wrong function qualifier: {}", val));
     return this;

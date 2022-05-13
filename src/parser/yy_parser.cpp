@@ -1524,1307 +1524,1319 @@ namespace yy {
           switch (yyn)
             {
   case 2: // primary_expr: IDENTIFIER
-#line 152 "parser.y"
+#line 153 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1530 "yy_parser.cpp"
     break;
 
   case 3: // primary_expr: CONSTANT
-#line 153 "parser.y"
+#line 154 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimConst(yystack_[0].value.as < AST_Literal > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1536 "yy_parser.cpp"
     break;
 
   case 4: // primary_expr: strings_seq
-#line 154 "parser.y"
+#line 155 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimStr(yystack_[0].value.as < AST_StringsSeq * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1542 "yy_parser.cpp"
     break;
 
   case 5: // primary_expr: "(" expr ")"
-#line 155 "parser.y"
+#line 156 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimExpr(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1548 "yy_parser.cpp"
     break;
 
   case 6: // primary_expr: "(" type_name ")" "{" init_lst "}"
-#line 156 "parser.y"
+#line 157 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimCompound(yystack_[4].value.as < AST_TypeName * > (), yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1554 "yy_parser.cpp"
     break;
 
   case 7: // primary_expr: "(" type_name ")" "{" init_lst "," "}"
-#line 157 "parser.y"
+#line 158 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPrimCompound(yystack_[5].value.as < AST_TypeName * > (), yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1560 "yy_parser.cpp"
     break;
 
   case 8: // strings_seq: STRING_LITERAL
-#line 161 "parser.y"
+#line 162 "parser.y"
                                                 { yylhs.value.as < AST_StringsSeq * > () = drv.ast->mkStringsSeq()->append(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_StringsSeq * > (), yylhs.location); }
 #line 1566 "yy_parser.cpp"
     break;
 
   case 9: // strings_seq: strings_seq STRING_LITERAL
-#line 162 "parser.y"
+#line 163 "parser.y"
                                                 { yylhs.value.as < AST_StringsSeq * > () = yystack_[1].value.as < AST_StringsSeq * > ()->append(yystack_[0].value.as < string_id_t > ()); }
 #line 1572 "yy_parser.cpp"
     break;
 
   case 10: // postfix_expr: primary_expr
-#line 166 "parser.y"
+#line 167 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1578 "yy_parser.cpp"
     break;
 
   case 11: // postfix_expr: postfix_expr "[" expr "]"
-#line 167 "parser.y"
+#line 168 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfArr(yystack_[3].value.as < AST_Expr * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1584 "yy_parser.cpp"
     break;
 
   case 12: // postfix_expr: postfix_expr "(" ")"
-#line 168 "parser.y"
+#line 169 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfCall(yystack_[2].value.as < AST_Expr * > (), nullptr); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1590 "yy_parser.cpp"
     break;
 
   case 13: // postfix_expr: postfix_expr "(" arg_expr_lst ")"
-#line 169 "parser.y"
+#line 170 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfCall(yystack_[3].value.as < AST_Expr * > (), yystack_[1].value.as < AST_ArgumentsList * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1596 "yy_parser.cpp"
     break;
 
   case 14: // postfix_expr: postfix_expr "." IDENTIFIER
-#line 170 "parser.y"
+#line 171 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfAccesor(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < string_id_t > (), false); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1602 "yy_parser.cpp"
     break;
 
   case 15: // postfix_expr: postfix_expr PTR_OP IDENTIFIER
-#line 171 "parser.y"
+#line 172 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfAccesor(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < string_id_t > (), true); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1608 "yy_parser.cpp"
     break;
 
   case 16: // postfix_expr: postfix_expr INC_OP
-#line 172 "parser.y"
+#line 173 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfIncdec(yystack_[1].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1614 "yy_parser.cpp"
     break;
 
   case 17: // postfix_expr: postfix_expr DEC_OP
-#line 173 "parser.y"
+#line 174 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkPostfIncdec(yystack_[1].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1620 "yy_parser.cpp"
     break;
 
   case 18: // arg_expr_lst: assign_expr
-#line 177 "parser.y"
+#line 178 "parser.y"
                                                 { yylhs.value.as < AST_ArgumentsList * > () = drv.ast->mkArgsLst()->append(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ArgumentsList * > (), yylhs.location); }
 #line 1626 "yy_parser.cpp"
     break;
 
   case 19: // arg_expr_lst: arg_expr_lst "," assign_expr
-#line 178 "parser.y"
+#line 179 "parser.y"
                                                 { yylhs.value.as < AST_ArgumentsList * > () = yystack_[2].value.as < AST_ArgumentsList * > ()->append(yystack_[0].value.as < AST_Expr * > ()); }
 #line 1632 "yy_parser.cpp"
     break;
 
   case 20: // unary_expr: postfix_expr
-#line 182 "parser.y"
+#line 183 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1638 "yy_parser.cpp"
     break;
 
   case 21: // unary_expr: INC_OP unary_expr
-#line 183 "parser.y"
+#line 184 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::PRE_INC, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1644 "yy_parser.cpp"
     break;
 
   case 22: // unary_expr: DEC_OP unary_expr
-#line 184 "parser.y"
+#line 185 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::PRE_DEC, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1650 "yy_parser.cpp"
     break;
 
   case 23: // unary_expr: unary_operator cast_expr
-#line 185 "parser.y"
+#line 186 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::OpType(yystack_[1].value.as < short > ()), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1656 "yy_parser.cpp"
     break;
 
   case 24: // unary_expr: SIZEOF unary_expr
-#line 186 "parser.y"
+#line 187 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::SIZEOF_OP, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1662 "yy_parser.cpp"
     break;
 
   case 25: // unary_expr: SIZEOF "(" type_name ")"
-#line 187 "parser.y"
+#line 188 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkUnop(AST_Unop::SIZEOF_OP, yystack_[1].value.as < AST_TypeName * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1668 "yy_parser.cpp"
     break;
 
   case 26: // unary_operator: "&"
-#line 191 "parser.y"
+#line 192 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Unop::ADDR_OF; }
 #line 1674 "yy_parser.cpp"
     break;
 
   case 27: // unary_operator: "*"
-#line 192 "parser.y"
+#line 193 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Unop::DEREF; }
 #line 1680 "yy_parser.cpp"
     break;
 
   case 28: // unary_operator: "+"
-#line 193 "parser.y"
+#line 194 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Unop::UN_PLUS; }
 #line 1686 "yy_parser.cpp"
     break;
 
   case 29: // unary_operator: "-"
-#line 194 "parser.y"
+#line 195 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Unop::UN_MINUS; }
 #line 1692 "yy_parser.cpp"
     break;
 
   case 30: // unary_operator: "~"
-#line 195 "parser.y"
+#line 196 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Unop::UN_NEG; }
 #line 1698 "yy_parser.cpp"
     break;
 
   case 31: // unary_operator: "!"
-#line 196 "parser.y"
+#line 197 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Unop::UN_NOT; }
 #line 1704 "yy_parser.cpp"
     break;
 
   case 32: // cast_expr: unary_expr
-#line 200 "parser.y"
+#line 201 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1710 "yy_parser.cpp"
     break;
 
   case 33: // cast_expr: "(" type_name ")" cast_expr
-#line 201 "parser.y"
+#line 202 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkCastop(yystack_[2].value.as < AST_TypeName * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1716 "yy_parser.cpp"
     break;
 
   case 34: // mult_expr: cast_expr
-#line 205 "parser.y"
+#line 206 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1722 "yy_parser.cpp"
     break;
 
   case 35: // mult_expr: mult_expr "*" cast_expr
-#line 206 "parser.y"
+#line 207 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::MUL, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1728 "yy_parser.cpp"
     break;
 
   case 36: // mult_expr: mult_expr "/" cast_expr
-#line 207 "parser.y"
+#line 208 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::DIV, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1734 "yy_parser.cpp"
     break;
 
   case 37: // mult_expr: mult_expr "%" cast_expr
-#line 208 "parser.y"
+#line 209 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::REM, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1740 "yy_parser.cpp"
     break;
 
   case 38: // add_expr: mult_expr
-#line 212 "parser.y"
+#line 213 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1746 "yy_parser.cpp"
     break;
 
   case 39: // add_expr: add_expr "+" mult_expr
-#line 213 "parser.y"
+#line 214 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::ADD, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1752 "yy_parser.cpp"
     break;
 
   case 40: // add_expr: add_expr "-" mult_expr
-#line 214 "parser.y"
+#line 215 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::SUB, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1758 "yy_parser.cpp"
     break;
 
   case 41: // shift_expr: add_expr
-#line 218 "parser.y"
+#line 219 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1764 "yy_parser.cpp"
     break;
 
   case 42: // shift_expr: shift_expr LEFT_OP add_expr
-#line 219 "parser.y"
+#line 220 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::SHL, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1770 "yy_parser.cpp"
     break;
 
   case 43: // shift_expr: shift_expr RIGHT_OP add_expr
-#line 220 "parser.y"
+#line 221 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::SHR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1776 "yy_parser.cpp"
     break;
 
   case 44: // rel_expr: shift_expr
-#line 224 "parser.y"
+#line 225 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1782 "yy_parser.cpp"
     break;
 
   case 45: // rel_expr: rel_expr "<" shift_expr
-#line 225 "parser.y"
+#line 226 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LT, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1788 "yy_parser.cpp"
     break;
 
   case 46: // rel_expr: rel_expr ">" shift_expr
-#line 226 "parser.y"
+#line 227 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::GT, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1794 "yy_parser.cpp"
     break;
 
   case 47: // rel_expr: rel_expr LE_OP shift_expr
-#line 227 "parser.y"
+#line 228 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1800 "yy_parser.cpp"
     break;
 
   case 48: // rel_expr: rel_expr GE_OP shift_expr
-#line 228 "parser.y"
+#line 229 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::GE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1806 "yy_parser.cpp"
     break;
 
   case 49: // eq_expr: rel_expr
-#line 232 "parser.y"
+#line 233 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1812 "yy_parser.cpp"
     break;
 
   case 50: // eq_expr: eq_expr EQ_OP rel_expr
-#line 233 "parser.y"
+#line 234 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::EQ, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1818 "yy_parser.cpp"
     break;
 
   case 51: // eq_expr: eq_expr NE_OP rel_expr
-#line 234 "parser.y"
+#line 235 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::NE, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1824 "yy_parser.cpp"
     break;
 
   case 52: // and_expr: eq_expr
-#line 238 "parser.y"
+#line 239 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1830 "yy_parser.cpp"
     break;
 
   case 53: // and_expr: and_expr "&" eq_expr
-#line 239 "parser.y"
+#line 240 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::BIT_AND, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1836 "yy_parser.cpp"
     break;
 
   case 54: // xor_expr: and_expr
-#line 243 "parser.y"
+#line 244 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1842 "yy_parser.cpp"
     break;
 
   case 55: // xor_expr: xor_expr "^" and_expr
-#line 244 "parser.y"
+#line 245 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::BIT_XOR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1848 "yy_parser.cpp"
     break;
 
   case 56: // or_expr: xor_expr
-#line 248 "parser.y"
+#line 249 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1854 "yy_parser.cpp"
     break;
 
   case 57: // or_expr: or_expr "|" xor_expr
-#line 249 "parser.y"
+#line 250 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::BIT_OR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1860 "yy_parser.cpp"
     break;
 
   case 58: // land_expr: or_expr
-#line 253 "parser.y"
+#line 254 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1866 "yy_parser.cpp"
     break;
 
   case 59: // land_expr: land_expr AND_OP or_expr
-#line 254 "parser.y"
+#line 255 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LOG_AND, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1872 "yy_parser.cpp"
     break;
 
   case 60: // lor_expr: land_expr
-#line 258 "parser.y"
+#line 259 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1878 "yy_parser.cpp"
     break;
 
   case 61: // lor_expr: lor_expr OR_OP land_expr
-#line 259 "parser.y"
+#line 260 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkBinop(AST_Binop::LOG_OR, yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1884 "yy_parser.cpp"
     break;
 
   case 62: // ternary_expr: lor_expr
-#line 263 "parser.y"
+#line 264 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1890 "yy_parser.cpp"
     break;
 
   case 63: // ternary_expr: lor_expr "?" expr ":" ternary_expr
-#line 264 "parser.y"
+#line 265 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkTernary(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1896 "yy_parser.cpp"
     break;
 
   case 64: // assign_expr: ternary_expr
-#line 268 "parser.y"
+#line 269 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1902 "yy_parser.cpp"
     break;
 
   case 65: // assign_expr: unary_expr assign_op assign_expr
-#line 269 "parser.y"
+#line 270 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = drv.ast->mkAssign(AST_Assignment::OpType(yystack_[1].value.as < short > ()), yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1908 "yy_parser.cpp"
     break;
 
   case 66: // assign_op: "="
-#line 273 "parser.y"
+#line 274 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::DIRECT; }
 #line 1914 "yy_parser.cpp"
     break;
 
   case 67: // assign_op: MUL_ASSIGN
-#line 274 "parser.y"
+#line 275 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::MUL; }
 #line 1920 "yy_parser.cpp"
     break;
 
   case 68: // assign_op: DIV_ASSIGN
-#line 275 "parser.y"
+#line 276 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::DIV; }
 #line 1926 "yy_parser.cpp"
     break;
 
   case 69: // assign_op: MOD_ASSIGN
-#line 276 "parser.y"
+#line 277 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::REM; }
 #line 1932 "yy_parser.cpp"
     break;
 
   case 70: // assign_op: ADD_ASSIGN
-#line 277 "parser.y"
+#line 278 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::ADD; }
 #line 1938 "yy_parser.cpp"
     break;
 
   case 71: // assign_op: SUB_ASSIGN
-#line 278 "parser.y"
+#line 279 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::SUB; }
 #line 1944 "yy_parser.cpp"
     break;
 
   case 72: // assign_op: LEFT_ASSIGN
-#line 279 "parser.y"
+#line 280 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::SHL; }
 #line 1950 "yy_parser.cpp"
     break;
 
   case 73: // assign_op: RIGHT_ASSIGN
-#line 280 "parser.y"
+#line 281 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::SHR; }
 #line 1956 "yy_parser.cpp"
     break;
 
   case 74: // assign_op: AND_ASSIGN
-#line 281 "parser.y"
+#line 282 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::AND; }
 #line 1962 "yy_parser.cpp"
     break;
 
   case 75: // assign_op: XOR_ASSIGN
-#line 282 "parser.y"
+#line 283 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::XOR; }
 #line 1968 "yy_parser.cpp"
     break;
 
   case 76: // assign_op: OR_ASSIGN
-#line 283 "parser.y"
+#line 284 "parser.y"
                                                 { yylhs.value.as < short > () = AST_Assignment::OR; }
 #line 1974 "yy_parser.cpp"
     break;
 
   case 77: // expr: assign_expr
-#line 287 "parser.y"
+#line 288 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); /* TODO: fixme */ }
 #line 1980 "yy_parser.cpp"
     break;
 
   case 78: // expr: expr "," assign_expr
-#line 288 "parser.y"
+#line 289 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = dynamic_cast<AST_CommaExpression*>(yystack_[2].value.as < AST_Expr * > ())->append(yystack_[0].value.as < AST_Expr * > ()); }
 #line 1986 "yy_parser.cpp"
     break;
 
   case 79: // const_expr: ternary_expr
-#line 292 "parser.y"
+#line 293 "parser.y"
                                                 { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1992 "yy_parser.cpp"
     break;
 
   case 80: // decl_specs: storage_class_specifier
-#line 298 "parser.y"
+#line 299 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_storage(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 1998 "yy_parser.cpp"
     break;
 
   case 81: // decl_specs: storage_class_specifier decl_specs
-#line 299 "parser.y"
+#line 300 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = yystack_[0].value.as < AST_DeclSpecifiers * > ()->update_storage(yystack_[1].value.as < short > ()); }
 #line 2004 "yy_parser.cpp"
     break;
 
   case 82: // decl_specs: type_specifier
-#line 300 "parser.y"
+#line 301 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_type_spec(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 2010 "yy_parser.cpp"
     break;
 
   case 83: // decl_specs: type_specifier decl_specs
-#line 301 "parser.y"
+#line 302 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = yystack_[0].value.as < AST_DeclSpecifiers * > ()->update_type_spec(yystack_[1].value.as < AST_TypeSpecifier * > ()); }
 #line 2016 "yy_parser.cpp"
     break;
 
   case 84: // decl_specs: type_qual
-#line 302 "parser.y"
+#line 303 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_type_qual(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 2022 "yy_parser.cpp"
     break;
 
   case 85: // decl_specs: type_qual decl_specs
-#line 303 "parser.y"
+#line 304 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = yystack_[0].value.as < AST_DeclSpecifiers * > ()->update_type_qual(yystack_[1].value.as < short > ()); }
 #line 2028 "yy_parser.cpp"
     break;
 
   case 86: // decl_specs: function_specifier
-#line 304 "parser.y"
+#line 305 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = drv.ast->mkDeclSpecs()->update_func_qual(yystack_[0].value.as < short > ()); SL(yylhs.value.as < AST_DeclSpecifiers * > (), yylhs.location); }
 #line 2034 "yy_parser.cpp"
     break;
 
   case 87: // decl_specs: function_specifier decl_specs
-#line 305 "parser.y"
+#line 306 "parser.y"
                                                 { yylhs.value.as < AST_DeclSpecifiers * > () = yystack_[0].value.as < AST_DeclSpecifiers * > ()->update_func_qual(yystack_[1].value.as < short > ()); }
 #line 2040 "yy_parser.cpp"
     break;
 
   case 88: // storage_class_specifier: TYPEDEF
-#line 309 "parser.y"
+#line 310 "parser.y"
                                 { yylhs.value.as < short > () = AST_DeclSpecifiers::ST_TYPEDEF; }
 #line 2046 "yy_parser.cpp"
     break;
 
   case 89: // storage_class_specifier: EXTERN
-#line 310 "parser.y"
+#line 311 "parser.y"
                                 { yylhs.value.as < short > () = AST_DeclSpecifiers::ST_EXTERN; }
 #line 2052 "yy_parser.cpp"
     break;
 
   case 90: // storage_class_specifier: STATIC
-#line 311 "parser.y"
+#line 312 "parser.y"
                                 { yylhs.value.as < short > () = AST_DeclSpecifiers::ST_STATIC; }
 #line 2058 "yy_parser.cpp"
     break;
 
   case 91: // storage_class_specifier: AUTO
-#line 312 "parser.y"
+#line 313 "parser.y"
                                 { yylhs.value.as < short > () = AST_DeclSpecifiers::ST_AUTO; }
 #line 2064 "yy_parser.cpp"
     break;
 
   case 92: // storage_class_specifier: REGISTER
-#line 313 "parser.y"
+#line 314 "parser.y"
                                 { yylhs.value.as < short > () = AST_DeclSpecifiers::ST_REGISTER; }
 #line 2070 "yy_parser.cpp"
     break;
 
   case 93: // type_specifier: VOID
-#line 317 "parser.y"
+#line 318 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_VOID); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2076 "yy_parser.cpp"
     break;
 
   case 94: // type_specifier: CHAR
-#line 318 "parser.y"
+#line 319 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_CHAR); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2082 "yy_parser.cpp"
     break;
 
   case 95: // type_specifier: SHORT
-#line 319 "parser.y"
+#line 320 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_SHORT); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2088 "yy_parser.cpp"
     break;
 
   case 96: // type_specifier: INT
-#line 320 "parser.y"
+#line 321 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_INT); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2094 "yy_parser.cpp"
     break;
 
   case 97: // type_specifier: LONG
-#line 321 "parser.y"
+#line 322 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_LONG); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2100 "yy_parser.cpp"
     break;
 
   case 98: // type_specifier: FLOAT
-#line 322 "parser.y"
+#line 323 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_FLOAT); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2106 "yy_parser.cpp"
     break;
 
   case 99: // type_specifier: DOUBLE
-#line 323 "parser.y"
+#line 324 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_DOUBLE); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2112 "yy_parser.cpp"
     break;
 
   case 100: // type_specifier: SIGNED
-#line 324 "parser.y"
+#line 325 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_SIGNED); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2118 "yy_parser.cpp"
     break;
 
   case 101: // type_specifier: UNSIGNED
-#line 325 "parser.y"
+#line 326 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_UNSIGNED); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2124 "yy_parser.cpp"
     break;
 
   case 102: // type_specifier: ustruct_spec
-#line 326 "parser.y"
+#line 327 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(yystack_[0].value.as < AST_UStructSpec * > ()); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2130 "yy_parser.cpp"
     break;
 
   case 103: // type_specifier: enum_specifier
-#line 327 "parser.y"
+#line 328 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(yystack_[0].value.as < AST_EnumSpecifier * > ()); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2136 "yy_parser.cpp"
     break;
 
   case 104: // type_specifier: TYPE_NAME
-#line 328 "parser.y"
+#line 329 "parser.y"
                                 { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(get_def_type(yystack_[0].value.as < string_id_t > ())); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2142 "yy_parser.cpp"
     break;
 
   case 105: // type_qual: CONST
-#line 332 "parser.y"
+#line 333 "parser.y"
                                 { yylhs.value.as < short > () = AST_TypeQuals::Q_CONST; }
 #line 2148 "yy_parser.cpp"
     break;
 
   case 106: // type_qual: RESTRICT
-#line 333 "parser.y"
+#line 334 "parser.y"
                                 { yylhs.value.as < short > () = AST_TypeQuals::Q_RESTRICT; }
 #line 2154 "yy_parser.cpp"
     break;
 
   case 107: // type_qual: VOLATILE
-#line 334 "parser.y"
+#line 335 "parser.y"
                                 { yylhs.value.as < short > () = AST_TypeQuals::Q_VOLATILE; }
 #line 2160 "yy_parser.cpp"
     break;
 
   case 108: // function_specifier: INLINE
-#line 338 "parser.y"
+#line 339 "parser.y"
                                 { yylhs.value.as < short > () = AST_DeclSpecifiers::Q_INLINE; }
 #line 2166 "yy_parser.cpp"
     break;
 
-  case 109: // ustruct_spec: ustruct IDENTIFIER "{" struct_decls_lst "}"
-#line 342 "parser.y"
-                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[4].value.as < short > (), yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
+  case 109: // function_specifier: EXT_PURE
+#line 340 "parser.y"
+                                { yylhs.value.as < short > () = AST_DeclSpecifiers::Q_PURE; }
 #line 2172 "yy_parser.cpp"
     break;
 
-  case 110: // ustruct_spec: ustruct "{" struct_decls_lst "}"
-#line 343 "parser.y"
-                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[3].value.as < short > (), NO_IDENT_ID, yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
+  case 110: // function_specifier: EXT_FCONST
+#line 341 "parser.y"
+                                { yylhs.value.as < short > () = AST_DeclSpecifiers::Q_FCONST; }
 #line 2178 "yy_parser.cpp"
     break;
 
-  case 111: // ustruct_spec: ustruct IDENTIFIER
-#line 344 "parser.y"
-                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[1].value.as < short > (), yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
+  case 111: // ustruct_spec: ustruct IDENTIFIER "{" struct_decls_lst "}"
+#line 345 "parser.y"
+                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[4].value.as < short > (), yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
 #line 2184 "yy_parser.cpp"
     break;
 
-  case 112: // ustruct: STRUCT
-#line 348 "parser.y"
-                                                    { yylhs.value.as < short > () = 0; }
+  case 112: // ustruct_spec: ustruct "{" struct_decls_lst "}"
+#line 346 "parser.y"
+                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[3].value.as < short > (), NO_IDENT_ID, yystack_[1].value.as < AST_StructDeclarationList * > ()); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
 #line 2190 "yy_parser.cpp"
     break;
 
-  case 113: // ustruct: UNION
-#line 349 "parser.y"
-                                                    { yylhs.value.as < short > () = 1; }
+  case 113: // ustruct_spec: ustruct IDENTIFIER
+#line 347 "parser.y"
+                                                    { yylhs.value.as < AST_UStructSpec * > () = drv.ast->mkUstructSpec(yystack_[1].value.as < short > (), yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_UStructSpec * > (), yylhs.location); }
 #line 2196 "yy_parser.cpp"
     break;
 
-  case 114: // struct_decls_lst: struct_declaration
-#line 353 "parser.y"
-                                                    { yylhs.value.as < AST_StructDeclarationList * > () = drv.ast->mkStructDeclarationLst(yystack_[0].value.as < AST_StructDeclaration * > ()); SL(yylhs.value.as < AST_StructDeclarationList * > (), yylhs.location); }
+  case 114: // ustruct: STRUCT
+#line 351 "parser.y"
+                                                    { yylhs.value.as < short > () = 0; }
 #line 2202 "yy_parser.cpp"
     break;
 
-  case 115: // struct_decls_lst: struct_decls_lst struct_declaration
-#line 354 "parser.y"
-                                                    { yylhs.value.as < AST_StructDeclarationList * > () = yystack_[1].value.as < AST_StructDeclarationList * > ()->append(yystack_[0].value.as < AST_StructDeclaration * > ()); }
+  case 115: // ustruct: UNION
+#line 352 "parser.y"
+                                                    { yylhs.value.as < short > () = 1; }
 #line 2208 "yy_parser.cpp"
     break;
 
-  case 116: // struct_declaration: spec_qual_lst struct_declarator_list ";"
-#line 358 "parser.y"
-                                                    { yylhs.value.as < AST_StructDeclaration * > () = drv.ast->mkStructDeclaration(yystack_[2].value.as < AST_SpecsQualsList * > (), yystack_[1].value.as < AST_StructDeclaratorList * > ()); SL(yylhs.value.as < AST_StructDeclaration * > (), yylhs.location); }
+  case 116: // struct_decls_lst: struct_declaration
+#line 356 "parser.y"
+                                                    { yylhs.value.as < AST_StructDeclarationList * > () = drv.ast->mkStructDeclarationLst(yystack_[0].value.as < AST_StructDeclaration * > ()); SL(yylhs.value.as < AST_StructDeclarationList * > (), yylhs.location); }
 #line 2214 "yy_parser.cpp"
     break;
 
-  case 117: // spec_qual_lst: type_specifier spec_qual_lst
-#line 362 "parser.y"
-                                        { yylhs.value.as < AST_SpecsQualsList * > () = yystack_[0].value.as < AST_SpecsQualsList * > ()->append_spec(yystack_[1].value.as < AST_TypeSpecifier * > ()); }
+  case 117: // struct_decls_lst: struct_decls_lst struct_declaration
+#line 357 "parser.y"
+                                                    { yylhs.value.as < AST_StructDeclarationList * > () = yystack_[1].value.as < AST_StructDeclarationList * > ()->append(yystack_[0].value.as < AST_StructDeclaration * > ()); }
 #line 2220 "yy_parser.cpp"
     break;
 
-  case 118: // spec_qual_lst: type_specifier
-#line 363 "parser.y"
-                                        { yylhs.value.as < AST_SpecsQualsList * > () = drv.ast->mkSpecQualLst(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
+  case 118: // struct_declaration: spec_qual_lst struct_declarator_list ";"
+#line 361 "parser.y"
+                                                    { yylhs.value.as < AST_StructDeclaration * > () = drv.ast->mkStructDeclaration(yystack_[2].value.as < AST_SpecsQualsList * > (), yystack_[1].value.as < AST_StructDeclaratorList * > ()); SL(yylhs.value.as < AST_StructDeclaration * > (), yylhs.location); }
 #line 2226 "yy_parser.cpp"
     break;
 
-  case 119: // spec_qual_lst: type_qual spec_qual_lst
-#line 364 "parser.y"
-                                        { yylhs.value.as < AST_SpecsQualsList * > () = yystack_[0].value.as < AST_SpecsQualsList * > ()->append_qual(AST_TypeQuals::QualType(yystack_[1].value.as < short > ())); }
+  case 119: // spec_qual_lst: type_specifier spec_qual_lst
+#line 365 "parser.y"
+                                        { yylhs.value.as < AST_SpecsQualsList * > () = yystack_[0].value.as < AST_SpecsQualsList * > ()->append_spec(yystack_[1].value.as < AST_TypeSpecifier * > ()); }
 #line 2232 "yy_parser.cpp"
     break;
 
-  case 120: // spec_qual_lst: type_qual
-#line 365 "parser.y"
-                                        { yylhs.value.as < AST_SpecsQualsList * > () = drv.ast->mkSpecQualLst(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
+  case 120: // spec_qual_lst: type_specifier
+#line 366 "parser.y"
+                                        { yylhs.value.as < AST_SpecsQualsList * > () = drv.ast->mkSpecQualLst(yystack_[0].value.as < AST_TypeSpecifier * > ()); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
 #line 2238 "yy_parser.cpp"
     break;
 
-  case 121: // struct_declarator_list: struct_declarator
-#line 369 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclaratorList * > () = drv.ast->mkStructDeclaratorLst(yystack_[0].value.as < AST_StructDeclarator * > ()); SL(yylhs.value.as < AST_StructDeclaratorList * > (), yylhs.location); }
+  case 121: // spec_qual_lst: type_qual spec_qual_lst
+#line 367 "parser.y"
+                                        { yylhs.value.as < AST_SpecsQualsList * > () = yystack_[0].value.as < AST_SpecsQualsList * > ()->append_qual(AST_TypeQuals::QualType(yystack_[1].value.as < short > ())); }
 #line 2244 "yy_parser.cpp"
     break;
 
-  case 122: // struct_declarator_list: struct_declarator_list "," struct_declarator
-#line 370 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclaratorList * > () = yystack_[2].value.as < AST_StructDeclaratorList * > ()->append(yystack_[0].value.as < AST_StructDeclarator * > ()); }
+  case 122: // spec_qual_lst: type_qual
+#line 368 "parser.y"
+                                        { yylhs.value.as < AST_SpecsQualsList * > () = drv.ast->mkSpecQualLst(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_SpecsQualsList * > (), yylhs.location); }
 #line 2250 "yy_parser.cpp"
     break;
 
-  case 123: // struct_declarator: declarator
-#line 374 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
+  case 123: // struct_declarator_list: struct_declarator
+#line 372 "parser.y"
+                                                        { yylhs.value.as < AST_StructDeclaratorList * > () = drv.ast->mkStructDeclaratorLst(yystack_[0].value.as < AST_StructDeclarator * > ()); SL(yylhs.value.as < AST_StructDeclaratorList * > (), yylhs.location); }
 #line 2256 "yy_parser.cpp"
     break;
 
-  case 124: // struct_declarator: ":" const_expr
-#line 375 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(nullptr, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
+  case 124: // struct_declarator_list: struct_declarator_list "," struct_declarator
+#line 373 "parser.y"
+                                                        { yylhs.value.as < AST_StructDeclaratorList * > () = yystack_[2].value.as < AST_StructDeclaratorList * > ()->append(yystack_[0].value.as < AST_StructDeclarator * > ()); }
 #line 2262 "yy_parser.cpp"
     break;
 
-  case 125: // struct_declarator: declarator ":" const_expr
-#line 376 "parser.y"
-                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
+  case 125: // struct_declarator: declarator
+#line 377 "parser.y"
+                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
 #line 2268 "yy_parser.cpp"
     break;
 
-  case 126: // enum_specifier: ENUM "{" enumerator_list "}"
-#line 380 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(NO_IDENT_ID, yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+  case 126: // struct_declarator: ":" const_expr
+#line 378 "parser.y"
+                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(nullptr, yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
 #line 2274 "yy_parser.cpp"
     break;
 
-  case 127: // enum_specifier: ENUM IDENTIFIER "{" enumerator_list "}"
-#line 381 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+  case 127: // struct_declarator: declarator ":" const_expr
+#line 379 "parser.y"
+                                                        { yylhs.value.as < AST_StructDeclarator * > () = drv.ast->mkStructDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_StructDeclarator * > (), yylhs.location); }
 #line 2280 "yy_parser.cpp"
     break;
 
-  case 128: // enum_specifier: ENUM "{" enumerator_list "," "}"
-#line 382 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(NO_IDENT_ID, yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+  case 128: // enum_specifier: ENUM "{" enumerator_list "}"
+#line 383 "parser.y"
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(NO_IDENT_ID, yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2286 "yy_parser.cpp"
     break;
 
-  case 129: // enum_specifier: ENUM IDENTIFIER "{" enumerator_list "," "}"
-#line 383 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[4].value.as < string_id_t > (), yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+  case 129: // enum_specifier: ENUM IDENTIFIER "{" enumerator_list "}"
+#line 384 "parser.y"
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[3].value.as < string_id_t > (), yystack_[1].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2292 "yy_parser.cpp"
     break;
 
-  case 130: // enum_specifier: ENUM IDENTIFIER
-#line 384 "parser.y"
-                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
+  case 130: // enum_specifier: ENUM "{" enumerator_list "," "}"
+#line 385 "parser.y"
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(NO_IDENT_ID, yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2298 "yy_parser.cpp"
     break;
 
-  case 131: // enumerator_list: enumerator
-#line 388 "parser.y"
-                                                        { yylhs.value.as < AST_EnumeratorList * > () = drv.ast->mkEnumLst(yystack_[0].value.as < AST_Enumerator * > ()); SL(yylhs.value.as < AST_EnumeratorList * > (), yylhs.location); }
+  case 131: // enum_specifier: ENUM IDENTIFIER "{" enumerator_list "," "}"
+#line 386 "parser.y"
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[4].value.as < string_id_t > (), yystack_[2].value.as < AST_EnumeratorList * > ()); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2304 "yy_parser.cpp"
     break;
 
-  case 132: // enumerator_list: enumerator_list "," enumerator
-#line 389 "parser.y"
-                                                        { yylhs.value.as < AST_EnumeratorList * > () = yystack_[2].value.as < AST_EnumeratorList * > ()->append(yystack_[0].value.as < AST_Enumerator * > ()); }
+  case 132: // enum_specifier: ENUM IDENTIFIER
+#line 387 "parser.y"
+                                                        { yylhs.value.as < AST_EnumSpecifier * > () = drv.ast->mkEnumSpec(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_EnumSpecifier * > (), yylhs.location); }
 #line 2310 "yy_parser.cpp"
     break;
 
-  case 133: // enumerator: IDENTIFIER
-#line 393 "parser.y"
-                                                        { yylhs.value.as < AST_Enumerator * > () = drv.ast->mkEnumer(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
+  case 133: // enumerator_list: enumerator
+#line 391 "parser.y"
+                                                        { yylhs.value.as < AST_EnumeratorList * > () = drv.ast->mkEnumLst(yystack_[0].value.as < AST_Enumerator * > ()); SL(yylhs.value.as < AST_EnumeratorList * > (), yylhs.location); }
 #line 2316 "yy_parser.cpp"
     break;
 
-  case 134: // enumerator: IDENTIFIER "=" const_expr
-#line 394 "parser.y"
-                                                        { yylhs.value.as < AST_Enumerator * > () = drv.ast->mkEnumer(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
+  case 134: // enumerator_list: enumerator_list "," enumerator
+#line 392 "parser.y"
+                                                        { yylhs.value.as < AST_EnumeratorList * > () = yystack_[2].value.as < AST_EnumeratorList * > ()->append(yystack_[0].value.as < AST_Enumerator * > ()); }
 #line 2322 "yy_parser.cpp"
     break;
 
-  case 135: // declaration: decl_specs ";"
-#line 401 "parser.y"
-                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
+  case 135: // enumerator: IDENTIFIER
+#line 396 "parser.y"
+                                                        { yylhs.value.as < AST_Enumerator * > () = drv.ast->mkEnumer(yystack_[0].value.as < string_id_t > (), nullptr); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
 #line 2328 "yy_parser.cpp"
     break;
 
-  case 136: // declaration: decl_specs init_decltor_list ";"
-#line 402 "parser.y"
-                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_InitDeclaratorList * > ()); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
+  case 136: // enumerator: IDENTIFIER "=" const_expr
+#line 397 "parser.y"
+                                                        { yylhs.value.as < AST_Enumerator * > () = drv.ast->mkEnumer(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Enumerator * > (), yylhs.location); }
 #line 2334 "yy_parser.cpp"
     break;
 
-  case 137: // init_decltor_list: init_decltor
-#line 406 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclaratorList * > () = drv.ast->mkInitDeclaratorLst(yystack_[0].value.as < AST_InitDeclarator * > ()); SL(yylhs.value.as < AST_InitDeclaratorList * > (), yylhs.location); }
+  case 137: // declaration: decl_specs ";"
+#line 404 "parser.y"
+                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
 #line 2340 "yy_parser.cpp"
     break;
 
-  case 138: // init_decltor_list: init_decltor_list "," init_decltor
-#line 407 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclaratorList * > () = yystack_[2].value.as < AST_InitDeclaratorList * > ()->append(yystack_[0].value.as < AST_InitDeclarator * > ()); }
+  case 138: // declaration: decl_specs init_decltor_list ";"
+#line 405 "parser.y"
+                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_InitDeclaratorList * > ()); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
 #line 2346 "yy_parser.cpp"
     break;
 
-  case 139: // init_decltor: declarator
-#line 411 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclarator * > () = drv.ast->mkInitDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
+  case 139: // init_decltor_list: init_decltor
+#line 409 "parser.y"
+                                                        { yylhs.value.as < AST_InitDeclaratorList * > () = drv.ast->mkInitDeclaratorLst(yystack_[0].value.as < AST_InitDeclarator * > ()); SL(yylhs.value.as < AST_InitDeclaratorList * > (), yylhs.location); }
 #line 2352 "yy_parser.cpp"
     break;
 
-  case 140: // init_decltor: declarator "=" initializer
-#line 412 "parser.y"
-                                                        { yylhs.value.as < AST_InitDeclarator * > () = drv.ast->mkInitDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Initializer * > ()); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
+  case 140: // init_decltor_list: init_decltor_list "," init_decltor
+#line 410 "parser.y"
+                                                        { yylhs.value.as < AST_InitDeclaratorList * > () = yystack_[2].value.as < AST_InitDeclaratorList * > ()->append(yystack_[0].value.as < AST_InitDeclarator * > ()); }
 #line 2358 "yy_parser.cpp"
     break;
 
-  case 141: // declarator: pointer dir_decltor
-#line 416 "parser.y"
-                                        { yylhs.value.as < AST_Declarator * > () = drv.ast->mkDeclarator(yystack_[0].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
+  case 141: // init_decltor: declarator
+#line 414 "parser.y"
+                                                        { yylhs.value.as < AST_InitDeclarator * > () = drv.ast->mkInitDeclarator(yystack_[0].value.as < AST_Declarator * > (), nullptr); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
 #line 2364 "yy_parser.cpp"
     break;
 
-  case 142: // declarator: dir_decltor
-#line 417 "parser.y"
-                                        { yylhs.value.as < AST_Declarator * > () = drv.ast->mkDeclarator(yystack_[0].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
+  case 142: // init_decltor: declarator "=" initializer
+#line 415 "parser.y"
+                                                        { yylhs.value.as < AST_InitDeclarator * > () = drv.ast->mkInitDeclarator(yystack_[2].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_Initializer * > ()); SL(yylhs.value.as < AST_InitDeclarator * > (), yylhs.location); }
 #line 2370 "yy_parser.cpp"
     break;
 
-  case 143: // pointer: "*"
-#line 421 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(nullptr, nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+  case 143: // declarator: pointer dir_decltor
+#line 419 "parser.y"
+                                        { yylhs.value.as < AST_Declarator * > () = drv.ast->mkDeclarator(yystack_[0].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
 #line 2376 "yy_parser.cpp"
     break;
 
-  case 144: // pointer: "*" type_qual_lst
-#line 422 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(yystack_[0].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+  case 144: // declarator: dir_decltor
+#line 420 "parser.y"
+                                        { yylhs.value.as < AST_Declarator * > () = drv.ast->mkDeclarator(yystack_[0].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_Declarator * > (), yylhs.location); }
 #line 2382 "yy_parser.cpp"
     break;
 
-  case 145: // pointer: "*" pointer
-#line 423 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+  case 145: // pointer: "*"
+#line 424 "parser.y"
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(nullptr, nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2388 "yy_parser.cpp"
     break;
 
-  case 146: // pointer: "*" type_qual_lst pointer
-#line 424 "parser.y"
-                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(yystack_[1].value.as < AST_TypeQuals * > (), yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
+  case 146: // pointer: "*" type_qual_lst
+#line 425 "parser.y"
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(yystack_[0].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2394 "yy_parser.cpp"
     break;
 
-  case 147: // dir_decltor: IDENTIFIER
-#line 428 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 147: // pointer: "*" pointer
+#line 426 "parser.y"
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2400 "yy_parser.cpp"
     break;
 
-  case 148: // dir_decltor: "(" declarator ")"
-#line 429 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclNested(yystack_[1].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 148: // pointer: "*" type_qual_lst pointer
+#line 427 "parser.y"
+                                        { yylhs.value.as < AST_Pointer * > () = drv.ast->mkPointer(yystack_[1].value.as < AST_TypeQuals * > (), yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_Pointer * > (), yylhs.location); }
 #line 2406 "yy_parser.cpp"
     break;
 
-  case 149: // dir_decltor: dir_decltor "[" type_qual_lst assign_expr "]"
-#line 430 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[4].value.as < AST_DirDeclarator * > (), yystack_[2].value.as < AST_TypeQuals * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 149: // dir_decltor: IDENTIFIER
+#line 431 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclIdent(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2412 "yy_parser.cpp"
     break;
 
-  case 150: // dir_decltor: dir_decltor "[" type_qual_lst "]"
-#line 431 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 150: // dir_decltor: "(" declarator ")"
+#line 432 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclNested(yystack_[1].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2418 "yy_parser.cpp"
     break;
 
-  case 151: // dir_decltor: dir_decltor "[" assign_expr "]"
-#line 432 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[3].value.as < AST_DirDeclarator * > (), nullptr, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 151: // dir_decltor: dir_decltor "[" type_qual_lst assign_expr "]"
+#line 433 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[4].value.as < AST_DirDeclarator * > (), yystack_[2].value.as < AST_TypeQuals * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2424 "yy_parser.cpp"
     break;
 
-  case 152: // dir_decltor: dir_decltor "[" "]"
-#line 433 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr, nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 152: // dir_decltor: dir_decltor "[" type_qual_lst "]"
+#line 434 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_TypeQuals * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2430 "yy_parser.cpp"
     break;
 
-  case 153: // dir_decltor: dir_decltor "(" param_type_lst ")"
-#line 434 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclFunc(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 153: // dir_decltor: dir_decltor "[" assign_expr "]"
+#line 435 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[3].value.as < AST_DirDeclarator * > (), nullptr, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2436 "yy_parser.cpp"
     break;
 
-  case 154: // dir_decltor: dir_decltor "(" ")"
-#line 435 "parser.y"
-                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclFunc(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
+  case 154: // dir_decltor: dir_decltor "[" "]"
+#line 436 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclArr(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr, nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2442 "yy_parser.cpp"
     break;
 
-  case 155: // type_qual_lst: type_qual
-#line 439 "parser.y"
-                                    { yylhs.value.as < AST_TypeQuals * > () = drv.ast->mkTypeQuals(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_TypeQuals * > (), yylhs.location); }
+  case 155: // dir_decltor: dir_decltor "(" param_type_lst ")"
+#line 437 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclFunc(yystack_[3].value.as < AST_DirDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2448 "yy_parser.cpp"
     break;
 
-  case 156: // type_qual_lst: type_qual_lst type_qual
-#line 440 "parser.y"
-                                    { yylhs.value.as < AST_TypeQuals * > () = yystack_[1].value.as < AST_TypeQuals * > ()->update(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); }
+  case 156: // dir_decltor: dir_decltor "(" ")"
+#line 438 "parser.y"
+                                                        { yylhs.value.as < AST_DirDeclarator * > () = drv.ast->mkDirDeclFunc(yystack_[2].value.as < AST_DirDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirDeclarator * > (), yylhs.location); }
 #line 2454 "yy_parser.cpp"
     break;
 
-  case 157: // param_type_lst: param_lst
-#line 444 "parser.y"
-                                    { yylhs.value.as < AST_ParameterTypeList * > () = drv.ast->mkParamTypeLst(yystack_[0].value.as < AST_ParameterList * > (), false); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
+  case 157: // type_qual_lst: type_qual
+#line 442 "parser.y"
+                                    { yylhs.value.as < AST_TypeQuals * > () = drv.ast->mkTypeQuals(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); SL(yylhs.value.as < AST_TypeQuals * > (), yylhs.location); }
 #line 2460 "yy_parser.cpp"
     break;
 
-  case 158: // param_type_lst: param_lst "," ELLIPSIS
-#line 445 "parser.y"
-                                    { yylhs.value.as < AST_ParameterTypeList * > () = drv.ast->mkParamTypeLst(yystack_[2].value.as < AST_ParameterList * > (), true); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
+  case 158: // type_qual_lst: type_qual_lst type_qual
+#line 443 "parser.y"
+                                    { yylhs.value.as < AST_TypeQuals * > () = yystack_[1].value.as < AST_TypeQuals * > ()->update(AST_TypeQuals::QualType(yystack_[0].value.as < short > ())); }
 #line 2466 "yy_parser.cpp"
     break;
 
-  case 159: // param_lst: parameter_declaration
-#line 449 "parser.y"
-                                                { yylhs.value.as < AST_ParameterList * > () = drv.ast->mkParamLst(yystack_[0].value.as < AST_ParameterDeclaration * > ()); SL(yylhs.value.as < AST_ParameterList * > (), yylhs.location); }
+  case 159: // param_type_lst: param_lst
+#line 447 "parser.y"
+                                    { yylhs.value.as < AST_ParameterTypeList * > () = drv.ast->mkParamTypeLst(yystack_[0].value.as < AST_ParameterList * > (), false); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
 #line 2472 "yy_parser.cpp"
     break;
 
-  case 160: // param_lst: param_lst "," parameter_declaration
-#line 450 "parser.y"
-                                                { yylhs.value.as < AST_ParameterList * > () = yystack_[2].value.as < AST_ParameterList * > ()->append(yystack_[0].value.as < AST_ParameterDeclaration * > ()); }
+  case 160: // param_type_lst: param_lst "," ELLIPSIS
+#line 448 "parser.y"
+                                    { yylhs.value.as < AST_ParameterTypeList * > () = drv.ast->mkParamTypeLst(yystack_[2].value.as < AST_ParameterList * > (), true); SL(yylhs.value.as < AST_ParameterTypeList * > (), yylhs.location); }
 #line 2478 "yy_parser.cpp"
     break;
 
-  case 161: // parameter_declaration: decl_specs declarator
-#line 454 "parser.y"
-                                                { yylhs.value.as < AST_ParameterDeclaration * > () = drv.ast->mkParamDecl(yystack_[1].value.as < AST_DeclSpecifiers * > (), yystack_[0].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
+  case 161: // param_lst: parameter_declaration
+#line 452 "parser.y"
+                                                { yylhs.value.as < AST_ParameterList * > () = drv.ast->mkParamLst(yystack_[0].value.as < AST_ParameterDeclaration * > ()); SL(yylhs.value.as < AST_ParameterList * > (), yylhs.location); }
 #line 2484 "yy_parser.cpp"
     break;
 
-  case 162: // parameter_declaration: decl_specs
-#line 455 "parser.y"
-                                                { yylhs.value.as < AST_ParameterDeclaration * > () = drv.ast->mkParamDecl(yystack_[0].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
+  case 162: // param_lst: param_lst "," parameter_declaration
+#line 453 "parser.y"
+                                                { yylhs.value.as < AST_ParameterList * > () = yystack_[2].value.as < AST_ParameterList * > ()->append(yystack_[0].value.as < AST_ParameterDeclaration * > ()); }
 #line 2490 "yy_parser.cpp"
     break;
 
-  case 163: // type_name: spec_qual_lst
-#line 459 "parser.y"
-                                                { yylhs.value.as < AST_TypeName * > () = drv.ast->mkTypeName(yystack_[0].value.as < AST_SpecsQualsList * > (), nullptr); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
+  case 163: // parameter_declaration: decl_specs declarator
+#line 457 "parser.y"
+                                                { yylhs.value.as < AST_ParameterDeclaration * > () = drv.ast->mkParamDecl(yystack_[1].value.as < AST_DeclSpecifiers * > (), yystack_[0].value.as < AST_Declarator * > ()); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
 #line 2496 "yy_parser.cpp"
     break;
 
-  case 164: // type_name: spec_qual_lst abstr_decltor
-#line 460 "parser.y"
-                                                { yylhs.value.as < AST_TypeName * > () = drv.ast->mkTypeName(yystack_[1].value.as < AST_SpecsQualsList * > (), yystack_[0].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
+  case 164: // parameter_declaration: decl_specs
+#line 458 "parser.y"
+                                                { yylhs.value.as < AST_ParameterDeclaration * > () = drv.ast->mkParamDecl(yystack_[0].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_ParameterDeclaration * > (), yylhs.location); }
 #line 2502 "yy_parser.cpp"
     break;
 
-  case 165: // abstr_decltor: dir_abstr_decltor
-#line 464 "parser.y"
-                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
+  case 165: // type_name: spec_qual_lst
+#line 462 "parser.y"
+                                                { yylhs.value.as < AST_TypeName * > () = drv.ast->mkTypeName(yystack_[0].value.as < AST_SpecsQualsList * > (), nullptr); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
 #line 2508 "yy_parser.cpp"
     break;
 
-  case 166: // abstr_decltor: pointer dir_abstr_decltor
-#line 465 "parser.y"
-                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
+  case 166: // type_name: spec_qual_lst abstr_decltor
+#line 463 "parser.y"
+                                                { yylhs.value.as < AST_TypeName * > () = drv.ast->mkTypeName(yystack_[1].value.as < AST_SpecsQualsList * > (), yystack_[0].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_TypeName * > (), yylhs.location); }
 #line 2514 "yy_parser.cpp"
     break;
 
-  case 167: // abstr_decltor: pointer
-#line 466 "parser.y"
-                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
+  case 167: // abstr_decltor: dir_abstr_decltor
+#line 467 "parser.y"
+                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
 #line 2520 "yy_parser.cpp"
     break;
 
-  case 168: // dir_abstr_decltor: "(" abstr_decltor ")"
-#line 470 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclNested(yystack_[1].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+  case 168: // abstr_decltor: pointer dir_abstr_decltor
+#line 468 "parser.y"
+                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(yystack_[0].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
 #line 2526 "yy_parser.cpp"
     break;
 
-  case 169: // dir_abstr_decltor: dir_abstr_decltor "[" "]"
-#line 471 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclArr(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+  case 169: // abstr_decltor: pointer
+#line 469 "parser.y"
+                                                { yylhs.value.as < AST_AbstrDeclarator * > () = drv.ast->mkAbstrDeclarator(nullptr, yystack_[0].value.as < AST_Pointer * > ()); SL(yylhs.value.as < AST_AbstrDeclarator * > (), yylhs.location); }
 #line 2532 "yy_parser.cpp"
     break;
 
-  case 170: // dir_abstr_decltor: dir_abstr_decltor "[" assign_expr "]"
-#line 472 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclArr(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+  case 170: // dir_abstr_decltor: "(" abstr_decltor ")"
+#line 473 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclNested(yystack_[1].value.as < AST_AbstrDeclarator * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2538 "yy_parser.cpp"
     break;
 
-  case 171: // dir_abstr_decltor: dir_abstr_decltor "(" ")"
-#line 473 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclFunc(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+  case 171: // dir_abstr_decltor: dir_abstr_decltor "[" "]"
+#line 474 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclArr(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2544 "yy_parser.cpp"
     break;
 
-  case 172: // dir_abstr_decltor: dir_abstr_decltor "(" param_type_lst ")"
-#line 474 "parser.y"
-                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclFunc(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
+  case 172: // dir_abstr_decltor: dir_abstr_decltor "[" assign_expr "]"
+#line 475 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclArr(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2550 "yy_parser.cpp"
     break;
 
-  case 173: // initializer: assign_expr
-#line 481 "parser.y"
-                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
+  case 173: // dir_abstr_decltor: dir_abstr_decltor "(" ")"
+#line 476 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclFunc(yystack_[2].value.as < AST_DirAbstrDeclarator * > (), nullptr); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2556 "yy_parser.cpp"
     break;
 
-  case 174: // initializer: "{" init_lst "}"
-#line 482 "parser.y"
-                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
+  case 174: // dir_abstr_decltor: dir_abstr_decltor "(" param_type_lst ")"
+#line 477 "parser.y"
+                                                    { yylhs.value.as < AST_DirAbstrDeclarator * > () = drv.ast->mkDirAbstrDeclFunc(yystack_[3].value.as < AST_DirAbstrDeclarator * > (), yystack_[1].value.as < AST_ParameterTypeList * > ()); SL(yylhs.value.as < AST_DirAbstrDeclarator * > (), yylhs.location); }
 #line 2562 "yy_parser.cpp"
     break;
 
-  case 175: // initializer: "{" init_lst "," "}"
-#line 483 "parser.y"
-                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
+  case 175: // initializer: assign_expr
+#line 484 "parser.y"
+                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
 #line 2568 "yy_parser.cpp"
     break;
 
-  case 176: // init_lst: initializer
-#line 487 "parser.y"
-                                                    { yylhs.value.as < AST_InitializerList * > () = drv.ast->mkInitializerLst(yystack_[0].value.as < AST_Initializer * > (), nullptr); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
+  case 176: // initializer: "{" init_lst "}"
+#line 485 "parser.y"
+                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[1].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
 #line 2574 "yy_parser.cpp"
     break;
 
-  case 177: // init_lst: designator "=" initializer
-#line 488 "parser.y"
-                                                    { yylhs.value.as < AST_InitializerList * > () = drv.ast->mkInitializerLst(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
+  case 177: // initializer: "{" init_lst "," "}"
+#line 486 "parser.y"
+                                                    { yylhs.value.as < AST_Initializer * > () = drv.ast->mkInitializer(yystack_[2].value.as < AST_InitializerList * > ()); SL(yylhs.value.as < AST_Initializer * > (), yylhs.location); }
 #line 2580 "yy_parser.cpp"
     break;
 
-  case 178: // init_lst: init_lst "," initializer
-#line 489 "parser.y"
-                                                    { yylhs.value.as < AST_InitializerList * > () = yystack_[2].value.as < AST_InitializerList * > ()->append(yystack_[0].value.as < AST_Initializer * > (), nullptr); }
+  case 178: // init_lst: initializer
+#line 490 "parser.y"
+                                                    { yylhs.value.as < AST_InitializerList * > () = drv.ast->mkInitializerLst(yystack_[0].value.as < AST_Initializer * > (), nullptr); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
 #line 2586 "yy_parser.cpp"
     break;
 
-  case 179: // init_lst: init_lst "," designator "=" initializer
-#line 490 "parser.y"
-                                                    { yylhs.value.as < AST_InitializerList * > () = yystack_[4].value.as < AST_InitializerList * > ()->append(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); }
+  case 179: // init_lst: designator "=" initializer
+#line 491 "parser.y"
+                                                    { yylhs.value.as < AST_InitializerList * > () = drv.ast->mkInitializerLst(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); SL(yylhs.value.as < AST_InitializerList * > (), yylhs.location); }
 #line 2592 "yy_parser.cpp"
     break;
 
-  case 180: // designator: "[" const_expr "]"
-#line 494 "parser.y"
-                                                    { yylhs.value.as < AST_Designator * > () = drv.ast->mkDesignator(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
+  case 180: // init_lst: init_lst "," initializer
+#line 492 "parser.y"
+                                                    { yylhs.value.as < AST_InitializerList * > () = yystack_[2].value.as < AST_InitializerList * > ()->append(yystack_[0].value.as < AST_Initializer * > (), nullptr); }
 #line 2598 "yy_parser.cpp"
     break;
 
-  case 181: // designator: "." IDENTIFIER
-#line 495 "parser.y"
-                                                    { yylhs.value.as < AST_Designator * > () = drv.ast->mkDesignator(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
+  case 181: // init_lst: init_lst "," designator "=" initializer
+#line 493 "parser.y"
+                                                    { yylhs.value.as < AST_InitializerList * > () = yystack_[4].value.as < AST_InitializerList * > ()->append(yystack_[0].value.as < AST_Initializer * > (), yystack_[2].value.as < AST_Designator * > ()); }
 #line 2604 "yy_parser.cpp"
     break;
 
-  case 182: // stmt: label_stmt
-#line 502 "parser.y"
-                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_LabeledStmt * > (); }
+  case 182: // designator: "[" const_expr "]"
+#line 497 "parser.y"
+                                                    { yylhs.value.as < AST_Designator * > () = drv.ast->mkDesignator(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
 #line 2610 "yy_parser.cpp"
     break;
 
-  case 183: // stmt: compound_stmt
-#line 503 "parser.y"
-                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_CompoundStmt * > (); }
+  case 183: // designator: "." IDENTIFIER
+#line 498 "parser.y"
+                                                    { yylhs.value.as < AST_Designator * > () = drv.ast->mkDesignator(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_Designator * > (), yylhs.location); }
 #line 2616 "yy_parser.cpp"
     break;
 
-  case 184: // stmt: expr_stmt
-#line 504 "parser.y"
-                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_ExprStmt * > (); }
+  case 184: // stmt: label_stmt
+#line 505 "parser.y"
+                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_LabeledStmt * > (); }
 #line 2622 "yy_parser.cpp"
     break;
 
-  case 185: // stmt: select_stmt
-#line 505 "parser.y"
-                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_SelectionStmt * > (); }
+  case 185: // stmt: compound_stmt
+#line 506 "parser.y"
+                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_CompoundStmt * > (); }
 #line 2628 "yy_parser.cpp"
     break;
 
-  case 186: // stmt: loop_stmt
-#line 506 "parser.y"
-                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_IterStmt * > (); }
+  case 186: // stmt: expr_stmt
+#line 507 "parser.y"
+                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_ExprStmt * > (); }
 #line 2634 "yy_parser.cpp"
     break;
 
-  case 187: // stmt: jmp_stmt
-#line 507 "parser.y"
-                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_JumpStmt * > (); }
+  case 187: // stmt: select_stmt
+#line 508 "parser.y"
+                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_SelectionStmt * > (); }
 #line 2640 "yy_parser.cpp"
     break;
 
-  case 188: // label_stmt: IDENTIFIER ":" stmt
-#line 511 "parser.y"
-                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SIMPL); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
+  case 188: // stmt: loop_stmt
+#line 509 "parser.y"
+                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_IterStmt * > (); }
 #line 2646 "yy_parser.cpp"
     break;
 
-  case 189: // label_stmt: CASE const_expr ":" stmt
-#line 512 "parser.y"
-                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_CASE); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
+  case 189: // stmt: jmp_stmt
+#line 510 "parser.y"
+                                    { yylhs.value.as < AST_Stmt * > () = yystack_[0].value.as < AST_JumpStmt * > (); }
 #line 2652 "yy_parser.cpp"
     break;
 
-  case 190: // label_stmt: DEFAULT ":" stmt
-#line 513 "parser.y"
-                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(nullptr, yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_DEFAULT); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
+  case 190: // label_stmt: IDENTIFIER ":" stmt
+#line 514 "parser.y"
+                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(yystack_[2].value.as < string_id_t > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SIMPL); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
 #line 2658 "yy_parser.cpp"
     break;
 
-  case 191: // compound_stmt: "{" "}"
-#line 517 "parser.y"
-                                    { yylhs.value.as < AST_CompoundStmt * > () = drv.ast->mkCompoundStmt(new AST_BlockItemList()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
+  case 191: // label_stmt: CASE const_expr ":" stmt
+#line 515 "parser.y"
+                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_CASE); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
 #line 2664 "yy_parser.cpp"
     break;
 
-  case 192: // compound_stmt: "{" block_items "}"
-#line 518 "parser.y"
-                                    { yylhs.value.as < AST_CompoundStmt * > () = drv.ast->mkCompoundStmt(yystack_[1].value.as < AST_BlockItemList * > ()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
+  case 192: // label_stmt: DEFAULT ":" stmt
+#line 516 "parser.y"
+                                    { yylhs.value.as < AST_LabeledStmt * > () = drv.ast->mkLabelStmt(nullptr, yystack_[0].value.as < AST_Stmt * > (), AST_LabeledStmt::SW_DEFAULT); SL(yylhs.value.as < AST_LabeledStmt * > (), yylhs.location); }
 #line 2670 "yy_parser.cpp"
     break;
 
-  case 193: // block_items: declaration
-#line 522 "parser.y"
-                                    { yylhs.value.as < AST_BlockItemList * > () = drv.ast->mkBlockItemLst()->append(yystack_[0].value.as < AST_Declaration * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
+  case 193: // compound_stmt: "{" "}"
+#line 520 "parser.y"
+                                    { yylhs.value.as < AST_CompoundStmt * > () = drv.ast->mkCompoundStmt(new AST_BlockItemList()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
 #line 2676 "yy_parser.cpp"
     break;
 
-  case 194: // block_items: stmt
-#line 523 "parser.y"
-                                    { yylhs.value.as < AST_BlockItemList * > () = drv.ast->mkBlockItemLst()->append(yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
+  case 194: // compound_stmt: "{" block_items "}"
+#line 521 "parser.y"
+                                    { yylhs.value.as < AST_CompoundStmt * > () = drv.ast->mkCompoundStmt(yystack_[1].value.as < AST_BlockItemList * > ()); SL(yylhs.value.as < AST_CompoundStmt * > (), yylhs.location); }
 #line 2682 "yy_parser.cpp"
     break;
 
-  case 195: // block_items: block_items declaration
-#line 524 "parser.y"
-                                    { yylhs.value.as < AST_BlockItemList * > () = yystack_[1].value.as < AST_BlockItemList * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); }
+  case 195: // block_items: declaration
+#line 525 "parser.y"
+                                    { yylhs.value.as < AST_BlockItemList * > () = drv.ast->mkBlockItemLst()->append(yystack_[0].value.as < AST_Declaration * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
 #line 2688 "yy_parser.cpp"
     break;
 
-  case 196: // block_items: block_items stmt
-#line 525 "parser.y"
-                                    { yylhs.value.as < AST_BlockItemList * > () = yystack_[1].value.as < AST_BlockItemList * > ()->append(yystack_[0].value.as < AST_Stmt * > ()); }
+  case 196: // block_items: stmt
+#line 526 "parser.y"
+                                    { yylhs.value.as < AST_BlockItemList * > () = drv.ast->mkBlockItemLst()->append(yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_BlockItemList * > (), yylhs.location); }
 #line 2694 "yy_parser.cpp"
     break;
 
-  case 197: // expr_stmt: ";"
-#line 529 "parser.y"
-                                    { yylhs.value.as < AST_ExprStmt * > () = drv.ast->mkExprStmt(nullptr); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
+  case 197: // block_items: block_items declaration
+#line 527 "parser.y"
+                                    { yylhs.value.as < AST_BlockItemList * > () = yystack_[1].value.as < AST_BlockItemList * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); }
 #line 2700 "yy_parser.cpp"
     break;
 
-  case 198: // expr_stmt: expr ";"
-#line 530 "parser.y"
-                                    { yylhs.value.as < AST_ExprStmt * > () = drv.ast->mkExprStmt(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
+  case 198: // block_items: block_items stmt
+#line 528 "parser.y"
+                                    { yylhs.value.as < AST_BlockItemList * > () = yystack_[1].value.as < AST_BlockItemList * > ()->append(yystack_[0].value.as < AST_Stmt * > ()); }
 #line 2706 "yy_parser.cpp"
     break;
 
-  case 199: // select_stmt: IF "(" expr ")" stmt
-#line 534 "parser.y"
-                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkIfStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), nullptr); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
+  case 199: // expr_stmt: ";"
+#line 532 "parser.y"
+                                    { yylhs.value.as < AST_ExprStmt * > () = drv.ast->mkExprStmt(nullptr); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
 #line 2712 "yy_parser.cpp"
     break;
 
-  case 200: // select_stmt: IF "(" expr ")" stmt ELSE stmt
-#line 535 "parser.y"
-                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkIfStmt(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Stmt * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
+  case 200: // expr_stmt: expr ";"
+#line 533 "parser.y"
+                                    { yylhs.value.as < AST_ExprStmt * > () = drv.ast->mkExprStmt(yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_ExprStmt * > (), yylhs.location); }
 #line 2718 "yy_parser.cpp"
     break;
 
-  case 201: // select_stmt: SWITCH "(" expr ")" stmt
-#line 536 "parser.y"
-                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkSwitchStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
+  case 201: // select_stmt: IF "(" expr ")" stmt
+#line 537 "parser.y"
+                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkIfStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > (), nullptr); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
 #line 2724 "yy_parser.cpp"
     break;
 
-  case 202: // loop_stmt: WHILE "(" expr ")" stmt
-#line 540 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeWhileStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+  case 202: // select_stmt: IF "(" expr ")" stmt ELSE stmt
+#line 538 "parser.y"
+                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkIfStmt(yystack_[4].value.as < AST_Expr * > (), yystack_[2].value.as < AST_Stmt * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
 #line 2730 "yy_parser.cpp"
     break;
 
-  case 203: // loop_stmt: DO stmt WHILE "(" expr ")" ";"
-#line 541 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeWhileStmt(yystack_[5].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+  case 203: // select_stmt: SWITCH "(" expr ")" stmt
+#line 539 "parser.y"
+                                            { yylhs.value.as < AST_SelectionStmt * > () = drv.ast->mkSwitchStmt(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Stmt * > ()); SL(yylhs.value.as < AST_SelectionStmt * > (), yylhs.location); }
 #line 2736 "yy_parser.cpp"
     break;
 
-  case 204: // loop_stmt: FOR "(" expr_stmt expr_stmt ")" stmt
-#line 542 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+  case 204: // loop_stmt: WHILE "(" expr ")" stmt
+#line 543 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeWhileStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), false); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2742 "yy_parser.cpp"
     break;
 
-  case 205: // loop_stmt: FOR "(" expr_stmt expr_stmt expr ")" stmt
-#line 543 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_ExprStmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+  case 205: // loop_stmt: DO stmt WHILE "(" expr ")" ";"
+#line 544 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeWhileStmt(yystack_[5].value.as < AST_Stmt * > (), yystack_[2].value.as < AST_Expr * > (), true); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2748 "yy_parser.cpp"
     break;
 
-  case 206: // loop_stmt: FOR "(" declaration expr_stmt ")" stmt
-#line 544 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_Declaration * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+  case 206: // loop_stmt: FOR "(" expr_stmt expr_stmt ")" stmt
+#line 545 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2754 "yy_parser.cpp"
     break;
 
-  case 207: // loop_stmt: FOR "(" declaration expr_stmt expr ")" stmt
-#line 545 "parser.y"
-                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_Declaration * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
+  case 207: // loop_stmt: FOR "(" expr_stmt expr_stmt expr ")" stmt
+#line 546 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_ExprStmt * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2760 "yy_parser.cpp"
     break;
 
-  case 208: // jmp_stmt: GOTO IDENTIFIER ";"
-#line 549 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_GOTO, yystack_[1].value.as < string_id_t > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+  case 208: // loop_stmt: FOR "(" declaration expr_stmt ")" stmt
+#line 547 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[3].value.as < AST_Declaration * > (), yystack_[2].value.as < AST_ExprStmt * > (), nullptr); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2766 "yy_parser.cpp"
     break;
 
-  case 209: // jmp_stmt: CONTINUE ";"
-#line 550 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_CONTINUE); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+  case 209: // loop_stmt: FOR "(" declaration expr_stmt expr ")" stmt
+#line 548 "parser.y"
+                                                    { yylhs.value.as < AST_IterStmt * > () = drv.ast->makeForStmt(yystack_[0].value.as < AST_Stmt * > (), yystack_[4].value.as < AST_Declaration * > (), yystack_[3].value.as < AST_ExprStmt * > (), yystack_[2].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_IterStmt * > (), yylhs.location); }
 #line 2772 "yy_parser.cpp"
     break;
 
-  case 210: // jmp_stmt: BREAK ";"
-#line 551 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_BREAK); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+  case 210: // jmp_stmt: GOTO IDENTIFIER ";"
+#line 552 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_GOTO, yystack_[1].value.as < string_id_t > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2778 "yy_parser.cpp"
     break;
 
-  case 211: // jmp_stmt: RETURN ";"
-#line 552 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+  case 211: // jmp_stmt: CONTINUE ";"
+#line 553 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_CONTINUE); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2784 "yy_parser.cpp"
     break;
 
-  case 212: // jmp_stmt: RETURN expr ";"
-#line 553 "parser.y"
-                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+  case 212: // jmp_stmt: BREAK ";"
+#line 554 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_BREAK); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2790 "yy_parser.cpp"
     break;
 
-  case 213: // trans_unit: func_def
-#line 560 "parser.y"
-                                    { yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_FunctionDef * > ()); SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location); }
+  case 213: // jmp_stmt: RETURN ";"
+#line 555 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
 #line 2796 "yy_parser.cpp"
     break;
 
-  case 214: // trans_unit: declaration
-#line 561 "parser.y"
+  case 214: // jmp_stmt: RETURN expr ";"
+#line 556 "parser.y"
+                                { yylhs.value.as < AST_JumpStmt * > () = drv.ast->mkJumpStmt(AST_JumpStmt::J_RET, yystack_[1].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_JumpStmt * > (), yylhs.location); }
+#line 2802 "yy_parser.cpp"
+    break;
+
+  case 215: // trans_unit: func_def
+#line 563 "parser.y"
+                                    { yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_FunctionDef * > ()); SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location); }
+#line 2808 "yy_parser.cpp"
+    break;
+
+  case 216: // trans_unit: declaration
+#line 564 "parser.y"
                                     {
                                         yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_Declaration * > ());
                                         check_typedef(yystack_[0].value.as < AST_Declaration * > ());
                                         SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location);
                                     }
-#line 2806 "yy_parser.cpp"
-    break;
-
-  case 215: // trans_unit: trans_unit func_def
-#line 566 "parser.y"
-                                    { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_FunctionDef * > ()); }
-#line 2812 "yy_parser.cpp"
-    break;
-
-  case 216: // trans_unit: trans_unit declaration
-#line 567 "parser.y"
-                                    { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); check_typedef(yystack_[0].value.as < AST_Declaration * > ()); }
 #line 2818 "yy_parser.cpp"
     break;
 
-  case 217: // func_def: decl_specs declarator compound_stmt
-#line 571 "parser.y"
-                                                { yylhs.value.as < AST_FunctionDef * > () = drv.ast->mkFunDef(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_CompoundStmt * > ()); SL(yylhs.value.as < AST_FunctionDef * > (), yylhs.location); }
+  case 217: // trans_unit: trans_unit func_def
+#line 569 "parser.y"
+                                    { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_FunctionDef * > ()); }
 #line 2824 "yy_parser.cpp"
     break;
 
+  case 218: // trans_unit: trans_unit declaration
+#line 570 "parser.y"
+                                    { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); check_typedef(yystack_[0].value.as < AST_Declaration * > ()); }
+#line 2830 "yy_parser.cpp"
+    break;
 
-#line 2828 "yy_parser.cpp"
+  case 219: // func_def: decl_specs declarator compound_stmt
+#line 574 "parser.y"
+                                                { yylhs.value.as < AST_FunctionDef * > () = drv.ast->mkFunDef(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_CompoundStmt * > ()); SL(yylhs.value.as < AST_FunctionDef * > (), yylhs.location); }
+#line 2836 "yy_parser.cpp"
+    break;
+
+
+#line 2840 "yy_parser.cpp"
 
             default:
               break;
@@ -3015,25 +3027,26 @@ namespace yy {
   "DIV_ASSIGN", "MOD_ASSIGN", "ADD_ASSIGN", "SUB_ASSIGN", "LEFT_ASSIGN",
   "RIGHT_ASSIGN", "AND_ASSIGN", "XOR_ASSIGN", "OR_ASSIGN", "SIZEOF",
   "TYPEDEF", "EXTERN", "STATIC", "AUTO", "REGISTER", "INLINE", "RESTRICT",
-  "CHAR", "SHORT", "INT", "LONG", "SIGNED", "UNSIGNED", "FLOAT", "DOUBLE",
-  "CONST", "VOLATILE", "VOID", "STRUCT", "UNION", "ENUM", "ELLIPSIS",
-  "CASE", "DEFAULT", "IF", "SWITCH", "WHILE", "DO", "FOR", "GOTO",
-  "CONTINUE", "BREAK", "RETURN", "IFX", "ELSE", "IDENTIFIER", "TYPE_NAME",
-  "CONSTANT", "STRING_LITERAL", "$accept", "primary_expr", "strings_seq",
-  "postfix_expr", "arg_expr_lst", "unary_expr", "unary_operator",
-  "cast_expr", "mult_expr", "add_expr", "shift_expr", "rel_expr",
-  "eq_expr", "and_expr", "xor_expr", "or_expr", "land_expr", "lor_expr",
-  "ternary_expr", "assign_expr", "assign_op", "expr", "const_expr",
-  "decl_specs", "storage_class_specifier", "type_specifier", "type_qual",
-  "function_specifier", "ustruct_spec", "ustruct", "struct_decls_lst",
-  "struct_declaration", "spec_qual_lst", "struct_declarator_list",
-  "struct_declarator", "enum_specifier", "enumerator_list", "enumerator",
-  "declaration", "init_decltor_list", "init_decltor", "declarator",
-  "pointer", "dir_decltor", "type_qual_lst", "param_type_lst", "param_lst",
-  "parameter_declaration", "type_name", "abstr_decltor",
-  "dir_abstr_decltor", "initializer", "init_lst", "designator", "stmt",
-  "label_stmt", "compound_stmt", "block_items", "expr_stmt", "select_stmt",
-  "loop_stmt", "jmp_stmt", "trans_unit", "func_def", YY_NULLPTR
+  "EXT_PURE", "EXT_FCONST", "CHAR", "SHORT", "INT", "LONG", "SIGNED",
+  "UNSIGNED", "FLOAT", "DOUBLE", "CONST", "VOLATILE", "VOID", "STRUCT",
+  "UNION", "ENUM", "ELLIPSIS", "CASE", "DEFAULT", "IF", "SWITCH", "WHILE",
+  "DO", "FOR", "GOTO", "CONTINUE", "BREAK", "RETURN", "IFX", "ELSE",
+  "IDENTIFIER", "TYPE_NAME", "CONSTANT", "STRING_LITERAL", "$accept",
+  "primary_expr", "strings_seq", "postfix_expr", "arg_expr_lst",
+  "unary_expr", "unary_operator", "cast_expr", "mult_expr", "add_expr",
+  "shift_expr", "rel_expr", "eq_expr", "and_expr", "xor_expr", "or_expr",
+  "land_expr", "lor_expr", "ternary_expr", "assign_expr", "assign_op",
+  "expr", "const_expr", "decl_specs", "storage_class_specifier",
+  "type_specifier", "type_qual", "function_specifier", "ustruct_spec",
+  "ustruct", "struct_decls_lst", "struct_declaration", "spec_qual_lst",
+  "struct_declarator_list", "struct_declarator", "enum_specifier",
+  "enumerator_list", "enumerator", "declaration", "init_decltor_list",
+  "init_decltor", "declarator", "pointer", "dir_decltor", "type_qual_lst",
+  "param_type_lst", "param_lst", "parameter_declaration", "type_name",
+  "abstr_decltor", "dir_abstr_decltor", "initializer", "init_lst",
+  "designator", "stmt", "label_stmt", "compound_stmt", "block_items",
+  "expr_stmt", "select_stmt", "loop_stmt", "jmp_stmt", "trans_unit",
+  "func_def", YY_NULLPTR
     };
     return yy_sname[yysymbol];
   }
@@ -3302,396 +3315,412 @@ namespace yy {
   }
 
 
-  const short parser::yypact_ninf_ = -281;
+  const short parser::yypact_ninf_ = -289;
 
   const signed char parser::yytable_ninf_ = -1;
 
   const short
   parser::yypact_[] =
   {
-    1245,  -281,  -281,  -281,  -281,  -281,  -281,  -281,  -281,  -281,
-    -281,  -281,  -281,  -281,  -281,  -281,  -281,  -281,  -281,  -281,
-    -281,    17,  -281,    37,  1245,  1245,  1245,  1245,  -281,    19,
-    -281,  -281,   260,  -281,   -67,    38,  -281,    39,    16,  -281,
-      80,  -281,    74,    20,   204,  -281,  -281,  -281,  -281,  1260,
-      46,  -281,  -281,  -281,    14,   101,  -281,   -67,    49,  -281,
-    -281,    16,  -281,    39,   332,   179,  -281,   204,  1111,   865,
-    1260,  1260,   764,  -281,    36,  1260,  1030,  -281,     8,   119,
-    -281,  -281,  -281,  -281,    58,  -281,  -281,   841,  -281,  -281,
-    -281,  -281,  -281,  -281,  1051,  1051,  1072,  1030,    84,   178,
-     214,   217,   570,   219,   146,   228,   231,   587,   232,  -281,
-    -281,  -281,   156,   118,   253,  1030,  -281,   190,   123,   125,
-      41,   128,   240,   235,   230,   226,    10,  -281,  -281,   111,
-      37,  -281,  -281,  -281,  -281,   417,  -281,  -281,  -281,  -281,
-     668,  -281,  -281,  -281,  -281,    39,   257,   262,  -281,  -281,
-     258,   925,  -281,  -281,  -281,  -281,  1030,   113,  -281,   264,
-     779,  -281,  -281,  -281,  -281,  -281,  -281,    11,    78,    25,
-     259,   841,  -281,  -281,   841,  -281,   270,   570,  1030,  1030,
-    1030,   208,   496,   276,  -281,  -281,  -281,   148,   570,  -281,
-     946,  1030,   196,   201,  -281,  -281,  -281,  -281,  -281,  -281,
-    -281,  -281,  -281,  -281,  -281,  -281,  -281,  1030,  -281,  1030,
-    1030,  1030,  1030,  1030,  1030,  1030,  1030,  1030,  1030,  1030,
-    1030,  1030,  1030,  1030,  1030,  1030,  1030,  1030,  -281,  1030,
-    -281,  -281,  -281,  1030,   218,  -281,   186,   279,  -281,  -281,
-    1208,  -281,  -281,   277,  -281,  -281,    36,  1030,  -281,  -281,
-    -281,    25,   292,  -281,   205,   731,   293,   294,   570,  -281,
-      79,   124,   126,   296,   605,   605,  -281,  -281,  -281,  -281,
-     127,  -281,    63,  -281,  -281,  -281,  -281,  -281,  -281,   190,
-     190,   123,   123,   125,   125,   125,   125,    41,    41,   128,
-     240,   235,   230,   199,   226,  -281,   295,  -281,  -281,   689,
-     179,  -281,  -281,  -281,  -281,  -281,   320,   205,  1171,   967,
-     668,  -281,   302,   302,  -281,   570,   570,   570,  1030,   988,
-    1009,  1030,  -281,  -281,  1030,  -281,  -281,  -281,   323,  -281,
-    -281,  -281,   322,  -281,   321,   216,   251,  -281,  -281,   129,
-     570,   142,   570,   143,  -281,  -281,   179,  -281,  -281,  -281,
-     710,   570,   335,  -281,   570,  -281,   570,  -281,  -281,  -281,
-    -281,  -281,  -281
+    1303,  -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,
+    -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,
+    -289,  -289,  -289,    12,  -289,    14,  1303,  1303,  1303,  1303,
+    -289,    15,  -289,  -289,   285,  -289,   -45,    18,  -289,    41,
+      86,  -289,    78,  -289,    10,    35,    36,  -289,  -289,  -289,
+    -289,  1333,    76,  -289,  -289,  -289,    44,   193,  -289,   -45,
+      63,  -289,  -289,    86,  -289,    41,   359,   769,  -289,    36,
+    1163,   933,  1333,  1333,   805,  -289,    30,  1333,  1080,  -289,
+      31,   197,  -289,  -289,  -289,  -289,   106,  -289,  -289,   909,
+    -289,  -289,  -289,  -289,  -289,  -289,  1101,  1101,  1122,  1080,
+      79,   128,   148,   158,   603,   191,    45,   201,   204,    74,
+     222,  -289,  -289,  -289,   155,   182,   351,  1080,  -289,   169,
+     195,   190,    39,   198,   147,   217,   224,   211,    20,  -289,
+    -289,   122,    14,  -289,  -289,  -289,  -289,   446,  -289,  -289,
+    -289,  -289,   748,  -289,  -289,  -289,  -289,    41,   246,   252,
+    -289,  -289,   251,   975,  -289,  -289,  -289,  -289,  1080,   133,
+    -289,   260,   846,  -289,  -289,  -289,  -289,  -289,  -289,    37,
+      69,    50,   262,   909,  -289,  -289,   909,  -289,   266,   603,
+    1080,  1080,  1080,   199,   527,   271,  -289,  -289,  -289,   152,
+     603,  -289,   996,  1080,   189,   194,  -289,  -289,  -289,  -289,
+    -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,  -289,  1080,
+    -289,  1080,  1080,  1080,  1080,  1080,  1080,  1080,  1080,  1080,
+    1080,  1080,  1080,  1080,  1080,  1080,  1080,  1080,  1080,  1080,
+    -289,  1080,  -289,  -289,  -289,  1080,   203,  -289,   234,   269,
+    -289,  -289,  1264,  -289,  -289,   267,  -289,  -289,    30,  1080,
+    -289,  -289,  -289,    50,   272,  -289,    97,   814,   277,   280,
+     603,  -289,    72,   124,   132,   282,   620,   620,  -289,  -289,
+    -289,  -289,   138,  -289,     3,  -289,  -289,  -289,  -289,  -289,
+    -289,   169,   169,   195,   195,   190,   190,   190,   190,    39,
+      39,   198,   147,   217,   224,   248,   211,  -289,   281,  -289,
+    -289,   706,   769,  -289,  -289,  -289,  -289,  -289,   284,    97,
+    1225,  1017,   748,  -289,   288,   288,  -289,   603,   603,   603,
+    1080,  1038,  1059,  1080,  -289,  -289,  1080,  -289,  -289,  -289,
+     287,  -289,  -289,  -289,   286,  -289,   289,   255,   212,  -289,
+    -289,   139,   603,   140,   603,   141,  -289,  -289,   769,  -289,
+    -289,  -289,   727,   603,   296,  -289,   603,  -289,   603,  -289,
+    -289,  -289,  -289,  -289,  -289
   };
 
   const unsigned char
   parser::yydefact_[] =
   {
-       0,    88,    89,    90,    91,    92,   108,   106,    94,    95,
-      96,    97,   100,   101,    98,    99,   105,   107,    93,   112,
-     113,     0,   104,     0,    80,    82,    84,    86,   102,     0,
-     103,   214,     0,   213,     0,   130,   135,     0,   143,   147,
-       0,   137,   139,     0,   142,    81,    83,    85,    87,     0,
-     111,     1,   216,   215,   133,     0,   131,     0,     0,   155,
-     145,   144,   136,     0,     0,     0,   217,   141,     0,     0,
-     118,   120,     0,   114,     0,     0,     0,   126,     0,     0,
-     148,   156,   146,   138,   139,   197,   191,     0,    26,    31,
-      30,    29,    28,    27,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     2,     3,
-       8,    10,     4,    20,    32,     0,    34,    38,    41,    44,
-      49,    52,    54,    56,    58,    60,    62,    64,    77,     0,
-       0,   193,   194,   182,   183,     0,   184,   185,   186,   187,
-       0,     2,   173,   140,   154,   162,     0,   157,   159,   152,
-       0,     0,   117,   119,   110,   115,     0,     0,   121,   123,
-       0,    32,    79,   134,   128,   132,   127,     0,     0,   163,
-       0,     0,    21,    22,     0,    24,     0,     0,     0,     0,
-       0,     0,     0,     0,   209,   210,   211,     0,     0,     9,
-       0,     0,     0,     0,    16,    17,    66,    67,    68,    69,
-      70,    71,    72,    73,    74,    75,    76,     0,    23,     0,
+       0,    88,    89,    90,    91,    92,   108,   106,   109,   110,
+      94,    95,    96,    97,   100,   101,    98,    99,   105,   107,
+      93,   114,   115,     0,   104,     0,    80,    82,    84,    86,
+     102,     0,   103,   216,     0,   215,     0,   132,   137,     0,
+     145,   149,     0,   139,   141,     0,   144,    81,    83,    85,
+      87,     0,   113,     1,   218,   217,   135,     0,   133,     0,
+       0,   157,   147,   146,   138,     0,     0,     0,   219,   143,
+       0,     0,   120,   122,     0,   116,     0,     0,     0,   128,
+       0,     0,   150,   158,   148,   140,   141,   199,   193,     0,
+      26,    31,    30,    29,    28,    27,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,   198,     0,
-     192,   195,   196,     0,     0,   176,     0,     0,   161,   153,
-       0,   151,   150,     0,   124,   116,     0,     0,   109,   129,
-       5,     0,   167,   164,   165,     0,     0,     0,     0,   190,
-       0,     0,     0,     0,     0,     0,   208,   212,   188,    12,
-       0,    18,     0,    14,    15,    65,    35,    36,    37,    40,
-      39,    42,    43,    45,    46,    47,    48,    50,    51,    53,
-      55,    57,    59,     0,    61,    78,     0,   181,   174,     0,
-       0,   158,   160,   149,   122,   125,     0,   166,     0,     0,
-       0,    33,     0,    25,   189,     0,     0,     0,     0,     0,
-       0,     0,    13,    11,     0,   180,   175,   178,     0,   177,
-     168,   171,     0,   169,     0,     0,   199,   201,   202,     0,
-       0,     0,     0,     0,    19,    63,     0,   172,   170,     6,
-       0,     0,     0,   206,     0,   204,     0,   179,     7,   200,
-     203,   207,   205
+       2,     3,     8,    10,     4,    20,    32,     0,    34,    38,
+      41,    44,    49,    52,    54,    56,    58,    60,    62,    64,
+      77,     0,     0,   195,   196,   184,   185,     0,   186,   187,
+     188,   189,     0,     2,   175,   142,   156,   164,     0,   159,
+     161,   154,     0,     0,   119,   121,   112,   117,     0,     0,
+     123,   125,     0,    32,    79,   136,   130,   134,   129,     0,
+       0,   165,     0,     0,    21,    22,     0,    24,     0,     0,
+       0,     0,     0,     0,     0,     0,   211,   212,   213,     0,
+       0,     9,     0,     0,     0,     0,    16,    17,    66,    67,
+      68,    69,    70,    71,    72,    73,    74,    75,    76,     0,
+      23,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+     200,     0,   194,   197,   198,     0,     0,   178,     0,     0,
+     163,   155,     0,   153,   152,     0,   126,   118,     0,     0,
+     111,   131,     5,     0,   169,   166,   167,     0,     0,     0,
+       0,   192,     0,     0,     0,     0,     0,     0,   210,   214,
+     190,    12,     0,    18,     0,    14,    15,    65,    35,    36,
+      37,    40,    39,    42,    43,    45,    46,    47,    48,    50,
+      51,    53,    55,    57,    59,     0,    61,    78,     0,   183,
+     176,     0,     0,   160,   162,   151,   124,   127,     0,   168,
+       0,     0,     0,    33,     0,    25,   191,     0,     0,     0,
+       0,     0,     0,     0,    13,    11,     0,   182,   177,   180,
+       0,   179,   170,   173,     0,   171,     0,     0,   201,   203,
+     204,     0,     0,     0,     0,     0,    19,    63,     0,   174,
+     172,     6,     0,     0,     0,   208,     0,   206,     0,   181,
+       7,   202,   205,   209,   207
   };
 
   const short
   parser::yypgoto_[] =
   {
-    -281,  -281,  -281,  -281,  -281,   -43,  -281,  -113,    12,    18,
-     -16,    27,   117,   120,   116,   130,   115,  -281,   -48,   -64,
-    -281,   -69,   -89,     0,  -281,   -10,   203,  -281,  -281,  -281,
-     269,   -60,   -56,  -281,   106,  -281,   299,   -68,   -23,  -281,
-     290,   -17,   -31,   314,   289,    51,  -281,   122,    15,   114,
-     112,   -62,    56,  -280,   -98,  -281,   325,  -281,  -171,  -281,
-    -281,  -281,  -281,   336
+    -289,  -289,  -289,  -289,  -289,   -43,  -289,   -93,    51,    52,
+    -153,    48,    80,    75,    77,    81,    73,  -289,   -48,   -66,
+    -289,   -69,   -95,     0,  -289,   154,   145,  -289,  -289,  -289,
+     228,   -63,   -41,  -289,    58,  -289,   250,   -72,   -28,  -289,
+     247,   -18,   -38,   268,   240,     4,  -289,    82,    21,    62,
+      65,   -64,     5,  -288,   -94,  -289,   276,  -289,  -172,  -289,
+    -289,  -289,  -289,   291
   };
 
   const short
   parser::yydefgoto_[] =
   {
-       0,   111,   112,   113,   270,   114,   115,   116,   117,   118,
-     119,   120,   121,   122,   123,   124,   125,   126,   127,   128,
-     207,   129,   163,   130,    24,    25,    26,    27,    28,    29,
-      72,    73,    74,   157,   158,    30,    55,    56,    31,    40,
-      41,    84,    43,    44,    61,   146,   147,   148,   170,   253,
-     254,   235,   236,   237,   132,   133,   134,   135,   136,   137,
-     138,   139,    32,    33
+       0,   113,   114,   115,   272,   116,   117,   118,   119,   120,
+     121,   122,   123,   124,   125,   126,   127,   128,   129,   130,
+     209,   131,   165,   132,    26,    27,    28,    29,    30,    31,
+      74,    75,    76,   159,   160,    32,    57,    58,    33,    42,
+      43,    86,    45,    46,    63,   148,   149,   150,   172,   255,
+     256,   237,   238,   239,   134,   135,   136,   137,   138,   139,
+     140,   141,    34,    35
   };
 
   const short
   parser::yytable_[] =
   {
-      23,   142,   208,   143,   181,   150,    42,    60,   176,    52,
-     165,   265,   155,   164,   152,   153,   249,    54,   168,   328,
-      58,    34,    76,    49,    45,    46,    47,    48,   162,    37,
-      82,   169,    23,   161,   251,    38,   226,   232,   187,    70,
-      36,   131,    57,   156,    38,    37,    37,   227,    37,   162,
-      75,   172,   173,   175,   161,    38,    38,   159,    38,    80,
-      70,    70,    70,   216,   217,    70,    65,   244,   145,   229,
-     328,     7,   161,   218,   219,   323,   142,    70,    64,   259,
-      16,    17,    65,    62,   229,   229,    63,   243,   250,   315,
-     268,   177,    54,   319,   320,    54,   276,   277,   278,   165,
-     155,    35,   168,    50,    39,   168,    77,    78,   162,   260,
-     261,   262,   231,   161,   228,   169,   245,   229,   169,   246,
-      39,    39,   272,    39,   166,   167,   271,   190,   238,   191,
-     229,   192,   229,   321,   316,   229,   317,   322,   252,   352,
-     212,   213,   311,   275,   296,   193,   194,   195,   229,   229,
-      70,   267,   354,   356,   229,   214,   215,   293,   305,   264,
-     314,    70,   220,   221,    70,   295,   161,   161,   161,   161,
-     161,   161,   161,   161,   161,   161,   161,   161,   161,   161,
-     161,   161,   161,   140,   161,   162,   256,   178,    87,   257,
-     161,   298,   299,    88,    89,    90,    91,    92,    93,   162,
-     283,   284,   285,   286,   161,   229,   324,    94,    95,   209,
-     210,   211,   161,    68,   308,    69,   309,   336,   337,   338,
-     252,   349,   350,   179,   279,   280,   180,    96,   182,   159,
-     183,   184,   281,   282,   185,   142,   142,   327,   329,   188,
-     145,    59,   353,   189,   355,   334,   142,   287,   288,   339,
-     341,   343,    71,   359,   222,   224,   361,   344,   362,   223,
-      51,   196,   225,   141,    81,   109,   110,   239,   240,   255,
-     241,   247,    59,    71,    71,    71,   345,   258,    71,   266,
-     273,   161,   142,   263,   357,   274,   142,   300,   327,   303,
-      71,   197,   198,   199,   200,   201,   202,   203,   204,   205,
-     206,   251,   297,   312,   313,   318,   310,   325,   145,     1,
-       2,     3,     4,     5,     6,     7,     8,     9,    10,    11,
-      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
-     330,   346,   347,   348,   351,    85,    64,    86,   360,   289,
-     291,    87,   294,   290,   160,    22,    88,    89,    90,    91,
-      92,    93,   304,    83,    81,   292,    79,    67,   151,   332,
-      94,    95,   302,    71,   307,   306,   335,    66,    53,     0,
-       0,     0,     0,     0,    71,     0,     0,    71,     0,     0,
-      96,     1,     2,     3,     4,     5,     6,     7,     8,     9,
-      10,    11,    12,    13,    14,    15,    16,    17,    18,    19,
-      20,    21,     0,    97,    98,    99,   100,   101,   102,   103,
-     104,   105,   106,   107,     0,     0,   108,    22,   109,   110,
-      85,    64,   230,     0,     0,     0,    87,     0,     0,     0,
-       0,    88,    89,    90,    91,    92,    93,     0,     0,     0,
-       0,     0,     0,     0,     0,    94,    95,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,    96,     1,     2,     3,     4,
-       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
-      15,    16,    17,    18,    19,    20,    21,     0,    97,    98,
-      99,   100,   101,   102,   103,   104,   105,   106,   107,    85,
-       0,   108,    22,   109,   110,    87,     0,     0,     0,     0,
-      88,    89,    90,    91,    92,    93,     0,     0,     0,     0,
-       0,     0,     0,     0,    94,    95,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,    96,     1,     2,     3,     4,     5,
-       6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
-      16,    17,    18,    19,    20,    21,     0,     0,     0,     0,
-       0,     0,     0,    85,    64,     0,     0,     0,     0,    87,
-     141,    22,   109,   110,    88,    89,    90,    91,    92,    93,
-     186,     0,     0,     0,     0,     0,    87,     0,    94,    95,
-       0,    88,    89,    90,    91,    92,    93,     0,    85,     0,
-       0,     0,     0,     0,    87,    94,    95,     0,    96,    88,
-      89,    90,    91,    92,    93,     0,     0,     0,     0,     0,
-       0,     0,     0,    94,    95,    96,     0,     0,     0,     0,
-       0,    97,    98,    99,   100,   101,   102,   103,   104,   105,
-     106,   107,     0,    96,   108,     0,   109,   110,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   141,   140,   109,   110,     0,     0,    87,     0,   233,
-       0,   234,    88,    89,    90,    91,    92,    93,     0,   141,
-       0,   109,   110,   140,   326,     0,    94,    95,    87,     0,
-     233,     0,   234,    88,    89,    90,    91,    92,    93,     0,
-       0,     0,     0,     0,   140,   358,    96,    94,    95,    87,
-       0,   233,     0,   234,    88,    89,    90,    91,    92,    93,
-       0,     0,     0,     0,     0,   310,     0,    96,    94,    95,
-      87,     0,     0,     0,     0,    88,    89,    90,    91,    92,
-      93,     0,   141,     0,   109,   110,     0,     0,    96,    94,
-      95,     0,     0,     0,     0,     0,     0,     0,     0,   154,
-       0,     0,     0,   141,     0,   109,   110,     0,     0,    96,
-       0,     0,     0,     0,   248,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   141,     0,   109,   110,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,   141,     0,   109,   110,     7,
-       8,     9,    10,    11,    12,    13,    14,    15,    16,    17,
-      18,    19,    20,    21,     7,     8,     9,    10,    11,    12,
-      13,    14,    15,    16,    17,    18,    19,    20,    21,    22,
-      87,     0,     0,     0,     0,    88,    89,    90,    91,    92,
-      93,     0,     0,     0,    22,     0,     0,     0,     0,    94,
-      95,     0,     0,     0,    87,     0,     0,   149,     0,    88,
-      89,    90,    91,    92,    93,     0,     0,     0,     0,    96,
-       0,     0,     0,    94,    95,     0,     7,     8,     9,    10,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,     0,     0,    96,     0,     0,     0,     0,     0,     0,
-       7,     0,     0,     0,     0,   141,    22,   109,   110,    16,
-      17,     0,     0,     0,    87,     0,     0,   242,     0,    88,
-      89,    90,    91,    92,    93,     0,     0,     0,     0,   141,
-       0,   109,   110,    94,    95,    87,   269,     0,     0,     0,
-      88,    89,    90,    91,    92,    93,     0,     0,     0,     0,
-       0,     0,     0,    96,    94,    95,    87,     0,     0,   333,
-       7,    88,    89,    90,    91,    92,    93,     0,     0,    16,
-      17,     0,     0,     0,    96,    94,    95,    87,   340,     0,
-       0,     0,    88,    89,    90,    91,    92,    93,     0,   141,
-       0,   109,   110,     0,     0,    96,    94,    95,    87,   342,
-       0,     0,     0,    88,    89,    90,    91,    92,    93,     0,
-     141,     0,   109,   110,     0,     0,    96,    94,    95,    87,
-       0,     0,     0,     0,    88,    89,    90,    91,    92,    93,
-       0,   141,     0,   109,   110,     0,     0,    96,    94,    95,
-     171,     0,     0,     0,     0,    88,    89,    90,    91,    92,
-      93,     0,   141,     0,   109,   110,     0,     0,    96,    94,
-      95,   174,     0,     0,     0,     0,    88,    89,    90,    91,
-      92,    93,     0,   141,     0,   109,   110,     0,     0,    96,
-      94,    95,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   141,     0,   109,   110,     0,     0,
-      96,   144,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,   141,     0,   109,   110,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   141,     0,   109,   110,
-       1,     2,     3,     4,     5,     6,     7,     8,     9,    10,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,   331,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    22,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       1,     2,     3,     4,     5,     6,     7,     8,     9,    10,
-      11,    12,    13,    14,    15,    16,    17,    18,    19,    20,
-      21,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    22,     1,     2,     3,
-       4,     5,     6,     7,     8,     9,    10,    11,    12,    13,
-      14,    15,    16,    17,    18,    19,    20,    21,   301,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,    22,     1,     2,     3,     4,     5,     6,
+      25,   144,    62,   145,   178,   152,    54,    44,   167,   231,
+     183,   157,   267,   330,    66,   325,    36,    38,    67,    51,
+     170,    60,    59,    39,   210,    84,    47,    48,    49,    50,
+     164,   154,   155,    40,    25,   163,   166,   158,   133,    39,
+     189,    56,   251,   234,    39,    70,   228,    71,   171,    40,
+      39,   164,    78,   174,   175,   177,   163,   229,   161,   253,
+      40,   218,   219,   246,   330,   285,   286,   287,   288,    40,
+     147,   220,   221,    82,   163,   231,   144,   188,   231,   252,
+      77,    64,   317,    89,    65,   261,   179,   245,    90,    91,
+      92,    93,    94,    95,   321,   322,   270,   167,    37,   157,
+      41,    52,    96,    97,   170,    40,   310,   170,   311,   233,
+     164,   262,   263,   264,    67,   163,    41,    56,   278,   279,
+     280,    41,    98,    56,   274,   230,   273,    41,   231,   240,
+     231,   185,   171,   254,   318,   171,   247,   180,   231,   248,
+     298,     7,   319,   277,   323,   231,   231,   231,   324,   354,
+     356,   358,    18,    19,   307,   269,   266,   181,   231,   295,
+     143,   224,   111,   112,   313,   297,   316,   182,   163,   163,
+     163,   163,   163,   163,   163,   163,   163,   163,   163,   163,
+     163,   163,   163,   163,   163,    61,   163,   164,   211,   212,
+     213,   192,   163,   193,   258,   194,    73,   259,    79,    80,
+     184,   164,   168,   169,   186,    72,   163,   187,    83,   195,
+     196,   197,   214,   215,   163,   254,    61,    73,    73,    73,
+     216,   217,    73,   338,   339,   340,    72,    72,    72,   190,
+     161,    72,   222,   223,    73,   144,   144,   329,   331,   300,
+     301,   225,   147,    72,   191,   336,   144,   227,   355,   226,
+     357,   341,   343,   345,   231,   326,   241,   346,   242,   361,
+     351,   352,   363,   243,   364,   281,   282,   249,   283,   284,
+     289,   290,   257,   260,   268,   275,   265,   302,   347,   305,
+     276,   253,   144,   163,   359,    53,   144,   314,   329,   299,
+     315,   320,   312,   327,   332,   348,   349,   353,    83,   362,
+     292,   350,   296,   293,   291,   162,   306,    73,   294,    81,
+     147,   153,    85,    69,   334,   308,    72,   337,    73,   309,
+      68,    73,     0,     0,   304,    55,     0,    72,     0,     0,
+      72,     0,     0,     0,     1,     2,     3,     4,     5,     6,
        7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-      17,    18,    19,    20,    21,     7,     8,     9,    10,    11,
-      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
-      22,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,    22
+      17,    18,    19,    20,    21,    22,    23,     0,     0,   198,
+       0,     0,    87,    66,    88,     0,     0,     0,    89,     0,
+       0,     0,    24,    90,    91,    92,    93,    94,    95,     0,
+       0,     0,     0,     0,     0,     0,     0,    96,    97,   199,
+     200,   201,   202,   203,   204,   205,   206,   207,   208,     0,
+       0,     0,     0,     0,     0,     0,     0,    98,     1,     2,
+       3,     4,     5,     6,     7,     8,     9,    10,    11,    12,
+      13,    14,    15,    16,    17,    18,    19,    20,    21,    22,
+      23,     0,    99,   100,   101,   102,   103,   104,   105,   106,
+     107,   108,   109,     0,     0,   110,    24,   111,   112,    87,
+      66,   232,     0,     0,     0,    89,     0,     0,     0,     0,
+      90,    91,    92,    93,    94,    95,     0,     0,     0,     0,
+       0,     0,     0,     0,    96,    97,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,    98,     1,     2,     3,     4,     5,
+       6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
+      16,    17,    18,    19,    20,    21,    22,    23,     0,    99,
+     100,   101,   102,   103,   104,   105,   106,   107,   108,   109,
+      87,     0,   110,    24,   111,   112,    89,     0,     0,     0,
+       0,    90,    91,    92,    93,    94,    95,     0,     0,     0,
+       0,     0,     0,     0,     0,    96,    97,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    98,     1,     2,     3,     4,
+       5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
+      15,    16,    17,    18,    19,    20,    21,    22,    23,     0,
+       0,     0,     0,     0,     0,     0,    87,    66,     0,     0,
+       0,     0,    89,   143,    24,   111,   112,    90,    91,    92,
+      93,    94,    95,    87,     0,     0,     0,     0,     0,    89,
+       0,    96,    97,     0,    90,    91,    92,    93,    94,    95,
+       0,     0,     0,     0,     0,     0,     0,     0,    96,    97,
+       0,    98,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,    98,     0,
+       0,     0,     0,     0,     0,     0,    99,   100,   101,   102,
+     103,   104,   105,   106,   107,   108,   109,     0,     0,   110,
+       0,   111,   112,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,   143,     0,   111,   112,
+     142,   328,     0,     0,     0,    89,     0,   235,     0,   236,
+      90,    91,    92,    93,    94,    95,     0,     0,     0,     0,
+       0,   142,   360,     0,    96,    97,    89,     0,   235,     0,
+     236,    90,    91,    92,    93,    94,    95,     0,     0,     0,
+       0,     0,   142,     0,    98,    96,    97,    89,     0,   235,
+       0,   236,    90,    91,    92,    93,    94,    95,     0,     0,
+       0,     0,     0,   142,     0,    98,    96,    97,    89,     0,
+       0,     0,     0,    90,    91,    92,    93,    94,    95,     0,
+       0,     0,   143,     0,   111,   112,    98,    96,    97,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+     156,     0,     0,   143,     0,   111,   112,    98,   312,     0,
+       0,     0,     0,    89,     0,     0,     0,     0,    90,    91,
+      92,    93,    94,    95,   143,     0,   111,   112,     0,     0,
+       0,     0,    96,    97,     0,     0,     0,     0,     0,     0,
+       0,   250,     0,     0,     0,   143,     0,   111,   112,     0,
+       7,     0,    98,    10,    11,    12,    13,    14,    15,    16,
+      17,    18,    19,    20,    21,    22,    23,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,    24,     0,     0,     0,     0,     0,     0,     0,
+     143,     7,   111,   112,    10,    11,    12,    13,    14,    15,
+      16,    17,    18,    19,    20,    21,    22,    23,    89,     0,
+       0,     0,     0,    90,    91,    92,    93,    94,    95,     0,
+       0,     0,     0,    24,     0,     0,     0,    96,    97,     0,
+       0,     0,    89,     0,     0,   151,     0,    90,    91,    92,
+      93,    94,    95,     0,     0,     0,     0,    98,     0,     0,
+       0,    96,    97,     0,     7,     0,     0,    10,    11,    12,
+      13,    14,    15,    16,    17,    18,    19,    20,    21,    22,
+      23,    98,     0,     0,    89,     0,     0,   244,     7,    90,
+      91,    92,    93,    94,    95,   143,    24,   111,   112,    18,
+      19,     0,     0,    96,    97,    89,   271,     0,     0,     0,
+      90,    91,    92,    93,    94,    95,     0,     0,     0,   143,
+       0,   111,   112,    98,    96,    97,    89,     0,     0,   335,
+       7,    90,    91,    92,    93,    94,    95,     0,     0,     0,
+       0,    18,    19,     0,    98,    96,    97,    89,   342,     0,
+       0,     0,    90,    91,    92,    93,    94,    95,     0,     0,
+       0,   143,     0,   111,   112,    98,    96,    97,    89,   344,
+       0,     0,     0,    90,    91,    92,    93,    94,    95,     0,
+       0,     0,   143,     0,   111,   112,    98,    96,    97,    89,
+       0,     0,     0,     0,    90,    91,    92,    93,    94,    95,
+       0,     0,     0,   143,     0,   111,   112,    98,    96,    97,
+     173,     0,     0,     0,     0,    90,    91,    92,    93,    94,
+      95,     0,     0,     0,   143,     0,   111,   112,    98,    96,
+      97,   176,     0,     0,     0,     0,    90,    91,    92,    93,
+      94,    95,     0,     0,     0,   143,     0,   111,   112,    98,
+      96,    97,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,   143,     0,   111,   112,
+      98,     0,     0,   146,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,   143,     0,   111,
+     112,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,   143,     0,
+     111,   112,     1,     2,     3,     4,     5,     6,     7,     8,
+       9,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,   333,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      24,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     1,     2,     3,     4,     5,     6,
+       7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
+      17,    18,    19,    20,    21,    22,    23,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,    24,     1,     2,     3,     4,     5,     6,     7,
+       8,     9,    10,    11,    12,    13,    14,    15,    16,    17,
+      18,    19,    20,    21,    22,    23,   303,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,    24,     1,     2,     3,     4,     5,     6,     7,     8,
+       9,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     7,     0,
+      24,    10,    11,    12,    13,    14,    15,    16,    17,    18,
+      19,    20,    21,    22,    23,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+      24
   };
 
   const short
   parser::yycheck_[] =
   {
-       0,    65,   115,    65,   102,    69,    23,    38,    97,    32,
-      78,   182,    72,     5,    70,    71,     5,    84,    87,   299,
-      37,     4,     8,     4,    24,    25,    26,    27,    76,     9,
-      61,    87,    32,    76,     9,    19,    26,   135,   107,    49,
-       3,    64,     4,     7,    19,     9,     9,    37,     9,    97,
-       4,    94,    95,    96,    97,    19,    19,    74,    19,    10,
-      70,    71,    72,    22,    23,    75,     8,   156,    68,     6,
-     350,    55,   115,    32,    33,    12,   140,    87,     4,   177,
-      64,    65,     8,     3,     6,     6,     6,   151,    10,    10,
-     188,     7,    84,   264,   265,    84,   209,   210,   211,   167,
-     160,    84,   171,    84,    84,   174,     5,     6,   156,   178,
-     179,   180,   135,   156,     3,   171,     3,     6,   174,     6,
-      84,    84,   191,    84,     5,     6,   190,     9,   145,    11,
-       6,    13,     6,     6,    10,     6,    10,    10,   169,    10,
-      17,    18,   255,   207,   233,    27,    28,    29,     6,     6,
-     160,     3,    10,    10,     6,    30,    31,   226,   247,   182,
-     258,   171,    34,    35,   174,   229,   209,   210,   211,   212,
+       0,    67,    40,    67,    99,    71,    34,    25,    80,     6,
+     104,    74,   184,   301,     4,    12,     4,     3,     8,     4,
+      89,    39,     4,     9,   117,    63,    26,    27,    28,    29,
+      78,    72,    73,    19,    34,    78,     5,     7,    66,     9,
+     109,    86,     5,   137,     9,     9,    26,    11,    89,    19,
+       9,    99,     8,    96,    97,    98,    99,    37,    76,     9,
+      19,    22,    23,   158,   352,   218,   219,   220,   221,    19,
+      70,    32,    33,    10,   117,     6,   142,     3,     6,    10,
+       4,     3,    10,     9,     6,   179,     7,   153,    14,    15,
+      16,    17,    18,    19,   266,   267,   190,   169,    86,   162,
+      86,    86,    28,    29,   173,    19,     9,   176,    11,   137,
+     158,   180,   181,   182,     8,   158,    86,    86,   211,   212,
+     213,    86,    48,    86,   193,     3,   192,    86,     6,   147,
+       6,    86,   173,   171,    10,   176,     3,     9,     6,     6,
+     235,    55,    10,   209,     6,     6,     6,     6,    10,    10,
+      10,    10,    66,    67,   249,     3,   184,     9,     6,   228,
+      86,    14,    88,    89,   257,   231,   260,     9,   211,   212,
      213,   214,   215,   216,   217,   218,   219,   220,   221,   222,
-     223,   224,   225,     4,   227,   233,   171,     9,     9,   174,
-     233,     5,     6,    14,    15,    16,    17,    18,    19,   247,
-     216,   217,   218,   219,   247,     6,     7,    28,    29,    19,
-      20,    21,   255,     9,     9,    11,    11,   315,   316,   317,
-     251,     5,     6,     9,   212,   213,     9,    48,     9,   246,
-      84,     3,   214,   215,     3,   299,   300,   299,   300,     7,
-     240,    38,   340,    87,   342,   309,   310,   220,   221,   318,
-     319,   320,    49,   351,    14,    25,   354,   321,   356,    24,
-       0,     8,    36,    84,    61,    86,    87,    10,     6,    10,
-      12,     7,    69,    70,    71,    72,   324,     7,    75,     3,
-      84,   324,   346,    75,   346,    84,   350,     8,   350,    12,
-      87,    38,    39,    40,    41,    42,    43,    44,    45,    46,
-      47,     9,    84,    10,    10,     9,     4,    12,   308,    49,
-      50,    51,    52,    53,    54,    55,    56,    57,    58,    59,
-      60,    61,    62,    63,    64,    65,    66,    67,    68,    69,
-      10,     8,    10,    12,    83,     3,     4,     5,     3,   222,
-     224,     9,   227,   223,    75,    85,    14,    15,    16,    17,
-      18,    19,   246,    63,   151,   225,    57,    43,    69,   308,
-      28,    29,   240,   160,   252,   251,   310,    42,    32,    -1,
-      -1,    -1,    -1,    -1,   171,    -1,    -1,   174,    -1,    -1,
-      48,    49,    50,    51,    52,    53,    54,    55,    56,    57,
-      58,    59,    60,    61,    62,    63,    64,    65,    66,    67,
-      68,    69,    -1,    71,    72,    73,    74,    75,    76,    77,
-      78,    79,    80,    81,    -1,    -1,    84,    85,    86,    87,
-       3,     4,     5,    -1,    -1,    -1,     9,    -1,    -1,    -1,
-      -1,    14,    15,    16,    17,    18,    19,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    28,    29,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    48,    49,    50,    51,    52,
-      53,    54,    55,    56,    57,    58,    59,    60,    61,    62,
-      63,    64,    65,    66,    67,    68,    69,    -1,    71,    72,
-      73,    74,    75,    76,    77,    78,    79,    80,    81,     3,
-      -1,    84,    85,    86,    87,     9,    -1,    -1,    -1,    -1,
+     223,   224,   225,   226,   227,    40,   229,   235,    19,    20,
+      21,     9,   235,    11,   173,    13,    51,   176,     5,     6,
+       9,   249,     5,     6,     3,    51,   249,     3,    63,    27,
+      28,    29,    17,    18,   257,   253,    71,    72,    73,    74,
+      30,    31,    77,   317,   318,   319,    72,    73,    74,     7,
+     248,    77,    34,    35,    89,   301,   302,   301,   302,     5,
+       6,    24,   242,    89,    89,   311,   312,    36,   342,    25,
+     344,   320,   321,   322,     6,     7,    10,   323,     6,   353,
+       5,     6,   356,    12,   358,   214,   215,     7,   216,   217,
+     222,   223,    10,     7,     3,    86,    77,     8,   326,    12,
+      86,     9,   348,   326,   348,     0,   352,    10,   352,    86,
+      10,     9,     4,    12,    10,     8,    10,    85,   153,     3,
+     225,    12,   229,   226,   224,    77,   248,   162,   227,    59,
+     310,    71,    65,    45,   310,   253,   162,   312,   173,   254,
+      44,   176,    -1,    -1,   242,    34,    -1,   173,    -1,    -1,
+     176,    -1,    -1,    -1,    49,    50,    51,    52,    53,    54,
+      55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
+      65,    66,    67,    68,    69,    70,    71,    -1,    -1,     8,
+      -1,    -1,     3,     4,     5,    -1,    -1,    -1,     9,    -1,
+      -1,    -1,    87,    14,    15,    16,    17,    18,    19,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    28,    29,    38,
+      39,    40,    41,    42,    43,    44,    45,    46,    47,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    48,    49,    50,
+      51,    52,    53,    54,    55,    56,    57,    58,    59,    60,
+      61,    62,    63,    64,    65,    66,    67,    68,    69,    70,
+      71,    -1,    73,    74,    75,    76,    77,    78,    79,    80,
+      81,    82,    83,    -1,    -1,    86,    87,    88,    89,     3,
+       4,     5,    -1,    -1,    -1,     9,    -1,    -1,    -1,    -1,
       14,    15,    16,    17,    18,    19,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    28,    29,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    48,    49,    50,    51,    52,    53,
       54,    55,    56,    57,    58,    59,    60,    61,    62,    63,
-      64,    65,    66,    67,    68,    69,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,     3,     4,    -1,    -1,    -1,    -1,     9,
-      84,    85,    86,    87,    14,    15,    16,    17,    18,    19,
-       3,    -1,    -1,    -1,    -1,    -1,     9,    -1,    28,    29,
-      -1,    14,    15,    16,    17,    18,    19,    -1,     3,    -1,
-      -1,    -1,    -1,    -1,     9,    28,    29,    -1,    48,    14,
-      15,    16,    17,    18,    19,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    28,    29,    48,    -1,    -1,    -1,    -1,
-      -1,    71,    72,    73,    74,    75,    76,    77,    78,    79,
-      80,    81,    -1,    48,    84,    -1,    86,    87,    -1,    -1,
+      64,    65,    66,    67,    68,    69,    70,    71,    -1,    73,
+      74,    75,    76,    77,    78,    79,    80,    81,    82,    83,
+       3,    -1,    86,    87,    88,    89,     9,    -1,    -1,    -1,
+      -1,    14,    15,    16,    17,    18,    19,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    28,    29,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    84,     4,    86,    87,    -1,    -1,     9,    -1,    11,
-      -1,    13,    14,    15,    16,    17,    18,    19,    -1,    84,
-      -1,    86,    87,     4,     5,    -1,    28,    29,     9,    -1,
-      11,    -1,    13,    14,    15,    16,    17,    18,    19,    -1,
-      -1,    -1,    -1,    -1,     4,     5,    48,    28,    29,     9,
-      -1,    11,    -1,    13,    14,    15,    16,    17,    18,    19,
-      -1,    -1,    -1,    -1,    -1,     4,    -1,    48,    28,    29,
-       9,    -1,    -1,    -1,    -1,    14,    15,    16,    17,    18,
-      19,    -1,    84,    -1,    86,    87,    -1,    -1,    48,    28,
-      29,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,     5,
-      -1,    -1,    -1,    84,    -1,    86,    87,    -1,    -1,    48,
-      -1,    -1,    -1,    -1,     5,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    84,    -1,    86,    87,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    84,    -1,    86,    87,    55,
-      56,    57,    58,    59,    60,    61,    62,    63,    64,    65,
-      66,    67,    68,    69,    55,    56,    57,    58,    59,    60,
-      61,    62,    63,    64,    65,    66,    67,    68,    69,    85,
-       9,    -1,    -1,    -1,    -1,    14,    15,    16,    17,    18,
-      19,    -1,    -1,    -1,    85,    -1,    -1,    -1,    -1,    28,
-      29,    -1,    -1,    -1,     9,    -1,    -1,    12,    -1,    14,
-      15,    16,    17,    18,    19,    -1,    -1,    -1,    -1,    48,
-      -1,    -1,    -1,    28,    29,    -1,    55,    56,    57,    58,
-      59,    60,    61,    62,    63,    64,    65,    66,    67,    68,
-      69,    -1,    -1,    48,    -1,    -1,    -1,    -1,    -1,    -1,
-      55,    -1,    -1,    -1,    -1,    84,    85,    86,    87,    64,
-      65,    -1,    -1,    -1,     9,    -1,    -1,    12,    -1,    14,
-      15,    16,    17,    18,    19,    -1,    -1,    -1,    -1,    84,
-      -1,    86,    87,    28,    29,     9,    10,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    48,    49,    50,    51,    52,
+      53,    54,    55,    56,    57,    58,    59,    60,    61,    62,
+      63,    64,    65,    66,    67,    68,    69,    70,    71,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,     3,     4,    -1,    -1,
+      -1,    -1,     9,    86,    87,    88,    89,    14,    15,    16,
+      17,    18,    19,     3,    -1,    -1,    -1,    -1,    -1,     9,
+      -1,    28,    29,    -1,    14,    15,    16,    17,    18,    19,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    28,    29,
+      -1,    48,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    48,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    73,    74,    75,    76,
+      77,    78,    79,    80,    81,    82,    83,    -1,    -1,    86,
+      -1,    88,    89,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    86,    -1,    88,    89,
+       4,     5,    -1,    -1,    -1,     9,    -1,    11,    -1,    13,
       14,    15,    16,    17,    18,    19,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    48,    28,    29,     9,    -1,    -1,    12,
-      55,    14,    15,    16,    17,    18,    19,    -1,    -1,    64,
-      65,    -1,    -1,    -1,    48,    28,    29,     9,    10,    -1,
-      -1,    -1,    14,    15,    16,    17,    18,    19,    -1,    84,
-      -1,    86,    87,    -1,    -1,    48,    28,    29,     9,    10,
+      -1,     4,     5,    -1,    28,    29,     9,    -1,    11,    -1,
+      13,    14,    15,    16,    17,    18,    19,    -1,    -1,    -1,
+      -1,    -1,     4,    -1,    48,    28,    29,     9,    -1,    11,
+      -1,    13,    14,    15,    16,    17,    18,    19,    -1,    -1,
+      -1,    -1,    -1,     4,    -1,    48,    28,    29,     9,    -1,
       -1,    -1,    -1,    14,    15,    16,    17,    18,    19,    -1,
-      84,    -1,    86,    87,    -1,    -1,    48,    28,    29,     9,
+      -1,    -1,    86,    -1,    88,    89,    48,    28,    29,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+       5,    -1,    -1,    86,    -1,    88,    89,    48,     4,    -1,
+      -1,    -1,    -1,     9,    -1,    -1,    -1,    -1,    14,    15,
+      16,    17,    18,    19,    86,    -1,    88,    89,    -1,    -1,
+      -1,    -1,    28,    29,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,     5,    -1,    -1,    -1,    86,    -1,    88,    89,    -1,
+      55,    -1,    48,    58,    59,    60,    61,    62,    63,    64,
+      65,    66,    67,    68,    69,    70,    71,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    87,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      86,    55,    88,    89,    58,    59,    60,    61,    62,    63,
+      64,    65,    66,    67,    68,    69,    70,    71,     9,    -1,
+      -1,    -1,    -1,    14,    15,    16,    17,    18,    19,    -1,
+      -1,    -1,    -1,    87,    -1,    -1,    -1,    28,    29,    -1,
+      -1,    -1,     9,    -1,    -1,    12,    -1,    14,    15,    16,
+      17,    18,    19,    -1,    -1,    -1,    -1,    48,    -1,    -1,
+      -1,    28,    29,    -1,    55,    -1,    -1,    58,    59,    60,
+      61,    62,    63,    64,    65,    66,    67,    68,    69,    70,
+      71,    48,    -1,    -1,     9,    -1,    -1,    12,    55,    14,
+      15,    16,    17,    18,    19,    86,    87,    88,    89,    66,
+      67,    -1,    -1,    28,    29,     9,    10,    -1,    -1,    -1,
+      14,    15,    16,    17,    18,    19,    -1,    -1,    -1,    86,
+      -1,    88,    89,    48,    28,    29,     9,    -1,    -1,    12,
+      55,    14,    15,    16,    17,    18,    19,    -1,    -1,    -1,
+      -1,    66,    67,    -1,    48,    28,    29,     9,    10,    -1,
+      -1,    -1,    14,    15,    16,    17,    18,    19,    -1,    -1,
+      -1,    86,    -1,    88,    89,    48,    28,    29,     9,    10,
+      -1,    -1,    -1,    14,    15,    16,    17,    18,    19,    -1,
+      -1,    -1,    86,    -1,    88,    89,    48,    28,    29,     9,
       -1,    -1,    -1,    -1,    14,    15,    16,    17,    18,    19,
-      -1,    84,    -1,    86,    87,    -1,    -1,    48,    28,    29,
+      -1,    -1,    -1,    86,    -1,    88,    89,    48,    28,    29,
        9,    -1,    -1,    -1,    -1,    14,    15,    16,    17,    18,
-      19,    -1,    84,    -1,    86,    87,    -1,    -1,    48,    28,
+      19,    -1,    -1,    -1,    86,    -1,    88,    89,    48,    28,
       29,     9,    -1,    -1,    -1,    -1,    14,    15,    16,    17,
-      18,    19,    -1,    84,    -1,    86,    87,    -1,    -1,    48,
+      18,    19,    -1,    -1,    -1,    86,    -1,    88,    89,    48,
       28,    29,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    84,    -1,    86,    87,    -1,    -1,
-      48,    10,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    84,    -1,    86,    87,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    86,    -1,    88,    89,
+      48,    -1,    -1,    10,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    86,    -1,    88,
+      89,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    86,    -1,
+      88,    89,    49,    50,    51,    52,    53,    54,    55,    56,
+      57,    58,    59,    60,    61,    62,    63,    64,    65,    66,
+      67,    68,    69,    70,    71,    10,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    84,    -1,    86,    87,
-      49,    50,    51,    52,    53,    54,    55,    56,    57,    58,
-      59,    60,    61,    62,    63,    64,    65,    66,    67,    68,
-      69,    10,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    85,    -1,    -1,    -1,
+      87,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      49,    50,    51,    52,    53,    54,    55,    56,    57,    58,
-      59,    60,    61,    62,    63,    64,    65,    66,    67,    68,
-      69,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    85,    49,    50,    51,
-      52,    53,    54,    55,    56,    57,    58,    59,    60,    61,
-      62,    63,    64,    65,    66,    67,    68,    69,    70,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    85,    49,    50,    51,    52,    53,    54,
+      -1,    -1,    -1,    -1,    49,    50,    51,    52,    53,    54,
       55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
-      65,    66,    67,    68,    69,    55,    56,    57,    58,    59,
-      60,    61,    62,    63,    64,    65,    66,    67,    68,    69,
-      85,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    85
+      65,    66,    67,    68,    69,    70,    71,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    87,    49,    50,    51,    52,    53,    54,    55,
+      56,    57,    58,    59,    60,    61,    62,    63,    64,    65,
+      66,    67,    68,    69,    70,    71,    72,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    87,    49,    50,    51,    52,    53,    54,    55,    56,
+      57,    58,    59,    60,    61,    62,    63,    64,    65,    66,
+      67,    68,    69,    70,    71,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    55,    -1,
+      87,    58,    59,    60,    61,    62,    63,    64,    65,    66,
+      67,    68,    69,    70,    71,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      87
   };
 
   const unsigned char
@@ -3699,68 +3728,68 @@ namespace yy {
   {
        0,    49,    50,    51,    52,    53,    54,    55,    56,    57,
       58,    59,    60,    61,    62,    63,    64,    65,    66,    67,
-      68,    69,    85,   111,   112,   113,   114,   115,   116,   117,
-     123,   126,   150,   151,     4,    84,     3,     9,    19,    84,
-     127,   128,   129,   130,   131,   111,   111,   111,   111,     4,
-      84,     0,   126,   151,    84,   124,   125,     4,   129,   114,
-     130,   132,     3,     6,     4,     8,   144,   131,     9,    11,
-     113,   114,   118,   119,   120,     4,     8,     5,     6,   124,
-      10,   114,   130,   128,   129,     3,     5,     9,    14,    15,
-      16,    17,    18,    19,    28,    29,    48,    71,    72,    73,
-      74,    75,    76,    77,    78,    79,    80,    81,    84,    86,
-      87,    89,    90,    91,    93,    94,    95,    96,    97,    98,
-      99,   100,   101,   102,   103,   104,   105,   106,   107,   109,
-     111,   126,   142,   143,   144,   145,   146,   147,   148,   149,
-       4,    84,   107,   139,    10,   111,   133,   134,   135,    12,
-     107,   132,   120,   120,     5,   119,     7,   121,   122,   129,
-     118,    93,   106,   110,     5,   125,     5,     6,   109,   120,
-     136,     9,    93,    93,     9,    93,   110,     7,     9,     9,
-       9,   142,     9,    84,     3,     3,     3,   109,     7,    87,
-       9,    11,    13,    27,    28,    29,     8,    38,    39,    40,
-      41,    42,    43,    44,    45,    46,    47,   108,    95,    19,
-      20,    21,    17,    18,    30,    31,    22,    23,    32,    33,
-      34,    35,    14,    24,    25,    36,    26,    37,     3,     6,
-       5,   126,   142,    11,    13,   139,   140,   141,   129,    10,
-       6,    12,    12,   107,   110,     3,     6,     7,     5,     5,
-      10,     9,   130,   137,   138,    10,   136,   136,     7,   142,
-     109,   109,   109,    75,   126,   146,     3,     3,   142,    10,
-      92,   107,   109,    84,    84,   107,    95,    95,    95,    96,
-      96,    97,    97,    98,    98,    98,    98,    99,    99,   100,
-     101,   102,   103,   109,   104,   107,   110,    84,     5,     6,
-       8,    70,   135,    12,   122,   110,   137,   138,     9,    11,
-       4,    95,    10,    10,   142,    10,    10,    10,     9,   146,
-     146,     6,    10,    12,     7,    12,     5,   139,   141,   139,
-      10,    10,   133,    12,   107,   140,   142,   142,   142,   109,
-      10,   109,    10,   109,   107,   106,     8,    10,    12,     5,
-       6,    83,    10,   142,    10,   142,    10,   139,     5,   142,
-       3,   142,   142
+      68,    69,    70,    71,    87,   113,   114,   115,   116,   117,
+     118,   119,   125,   128,   152,   153,     4,    86,     3,     9,
+      19,    86,   129,   130,   131,   132,   133,   113,   113,   113,
+     113,     4,    86,     0,   128,   153,    86,   126,   127,     4,
+     131,   116,   132,   134,     3,     6,     4,     8,   146,   133,
+       9,    11,   115,   116,   120,   121,   122,     4,     8,     5,
+       6,   126,    10,   116,   132,   130,   131,     3,     5,     9,
+      14,    15,    16,    17,    18,    19,    28,    29,    48,    73,
+      74,    75,    76,    77,    78,    79,    80,    81,    82,    83,
+      86,    88,    89,    91,    92,    93,    95,    96,    97,    98,
+      99,   100,   101,   102,   103,   104,   105,   106,   107,   108,
+     109,   111,   113,   128,   144,   145,   146,   147,   148,   149,
+     150,   151,     4,    86,   109,   141,    10,   113,   135,   136,
+     137,    12,   109,   134,   122,   122,     5,   121,     7,   123,
+     124,   131,   120,    95,   108,   112,     5,   127,     5,     6,
+     111,   122,   138,     9,    95,    95,     9,    95,   112,     7,
+       9,     9,     9,   144,     9,    86,     3,     3,     3,   111,
+       7,    89,     9,    11,    13,    27,    28,    29,     8,    38,
+      39,    40,    41,    42,    43,    44,    45,    46,    47,   110,
+      97,    19,    20,    21,    17,    18,    30,    31,    22,    23,
+      32,    33,    34,    35,    14,    24,    25,    36,    26,    37,
+       3,     6,     5,   128,   144,    11,    13,   141,   142,   143,
+     131,    10,     6,    12,    12,   109,   112,     3,     6,     7,
+       5,     5,    10,     9,   132,   139,   140,    10,   138,   138,
+       7,   144,   111,   111,   111,    77,   128,   148,     3,     3,
+     144,    10,    94,   109,   111,    86,    86,   109,    97,    97,
+      97,    98,    98,    99,    99,   100,   100,   100,   100,   101,
+     101,   102,   103,   104,   105,   111,   106,   109,   112,    86,
+       5,     6,     8,    72,   137,    12,   124,   112,   139,   140,
+       9,    11,     4,    97,    10,    10,   144,    10,    10,    10,
+       9,   148,   148,     6,    10,    12,     7,    12,     5,   141,
+     143,   141,    10,    10,   135,    12,   109,   142,   144,   144,
+     144,   111,    10,   111,    10,   111,   109,   108,     8,    10,
+      12,     5,     6,    85,    10,   144,    10,   144,    10,   141,
+       5,   144,     3,   144,   144
   };
 
   const unsigned char
   parser::yyr1_[] =
   {
-       0,    88,    89,    89,    89,    89,    89,    89,    90,    90,
-      91,    91,    91,    91,    91,    91,    91,    91,    92,    92,
-      93,    93,    93,    93,    93,    93,    94,    94,    94,    94,
-      94,    94,    95,    95,    96,    96,    96,    96,    97,    97,
-      97,    98,    98,    98,    99,    99,    99,    99,    99,   100,
-     100,   100,   101,   101,   102,   102,   103,   103,   104,   104,
-     105,   105,   106,   106,   107,   107,   108,   108,   108,   108,
-     108,   108,   108,   108,   108,   108,   108,   109,   109,   110,
-     111,   111,   111,   111,   111,   111,   111,   111,   112,   112,
-     112,   112,   112,   113,   113,   113,   113,   113,   113,   113,
-     113,   113,   113,   113,   113,   114,   114,   114,   115,   116,
-     116,   116,   117,   117,   118,   118,   119,   120,   120,   120,
-     120,   121,   121,   122,   122,   122,   123,   123,   123,   123,
-     123,   124,   124,   125,   125,   126,   126,   127,   127,   128,
-     128,   129,   129,   130,   130,   130,   130,   131,   131,   131,
-     131,   131,   131,   131,   131,   132,   132,   133,   133,   134,
-     134,   135,   135,   136,   136,   137,   137,   137,   138,   138,
-     138,   138,   138,   139,   139,   139,   140,   140,   140,   140,
-     141,   141,   142,   142,   142,   142,   142,   142,   143,   143,
-     143,   144,   144,   145,   145,   145,   145,   146,   146,   147,
-     147,   147,   148,   148,   148,   148,   148,   148,   149,   149,
-     149,   149,   149,   150,   150,   150,   150,   151
+       0,    90,    91,    91,    91,    91,    91,    91,    92,    92,
+      93,    93,    93,    93,    93,    93,    93,    93,    94,    94,
+      95,    95,    95,    95,    95,    95,    96,    96,    96,    96,
+      96,    96,    97,    97,    98,    98,    98,    98,    99,    99,
+      99,   100,   100,   100,   101,   101,   101,   101,   101,   102,
+     102,   102,   103,   103,   104,   104,   105,   105,   106,   106,
+     107,   107,   108,   108,   109,   109,   110,   110,   110,   110,
+     110,   110,   110,   110,   110,   110,   110,   111,   111,   112,
+     113,   113,   113,   113,   113,   113,   113,   113,   114,   114,
+     114,   114,   114,   115,   115,   115,   115,   115,   115,   115,
+     115,   115,   115,   115,   115,   116,   116,   116,   117,   117,
+     117,   118,   118,   118,   119,   119,   120,   120,   121,   122,
+     122,   122,   122,   123,   123,   124,   124,   124,   125,   125,
+     125,   125,   125,   126,   126,   127,   127,   128,   128,   129,
+     129,   130,   130,   131,   131,   132,   132,   132,   132,   133,
+     133,   133,   133,   133,   133,   133,   133,   134,   134,   135,
+     135,   136,   136,   137,   137,   138,   138,   139,   139,   139,
+     140,   140,   140,   140,   140,   141,   141,   141,   142,   142,
+     142,   142,   143,   143,   144,   144,   144,   144,   144,   144,
+     145,   145,   145,   146,   146,   147,   147,   147,   147,   148,
+     148,   149,   149,   149,   150,   150,   150,   150,   150,   150,
+     151,   151,   151,   151,   151,   152,   152,   152,   152,   153
   };
 
   const signed char
@@ -3776,18 +3805,18 @@ namespace yy {
        1,     1,     1,     1,     1,     1,     1,     1,     3,     1,
        1,     2,     1,     2,     1,     2,     1,     2,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     5,
-       4,     2,     1,     1,     1,     2,     3,     2,     1,     2,
-       1,     1,     3,     1,     2,     3,     4,     5,     5,     6,
-       2,     1,     3,     1,     3,     2,     3,     1,     3,     1,
-       3,     2,     1,     1,     2,     2,     3,     1,     3,     5,
-       4,     4,     3,     4,     3,     1,     2,     1,     3,     1,
-       3,     2,     1,     1,     2,     1,     2,     1,     3,     3,
-       4,     3,     4,     1,     3,     4,     1,     3,     3,     5,
-       3,     2,     1,     1,     1,     1,     1,     1,     3,     4,
-       3,     2,     3,     1,     1,     2,     2,     1,     2,     5,
-       7,     5,     5,     7,     6,     7,     6,     7,     3,     2,
-       2,     2,     3,     1,     1,     2,     2,     3
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     5,     4,     2,     1,     1,     1,     2,     3,     2,
+       1,     2,     1,     1,     3,     1,     2,     3,     4,     5,
+       5,     6,     2,     1,     3,     1,     3,     2,     3,     1,
+       3,     1,     3,     2,     1,     1,     2,     2,     3,     1,
+       3,     5,     4,     4,     3,     4,     3,     1,     2,     1,
+       3,     1,     3,     2,     1,     1,     2,     1,     2,     1,
+       3,     3,     4,     3,     4,     1,     3,     4,     1,     3,
+       3,     5,     3,     2,     1,     1,     1,     1,     1,     1,
+       3,     4,     3,     2,     3,     1,     1,     2,     2,     1,
+       2,     5,     7,     5,     5,     7,     6,     7,     6,     7,
+       3,     2,     2,     2,     3,     1,     1,     2,     2,     3
   };
 
 
@@ -3797,28 +3826,28 @@ namespace yy {
   const short
   parser::yyrline_[] =
   {
-       0,   152,   152,   153,   154,   155,   156,   157,   161,   162,
-     166,   167,   168,   169,   170,   171,   172,   173,   177,   178,
-     182,   183,   184,   185,   186,   187,   191,   192,   193,   194,
-     195,   196,   200,   201,   205,   206,   207,   208,   212,   213,
-     214,   218,   219,   220,   224,   225,   226,   227,   228,   232,
-     233,   234,   238,   239,   243,   244,   248,   249,   253,   254,
-     258,   259,   263,   264,   268,   269,   273,   274,   275,   276,
-     277,   278,   279,   280,   281,   282,   283,   287,   288,   292,
-     298,   299,   300,   301,   302,   303,   304,   305,   309,   310,
-     311,   312,   313,   317,   318,   319,   320,   321,   322,   323,
-     324,   325,   326,   327,   328,   332,   333,   334,   338,   342,
-     343,   344,   348,   349,   353,   354,   358,   362,   363,   364,
-     365,   369,   370,   374,   375,   376,   380,   381,   382,   383,
-     384,   388,   389,   393,   394,   401,   402,   406,   407,   411,
-     412,   416,   417,   421,   422,   423,   424,   428,   429,   430,
-     431,   432,   433,   434,   435,   439,   440,   444,   445,   449,
-     450,   454,   455,   459,   460,   464,   465,   466,   470,   471,
-     472,   473,   474,   481,   482,   483,   487,   488,   489,   490,
-     494,   495,   502,   503,   504,   505,   506,   507,   511,   512,
-     513,   517,   518,   522,   523,   524,   525,   529,   530,   534,
-     535,   536,   540,   541,   542,   543,   544,   545,   549,   550,
-     551,   552,   553,   560,   561,   566,   567,   571
+       0,   153,   153,   154,   155,   156,   157,   158,   162,   163,
+     167,   168,   169,   170,   171,   172,   173,   174,   178,   179,
+     183,   184,   185,   186,   187,   188,   192,   193,   194,   195,
+     196,   197,   201,   202,   206,   207,   208,   209,   213,   214,
+     215,   219,   220,   221,   225,   226,   227,   228,   229,   233,
+     234,   235,   239,   240,   244,   245,   249,   250,   254,   255,
+     259,   260,   264,   265,   269,   270,   274,   275,   276,   277,
+     278,   279,   280,   281,   282,   283,   284,   288,   289,   293,
+     299,   300,   301,   302,   303,   304,   305,   306,   310,   311,
+     312,   313,   314,   318,   319,   320,   321,   322,   323,   324,
+     325,   326,   327,   328,   329,   333,   334,   335,   339,   340,
+     341,   345,   346,   347,   351,   352,   356,   357,   361,   365,
+     366,   367,   368,   372,   373,   377,   378,   379,   383,   384,
+     385,   386,   387,   391,   392,   396,   397,   404,   405,   409,
+     410,   414,   415,   419,   420,   424,   425,   426,   427,   431,
+     432,   433,   434,   435,   436,   437,   438,   442,   443,   447,
+     448,   452,   453,   457,   458,   462,   463,   467,   468,   469,
+     473,   474,   475,   476,   477,   484,   485,   486,   490,   491,
+     492,   493,   497,   498,   505,   506,   507,   508,   509,   510,
+     514,   515,   516,   520,   521,   525,   526,   527,   528,   532,
+     533,   537,   538,   539,   543,   544,   545,   546,   547,   548,
+     552,   553,   554,   555,   556,   563,   564,   569,   570,   574
   };
 
   void
@@ -3850,7 +3879,7 @@ namespace yy {
 
 
 } // yy
-#line 3854 "yy_parser.cpp"
+#line 3883 "yy_parser.cpp"
 
-#line 574 "parser.y"
+#line 577 "parser.y"
 
