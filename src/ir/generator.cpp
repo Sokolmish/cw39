@@ -261,6 +261,8 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     auto declArgs = getDeclaredFuncArgs(*def.decl);
     int curArgNum = 0;
     for (auto const &[argIdent, argType] : declArgs) {
+        if (IR_TypeDirect::getVoid()->equal(*argType))
+            semanticError(def.decl->loc, "Function parameter cannot be 'void'");
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
         IRval argPtr = emitAlloc(argPtrType, argType);
 

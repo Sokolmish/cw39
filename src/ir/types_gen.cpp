@@ -188,7 +188,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirType(AST_DirDeclarator const &decl,
         return getDirType(decl.getBaseDirectDecl(), arr);
     }
     else if (decl.type == AST_DirDeclarator::FUNC) {
-        if (decl.func_args) {
+        if (decl.func_args && !checkVoidParam(decl.func_args->v->v)) {
             std::vector<std::shared_ptr<IR_Type>> params;
             for (const auto &param: decl.func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
@@ -227,7 +227,7 @@ std::shared_ptr<IR_Type> IR_Generator::getDirAbstrType(AST_DirAbstrDeclarator co
         return getDirAbstrType(&decl->getBaseDirectDecl(), arr);
     }
     else if (decl->type == AST_DirAbstrDeclarator::FUNC) {
-        if (decl->func_args) {
+        if (decl->func_args && !checkVoidParam(decl->func_args->v->v)) {
             std::vector<std::shared_ptr<IR_Type>> params;
             for (const auto &param: decl->func_args->v->v)
                 params.push_back(getType(*param->specifiers, *param->child));
@@ -274,10 +274,30 @@ string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
 }
 
+/** Check for explicitly no parameters via `void`, as in `int f(void)` */
+bool IR_Generator::checkVoidParam(std::vector<AST_ParameterDeclaration*> const &params) {
+    for (auto const &arg : params) {
+        if (arg->child) // Has declarator
+            continue;
+        auto const &typeSpecs = arg->specifiers->type_specifiers;
+        if (typeSpecs.size() != 1)
+            continue;
+        if (typeSpecs[0]->spec_type == AST_TypeSpecifier::T_VOID) {
+            if (params.size() != 1)
+                semanticError(arg->loc, "Void must be the only parameter");
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<IR_Generator::IR_FuncArgument> IR_Generator::getDeclaredFuncArgs(AST_Declarator const &decl) {
     if (decl.direct->type != AST_DirDeclarator::FUNC)
         semanticError(decl.direct->loc, "Non function type");
     if (!decl.direct->func_args)
+        return std::vector<IR_FuncArgument>();
+
+    if (checkVoidParam(decl.direct->func_args->v->v))
         return std::vector<IR_FuncArgument>();
 
     std::vector<IR_FuncArgument> res;
@@ -286,7 +306,7 @@ std::vector<IR_Generator::IR_FuncArgument> IR_Generator::getDeclaredFuncArgs(AST
         auto type = getType(*arg->specifiers, *arg->child);
         res.push_back({ ident, type });
     }
-    return  res;
+    return res;
 }
 
 std::shared_ptr<IR_Type> IR_Generator::getLiteralType(AST_Literal const &lit) {
@@ -334,7 +354,7 @@ IntermediateUnit::FunLinkage IR_Generator::getFunLinkage(AST_DeclSpecifiers::Sto
         case AST_DeclSpecifiers::ST_TYPEDEF:
             throw cw39_internal_error("Typedef in wrong context");
     }
-    throw cw39_internal_error("Unknown storage specifier");
+    throw std::logic_error("Unknown storage specifier");
 }
 
 IntermediateUnit::VarLinkage IR_Generator::getGVarLinkage(AST_DeclSpecifiers::StorageSpec spec,
@@ -353,5 +373,5 @@ IntermediateUnit::VarLinkage IR_Generator::getGVarLinkage(AST_DeclSpecifiers::St
         case AST_DeclSpecifiers::ST_TYPEDEF:
             throw cw39_internal_error("Typedef in wrong context");
     }
-    throw cw39_internal_error("Unknown storage specifier");
+    throw std::logic_error("Unknown storage specifier");
 }

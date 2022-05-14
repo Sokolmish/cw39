@@ -5,7 +5,7 @@ int ten;
 static int st;
 int def = 10;
 
-int f() {
+int f(void) {
     return ten + def + st;
 }
 
