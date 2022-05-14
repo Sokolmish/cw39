@@ -814,11 +814,13 @@ AST_DirDeclarator* AbstractSyntaxTree::mkDirDeclNested(AST_Declarator *decl) {
     return res;
 }
 
-AST_DirDeclarator* AbstractSyntaxTree::mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz) {
+AST_DirDeclarator* AbstractSyntaxTree::mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual,
+                                                    AST_Expr *sz, bool isStatic) {
     auto res = mkNode<AST_DirDeclarator>(AST_DirDeclarator::ARRAY);
     res->base = base;
     res->arr_type_qual = qual;
     res->arr_size = sz;
+    res->isStatic = isStatic;
     return res;
 }
 

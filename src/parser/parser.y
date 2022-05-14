@@ -430,10 +430,13 @@ pointer
 dir_decltor
     : IDENTIFIER                                        { $$ = drv.ast->mkDirDeclIdent($1); SL($$, @$); }
     | "(" declarator ")"                                { $$ = drv.ast->mkDirDeclNested($2); SL($$, @$); }
-    | dir_decltor "[" type_qual_lst assign_expr "]"     { $$ = drv.ast->mkDirDeclArr($1, $3, $4); SL($$, @$); }
-    | dir_decltor "[" type_qual_lst "]"                 { $$ = drv.ast->mkDirDeclArr($1, $3, nullptr); SL($$, @$); }
-    | dir_decltor "[" assign_expr "]"                   { $$ = drv.ast->mkDirDeclArr($1, nullptr, $3); SL($$, @$); }
-    | dir_decltor "[" "]"                               { $$ = drv.ast->mkDirDeclArr($1, nullptr, nullptr); SL($$, @$); }
+    | dir_decltor "[" type_qual_lst assign_expr "]"     { $$ = drv.ast->mkDirDeclArr($1, $3, $4, false); SL($$, @$); }
+    | dir_decltor "[" STATIC type_qual_lst assign_expr "]"     { $$ = drv.ast->mkDirDeclArr($1, $4, $5, true); SL($$, @$); }
+    | dir_decltor "[" type_qual_lst STATIC assign_expr "]"     { $$ = drv.ast->mkDirDeclArr($1, $3, $5, true); SL($$, @$); }
+    | dir_decltor "[" type_qual_lst "]"                 { $$ = drv.ast->mkDirDeclArr($1, $3, nullptr, false); SL($$, @$); }
+    | dir_decltor "[" assign_expr "]"                   { $$ = drv.ast->mkDirDeclArr($1, nullptr, $3, false); SL($$, @$); }
+    | dir_decltor "[" STATIC assign_expr "]"                   { $$ = drv.ast->mkDirDeclArr($1, nullptr, $4, true); SL($$, @$); }
+    | dir_decltor "[" "]"                               { $$ = drv.ast->mkDirDeclArr($1, nullptr, nullptr, false); SL($$, @$); }
     | dir_decltor "(" param_type_lst ")"                { $$ = drv.ast->mkDirDeclFunc($1, $3); SL($$, @$); }
     | dir_decltor "(" ")"                               { $$ = drv.ast->mkDirDeclFunc($1, nullptr); SL($$, @$); }
     ;

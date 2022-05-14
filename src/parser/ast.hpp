@@ -364,6 +364,7 @@ struct AST_DirDeclarator final : public AST_Node {
     AST_TypeQuals *arr_type_qual = nullptr;
     AST_Expr *arr_size = nullptr;
     AST_ParameterTypeList *func_args = nullptr;
+    bool isStatic = false;
 
     explicit AST_DirDeclarator(DeclType dtype);
 
@@ -686,7 +687,7 @@ public:
 
     AST_DirDeclarator* mkDirDeclIdent(string_id_t ident);
     AST_DirDeclarator* mkDirDeclNested(AST_Declarator *decl);
-    AST_DirDeclarator* mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz);
+    AST_DirDeclarator* mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz, bool isStatic);
     AST_DirDeclarator* mkDirDeclFunc(AST_DirDeclarator *base, AST_ParameterTypeList *args);
 
     AST_Pointer* mkPointer(AST_TypeQuals *qual, AST_Pointer *child);
