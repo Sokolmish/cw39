@@ -256,6 +256,7 @@ struct AST_SpecsQualsList final : public AST_Node {
     std::vector<AST_TypeSpecifier*> type_specifiers;
     AST_TypeQuals *type_qualifiers = nullptr;
 
+    AST_SpecsQualsList(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals);
     AST_SpecsQualsList(AST_TypeQuals::QualType qual, AST_TypeQuals *quals);
     AST_SpecsQualsList(AST_TypeSpecifier* type, AST_TypeQuals *quals);
     AST_SpecsQualsList* append_qual(AST_TypeQuals::QualType qual);
@@ -417,9 +418,12 @@ struct AST_ParameterTypeList final : public AST_Node {
 
 struct AST_TypeName final : public AST_Node {
     AST_SpecsQualsList *qual;
-    AST_AbstrDeclarator *declarator;
+    std::optional<std::variant<AST_AbstrDeclarator*, AST_Declarator*>> declarator;
+
+    using optDeclType = decltype(declarator);
 
     AST_TypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl);
+    AST_TypeName(AST_SpecsQualsList *qual, AST_Declarator *decl);
     [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
@@ -605,10 +609,6 @@ struct AST_TranslationUnit final : public AST_Node {
     [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
-// Implemented in utils.cpp
-void check_typedef(AST_Declaration *decl);
-AST_TypeName* get_def_type(string_id_t id);
-
 
 class AbstractSyntaxTree {
 public:
@@ -658,6 +658,7 @@ public:
 
     AST_DeclSpecifiers* mkDeclSpecs();
 
+    AST_SpecsQualsList* mkSpecQualLst(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals);
     AST_SpecsQualsList* mkSpecQualLst(AST_TypeQuals::QualType qual);
     AST_SpecsQualsList* mkSpecQualLst(AST_TypeSpecifier* type);
 
@@ -700,7 +701,9 @@ public:
 
     AST_ParameterTypeList* mkParamTypeLst(AST_ParameterList *child, bool ellipsis);
 
+    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, std::nullptr_t decl);
     AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl);
+    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_Declarator *decl);
 
     AST_DirAbstrDeclarator* mkDirAbstrDeclNested(AST_Node *decl);
     AST_DirAbstrDeclarator* mkDirAbstrDeclArr(AST_Node *base, AST_Expr *sz);

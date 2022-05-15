@@ -2137,7 +2137,7 @@ namespace yy {
 
   case 104: // type_specifier: TYPE_NAME
 #line 329 "parser.y"
-                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.ast->mkTypeSpec(get_def_type(yystack_[0].value.as < string_id_t > ())); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
+                                { yylhs.value.as < AST_TypeSpecifier * > () = drv.getDefinedType(yystack_[0].value.as < string_id_t > ()); SL(yylhs.value.as < AST_TypeSpecifier * > (), yylhs.location); }
 #line 2142 "yy_parser.cpp"
     break;
 
@@ -2335,13 +2335,13 @@ namespace yy {
 
   case 137: // declaration: decl_specs ";"
 #line 404 "parser.y"
-                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_Declaration * > () = drv.parseDeclaration(yystack_[1].value.as < AST_DeclSpecifiers * > (), nullptr); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
 #line 2340 "yy_parser.cpp"
     break;
 
   case 138: // declaration: decl_specs init_decltor_list ";"
 #line 405 "parser.y"
-                                                        { yylhs.value.as < AST_Declaration * > () = drv.ast->mkDeclaration(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_InitDeclaratorList * > ()); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
+                                                        { yylhs.value.as < AST_Declaration * > () = drv.parseDeclaration(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_InitDeclaratorList * > ()); SL(yylhs.value.as < AST_Declaration * > (), yylhs.location); }
 #line 2346 "yy_parser.cpp"
     break;
 
@@ -2827,34 +2827,30 @@ namespace yy {
 
   case 219: // trans_unit: declaration
 #line 567 "parser.y"
-                                    {
-                                        yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_Declaration * > ());
-                                        check_typedef(yystack_[0].value.as < AST_Declaration * > ());
-                                        SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location);
-                                    }
-#line 2836 "yy_parser.cpp"
+                                    { yylhs.value.as < AST_TranslationUnit * > () = drv.ast->mkTransUnit()->append(yystack_[0].value.as < AST_Declaration * > ()); SL(yylhs.value.as < AST_TranslationUnit * > (), yylhs.location); }
+#line 2832 "yy_parser.cpp"
     break;
 
   case 220: // trans_unit: trans_unit func_def
-#line 572 "parser.y"
+#line 568 "parser.y"
                                     { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_FunctionDef * > ()); }
-#line 2842 "yy_parser.cpp"
+#line 2838 "yy_parser.cpp"
     break;
 
   case 221: // trans_unit: trans_unit declaration
-#line 573 "parser.y"
-                                    { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); check_typedef(yystack_[0].value.as < AST_Declaration * > ()); }
-#line 2848 "yy_parser.cpp"
+#line 569 "parser.y"
+                                    { yylhs.value.as < AST_TranslationUnit * > () = yystack_[1].value.as < AST_TranslationUnit * > ()->append(yystack_[0].value.as < AST_Declaration * > ()); }
+#line 2844 "yy_parser.cpp"
     break;
 
   case 222: // func_def: decl_specs declarator compound_stmt
-#line 577 "parser.y"
+#line 573 "parser.y"
                                                 { yylhs.value.as < AST_FunctionDef * > () = drv.ast->mkFunDef(yystack_[2].value.as < AST_DeclSpecifiers * > (), yystack_[1].value.as < AST_Declarator * > (), yystack_[0].value.as < AST_CompoundStmt * > ()); SL(yylhs.value.as < AST_FunctionDef * > (), yylhs.location); }
-#line 2854 "yy_parser.cpp"
+#line 2850 "yy_parser.cpp"
     break;
 
 
-#line 2858 "yy_parser.cpp"
+#line 2854 "yy_parser.cpp"
 
             default:
               break;
@@ -3871,7 +3867,7 @@ namespace yy {
      511,   512,   513,   517,   518,   519,   523,   524,   528,   529,
      530,   531,   535,   536,   540,   541,   542,   546,   547,   548,
      549,   550,   551,   555,   556,   557,   558,   559,   566,   567,
-     572,   573,   577
+     568,   569,   573
   };
 
   void
@@ -3903,7 +3899,7 @@ namespace yy {
 
 
 } // yy
-#line 3907 "yy_parser.cpp"
+#line 3903 "yy_parser.cpp"
 
-#line 580 "parser.y"
+#line 576 "parser.y"
 

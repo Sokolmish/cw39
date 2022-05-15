@@ -3,7 +3,6 @@
 #include <fmt/core.h>
 #include <cstdlib>
 #include <cctype>
-#include "yy_parser.hpp"
 #include "core_driver.hpp"
 
 static char unescapeChar(char ch) {
@@ -35,16 +34,6 @@ static char unescapeChar(char ch) {
             return ch;
     }
 }
-
-void check_typedef(AST_Declaration *decl) {
-    (void)decl; // TODO
-}
-
-AST_TypeName* get_def_type(string_id_t id) {
-    (void)id;
-    throw cw39_not_implemented("Typedef"); // TODO
-}
-
 
 enum class IntSuff {
     ERR, U, L, LL
@@ -79,7 +68,7 @@ AST_Literal_t get_integer(const char *str) {
         .isFloat = 0,
         .val = { 0ULL },
     };
-    
+
     suff = endptr;
     while (*endptr) {
         enum IntSuff sf = get_int_suff(&endptr);

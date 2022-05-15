@@ -66,25 +66,22 @@ string_id_t ParsingContext::getStringId(std::string const &str) {
     return getStringId(str.c_str(), str.size());
 }
 
-string_id_t ParsingContext::getIdentId(const char *ident, size_t len, IdentType *type) {
+string_id_t ParsingContext::getIdentId(const char *ident, size_t len) {
     std::string str(ident, len);
     auto it = identsMap.lower_bound(str);
     if (it == identsMap.end() || it->first != str) {
         auto ins = identsMap.emplace_hint(it, std::move(str), IdentInfo(idCnt));
         invIdentsMap.emplace_hint(invIdentsMap.end(), idCnt, ins->first);
         idCnt++;
-        *type = IdentType::IDENT;
         return ins->second.id;
     }
     else { // If already exists
-        bool isIdent = (it->second.type == IdentInfo::IDENT);
-        *type = isIdent ? IdentType::IDENT : IdentType::TYPENAME;
         return it->second.id;
     }
 }
 
-string_id_t ParsingContext::getIdentId(std::string const &str, IdentType *type) {
-    return getIdentId(str.c_str(), str.size(), type);
+string_id_t ParsingContext::getIdentId(std::string const &str) {
+    return getIdentId(str.c_str(), str.size());
 }
 
 std::string ParsingContext::getIdentById(string_id_t id) const {

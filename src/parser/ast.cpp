@@ -615,6 +615,9 @@ TreeNodeRef AST_StructDeclarationList::getTreeNode(ParsingContext const &pctx) c
 
 // AST_SpecifierQualifierList
 
+AST_SpecsQualsList::AST_SpecsQualsList(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals)
+            : AST_Node(AST_SPEC_QUAL_LST), type_specifiers(specs), type_qualifiers(quals) {}
+
 AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeQuals::QualType qual, AST_TypeQuals *quals)
             : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(quals) {
     type_qualifiers->update(qual);
@@ -623,6 +626,10 @@ AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeQuals::QualType qual, AST_TypeQua
 AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeSpecifier* type, AST_TypeQuals *quals)
             : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(quals) {
     type_specifiers.emplace_back(type);
+}
+
+AST_SpecsQualsList *AbstractSyntaxTree::mkSpecQualLst(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals) {
+    return mkNode<AST_SpecsQualsList>(specs, quals);
 }
 
 AST_SpecsQualsList* AbstractSyntaxTree::mkSpecQualLst(AST_TypeQuals::QualType qual) {
@@ -980,17 +987,31 @@ TreeNodeRef AST_ParameterTypeList::getTreeNode(ParsingContext const &pctx) const
 // AST_TypeName
 
 AST_TypeName::AST_TypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl)
-    : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl) {}
+    : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl ? decl : optDeclType()) {}
+
+AST_TypeName::AST_TypeName(AST_SpecsQualsList *qual, AST_Declarator *decl)
+    : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl ? decl : optDeclType()) {}
+
+AST_TypeName* AbstractSyntaxTree::mkTypeName(AST_SpecsQualsList *qual, std::nullptr_t decl) {
+    return mkNode<AST_TypeName>(qual, static_cast<AST_AbstrDeclarator*>(decl));
+}
 
 AST_TypeName* AbstractSyntaxTree::mkTypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl) {
+    return mkNode<AST_TypeName>(qual, decl);
+}
+
+AST_TypeName *AbstractSyntaxTree::mkTypeName(AST_SpecsQualsList *qual, AST_Declarator *decl) {
     return mkNode<AST_TypeName>(qual, decl);
 }
 
 TreeNodeRef AST_TypeName::getTreeNode(ParsingContext const &pctx) const {
     auto node = TreeNode::create("type_name"s);
     node->addChild(qual->getTreeNode(pctx));
-    if (declarator)
-        node->addChild(declarator->getTreeNode(pctx));
+    if (declarator) {
+        std::visit([&node, &pctx](auto const &decl) {
+            node->addChild(decl->getTreeNode(pctx));
+        }, *declarator);
+    }
     return node;
 }
 

@@ -30,11 +30,16 @@ public:
 
     std::shared_ptr<AbstractSyntaxTree> getAST();
 
+    static string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
+    static string_id_t getDeclaredIdent(AST_Declarator const &decl);
+
 private:
     ParsingContext &ctx;
     std::shared_ptr<AbstractSyntaxTree> ast;
     std::string text;
     yy::location location; // TODO: fix tracking
+
+    std::map<string_id_t, AST_TypeSpecifier*> typesAliases;
 
     bool trace_parsing;
     bool trace_scanning;
@@ -44,6 +49,11 @@ private:
 
     void scan_begin();
     void scan_end();
+
+    /** Check for typedef. Pass it to AST anyway (it will be dropped in generator). */
+    AST_Declaration* parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
+    bool isDefinedType(string_id_t id);
+    AST_TypeSpecifier* getDefinedType(string_id_t id);
 
     [[noreturn]] void lexer_error(std::string msg);
 

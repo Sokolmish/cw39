@@ -9,7 +9,10 @@ std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec
         return itFound->second;
     }
     else if (itFound != iunit->structs.end()) {
-        semanticError(spec.loc, "Struct with given name already has been defined");
+        // Because of problems with typedef (or not only with it?)
+        // different structures with same name not checked at all
+        return itFound->second;
+        // semanticError(spec.loc, "Struct with given name has been already defined");
     }
 
     // Create new struct type
@@ -20,7 +23,7 @@ std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec
             if (singleDecl->bitwidth)
                 throw cw39_not_implemented("Bitwidth");
             auto fieldType = getType(*structDecl->type, *singleDecl->declarator);
-            string_id_t fieldName = getDeclaredIdent(*singleDecl->declarator);
+            string_id_t fieldName = CoreDriver::getDeclaredIdent(*singleDecl->declarator);
             fields.emplace_back(fieldName, fieldType, curIndex);
             curIndex++;
         }
@@ -51,7 +54,9 @@ std::shared_ptr<IR_Type> IR_Generator::getPrimaryType(TypeSpecifiers const &spec
         throw cw39_not_implemented("Enums");
     }
     else if (spec[0]->spec_type == ast_ts::T_NAMED) {
-        throw cw39_not_implemented("Named types");
+        if (spec.size() != 1)
+            throw cw39_not_implemented("User defined types cannot be combined with others");
+        return getType(dynamic_cast<AST_TypeName const&>(*spec[0]->v));
     }
 
     if (spec[0]->spec_type == ast_ts::T_VOID) {
@@ -252,26 +257,12 @@ std::shared_ptr<IR_Type> IR_Generator::getType(AST_SpecsQualsList const &spec, A
 }
 
 std::shared_ptr<IR_Type> IR_Generator::getType(AST_TypeName const &typeName) {
-    return getIndirectType(typeName.declarator, getPrimaryType(typeName.qual->type_specifiers));
-}
-
-string_id_t IR_Generator::getDeclaredIdentDirect(AST_DirDeclarator const &decl) {
-    if (decl.type == AST_DirDeclarator::NAME) {
-        return decl.getIdent();
-    }
-    else if (decl.type == AST_DirDeclarator::NESTED) {
-        return getDeclaredIdent(decl.getBaseDecl());
-    }
-    else if (decl.type == AST_DirDeclarator::ARRAY || decl.type == AST_DirDeclarator::FUNC) {
-        return getDeclaredIdentDirect(decl.getBaseDirectDecl());
-    }
-    else {
-        throw std::logic_error("Wrong direct declarator type");
-    }
-}
-
-string_id_t IR_Generator::getDeclaredIdent(AST_Declarator const &decl) {
-    return getDeclaredIdentDirect(*decl.direct);
+    auto primType = getPrimaryType(typeName.qual->type_specifiers);
+    if (!typeName.declarator)
+        return primType;
+    return std::visit([&, this](auto const &decl) {
+        return getIndirectType(decl, std::move(primType));
+    }, *typeName.declarator);
 }
 
 /** Check for explicitly no parameters via `void`, as in `int f(void)` */
@@ -302,7 +293,7 @@ std::vector<IR_Generator::IR_FuncArgument> IR_Generator::getDeclaredFuncArgs(AST
 
     std::vector<IR_FuncArgument> res;
     for (auto const &arg : decl.direct->func_args->v->v) {
-        auto ident = getDeclaredIdent(*arg->child);
+        auto ident = CoreDriver::getDeclaredIdent(*arg->child);
         auto type = getType(*arg->specifiers, *arg->child);
         res.push_back({ ident, type });
     }

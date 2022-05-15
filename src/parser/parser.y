@@ -326,7 +326,7 @@ type_specifier
     | UNSIGNED                  { $$ = drv.ast->mkTypeSpec(AST_TypeSpecifier::T_UNSIGNED); SL($$, @$); }
     | ustruct_spec              { $$ = drv.ast->mkTypeSpec($1); SL($$, @$); }
     | enum_specifier            { $$ = drv.ast->mkTypeSpec($1); SL($$, @$); }
-    | TYPE_NAME                 { $$ = drv.ast->mkTypeSpec(get_def_type($1)); SL($$, @$); }
+    | TYPE_NAME                 { $$ = drv.getDefinedType($1); SL($$, @$); }
     ;
 
 type_qual
@@ -401,8 +401,8 @@ enumerator
     /* Declarations */
 
 declaration
-    : decl_specs ";"                                    { $$ = drv.ast->mkDeclaration($1, nullptr); SL($$, @$); }
-    | decl_specs init_decltor_list ";"                  { $$ = drv.ast->mkDeclaration($1, $2); SL($$, @$); }
+    : decl_specs ";"                                    { $$ = drv.parseDeclaration($1, nullptr); SL($$, @$); }
+    | decl_specs init_decltor_list ";"                  { $$ = drv.parseDeclaration($1, $2); SL($$, @$); }
     ;
 
 init_decltor_list
@@ -564,13 +564,9 @@ jmp_stmt
 
 trans_unit
     : func_def                      { $$ = drv.ast->mkTransUnit()->append($1); SL($$, @$); }
-    | declaration                   {
-                                        $$ = drv.ast->mkTransUnit()->append($1);
-                                        check_typedef($1);
-                                        SL($$, @$);
-                                    }
+    | declaration                   { $$ = drv.ast->mkTransUnit()->append($1); SL($$, @$); }
     | trans_unit func_def           { $$ = $1->append($2); }
-    | trans_unit declaration        { $$ = $1->append($2); check_typedef($2); }
+    | trans_unit declaration        { $$ = $1->append($2); }
     ;
 
 func_def

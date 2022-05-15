@@ -10,10 +10,10 @@ int atoi(const char *nptr);
 
 int gg = 142U;
 
-struct TestStruct {
+typedef struct TestStruct {
     int field1;
     int field2;
-};
+} TestStruct_t;
 
 void store555(int *addr) {
     *addr = 554;
@@ -58,6 +58,10 @@ int main() {
     sss.field1 = 111;
     sss.field2 = 222U;
     printf("%d %d\n", sss.field1, sss.field2);
+
+    TestStruct_t ss2;
+    ss2.field1 = 333;
+    printf("%d\n", ss2.field1);
 
     printf("%f\n", 2.3 + 0.7f);
     printf("%f\n", 2.3f + 0.7f);

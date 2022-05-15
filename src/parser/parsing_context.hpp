@@ -35,9 +35,7 @@ class ParsingContext {
 public:
     struct IdentInfo {
         string_id_t id;
-        // TODO: duplicates IdentType from common.hpp
-        enum : int { IDENT, DEF_TYPE } type = IDENT;
-        explicit IdentInfo(string_id_t id) : id(id) {}
+        IdentInfo(string_id_t id) : id(id) {}
     };
 
     struct StringInfo {
@@ -50,8 +48,8 @@ public:
     string_id_t getStringId(const char *str, size_t len);
     string_id_t getStringId(std::string const &str);
 
-    string_id_t getIdentId(const char *str, size_t len, IdentType *type);
-    string_id_t getIdentId(std::string const &str, IdentType *type);
+    string_id_t getIdentId(const char *str, size_t len);
+    string_id_t getIdentId(std::string const &str);
 
     std::string getIdentById(string_id_t id) const;
 

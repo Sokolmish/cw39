@@ -203,9 +203,6 @@ private:
     std::shared_ptr<IR_Type> getType(AST_TypeName const &typeName);
     std::shared_ptr<IR_Type> getLiteralType(AST_Literal const &lit);
 
-    string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
-    string_id_t getDeclaredIdent(AST_Declarator const &decl);
-
     bool checkVoidParam(std::vector<AST_ParameterDeclaration*> const &params);
     std::vector<IR_FuncArgument> getDeclaredFuncArgs(AST_Declarator const &decl);
 

@@ -170,6 +170,12 @@ void IR_Generator::genTransUnit(AST_TranslationUnit const &tunit) {
 
 /** Insert global variable declaration, new struct type or function prototype */
 void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
+    // Typedefs were processed in parser
+    if (decl.specifiers->storage_specifier == AST_DeclSpecifiers::ST_TYPEDEF) {
+        getPrimaryType(decl.specifiers->type_specifiers); // Save struct type if such is there
+        return;
+    }
+
     // Save struct type if such is there
     if (!decl.child) {
         getPrimaryType(decl.specifiers->type_specifiers);
@@ -178,7 +184,7 @@ void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
 
     for (const auto &singleDecl : decl.child->v) {
         auto varType = getType(*decl.specifiers, *singleDecl->declarator);
-        string_id_t ident = getDeclaredIdent(*singleDecl->declarator);
+        string_id_t ident = CoreDriver::getDeclaredIdent(*singleDecl->declarator);
 
         // Function prototype
         if (varType->type == IR_Type::FUNCTION) {
@@ -247,7 +253,7 @@ static int getFspec(AST_DeclSpecifiers const &declSpec) {
 void IR_Generator::createFunction(AST_FunctionDef const &def) {
     variables.increaseLevel();
 
-    string_id_t funcIdent = getDeclaredIdent(*def.decl);
+    string_id_t funcIdent = CoreDriver::getDeclaredIdent(*def.decl);
     auto fullType = getType(*def.specifiers, *def.decl);
     auto linkage = getFunLinkage(def.specifiers->storage_specifier, def.loc);
     int fspec = getFspec(*def.specifiers);
@@ -317,6 +323,12 @@ void IR_Generator::fillBlock(const AST_CompoundStmt &compStmt) {
 
 /** Create new local variables */
 void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
+    // Typedefs were processed in parser
+    if (decl.specifiers->storage_specifier == AST_DeclSpecifiers::ST_TYPEDEF) {
+        getPrimaryType(decl.specifiers->type_specifiers); // Save struct type if such is there
+        return;
+    }
+
     // Save struct type if such is there
     if (!decl.child) {
         getPrimaryType(decl.specifiers->type_specifiers);
@@ -325,7 +337,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
 
     for (const auto &singleDecl : decl.child->v) {
         auto varType = getType(*decl.specifiers, *singleDecl->declarator);
-        string_id_t ident = getDeclaredIdent(*singleDecl->declarator);
+        string_id_t ident = CoreDriver::getDeclaredIdent(*singleDecl->declarator);
 
         if (varType->type == IR_Type::FUNCTION)
             semanticError(singleDecl->declarator->loc, "Functions are not allowed inside compound statements");

@@ -29,6 +29,46 @@ std::shared_ptr<AbstractSyntaxTree> CoreDriver::getAST() {
     return ast;
 }
 
+string_id_t CoreDriver::getDeclaredIdentDirect(AST_DirDeclarator const &decl) {
+    if (decl.type == AST_DirDeclarator::NAME) {
+        return decl.getIdent();
+    }
+    else if (decl.type == AST_DirDeclarator::NESTED) {
+        return getDeclaredIdent(decl.getBaseDecl());
+    }
+    else if (decl.type == AST_DirDeclarator::ARRAY || decl.type == AST_DirDeclarator::FUNC) {
+        return getDeclaredIdentDirect(decl.getBaseDirectDecl());
+    }
+    else {
+        throw std::logic_error("Wrong direct declarator type");
+    }
+}
+
+string_id_t CoreDriver::getDeclaredIdent(AST_Declarator const &decl) {
+    return getDeclaredIdentDirect(*decl.direct);
+}
+
+AST_Declaration* CoreDriver::parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child) {
+    if (spec->storage_specifier == AST_DeclSpecifiers::ST_TYPEDEF) {
+        auto specQualsLst = ast->mkSpecQualLst(spec->type_specifiers, spec->type_qualifiers);
+        for (auto const &decl : child->v) {
+            string_id_t ident = getDeclaredIdent(*decl->declarator);
+            auto typeName = ast->mkTypeName(specQualsLst, decl->declarator);
+            typesAliases.emplace(ident, ast->mkTypeSpec(typeName));
+        }
+    }
+    return ast->mkDeclaration(spec, child);
+}
+
+AST_TypeSpecifier* CoreDriver::getDefinedType(string_id_t id) {
+    return typesAliases.at(id);
+}
+
+bool CoreDriver::isDefinedType(string_id_t id) {
+    return typesAliases.contains(id);
+}
+
+
 void CoreDriver::lexer_error(std::string msg) {
     auto fixLoc = ctx.warps.getLoc(location.begin.line);
     std::string filename = ctx.warps.getFilename(fixLoc.filenum);

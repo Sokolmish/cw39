@@ -71,12 +71,11 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "__pure"                    return yy::parser::make_EXT_PURE(loc);
 
 {L}({L}|{D})*               {
-                                IdentType type;
-                                string_id_t id = drv.ctx.getIdentId(yytext, yyleng, &type);
-                                if (type == IdentType::IDENT)
-                                    return yy::parser::make_IDENTIFIER(id, loc);
-                                else
+                                string_id_t id = drv.ctx.getIdentId(yytext, yyleng);
+                                if (drv.isDefinedType(id))
                                     return yy::parser::make_TYPE_NAME(id, loc);
+                                else
+                                    return yy::parser::make_IDENTIFIER(id, loc);
                             }
 
 0[xX]{H}+{ISF}?             return yy::parser::make_CONSTANT(get_integer(yytext), loc);

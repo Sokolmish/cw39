@@ -58,5 +58,6 @@ run_testcase ./tst_prog2.c 1 2 3
 run_testcase ./tst_prog3.c
 run_testcase ./tst_prog4.c
 run_testcase ./tst_prog5.c
+run_testcase ./tst_prog6.c
 
 echo -e "[${green}PASSED${nc}] ${bold}All tests finished successfully${nb}"

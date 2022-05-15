@@ -25,6 +25,4 @@ typedef struct AST_Literal {
 using string_id_t = int;
 #define NO_IDENT_ID 0
 
-enum class IdentType { IDENT, TYPENAME };
-
 #endif /* PARSER_COMMON_HPP_INCLUDED__ */
