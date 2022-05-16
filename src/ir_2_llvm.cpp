@@ -145,7 +145,7 @@ static std::optional<GlobalValue::LinkageTypes> getVarLinkageType(IntermediateUn
         case IntermediateUnit::VarLinkage::TENTATIVE:
             return GlobalValue::CommonLinkage;
     }
-    throw cw39_internal_error("Unknown linkage type");
+    throw std::logic_error("Unknown linkage type");
 }
 
 void IR2LLVM_Impl::createGlobals() {
@@ -302,7 +302,7 @@ static GlobalValue::LinkageTypes getFunLinkageType(IntermediateUnit::FunLinkage 
         case IntermediateUnit::FunLinkage::WEAK:
             return GlobalValue::WeakAnyLinkage;
     }
-    throw cw39_internal_error("Unknown linkage type");
+    throw std::logic_error("Unknown linkage type");
 }
 
 void IR2LLVM_Impl::createPrototypes() {
@@ -583,6 +583,26 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
 
         case IR_ExprOper::MOV:
             res = getValue(oper.args[0]);
+            break;
+
+        case IR_ExprOper::INTR_CTZ:
+            res = builder->CreateBinaryIntrinsic(
+                    Intrinsic::cttz, getValue(oper.args[0]), builder->getInt1(true), nullptr, name);
+            break;
+
+        case IR_ExprOper::INTR_CLZ:
+            res = builder->CreateBinaryIntrinsic(
+                    Intrinsic::ctlz, getValue(oper.args[0]), builder->getInt1(true), nullptr, name);
+            break;
+
+        case IR_ExprOper::INTR_POPCNT:
+            res = builder->CreateUnaryIntrinsic(
+                    Intrinsic::ctpop, getValue(oper.args[0]), nullptr, name);
+            break;
+
+        case IR_ExprOper::INTR_BITREV:
+            res = builder->CreateUnaryIntrinsic(
+                    Intrinsic::bitreverse, getValue(oper.args[0]), nullptr, name);
             break;
 
         default:

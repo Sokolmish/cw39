@@ -65,7 +65,8 @@ public:
         RESW_BUILTIN_POPCNT, RESW_BUILTIN_BITREV32,
     };
 
-    std::optional<ReservedWords> getReserved(string_id_t id);
+    std::optional<ReservedWords> getReserved(string_id_t id) const;
+    bool isIntrinsicFuncName(string_id_t id) const;
 
 private:
     string_id_t idCnt = 1;

@@ -13,6 +13,7 @@ public:
     static constexpr bool isIntegerOp(IR_ExprOper::IR_Ops op);
     static constexpr bool isComparsionOp(IR_ExprOper::IR_Ops op);
     static constexpr bool isShortLogicOp(IR_ExprOper::IR_Ops op);
+    static constexpr bool isIntrinsic(IR_ExprOper::IR_Ops op);
 
 private:
     static std::optional<IRval> foldOper(IR_ExprOper const &expr);

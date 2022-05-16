@@ -98,11 +98,19 @@ std::string ParsingContext::getStringById(string_id_t id) const {
     return std::string(invStringsMap.find(id)->second);
 }
 
-std::optional<ParsingContext::ReservedWords> ParsingContext::getReserved(string_id_t id) {
+std::optional<ParsingContext::ReservedWords> ParsingContext::getReserved(string_id_t id) const {
     auto it = reservedWords.find(id);
     if (it == reservedWords.end())
         return {};
     return it->second;
+}
+
+bool ParsingContext::isIntrinsicFuncName(string_id_t id) const {
+    auto word = getReserved(id);
+    if (!word.has_value())
+        return false;
+    return isInList(word, RESW_BUILTIN_CTZ, RESW_BUILTIN_CLZ,
+                    RESW_BUILTIN_POPCNT, RESW_BUILTIN_BITREV32);
 }
 
 

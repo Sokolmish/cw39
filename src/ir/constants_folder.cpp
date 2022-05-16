@@ -74,11 +74,9 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
         }, expr.args[0].getVal());
     }
     else if (isIntegerOp(expr.op)) {
-        // TODO: make it prettier
         using intVariant_t = std::variant<uint8_t, int8_t, uint32_t, int32_t, uint64_t, int64_t>;
         intVariant_t intVariant = variant_cast(expr.args[0].getVal());
         return std::visit([&expr](auto const &l) -> IRval {
-//            auto const &r = std::get<std::remove_cvref_t<decltype(l)>>(expr.args[1].getVal());
             auto const &r = expr.args[1].castValTo<std::remove_cvref_t<decltype(l)>>();
             switch (expr.op) {
                 case IR_ExprOper::REM:
@@ -97,7 +95,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
                     throw cw39_internal_error("Wrong integer operation");
             }
         }, intVariant);
-    }
+    } // TODO: intrisics evaluation (ctz, popcnt,...), but there is problem with types
     else {
         return {};
     }
@@ -123,6 +121,11 @@ constexpr bool ConstantsFolder::isComparsionOp(IR_ExprOper::IR_Ops op) {
 constexpr bool ConstantsFolder::isShortLogicOp(IR_ExprOper::IR_Ops op) {
     using o = IR_ExprOper;
     return isInList(op, o::LAND, o::LOR);
+}
+
+constexpr bool ConstantsFolder::isIntrinsic(IR_ExprOper::IR_Ops op) {
+    using o = IR_ExprOper;
+    return isInList(op, o::INTR_CTZ, o::INTR_CLZ, o::INTR_POPCNT, o::INTR_BITREV);
 }
 
 

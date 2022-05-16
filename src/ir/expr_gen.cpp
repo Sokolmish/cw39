@@ -412,17 +412,23 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
     std::shared_ptr<IR_TypeFunc> funType;
     int dirFuncId = -1;
     std::optional<IRval> funPtr;
+
     if (expr.base->node_type == AST_PRIMARY) {
         auto &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
         if (funcBase.type == AST_Primary::IDENT) {
-            auto funIt = functions.find(funcBase.getIdent());
+            string_id_t baseIdent = funcBase.getIdent();
+            auto funIt = functions.find(baseIdent);
             if (funIt != functions.end()) {
                 dirFuncId = funIt->second;
                 auto const &fun = iunit->getFunction(dirFuncId);
                 funType = fun.getFuncType();
             }
+            else if (ctx.isIntrinsicFuncName(baseIdent)) {
+                return doIntrinsic(baseIdent, expr);
+            }
         }
     }
+
     if (dirFuncId == -1) {
         funPtr = evalExpr(*expr.base);
         if (funPtr->getType()->type != IR_Type::POINTER)
@@ -452,7 +458,7 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
                 }
             }
         }
-        else if (funType->isVariadic) { // Default g promotion
+        else if (funType->isVariadic) { // Default promotion
             if (argVal.getType()->type == IR_Type::DIRECT) {
                 auto &dirType = dynamic_cast<IR_TypeDirect const &>(*argVal.getType());
                 if (dirType.spec == IR_TypeDirect::F32)
@@ -475,6 +481,38 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
         return *emitCall(funType->ret, dirFuncId, args);
     else
         return *emitIndirCall(funType->ret, *funPtr, args);
+}
+
+static std::optional<IR_ExprOper::IR_Ops> getIntrinsicOp(ParsingContext::ReservedWords word) {
+    switch (word) {
+        case ParsingContext::RESW_BUILTIN_CTZ:
+            return IR_ExprOper::INTR_CTZ;
+        case ParsingContext::RESW_BUILTIN_CLZ:
+            return IR_ExprOper::INTR_CLZ;
+        case ParsingContext::RESW_BUILTIN_POPCNT:
+            return IR_ExprOper::INTR_POPCNT;
+        case ParsingContext::RESW_BUILTIN_BITREV32:
+            return IR_ExprOper::INTR_BITREV;
+        default:
+            return {};
+    }
+}
+
+IRval IR_Generator::doIntrinsic(string_id_t intrIdent, AST_Postfix const &expr) {
+    // Currently, only unary intrisics are supported
+    auto const &argsLst = expr.getArgsList().children;
+    if (argsLst.size() != 1)
+        semanticError(expr.loc, "Wrong arguments count (intrisic)");
+    IRval arg = evalExpr(*argsLst[0]);
+
+    auto op = getIntrinsicOp(*ctx.getReserved(intrIdent));
+    if (!op.has_value())
+        throw cw39_internal_error("Wrong instrisic name");
+
+    // TODO: Return value not always has same type as argument.
+    // TODO: It is very bad solution. Need to use intrisic signature.
+    auto type = arg.getType();
+    return emitOp(std::move(type), *op, { std::move(arg) });
 }
 
 

@@ -79,8 +79,12 @@ static std::string operOpToStr(IR_ExprOper::IR_Ops op) {
         case IR_ExprOper::GE:         return "ge";
         case IR_ExprOper::LE:         return "le";
         case IR_ExprOper::MOV:        return "mov";
+        case IR_ExprOper::INTR_CTZ:         return "ctz";
+        case IR_ExprOper::INTR_CLZ:         return "clz";
+        case IR_ExprOper::INTR_POPCNT:      return "popcnt";
+        case IR_ExprOper::INTR_BITREV:      return "bitrev";
     }
-    throw;
+    throw std::logic_error("Wrong IR operation");
 }
 
 std::string IR_ExprOper::to_string() const {
@@ -106,7 +110,7 @@ std::unique_ptr<IR_Expr> IR_ExprMem::copy() const {
     else if (op == STORE)
         return std::make_unique<IR_ExprMem>(op, addr.copy(), val->copy());
     else
-        throw cw39_internal_error("Wrong memory operation");
+        throw std::logic_error("Wrong memory operation");
 }
 
 std::vector<IRval *> IR_ExprMem::getArgs() {
@@ -123,7 +127,7 @@ std::string IR_ExprMem::to_string() const {
         case STORE:
             return fmt::format("store {} {}", addr.to_string(), val->to_string());
     }
-    throw;
+    throw std::logic_error("Wrong memory operation");
 }
 
 
@@ -169,7 +173,7 @@ std::string IR_ExprAccess::to_string() const {
             ss << "gep ";
             break;
         default:
-            throw;
+            throw std::logic_error("Wrong access operation");
     }
     ss << base.to_string() << " ";
     if (val.has_value())
@@ -296,7 +300,7 @@ std::string castOpToStr(IR_ExprCast::CastType op)  {
         case IR_ExprCast::FPEXT:     return "fpext";
         case IR_ExprCast::FPTRUNC:   return "fptrunc";
     }
-    throw;
+    throw std::logic_error("Wrong cast operation type");
 }
 
 std::string IR_ExprCast::to_string() const {

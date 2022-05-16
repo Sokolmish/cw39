@@ -183,6 +183,7 @@ private:
     IRval doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right, yy::location loc);
     IRval doAddrOf(AST_Expr const &expr);
     IRval doCall(AST_Postfix const &expr);
+    IRval doIntrinsic(string_id_t intrIdent, AST_Postfix const &expr);
 
     IRval getCompoundVal(std::shared_ptr<IR_Type> const &type, AST_InitializerList const &lst);
     IRval getLiteralIRval(AST_Literal const &lit);

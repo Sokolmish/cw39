@@ -51,6 +51,7 @@ struct IR_ExprOper final : public IR_Expr {
         XOR, AND, OR, LAND, LOR,
         EQ, NE, GT, LT, GE, LE,
         MOV,
+        INTR_CTZ, INTR_CLZ, INTR_POPCNT, INTR_BITREV,
     };
 
     IR_Ops op;
