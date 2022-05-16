@@ -36,10 +36,13 @@ static void writeOut(std::string const &path, std::string const &data) {
 
 static void writeOutBinary(std::string const &path, char const *data, size_t size) {
     if (path.empty()) {
-        // This part is not crossplatform (*nix only)
+#ifdef __unix__
         FILE *out = fdopen(dup(fileno(stdout)), "wb");
         fwrite(data, 1, size, out); // TODO: missed check
         fclose(out);
+#else
+        throw cw39_error("Binary output into stdout is not available for current platform");
+#endif
     }
     else {
         std::ofstream file(path, std::ios::binary);

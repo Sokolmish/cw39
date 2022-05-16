@@ -637,6 +637,9 @@ void Preprocessor::addSystemDefines() {
     addDefine("__llvm__", "1");
     addDefine("__CW39__", "1");
 
+#ifdef __unix__
+    addDefine("__unix__", "1");
+#endif
 #ifdef __linux__
     addDefine("__linux__", "1");
 #endif
