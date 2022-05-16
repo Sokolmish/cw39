@@ -11,7 +11,7 @@ Following optimizations are implemented in this compiler:
 - Tail recursion elimination
 - Dead code elimination
 - Copy propagation and constants folding
-- Algebraic simplification (without reassotiation) and common subexpressions elimination
+- Algebraic simplifications (without reassotiation) and common subexpressions elimination
 - Loop invariant code motion
 
 Following optimization are under construction:
@@ -86,6 +86,7 @@ Each of following options can accept optional argument with path (e.g. `--llvm=.
 | `--ir-raw`  | Print IR before optimizations (i.e. right after generation)                                |
 | `--cfg-raw` | Print CFG representation before optimizations in the [dot](https://graphviz.org/) language |
 | `--llvm`    | Print final LLVM assembly code                                                             |
+| `--bc`      | Print final LLVM bitcode (binary output)                                                   |
 | `--asm`     | Print assmbly code (only in Unix-based systems)                                            |
 
 ### Debug options

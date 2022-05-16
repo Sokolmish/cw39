@@ -25,6 +25,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include "llvm/IR/Verifier.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
 
 //#include "llvm/ExecutionEngine/ExecutionEngine.h"
 //#include "llvm/Support/TargetSelect.h"
@@ -84,8 +85,12 @@ IR2LLVM::IR2LLVM(IntermediateUnit const &iunit) : iunit(iunit) {
     impl = std::make_unique<IR2LLVM_Impl>(this);
 }
 
-std::string IR2LLVM::getRes() const {
+std::string const& IR2LLVM::getLLVM_IR() const {
     return llvmIR;
+}
+
+std::vector<char> const& IR2LLVM::getLLVM_BC() const {
+    return llvmBC;
 }
 
 IR2LLVM::~IR2LLVM() = default;
@@ -114,6 +119,11 @@ IR2LLVM_Impl::IR2LLVM_Impl(IR2LLVM *par) : parent(par) {
 
     raw_string_ostream output(parent->llvmIR);
     module->print(output, nullptr);
+
+    SmallVector<char> ov;
+    llvm::raw_svector_ostream os(ov);
+    WriteBitcodeToFile(*module, os); // Actually it is written into vector os
+    parent->llvmBC = std::vector<char>(ov.begin(), ov.end());
 
     builder.reset();
     module.reset();

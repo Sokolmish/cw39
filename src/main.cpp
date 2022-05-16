@@ -26,8 +26,26 @@ static void writeOut(std::string const &path, std::string const &data) {
         fmt::print("{}\n", data);
     }
     else {
-        std::ofstream myfile(path);
-        myfile << data << std::endl;
+        std::ofstream file(path);
+        if (!file.is_open())
+            throw cw39_error(fmt::format("Cannot open file '{}'", path));
+        file << data << std::endl;
+    }
+}
+
+
+static void writeOutBinary(std::string const &path, char const *data, size_t size) {
+    if (path.empty()) {
+        // This part is not crossplatform (*nix only)
+        FILE *out = fdopen(dup(fileno(stdout)), "wb");
+        fwrite(data, 1, size, out); // TODO: missed check
+        fclose(out);
+    }
+    else {
+        std::ofstream file(path, std::ios::binary);
+        if (!file.is_open())
+            throw cw39_error(fmt::format("Cannot open file '{}'", path));
+        file.write(data, size);
     }
 }
 
@@ -44,7 +62,7 @@ enum class CompilationLevel {
 static CompilationLevel getCompilationLvl(CLIArgs const &args) {
     if (args.outASM())
         return CompilationLevel::COMPILE;
-    if (args.outLLVM())
+    if (args.outLLVM() || args.outBC())
         return CompilationLevel::MATERIALIZE;
     else if (args.outIR() || args.outCFG())
         return CompilationLevel::OPTIMIZE;
@@ -131,7 +149,11 @@ static void process(CLIArgs  &args) {
 
     IR2LLVM materializer(optUnit);
     if (args.outLLVM()) {
-        writeOut(*args.outLLVM(), materializer.getRes());
+        writeOut(*args.outLLVM(), materializer.getLLVM_IR());
+    }
+    if (args.outBC()) {
+        auto const &data = materializer.getLLVM_BC();
+        writeOutBinary(*args.outBC(), data.data(), data.size());
     }
 
     if (compilationLvl <= CompilationLevel::MATERIALIZE)
@@ -139,7 +161,7 @@ static void process(CLIArgs  &args) {
 
     if (args.outASM()) {
         ExtProcess llc_proc(args.get_llc_name(), {}); // TODO: catch output
-        llc_proc.sendString(materializer.getRes());
+        llc_proc.sendString(materializer.getLLVM_IR()); // Can send bitcode
         llc_proc.closeFd();
         llc_proc.wait();
     }

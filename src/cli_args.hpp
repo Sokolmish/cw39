@@ -18,6 +18,7 @@ public:
     std::optional<std::string> outIR() const;
     std::optional<std::string> outCFG() const;
     std::optional<std::string> outLLVM() const;
+    std::optional<std::string> outBC() const;
     std::optional<std::string> outASM() const;
 
     bool isScannerTracing() const;

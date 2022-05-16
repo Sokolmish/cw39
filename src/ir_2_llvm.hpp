@@ -12,7 +12,8 @@ public:
     IR2LLVM(IR2LLVM const&) = delete;
     IR2LLVM& operator=(IR2LLVM const&) = delete;
 
-    [[nodiscard]] std::string getRes() const;
+    std::string const& getLLVM_IR() const;
+    std::vector<char> const& getLLVM_BC() const;
 
     ~IR2LLVM(); // Needed for unique_ptr to incomplete type
 
@@ -24,6 +25,7 @@ private:
 
     IntermediateUnit const &iunit;
     std::string llvmIR;
+    std::vector<char> llvmBC;
 };
 
 
