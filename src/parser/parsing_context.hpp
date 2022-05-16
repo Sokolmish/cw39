@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <optional>
 
 #include "common.hpp"
 
@@ -57,6 +59,14 @@ public:
 
     LinesWarpMap warps;
 
+    enum ReservedWords {
+        RESW_FUNC_NAME,
+        RESW_BUILTIN_CTZ, RESW_BUILTIN_CLZ,
+        RESW_BUILTIN_POPCNT, RESW_BUILTIN_BITREV32,
+    };
+
+    std::optional<ReservedWords> getReserved(string_id_t id);
+
 private:
     string_id_t idCnt = 1;
     string_id_t strCnt = 1;
@@ -66,6 +76,8 @@ private:
 
     std::map<string_id_t, std::string> invIdentsMap;
     std::map<string_id_t, std::string> invStringsMap;
+
+    std::unordered_map<string_id_t, ReservedWords> reservedWords;
 };
 
 #endif /* PARSING_CONTEXT_HPP_INCLUDED__ */

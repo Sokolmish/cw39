@@ -2,7 +2,13 @@
 #include "utils.hpp"
 
 ParsingContext::ParsingContext(std::string topFileName)
-        : warps(topFileName) {}
+        : warps(topFileName) {
+    reservedWords[getIdentId("__func__")] = RESW_FUNC_NAME;
+    reservedWords[getIdentId("__builtin_ctz")] = RESW_BUILTIN_CTZ;
+    reservedWords[getIdentId("__builtin_clz")] = RESW_BUILTIN_CLZ;
+    reservedWords[getIdentId("__builtin_popcount")] = RESW_BUILTIN_POPCNT;
+    reservedWords[getIdentId("__builtin_bitreverse32")] = RESW_BUILTIN_BITREV32;
+}
 
 static char unescapeChar(char ch) {
     // TODO: '\xhh'
@@ -90,6 +96,13 @@ std::string ParsingContext::getIdentById(string_id_t id) const {
 
 std::string ParsingContext::getStringById(string_id_t id) const {
     return std::string(invStringsMap.find(id)->second);
+}
+
+std::optional<ParsingContext::ReservedWords> ParsingContext::getReserved(string_id_t id) {
+    auto it = reservedWords.find(id);
+    if (it == reservedWords.end())
+        return {};
+    return it->second;
 }
 
 

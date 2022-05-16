@@ -192,7 +192,7 @@ private:
     // Types generator
 
     std::shared_ptr<IR_Type> getStructType(AST_UStructSpec const &spec);
-    typedef std::vector<AST_TypeSpecifier*> TypeSpecifiers;
+    using TypeSpecifiers = std::vector<AST_TypeSpecifier*>;
     std::shared_ptr<IR_Type> getPrimaryType(TypeSpecifiers const &spec);
     template <typename DeclaratorType>
     std::shared_ptr<IR_Type> getIndirectType(DeclaratorType const *decl, std::shared_ptr<IR_Type> base);

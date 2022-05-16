@@ -699,7 +699,12 @@ IRval IR_Generator::evalPrimaryExpr(AST_Primary const &expr) {
         }
 
         case AST_Primary::IDENT: {
-            // TODO: check for __func__
+            if (auto reserved = ctx.getReserved(expr.getIdent())) {
+                if (reserved == ParsingContext::RESW_FUNC_NAME) {
+                    // Should check for this string in already created ones
+                    return IRval::createString(iunit->putString(curFunc->getName()));
+                }
+            }
 
             std::optional<IRval> var = getPtrToVariable(expr.getIdent());
             if (!var.has_value()) {
