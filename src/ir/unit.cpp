@@ -394,10 +394,6 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) c
     fmt::print(ss, "bl{} [label=\"{}\"]\n", block.id, ssb.str());
 }
 
-std::string CFGraph::drawCFG() const {
-    return std::string();
-}
-
 
 CFGraph::CFGraph(IntermediateUnit *iunit) : par(iunit) {}
 

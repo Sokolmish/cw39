@@ -36,8 +36,6 @@ public:
     void traverseBlocks(int blockId, std::set<int> &visited,
                         std::function<void(int)> const &action) const;
 
-    [[nodiscard]] std::string drawCFG() const;
-
     int entryBlockId = -1;
 
 private:
