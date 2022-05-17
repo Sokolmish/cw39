@@ -339,6 +339,8 @@ IntermediateUnit::FunLinkage IR_Generator::getFunLinkage(AST_DeclSpecifiers::Sto
             return IntermediateUnit::FunLinkage::EXTERN;
         case AST_DeclSpecifiers::ST_STATIC:
             return IntermediateUnit::FunLinkage::STATIC;
+        case AST_DeclSpecifiers::ST_WEAK:
+            return IntermediateUnit::FunLinkage::WEAK;
         case AST_DeclSpecifiers::ST_AUTO:
             semanticError(loc, "Function declaration cannot has 'auto' storage specifier");
         case AST_DeclSpecifiers::ST_REGISTER:
@@ -358,6 +360,8 @@ IntermediateUnit::VarLinkage IR_Generator::getGVarLinkage(AST_DeclSpecifiers::St
             return IntermediateUnit::VarLinkage::EXTERN;
         case AST_DeclSpecifiers::ST_STATIC:
             return IntermediateUnit::VarLinkage::STATIC;
+        case AST_DeclSpecifiers::ST_WEAK:
+            return IntermediateUnit::VarLinkage::WEAK;
         case AST_DeclSpecifiers::ST_AUTO:
             semanticError(loc, "Global declaration cannot has 'auto' storage specifier");
         case AST_DeclSpecifiers::ST_REGISTER:

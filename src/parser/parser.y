@@ -61,7 +61,7 @@
 %token XOR_ASSIGN OR_ASSIGN SIZEOF
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER INLINE RESTRICT
-%token EXT_PURE EXT_FCONST
+%token EXT_PURE EXT_FCONST EXT_WEAK
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
 %token STRUCT UNION ENUM ELLIPSIS
 %token CASE DEFAULT IF SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
@@ -313,6 +313,7 @@ storage_class_specifier
     | STATIC                    { $$ = AST_DeclSpecifiers::ST_STATIC; }
     | AUTO                      { $$ = AST_DeclSpecifiers::ST_AUTO; }
     | REGISTER                  { $$ = AST_DeclSpecifiers::ST_REGISTER; }
+    | EXT_WEAK                  { $$ = AST_DeclSpecifiers::ST_WEAK; }
     ;
 
 type_specifier

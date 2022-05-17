@@ -229,11 +229,12 @@ struct AST_TypeSpecifier final : public AST_Node {
 struct AST_DeclSpecifiers final : public AST_Node {
     static constexpr const char * const storstr[] = {
             "<storage>", "extern", "static", "auto",
-            "register", "typedef",
+            "register", "typedef", "weak",
     };
 
     enum StorageSpec : ast_enum_t {
-        ST_NONE, ST_EXTERN, ST_STATIC, ST_AUTO, ST_REGISTER, ST_TYPEDEF
+        ST_NONE, ST_EXTERN, ST_STATIC, ST_AUTO,
+        ST_REGISTER, ST_TYPEDEF, ST_WEAK,
     };
     enum FuncQual : ast_enum_t { Q_INLINE, Q_PURE, Q_FCONST };
 

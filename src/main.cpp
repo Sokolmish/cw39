@@ -38,8 +38,8 @@ static void writeOutBinary(std::string const &path, char const *data, size_t siz
     if (path.empty() || path == "-") {
 #ifdef __unix__
         if (path.empty() && isatty(fileno(stdout))) {
-            throw cw39_error("Bitcode has binary format and not supposed to be written into terminal.\n"
-                             "Use `--bc=-` to force this.");
+            throw cw39_error("Bitcode is not supposed to be written into terminal.\n"
+                             "Use `--bc=-` to force this (can break something).");
         }
         FILE *out = fdopen(dup(fileno(stdout)), "wb");
         fwrite(data, 1, size, out); // TODO: missed check

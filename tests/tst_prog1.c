@@ -1,6 +1,7 @@
 #ifdef __GNUC__
 #define __pure
 #define __fconst
+#define __weak
 #endif
 
 int printf(const char *format, ...);
@@ -15,7 +16,7 @@ typedef struct TestStruct {
     int field2;
 } TestStruct_t;
 
-void store555(int *addr) {
+__weak void store555(int *addr) {
     *addr = 554;
     (*addr)++;
     return;

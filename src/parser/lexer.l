@@ -69,6 +69,7 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "while"                     return yy::parser::make_WHILE(loc);
 "__fconst"                  return yy::parser::make_EXT_FCONST(loc);
 "__pure"                    return yy::parser::make_EXT_PURE(loc);
+"__weak"                    return yy::parser::make_EXT_WEAK(loc);
 
 {L}({L}|{D})*               {
                                 string_id_t id = drv.ctx.getIdentId(yytext, yyleng);
