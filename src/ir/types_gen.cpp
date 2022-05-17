@@ -1,6 +1,7 @@
 #include "generator.hpp"
 
 std::shared_ptr<IR_Type> IR_Generator::getStructType(AST_UStructSpec const &spec) {
+    // TODO: forwarding struct declaration
     // Lookup for existing struct type
     auto itFound = iunit->structs.find(spec.name);
     if (!spec.body) {

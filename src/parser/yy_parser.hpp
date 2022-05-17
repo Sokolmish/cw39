@@ -561,6 +561,7 @@ namespace yy {
       // IDENTIFIER
       // TYPE_NAME
       // STRING_LITERAL
+      // general_ident
       char dummy43[sizeof (string_id_t)];
     };
 
@@ -838,41 +839,42 @@ namespace yy {
         S_type_qual = 116,                       // type_qual
         S_function_specifier = 117,              // function_specifier
         S_ustruct_spec = 118,                    // ustruct_spec
-        S_ustruct = 119,                         // ustruct
-        S_struct_decls_lst = 120,                // struct_decls_lst
-        S_struct_declaration = 121,              // struct_declaration
-        S_spec_qual_lst = 122,                   // spec_qual_lst
-        S_struct_declarator_list = 123,          // struct_declarator_list
-        S_struct_declarator = 124,               // struct_declarator
-        S_enum_specifier = 125,                  // enum_specifier
-        S_enumerator_list = 126,                 // enumerator_list
-        S_enumerator = 127,                      // enumerator
-        S_declaration = 128,                     // declaration
-        S_init_decltor_list = 129,               // init_decltor_list
-        S_init_decltor = 130,                    // init_decltor
-        S_declarator = 131,                      // declarator
-        S_pointer = 132,                         // pointer
-        S_dir_decltor = 133,                     // dir_decltor
-        S_type_qual_lst = 134,                   // type_qual_lst
-        S_param_type_lst = 135,                  // param_type_lst
-        S_param_lst = 136,                       // param_lst
-        S_parameter_declaration = 137,           // parameter_declaration
-        S_type_name = 138,                       // type_name
-        S_abstr_decltor = 139,                   // abstr_decltor
-        S_dir_abstr_decltor = 140,               // dir_abstr_decltor
-        S_initializer = 141,                     // initializer
-        S_init_lst = 142,                        // init_lst
-        S_designator = 143,                      // designator
-        S_stmt = 144,                            // stmt
-        S_label_stmt = 145,                      // label_stmt
-        S_compound_stmt = 146,                   // compound_stmt
-        S_block_items = 147,                     // block_items
-        S_expr_stmt = 148,                       // expr_stmt
-        S_select_stmt = 149,                     // select_stmt
-        S_loop_stmt = 150,                       // loop_stmt
-        S_jmp_stmt = 151,                        // jmp_stmt
-        S_trans_unit = 152,                      // trans_unit
-        S_func_def = 153                         // func_def
+        S_general_ident = 119,                   // general_ident
+        S_ustruct = 120,                         // ustruct
+        S_struct_decls_lst = 121,                // struct_decls_lst
+        S_struct_declaration = 122,              // struct_declaration
+        S_spec_qual_lst = 123,                   // spec_qual_lst
+        S_struct_declarator_list = 124,          // struct_declarator_list
+        S_struct_declarator = 125,               // struct_declarator
+        S_enum_specifier = 126,                  // enum_specifier
+        S_enumerator_list = 127,                 // enumerator_list
+        S_enumerator = 128,                      // enumerator
+        S_declaration = 129,                     // declaration
+        S_init_decltor_list = 130,               // init_decltor_list
+        S_init_decltor = 131,                    // init_decltor
+        S_declarator = 132,                      // declarator
+        S_pointer = 133,                         // pointer
+        S_dir_decltor = 134,                     // dir_decltor
+        S_type_qual_lst = 135,                   // type_qual_lst
+        S_param_type_lst = 136,                  // param_type_lst
+        S_param_lst = 137,                       // param_lst
+        S_parameter_declaration = 138,           // parameter_declaration
+        S_type_name = 139,                       // type_name
+        S_abstr_decltor = 140,                   // abstr_decltor
+        S_dir_abstr_decltor = 141,               // dir_abstr_decltor
+        S_initializer = 142,                     // initializer
+        S_init_lst = 143,                        // init_lst
+        S_designator = 144,                      // designator
+        S_stmt = 145,                            // stmt
+        S_label_stmt = 146,                      // label_stmt
+        S_compound_stmt = 147,                   // compound_stmt
+        S_block_items = 148,                     // block_items
+        S_expr_stmt = 149,                       // expr_stmt
+        S_select_stmt = 150,                     // select_stmt
+        S_loop_stmt = 151,                       // loop_stmt
+        S_jmp_stmt = 152,                        // jmp_stmt
+        S_trans_unit = 153,                      // trans_unit
+        S_func_def = 154                         // func_def
       };
     };
 
@@ -1102,6 +1104,7 @@ namespace yy {
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_TYPE_NAME: // TYPE_NAME
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
+      case symbol_kind::S_general_ident: // general_ident
         value.move< string_id_t > (std::move (that.value));
         break;
 
@@ -1947,6 +1950,7 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_TYPE_NAME: // TYPE_NAME
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
+      case symbol_kind::S_general_ident: // general_ident
         value.template destroy< string_id_t > ();
         break;
 
@@ -3818,9 +3822,9 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1421,     ///< Last index in yytable_.
-      yynnts_ = 64,  ///< Number of nonterminal symbols.
-      yyfinal_ = 53 ///< Termination state number.
+      yylast_ = 1435,     ///< Last index in yytable_.
+      yynnts_ = 65,  ///< Number of nonterminal symbols.
+      yyfinal_ = 55 ///< Termination state number.
     };
 
 
@@ -4089,6 +4093,7 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_TYPE_NAME: // TYPE_NAME
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
+      case symbol_kind::S_general_ident: // general_ident
         value.copy< string_id_t > (YY_MOVE (that.value));
         break;
 
@@ -4316,6 +4321,7 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_TYPE_NAME: // TYPE_NAME
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
+      case symbol_kind::S_general_ident: // general_ident
         value.move< string_id_t > (YY_MOVE (s.value));
         break;
 
@@ -4385,7 +4391,7 @@ switch (yykind)
 
 
 } // yy
-#line 4389 "yy_parser.hpp"
+#line 4395 "yy_parser.hpp"
 
 
 

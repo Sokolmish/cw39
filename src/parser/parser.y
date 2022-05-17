@@ -99,6 +99,7 @@
 %type <AST_Expr *> expr
 %type <AST_Expr *> const_expr
 
+%type <string_id_t> general_ident
 %type <AST_DeclSpecifiers *> decl_specs
 %type <short> storage_class_specifier
 %type <AST_TypeSpecifier *> type_specifier
@@ -342,10 +343,14 @@ function_specifier
     ;
 
 ustruct_spec
-    : ustruct IDENTIFIER "{" struct_decls_lst "}"   { $$ = drv.ast->mkUstructSpec($1, $2, $4); SL($$, @$); }
-    | ustruct "{" struct_decls_lst "}"              { $$ = drv.ast->mkUstructSpec($1, NO_IDENT_ID, $3); SL($$, @$); }
-    | ustruct IDENTIFIER                            { $$ = drv.ast->mkUstructSpec($1, $2, nullptr); SL($$, @$); }
+    : ustruct general_ident "{" struct_decls_lst "}"   { $$ = drv.ast->mkUstructSpec($1, $2, $4); SL($$, @$); }
+    | ustruct "{" struct_decls_lst "}"                 { $$ = drv.ast->mkUstructSpec($1, NO_IDENT_ID, $3); SL($$, @$); }
+    | ustruct general_ident                            { $$ = drv.ast->mkUstructSpec($1, $2, nullptr); SL($$, @$); }
     ;
+
+general_ident
+    : IDENTIFIER
+    | TYPE_NAME
 
 ustruct
     : STRUCT                                        { $$ = 0; }
