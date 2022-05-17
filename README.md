@@ -93,7 +93,7 @@ cw39 [options] <input_file>
 
 Each of listed options can accept optional argument with path to file (e.g. `--llvm=./out.ll`).
 In this case output will be written into specified file.
-If path is `-` or otherwise, output will be written into stdout.
+If path is empty or `-`, output will be written into stdout.
 Without any of these options, compiler will print nothing but errors.
 
 ### Compilation options
