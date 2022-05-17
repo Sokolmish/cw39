@@ -124,6 +124,15 @@ private:
 
     bool isShortLogicEnabled = true;
 
+    struct IntrinsicSig {
+        IR_ExprOper::IR_Ops op;
+        std::shared_ptr<IR_Type> retType;
+        std::vector<std::shared_ptr<IR_Type>> argsTypes;
+    };
+
+    std::map<ParsingContext::ReservedWords, IntrinsicSig> intrinsicSignatures;
+    void setupIntrinsicSignatures();
+
 
     // Common
 

@@ -483,36 +483,21 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
         return *emitIndirCall(funType->ret, *funPtr, args);
 }
 
-static std::optional<IR_ExprOper::IR_Ops> getIntrinsicOp(ParsingContext::ReservedWords word) {
-    switch (word) {
-        case ParsingContext::RESW_BUILTIN_CTZ:
-            return IR_ExprOper::INTR_CTZ;
-        case ParsingContext::RESW_BUILTIN_CLZ:
-            return IR_ExprOper::INTR_CLZ;
-        case ParsingContext::RESW_BUILTIN_POPCNT:
-            return IR_ExprOper::INTR_POPCNT;
-        case ParsingContext::RESW_BUILTIN_BITREV32:
-            return IR_ExprOper::INTR_BITREV;
-        default:
-            return {};
-    }
-}
-
 IRval IR_Generator::doIntrinsic(string_id_t intrIdent, AST_Postfix const &expr) {
-    // Currently, only unary intrisics are supported
+    auto const &signature = intrinsicSignatures.at(*ctx.getReserved(intrIdent));
+
     auto const &argsLst = expr.getArgsList().children;
-    if (argsLst.size() != 1)
+    if (argsLst.size() != signature.argsTypes.size())
         semanticError(expr.loc, "Wrong arguments count (intrisic)");
-    IRval arg = evalExpr(*argsLst[0]);
+    std::vector<IRval> args;
+    for (size_t i = 0; i < argsLst.size(); i++) {
+        IRval argVal = evalExpr(*argsLst[i]);
+        if (!argVal.getType()->equal(*signature.argsTypes[i]))
+            argVal = emitCast(std::move(argVal), signature.argsTypes[i]);
+        args.push_back(argVal);
+    }
 
-    auto op = getIntrinsicOp(*ctx.getReserved(intrIdent));
-    if (!op.has_value())
-        throw cw39_internal_error("Wrong instrisic name");
-
-    // TODO: Return value not always has same type as argument.
-    // TODO: It is very bad solution. Need to use intrisic signature.
-    auto type = arg.getType();
-    return emitOp(std::move(type), *op, { std::move(arg) });
+    return emitOp(signature.retType, signature.op, std::move(args));
 }
 
 

@@ -4,9 +4,9 @@
 ParsingContext::ParsingContext(std::string topFileName)
         : warps(topFileName) {
     reservedWords[getIdentId("__func__")] = RESW_FUNC_NAME;
-    reservedWords[getIdentId("__builtin_ctz")] = RESW_BUILTIN_CTZ;
-    reservedWords[getIdentId("__builtin_clz")] = RESW_BUILTIN_CLZ;
-    reservedWords[getIdentId("__builtin_popcount")] = RESW_BUILTIN_POPCNT;
+    reservedWords[getIdentId("__builtin_ctz")] = RESW_BUILTIN_CTZ32;
+    reservedWords[getIdentId("__builtin_clz")] = RESW_BUILTIN_CLZ32;
+    reservedWords[getIdentId("__builtin_popcount")] = RESW_BUILTIN_POPCNT32;
     reservedWords[getIdentId("__builtin_bitreverse32")] = RESW_BUILTIN_BITREV32;
 }
 
@@ -102,8 +102,8 @@ bool ParsingContext::isIntrinsicFuncName(string_id_t id) const {
     auto word = getReserved(id);
     if (!word.has_value())
         return false;
-    return isInList(word, RESW_BUILTIN_CTZ, RESW_BUILTIN_CLZ,
-                    RESW_BUILTIN_POPCNT, RESW_BUILTIN_BITREV32);
+    return isInList(word, RESW_BUILTIN_CTZ32, RESW_BUILTIN_CLZ32,
+                    RESW_BUILTIN_POPCNT32, RESW_BUILTIN_BITREV32);
 }
 
 

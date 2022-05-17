@@ -61,8 +61,8 @@ public:
 
     enum ReservedWords {
         RESW_FUNC_NAME,
-        RESW_BUILTIN_CTZ, RESW_BUILTIN_CLZ,
-        RESW_BUILTIN_POPCNT, RESW_BUILTIN_BITREV32,
+        RESW_BUILTIN_CTZ32, RESW_BUILTIN_CLZ32,
+        RESW_BUILTIN_POPCNT32, RESW_BUILTIN_BITREV32,
     };
 
     std::optional<ReservedWords> getReserved(string_id_t id) const;

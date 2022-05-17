@@ -2,8 +2,32 @@
 #include "constants_folder.hpp"
 
 IR_Generator::IR_Generator(AbstractSyntaxTree const &ast, ParsingContext &ctx) : ctx(ctx) {
+    setupIntrinsicSignatures();
     iunit = std::make_unique<IntermediateUnit>();
     genTransUnit(*ast.top);
+}
+
+void IR_Generator::setupIntrinsicSignatures() {
+    intrinsicSignatures[ParsingContext::RESW_BUILTIN_CTZ32] = {
+            .op = IR_ExprOper::INTR_CTZ,
+            .retType = IR_TypeDirect::getI32(),
+            .argsTypes = { IR_TypeDirect::getU32() },
+    };
+    intrinsicSignatures[ParsingContext::RESW_BUILTIN_CLZ32] = {
+            .op = IR_ExprOper::INTR_CLZ,
+            .retType = IR_TypeDirect::getI32(),
+            .argsTypes = { IR_TypeDirect::getU32() },
+    };
+    intrinsicSignatures[ParsingContext::RESW_BUILTIN_POPCNT32] = {
+            .op = IR_ExprOper::INTR_POPCNT,
+            .retType = IR_TypeDirect::getI32(),
+            .argsTypes = { IR_TypeDirect::getU32() },
+    };
+    intrinsicSignatures[ParsingContext::RESW_BUILTIN_BITREV32] = {
+            .op = IR_ExprOper::INTR_BITREV,
+            .retType = IR_TypeDirect::getU32(),
+            .argsTypes = { IR_TypeDirect::getU32() },
+    };
 }
 
 
