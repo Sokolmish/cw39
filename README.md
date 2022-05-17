@@ -4,6 +4,7 @@ This is an optimizing compiler for the subset of the C99 language producing LLVM
 It is my bachelor's diploma work.
 
 There are some examples of compilable code it the [test directory](/tests).
+All tests can be checked via [run_tests](/tests/run_tests.sh) script.
 
 Following optimizations are implemented in this compiler:
 
