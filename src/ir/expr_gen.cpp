@@ -939,7 +939,7 @@ std::pair<string_id_t, std::string> IR_Generator::getStringLiteral(AST_StringsSe
     else {
         for (string_id_t sId : scat.v)
             fullStr += ctx.getStringById(sId);
-        parserStrId = ctx.getStringId(fullStr);
+        parserStrId = ctx.getStringId(fullStr, false);
     }
     return std::make_pair(parserStrId, fullStr);
 }

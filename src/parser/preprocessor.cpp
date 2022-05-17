@@ -270,7 +270,13 @@ void PreprocessorImpl::passChar(string_constit_t &it) {
             printError("Incomplete escape sequence");
 
         globalSS.put('\\');
-        globalSS.put(*(it++));
+        if (*it == 'x') {
+            globalSS.put(*(it++)); // x
+            globalSS.put(*(it++)); // H
+            globalSS.put(*(it++)); // H
+        }
+        else
+            globalSS.put(*(it++));
     }
     else if (noEnd(it)) {
         globalSS.put(*(it++));

@@ -49,7 +49,7 @@ int main() {
     char fixFmt[16];
     memcpy((void*)fixFmt, (void*)fmt, strlen(fmt) + 1);
     char *replace = fixFmt + 2;
-    *replace = 's';
+    *replace = '\x73'; // 's'
     fixFmt[1UL] = 'e';
     printf(fixFmt, y);
 //    printf("%p\n", fixFmt);

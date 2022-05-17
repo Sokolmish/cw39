@@ -86,10 +86,10 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 {D}*"."{D}+{EXP}?{FSF}?     return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
 {D}+"."{D}*{EXP}?{FSF}?     return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
 
-'(\\.|[^\\'\n])'            return yy::parser::make_CONSTANT(get_charval(yytext, yyleng), loc);
+'(\\x..|\\.|[^\\'\n])'      return yy::parser::make_CONSTANT(get_charval(yytext, yyleng), loc);
 
 \"(\\.|[^\\"\n])*\"         {
-                                string_id_t id = drv.ctx.getStringId(yytext, yyleng);
+                                string_id_t id = drv.ctx.getStringId(yytext, yyleng, true);
                                 return yy::parser::make_STRING_LITERAL(id, loc);
                             }
 

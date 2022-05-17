@@ -39,7 +39,8 @@ int main() {
 #endif
 #endif
 
-    printf("Function: %s\n", __func__);
+    printf("Con\\n" "Cat\n");
+    printf("Functi\x6Fn: %s\n", __func__);
     printf(/*hehe*/"End %s %d\n", __FILE__, __LINE__);
     printf("Date: %s\n", __DATE__);
     return 0;

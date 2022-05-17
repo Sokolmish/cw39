@@ -47,8 +47,8 @@ public:
 
     ParsingContext(std::string topFileName);
 
-    string_id_t getStringId(const char *str, size_t len);
-    string_id_t getStringId(std::string const &str);
+    string_id_t getStringId(const char *str, size_t len, bool unescape);
+    string_id_t getStringId(std::string const &str, bool unescape);
 
     string_id_t getIdentId(const char *str, size_t len);
     string_id_t getIdentId(std::string const &str);

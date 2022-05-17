@@ -5,35 +5,7 @@
 #include <cctype>
 #include "core_driver.hpp"
 
-static char unescapeChar(char ch) {
-    // TODO: '\xhh'
-    switch (ch) {
-        case 'a':
-            return '\a';
-        case 'b':
-            return '\b';
-        case 'f':
-            return '\f';
-        case 'n':
-            return '\n';
-        case 'r':
-            return '\r';
-        case 't':
-            return '\t';
-        case 'v':
-            return '\v';
-        case '\\':
-            return '\\';
-        case '\'':
-            return '\'';
-        case '\"':
-            return '\"';
-        case '?':
-            return '\?';
-        default:
-            return ch;
-    }
-}
+// Maybe, include this file directly in lexer?
 
 enum class IntSuff {
     ERR, U, L, LL
@@ -140,12 +112,21 @@ AST_Literal_t get_charval(const char *str, size_t len) {
     };
 
     if (len == 3) {
+        if (str[1] == '\\')
+            throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
         res.val.v_char = str[1];
     }
     else {
-        if (str[1] != '\\' || len != 4)
+        if (str[1] != '\\' || !(len == 4 || len == 6))
             throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
-        res.val.v_char = unescapeChar(str[2]);
+        if (len == 4) {
+            res.val.v_char = unescapeChar(str[2]);
+        }
+        else {
+            if (str[2] != 'x' || !isxdigit(str[3]) || !isxdigit(str[4]))
+                throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
+            res.val.v_char = parseXEscape(str[3], str[4]);
+        }
     }
 
     return res;

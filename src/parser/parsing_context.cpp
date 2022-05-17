@@ -10,50 +10,43 @@ ParsingContext::ParsingContext(std::string topFileName)
     reservedWords[getIdentId("__builtin_bitreverse32")] = RESW_BUILTIN_BITREV32;
 }
 
-static char unescapeChar(char ch) {
-    // TODO: '\xhh'
-    switch (ch) {
-        case 'a':
-            return '\a';
-        case 'b':
-            return '\b';
-        case 'f':
-            return '\f';
-        case 'n':
-            return '\n';
-        case 'r':
-            return '\r';
-        case 't':
-            return '\t';
-        case 'v':
-            return '\v';
-        case '\\':
-            return '\\';
-        case '\'':
-            return '\'';
-        case '\"':
-            return '\"';
-        case '?':
-            return '\?';
-        default:
-            return ch;
-    }
-}
-
-// TODO: possible bug with concatenated literals and escaping (leave unescaping in lexer only)
-string_id_t ParsingContext::getStringId(const char *str, size_t len) {
+string_id_t ParsingContext::getStringId(const char *str, size_t len, bool unescape) {
     std::string newStr;
-    newStr.reserve(len);
 
-    for (size_t i = 1; i < len - 1; i++) {
-        if (str[i] != '\\') {
-            newStr.push_back(str[i]);
+    if (unescape) {
+        newStr.reserve(len);
+
+        for (size_t i = 1; i < len - 1; i++) {
+            if (str[i] != '\\') {
+                newStr.push_back(str[i]);
+            }
+            else {
+                i++;
+                if (str[i] == 'x') {
+                    i++;
+                    if (i < len - 2) {
+                        newStr.push_back(parseXEscape(str[i], str[i + 1]));
+                        i++;
+                    }
+                    else {
+                        throw cw39_internal_error(fmt::format(
+                                "Wrong escape sequence in string: {}", str));
+                    }
+                }
+                else {
+                    if (i < len - 1) {
+                        newStr.push_back(unescapeChar(str[i]));
+                    }
+                    else {
+                        throw cw39_internal_error(fmt::format(
+                                "Wrong escape sequence in string: {}", str));
+                    }
+                }
+            }
         }
-        else {
-            i++;
-            if (i < len - 1)
-                newStr.push_back(unescapeChar(str[i]));
-        }
+    }
+    else {
+        newStr = std::string(str, len);
     }
 
     auto it = stringsMap.lower_bound(newStr);
@@ -68,8 +61,8 @@ string_id_t ParsingContext::getStringId(const char *str, size_t len) {
     }
 }
 
-string_id_t ParsingContext::getStringId(std::string const &str) {
-    return getStringId(str.c_str(), str.size());
+string_id_t ParsingContext::getStringId(std::string const &str, bool unescape) {
+    return getStringId(str.c_str(), str.size(), unescape);
 }
 
 string_id_t ParsingContext::getIdentId(const char *ident, size_t len) {
