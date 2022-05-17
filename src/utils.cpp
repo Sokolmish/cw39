@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <regex> // Just because replace
 
 cw39_exception::cw39_exception(std::string excClass, std::string loc, std::string msg)
         : std::exception(), excClass(std::move(excClass)),
@@ -9,9 +10,10 @@ const char *cw39_exception::what() const noexcept {
 }
 
 std::string cw39_exception::prettyWhat() const {
+    auto omsg = std::regex_replace(msg, std::regex("\n"), "\n\t");
     if (loc.empty())
-        return fmt::format("{}:\n\t{}\n", excClass, msg);
-    return fmt::format("{} ({}):\n\t{}\n", excClass, loc, msg);
+        return fmt::format("{}:\n\t{}\n", excClass, omsg);
+    return fmt::format("{} ({}):\n\t{}\n", excClass, loc, omsg);
 }
 
 

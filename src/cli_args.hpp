@@ -13,18 +13,21 @@ public:
     std::optional<std::string> getOutParam(const char *name) const;
     std::optional<std::string> outPreproc() const;
     std::optional<std::string> outAST() const;
-    std::optional<std::string> outRawIR() const;
-    std::optional<std::string> outRawCFG() const;
     std::optional<std::string> outIR() const;
     std::optional<std::string> outCFG() const;
     std::optional<std::string> outLLVM() const;
     std::optional<std::string> outBC() const;
     std::optional<std::string> outASM() const;
 
+    uint getOptLevel() const;
+    std::vector<std::string> getDefines() const;
+    bool isS1_Enabled() const;
+    bool isS2_Enabled() const;
+
     bool isScannerTracing() const;
     bool isParserTracing() const;
 
-    std::vector<std::string> inputFiles() const;
+    std::string inputFile() const;
 
     std::string get_llc_name() const;
 

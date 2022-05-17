@@ -9,7 +9,8 @@
 
 class Preprocessor {
 public:
-    Preprocessor(std::string const &path);
+    /** Raw defines in format "macro=value" */
+    Preprocessor(std::string const &path, std::vector<std::string> const &rawDefines);
 
     void addDefine(std::string name, std::string value);
     void removeDefine(std::string const &name);
@@ -25,6 +26,7 @@ private:
 
     std::map<std::string, std::string> defines;
 
+    void parseRawDefines(std::vector<std::string> const &rawDefines);
     void addSystemDefines();
 
     friend class PreprocessorImpl;

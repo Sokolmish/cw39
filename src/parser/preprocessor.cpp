@@ -88,8 +88,7 @@ private:
 };
 
 
-PreprocessorImpl::PreprocessorImpl(Preprocessor &parent, std::string const &path)
-        : par(parent) {
+PreprocessorImpl::PreprocessorImpl(Preprocessor &parent, std::string const &path) : par(parent) {
     trTime = time(nullptr);
     baseFilename = path;
     usrCounter = 0;
@@ -617,9 +616,10 @@ void PreprocessorImpl::assertNoArg(string_constit_t &it) {
 }
 
 
-Preprocessor::Preprocessor(std::string const &path) {
+Preprocessor::Preprocessor(std::string const &path, std::vector<std::string> const &rawDefines) {
     ctx = std::make_shared<ParsingContext>(path);
     addSystemDefines();
+    parseRawDefines(rawDefines);
     PreprocessorImpl(*this, path);
 }
 
@@ -637,6 +637,21 @@ std::string Preprocessor::getText() const {
 
 std::shared_ptr<ParsingContext> Preprocessor::getContext() const {
     return ctx;
+}
+
+void Preprocessor::parseRawDefines(const std::vector<std::string> &rawDefines) {
+    // TODO: check for alphanum names
+    for (std::string const &s : rawDefines) {
+        auto delimPos = s.find('=');
+        if (delimPos != std::string::npos) {
+            std::string name(s, 0, delimPos);
+            std::string val(s, delimPos + 1, std::string::npos);
+            addDefine(std::move(name), std::move(val));
+        }
+        else {
+            addDefine(s, "");
+        }
+    }
 }
 
 void Preprocessor::addSystemDefines() {

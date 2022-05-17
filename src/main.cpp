@@ -22,7 +22,7 @@
 
 /** If path is not empty then write to it, else write to stdout */
 static void writeOut(std::string const &path, std::string const &data) {
-    if (path.empty()) {
+    if (path.empty() || path == "-") {
         fmt::print("{}\n", data);
     }
     else {
@@ -35,8 +35,12 @@ static void writeOut(std::string const &path, std::string const &data) {
 
 
 static void writeOutBinary(std::string const &path, char const *data, size_t size) {
-    if (path.empty()) {
+    if (path.empty() || path == "-") {
 #ifdef __unix__
+        if (path.empty() && isatty(fileno(stdout))) {
+            throw cw39_error("Bitcode has binary format and not supposed to be written into terminal.\n"
+                             "Use `--bc=-` to force this.");
+        }
         FILE *out = fdopen(dup(fileno(stdout)), "wb");
         fwrite(data, 1, size, out); // TODO: missed check
         fclose(out);
@@ -56,8 +60,7 @@ enum class CompilationLevel {
     NONE = 0,
     PREPROCESS,     // files -> text
     PARSE,          // text -> ast
-    GENERATE,       // ast -> ir
-    OPTIMIZE,       // ir -> opt ir
+    GENERATE,       // ast -> ir (+optimization)
     MATERIALIZE,    // opt ir -> llvm
     COMPILE,        // llvm -> asm
 };
@@ -68,8 +71,6 @@ static CompilationLevel getCompilationLvl(CLIArgs const &args) {
     if (args.outLLVM() || args.outBC())
         return CompilationLevel::MATERIALIZE;
     else if (args.outIR() || args.outCFG())
-        return CompilationLevel::OPTIMIZE;
-    else if (args.outRawIR() || args.outRawCFG())
         return CompilationLevel::GENERATE;
     else if (args.outAST())
         return CompilationLevel::PARSE;
@@ -79,7 +80,9 @@ static CompilationLevel getCompilationLvl(CLIArgs const &args) {
         return CompilationLevel::NONE;
 }
 
-static void optimizeFunction(IntermediateUnit::Function &func) {
+static void optimizeFunction(IntermediateUnit::Function &func, uint level) {
+    if (level == 0)
+        return;
     CFGraph cfg = std::move(func.cfg);
     cfg = VarsVirtualizer(std::move(cfg)).moveCfg();
     cfg = SSA_Generator(std::move(cfg)).moveCfg();
@@ -96,13 +99,11 @@ static void process(CLIArgs  &args) {
     if (compilationLvl == CompilationLevel::NONE)
         return;
 
-    if (args.inputFiles().empty())
-        throw cw39_error("No input files");
-    if (args.inputFiles().size() > 1)
-        throw cw39_error("Cannot compile more than 1 file");
-    std::string path = args.inputFiles()[0];
+    if (args.inputFile().empty())
+        throw cw39_error("No input file");
+    std::string path = args.inputFile();
 
-    Preprocessor preproc(path);
+    Preprocessor preproc(path, args.getDefines());
     std::string text = preproc.getText();
     auto ctx = preproc.getContext();
 
@@ -129,17 +130,10 @@ static void process(CLIArgs  &args) {
 
     auto gen = std::make_unique<IR_Generator>(*ast, *ctx);
     auto rawUnit = gen->getIR();
-    if (args.outRawIR())
-        writeOut(*args.outRawIR(), rawUnit->printIR());
-    if (args.outRawCFG())
-        writeOut(*args.outRawCFG(), rawUnit->drawCFG());
-
-    if (compilationLvl <= CompilationLevel::GENERATE)
-        return;
 
     IntermediateUnit optUnit = *rawUnit;
     for (auto &[fId, func] : optUnit.getFuncsMut()) {
-        optimizeFunction(func);
+        optimizeFunction(func, args.getOptLevel());
     }
 
     if (args.outIR())
@@ -147,7 +141,7 @@ static void process(CLIArgs  &args) {
     if (args.outCFG())
         writeOut(*args.outCFG(), optUnit.drawCFG());
 
-    if (compilationLvl <= CompilationLevel::OPTIMIZE)
+    if (compilationLvl <= CompilationLevel::GENERATE)
         return;
 
     IR2LLVM materializer(optUnit);
