@@ -246,22 +246,6 @@ void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
     }
 }
 
-/** Convert storage specifier from AST enum to IR one */
-static IR_StorageSpecifier storageSpecFromAst(AST_DeclSpecifiers::StorageSpec const &spec) {
-    switch (spec) {
-        case AST_DeclSpecifiers::ST_AUTO:
-            return IR_StorageSpecifier::AUTO;
-        case AST_DeclSpecifiers::ST_EXTERN:
-            return IR_StorageSpecifier::EXTERN;
-        case AST_DeclSpecifiers::ST_STATIC:
-            return IR_StorageSpecifier::STATIC;
-        case AST_DeclSpecifiers::ST_REGISTER:
-            return IR_StorageSpecifier::REGISTER;
-        default:
-            throw std::logic_error("Wrong storage specifier");
-    }
-}
-
 static int getFspec(AST_DeclSpecifiers const &declSpec) {
     int fspec = IntermediateUnit::Function::FSPEC_NONE;
     if (declSpec.is_inline)
@@ -359,7 +343,16 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         return;
     }
 
+    bool isStatic = isInList(decl.specifiers->storage_specifier, AST_DeclSpecifiers::ST_EXTERN,
+                             AST_DeclSpecifiers::ST_STATIC, AST_DeclSpecifiers::ST_WEAK);
+    if (isStatic) {
+        insertGlobalDeclaration(decl);
+        return;
+    }
+
     for (const auto &singleDecl : decl.child->v) {
+        // If variable has register storage, should at least prohibit addrof for it
+
         auto varType = getType(*decl.specifiers, *singleDecl->declarator);
         string_id_t ident = CoreDriver::getDeclaredIdent(*singleDecl->declarator);
 

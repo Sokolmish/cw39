@@ -33,6 +33,11 @@ __fconst int mysqr(int x) {
     return x * x;
 }
 
+void staticTest(void) {
+    static int cntr = 0;
+    printf("%d\n", cntr++);
+}
+
 int main() {
     int x = gg;
     int y;
@@ -129,6 +134,10 @@ int main() {
     *(arrw4 + 1) = 6;
     *((arrw4 + 4) - 1) = 12;
     printf("%d %d %d %d\n", arrw4[0], arrw4[1], arrw4[2], arrw4[3]);
+
+    staticTest();
+    staticTest();
+    staticTest();
 
     while (1) {
         return x + 0; // * 0
