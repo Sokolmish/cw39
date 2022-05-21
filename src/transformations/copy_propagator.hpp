@@ -14,8 +14,6 @@ private:
 
     void propagateCopies();
     void foldConstants();
-
-    IRval doConstOperation(IR_ExprOper const &oper);
 };
 
 #endif /* COPY_PROPAGATOR_HPP_INCLUDED__ */

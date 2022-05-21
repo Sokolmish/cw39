@@ -92,11 +92,13 @@ void CopyPropagator::foldConstants() {
                     if (!isConst)
                         continue;
 
-                    changed = true;
-                    setPassChanged();
-                    IRval newVal = doConstOperation(operExpr);
-                    operExpr.op = IR_ExprOper::MOV;
-                    operExpr.args = { newVal };
+                    auto newVal = ConstantsFolder::foldExpr(operExpr);
+                    if (newVal) {
+                        changed = true;
+                        setPassChanged();
+                        operExpr.op = IR_ExprOper::MOV;
+                        operExpr.args = { *newVal };
+                    }
                 }
                 else if (node->body->type == IR_Expr::CAST) {
                     auto &castExpr = dynamic_cast<IR_ExprCast &>(*node->body);
@@ -132,8 +134,4 @@ void CopyPropagator::foldConstants() {
             }
         });
     }
-}
-
-IRval CopyPropagator::doConstOperation(const IR_ExprOper &oper) {
-    return *ConstantsFolder::foldExpr(oper);
 }
