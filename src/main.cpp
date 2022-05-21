@@ -16,6 +16,7 @@
 #include "transformations/copy_propagator.hpp"
 #include "transformations/tailrec_eliminator.hpp"
 #include "transformations/loop_inv_mover.hpp"
+#include "transformations/intrinsics_detector.hpp"
 
 #include "ir_2_llvm.hpp"
 #include "ext_process.hpp"
@@ -79,8 +80,8 @@ static CompilationLevel getCompilationLvl(CLIArgs const &args) {
         return CompilationLevel::MATERIALIZE; // Default level
 }
 
-static void optimizeFunction(IntermediateUnit::Function &func, uint level) {
-    if (level == 0)
+static void optimizeFunction(IntermediateUnit::Function &func, CLIArgs const &args) {
+    if (args.getOptLevel() == 0)
         return;
     CFGraph cfg = std::move(func.cfg);
     cfg = VarsVirtualizer(std::move(cfg)).moveCfg();
@@ -89,7 +90,14 @@ static void optimizeFunction(IntermediateUnit::Function &func, uint level) {
     cfg = CommonSubexprElim(std::move(cfg)).moveCfg();
     cfg = CopyPropagator(std::move(cfg)).moveCfg();
     cfg = TailrecEliminator(std::move(cfg), func.getId()).moveCfg();
-    cfg = LoopInvMover(std::move(cfg)).moveCfg();
+
+    if (args.getOptLevel() >= 2) {
+        cfg = LoopInvMover(std::move(cfg)).moveCfg();
+        if (args.isS1_Enabled()) {
+            cfg = IntrinsicsDetector(std::move(cfg)).moveCfg();
+        }
+    }
+
     func.cfg = std::move(cfg);
 }
 

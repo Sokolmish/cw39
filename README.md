@@ -14,12 +14,7 @@ Following optimizations are implemented in this compiler:
 - Copy propagation and constants folding
 - Algebraic simplifications (without reassotiation) and common subexpressions elimination
 - Loop invariant code motion
-
-Following optimization are under construction:
-
-- Inductive variables analysis
-- Intrisics introduction (special optimization)
-- Loops fixpoints detection (special optimization)
+- Intrisics introduction (special optimization, *CTZ* only)
 
 ## Requirements
 
@@ -108,7 +103,7 @@ Without any of these options, compiler will print nothing but errors.
 There are following optimization levels:
 
 - 0: no optimizations
-- 1: most common optimizations (without inductive detector and specials)
+- 1: most common optimizations (without loops optimizations)
 - 2: all available optimizations
 
 ### Debug options

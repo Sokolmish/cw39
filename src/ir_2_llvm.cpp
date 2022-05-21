@@ -596,13 +596,15 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             break;
 
         case IR_ExprOper::INTR_CTZ:
+            // Second argument is false so in case of zero argument behaviour is well-defined
             res = builder->CreateBinaryIntrinsic(
-                    Intrinsic::cttz, getValue(oper.args[0]), builder->getInt1(true), nullptr, name);
+                    Intrinsic::cttz, getValue(oper.args[0]), builder->getInt1(false), nullptr, name);
             break;
 
         case IR_ExprOper::INTR_CLZ:
+            // See note about second argument for CTZ
             res = builder->CreateBinaryIntrinsic(
-                    Intrinsic::ctlz, getValue(oper.args[0]), builder->getInt1(true), nullptr, name);
+                    Intrinsic::ctlz, getValue(oper.args[0]), builder->getInt1(false), nullptr, name);
             break;
 
         case IR_ExprOper::INTR_POPCNT:
