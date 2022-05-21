@@ -11,15 +11,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 add_compile_options(-Wall -Wextra)
 add_compile_options("-Wno-unused-parameter") # Because of warnings in LLVM headers
 
-set(BISON_PARSER_RES    yy_parser.cpp)
-set(BISON_HEADER_RES    yy_parser.hpp)
-set(BISON_LOCATIONS_HEADER  yy_location.hpp)
-set(FLEX_LEXER_RES      yy_scanner.cpp)
-set(BISON_PARSER_SRC    parser.y)
-set(FLEX_LEXER_SRC      lexer.l)
+set(BISON_PARSER_RES            yy_parser.cpp)
+set(BISON_HEADER_RES            yy_parser.hpp)
+set(BISON_LOCATIONS_HEADER      yy_location.hpp)
+set(FLEX_LEXER_RES              yy_scanner.cpp)
+set(BISON_PARSER_SRC            parser.y)
+set(FLEX_LEXER_SRC              lexer.l)
 
-set(GPERF_DIRECTIVES_RES    directives_hashtable.cpp)
-set(GPERF_DIRECTIVES_SRC    directives.gperf)
+set(GPERF_DIRECTIVES_RES        directives_hashtable.cpp)
+set(GPERF_DIRECTIVES_SRC        directives.gperf)
 
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp

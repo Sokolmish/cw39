@@ -57,7 +57,6 @@ static void writeOutBinary(std::string const &path, char const *data, size_t siz
 }
 
 enum class CompilationLevel {
-    NONE = 0,
     PREPROCESS,     // files -> text
     PARSE,          // text -> ast
     GENERATE,       // ast -> ir (+optimization)
@@ -77,7 +76,7 @@ static CompilationLevel getCompilationLvl(CLIArgs const &args) {
     else if (args.outPreproc())
         return CompilationLevel::PREPROCESS;
     else
-        return CompilationLevel::NONE;
+        return CompilationLevel::MATERIALIZE; // Default level
 }
 
 static void optimizeFunction(IntermediateUnit::Function &func, uint level) {
@@ -96,8 +95,6 @@ static void optimizeFunction(IntermediateUnit::Function &func, uint level) {
 
 static void process(CLIArgs  &args) {
     auto compilationLvl = getCompilationLvl(args);
-    if (compilationLvl == CompilationLevel::NONE)
-        return;
 
     if (args.inputFile().empty())
         throw cw39_error("No input file");

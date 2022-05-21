@@ -4,6 +4,8 @@
 ParsingContext::ParsingContext(std::string topFileName)
         : warps(topFileName) {
     reservedWords[getIdentId("__func__")] = RESW_FUNC_NAME;
+    reservedWords[getIdentId("setjmp")] = RESW_SETJMP;
+    reservedWords[getIdentId("longjmp")] = RESW_SETJMP;
     reservedWords[getIdentId("__builtin_ctz")] = RESW_BUILTIN_CTZ32;
     reservedWords[getIdentId("__builtin_clz")] = RESW_BUILTIN_CLZ32;
     reservedWords[getIdentId("__builtin_popcount")] = RESW_BUILTIN_POPCNT32;

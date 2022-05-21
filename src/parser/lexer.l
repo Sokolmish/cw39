@@ -53,7 +53,8 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
 "int"                       return yy::parser::make_INT(loc);
 "long"                      return yy::parser::make_LONG(loc);
 "register"                  return yy::parser::make_REGISTER(loc);
-(__)?"restrict"             return yy::parser::make_RESTRICT(loc);
+"restrict"                  return yy::parser::make_RESTRICT(loc);
+"__restrict"                return yy::parser::make_RESTRICT(loc); /* duplicate ext */
 "return"                    return yy::parser::make_RETURN(loc);
 "short"                     return yy::parser::make_SHORT(loc);
 "signed"                    return yy::parser::make_SIGNED(loc);

@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    std::list<std::map<K, V>> data;
+    std::vector<std::map<K, V>> data;
 };
 
 

@@ -5,8 +5,6 @@
 #include <optional>
 #include "ir_transformer.hpp"
 
-// TODO: check for phi functions
-
 class VarsVirtualizer : public IRTransformer {
 public:
     explicit VarsVirtualizer(CFGraph rawCfg);

@@ -61,6 +61,7 @@ public:
 
     enum ReservedWords {
         RESW_FUNC_NAME,
+        RESW_SETJMP, RESW_LONGJMP,
         RESW_BUILTIN_CTZ32, RESW_BUILTIN_CLZ32,
         RESW_BUILTIN_POPCNT32, RESW_BUILTIN_BITREV32,
     };

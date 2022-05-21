@@ -9,9 +9,6 @@ static constexpr const char *desc =
         "Created by Mikhail Sokolovskiy in 2022.\n"
         "More info: https://github.com/Sokolmish/diploma\n";
 
-static constexpr const char *customHelp = "[options]";
-static constexpr const char *positionalHelp = "filename";
-
 static constexpr const char *argPosFilename = "inputFile";
 
 static constexpr const char *argPreproc = "pproc";
@@ -44,8 +41,8 @@ public:
 CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc) {
     using namespace cxxopts;
 
-    options.custom_help(customHelp);
-    options.positional_help(positionalHelp);
+    options.custom_help("[options]");
+    options.positional_help("<filename>");
 
     options.add_options("")(argPosFilename, "Input file", value<std::string>());
     options.parse_positional(argPosFilename);
@@ -66,8 +63,8 @@ CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc)
     auto opt2 = options.add_options("Compilation");
     helpGroups.push_back("Compilation");
 
-    opt2(argOpt, "Set optimization level from 0 to 2", value<uint>()->default_value("2"), "lvl");
-    opt2(argAddDefine, "Add preprocessor macro", value<std::vector<std::string>>(), "macro");
+    opt2(argOpt, "Set optimization level from 0 to 2", value<uint>()->default_value("2"), "<lvl>");
+    opt2(argAddDefine, "Add preprocessor macro", value<std::vector<std::string>>(), "<macro>");
     opt2(argNoS1, "Disable S1 optimization");
     opt2(argNoS2, "Disable S2 optimization");
 

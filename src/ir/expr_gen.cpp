@@ -1,4 +1,5 @@
 #include "generator.hpp"
+#include "constants_folder.hpp"
 
 constexpr bool IR_Generator::isGeneralNumOp(AST_Binop::OpType op) {
     using b = AST_Binop;
@@ -13,6 +14,86 @@ constexpr bool IR_Generator::isIntegerNumOp(AST_Binop::OpType op) {
 constexpr bool IR_Generator::isComparsionOp(AST_Binop::OpType op) {
     using b = AST_Binop;
     return isInList(op, b::LT, b::GT, b::LE, b::GE, b::EQ, b::NE, b::LOG_AND, b::LOG_OR);
+}
+
+
+// Emitters
+
+std::optional<IRval> IR_Generator::emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr) {
+    // TODO: check if in global context
+    curBlock().addNode(ret, std::move(expr));
+    return ret;
+}
+
+std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr) {
+    // Store and non-pure calls will never be folded
+    auto val = ConstantsFolder::foldExpr(*expr);
+    if (val.has_value()) {
+        return val;
+    }
+    else {
+        std::optional<IRval> res = {};
+        if (ret)
+            res = iunit->createReg(std::move(ret));
+        return emitNode(res, std::move(expr));
+    }
+}
+
+IRval IR_Generator::emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprOper>(op, std::move(args)));
+}
+
+std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
+    auto expr = std::make_unique<IR_ExprOper>(IR_ExprOper::MOV, std::vector<IRval>{ std::move(src) });
+    return emitNode(std::move(dst), std::move(expr));
+}
+
+void IR_Generator::emitStore(IRval addr, IRval val) {
+    auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::STORE, std::move(addr), std::move(val));
+    emitNode(std::nullopt, std::move(expr));
+}
+
+IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr) {
+    auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::LOAD, std::move(addr));
+    return *emitNode(std::move(ret), std::move(expr));
+}
+
+IRval IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
+    if (srcVal.getType()->equal(*dst))
+        return srcVal;
+
+    auto dstCopy = dst;
+    auto expr = std::make_unique<IR_ExprCast>(std::move(srcVal), std::move(dst));
+    return *emitNode(std::move(dstCopy), std::move(expr));
+}
+
+std::optional<IRval>
+IR_Generator::emitCall(std::shared_ptr<IR_Type> ret, int callee, std::vector<IRval> args) {
+    return emitNode(std::move(ret), std::make_unique<IR_ExprCall>(callee, std::move(args)));
+}
+
+std::optional<IRval>
+IR_Generator::emitIndirCall(std::shared_ptr<IR_Type> ret, IRval callee, std::vector<IRval> args) {
+    return emitNode(std::move(ret), std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
+}
+
+IRval IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap) {
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAlloc>(std::move(type), onHeap));
+}
+
+IRval IR_Generator::emitExtract(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
+            IR_ExprAccess::EXTRACT, std::move(base), std::move(indices)));
+}
+
+IRval IR_Generator::emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> ind) {
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
+            IR_ExprAccess::INSERT, std::move(base), std::move(val), std::move(ind)));
+}
+
+IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
+    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
+            IR_ExprAccess::GEP, std::move(base), std::move(indices)));
 }
 
 
