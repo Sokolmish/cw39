@@ -85,12 +85,9 @@ void LoopInvMover::traverseLoop(const LoopNode &loop, const std::function<void(i
         visited.insert(cur);
         visit(cur);
 
-        if (loop.ends.contains(cur))
-            continue;
-
         IR_Block &block = cfg.block(cur);
         for (int next : block.next) {
-            if (!visited.contains(next))
+            if (!visited.contains(next) && loop.blocks.contains(next))
                 stack.push(next);
         }
     }
