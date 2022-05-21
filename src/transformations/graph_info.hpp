@@ -89,11 +89,15 @@ public:
         LoopNode(IR_Block const &head);
     };
 
-    LoopsDetector(CFGraph const &in);
+    LoopsDetector(CFGraph &in);
 
     bool hasLoops() const;
     std::set<int> getBlockLoops(int blockId) const;
     std::map<int, LoopNode> const& getLoops() const;
+
+    GraphInfo const& getGraphInfo() const;
+
+    void traverseLoop(LoopNode const &loop, std::function<bool(IR_Block &)> const &visitor);
 
     void printInfo() const;
 
@@ -102,7 +106,7 @@ private:
         std::set<int> loops;
     };
 
-    CFGraph const &cfg;
+    CFGraph &cfg;
     GraphInfo gInfo;
 
     bool improperLoops = false;

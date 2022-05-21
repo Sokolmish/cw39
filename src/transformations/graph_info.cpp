@@ -227,7 +227,7 @@ std::string GraphInfo::drawArcsClasses() const {
 
 LoopsDetector::LoopNode::LoopNode(IR_Block const &head) : head(head) {}
 
-LoopsDetector::LoopsDetector(CFGraph const &in) : cfg(std::move(in)), gInfo(cfg) {
+LoopsDetector::LoopsDetector(CFGraph &in) : cfg(in), gInfo(cfg) {
     // Find loops heads using back arcs
     for (auto const &[from, to] : gInfo.getArcs(GraphInfo::BACK)) {
         if (!gInfo.isDom(to, from)) { // Improper loop (because of goto)
@@ -334,4 +334,29 @@ std::set<int> LoopsDetector::getBlockLoops(int blockId) const {
 
 const std::map<int, LoopsDetector::LoopNode>& LoopsDetector::getLoops() const {
     return loops;
+}
+
+GraphInfo const &LoopsDetector::getGraphInfo() const {
+    return gInfo;
+}
+
+/** If visitor returns false, traversing is stopped */
+void LoopsDetector::traverseLoop(LoopNode const &loop, std::function<bool(IR_Block&)> const &visitor)  {
+    std::stack<int> stack;
+    std::set<int> visited;
+    stack.push(loop.head.id);
+    visited.insert(loop.head.id);
+    while (!stack.empty()) {
+        int curId = stack.top();
+        stack.pop();
+        IR_Block &block = cfg.block(curId);
+        if (!visitor(block))
+            return;
+        for (int nextId : block.next) {
+            if (visited.contains(nextId) || !loop.blocks.contains(nextId))
+                continue;
+            stack.push(nextId);
+            visited.insert(nextId);
+        }
+    }
 }

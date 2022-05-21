@@ -77,6 +77,7 @@ public:
         int getId() const;
         std::string getName() const;
         std::shared_ptr<IR_TypeFunc> getFuncType() const;
+        bool isPure() const;
 
     private:
         int id;

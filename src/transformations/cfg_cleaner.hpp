@@ -2,6 +2,7 @@
 #define CFG_CLEANER_HPP_INCLUDED__
 
 #include "ir_transformer.hpp"
+#include "graph_info.hpp"
 #include <set>
 
 class CfgCleaner : public IRTransformer {
@@ -13,6 +14,7 @@ public:
     void removeTransitBlocks();
     void removeUselessBranches();
     void removeUnreachableBlocks();
+    void removeUselessLoops();
 
 private:
     std::set<IRval> getPrimaryEffectiveRegs();
@@ -21,6 +23,11 @@ private:
 
     /** Do DFS from given block and mark all blocks, that can be accessed only trough it */
     std::set<int> getDominatedByGiven(int startId);
+
+    using LoopNode = LoopsDetector::LoopNode;
+    bool isNodeGeneralEffective(IR_Node const &node);
+    bool isLoopEffective(LoopNode const &loop);
+    std::pair<int, int> getLoopExit(LoopNode const &loop);
 };
 
 #endif /* CFG_CLEANER_HPP_INCLUDED__ */

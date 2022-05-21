@@ -1,6 +1,5 @@
 #include "cfg_cleaner.hpp"
 #include "utils.hpp"
-#include "graph_info.hpp"
 #include <stack>
 #include <algorithm>
 #include <ranges>
@@ -57,8 +56,14 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
             }
             else if (node->body->type == IR_Expr::CALL) {
                 auto &callExpr = node->body->getCall();
-                if (callExpr.isIndirect())
+                if (callExpr.isIndirect()) {
                     usedRegs.insert(callExpr.getFuncPtr());
+                }
+                else {
+                    auto const &func = cfg.getParentUnit()->getFunction(callExpr.getFuncId());
+                    if (func.isPure())
+                        continue;
+                }
                 for (auto const &arg : callExpr.args) {
                     if (arg.isVReg())
                         usedRegs.insert(arg);
@@ -268,4 +273,128 @@ std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
         }
     }
     return res;
+}
+
+
+
+/** Returns true if node is write, volatile read, non-pure call or return */
+bool CfgCleaner::isNodeGeneralEffective(IR_Node const &node) {
+    if (node.body->type == IR_Expr::MEMORY) {
+        auto &memExpr = node.body->getMem();
+        if (memExpr.op == IR_ExprMem::STORE)
+            return true;
+        // TODO: volatile read
+    }
+    else if (node.body->type == IR_Expr::CALL) {
+        auto &callExpr = node.body->getCall();
+        if (callExpr.isIndirect())
+            return true;
+        auto const &func = cfg.getParentUnit()->getFunction(callExpr.getFuncId());
+        if (!func.isPure())
+            return true;
+    }
+    else if (node.body->type == IR_Expr::TERM) {
+        auto &termExpr = node.body->getTerm();
+        if (termExpr.termType == IR_ExprTerminator::RET)
+            return true;
+    }
+    return false;
+}
+
+bool CfgCleaner::isLoopEffective(LoopNode const &loop) {
+    std::set<IRval> assignedRegs;
+
+    bool alreadyExited = false; // Can have only 1 exit from loop
+    for (int blockId : loop.blocks) {
+        IR_Block &block = cfg.block(blockId);
+        for (IR_Node const *node : block.getAllNodes()) {
+            if (isNodeGeneralEffective(*node))
+                return true;
+            if (node->body->type == IR_Expr::TERM) {
+                auto &termExpr = node->body->getTerm();
+                if (termExpr.termType == IR_ExprTerminator::BRANCH) {
+                    for (int next : block.next) {
+                        if (!loop.blocks.contains(next)) {
+                            if (alreadyExited)
+                                return true;
+                            else
+                                alreadyExited = true;
+                        }
+                    }
+                }
+            }
+            // Here node is primary ineffective
+            if (node->res) {
+                assignedRegs.insert(*node->res);
+            }
+        }
+    }
+
+    std::set<int> visited;
+    bool loopSubEffective = false;
+    auto visitor = [this, &loop, &assignedRegs, &loopSubEffective](int blockId) {
+        if (loop.blocks.contains(blockId))
+            return;
+        IR_Block &block = cfg.block(blockId);
+        for (IR_Node const *node : block.getAllNodes()) {
+            for (IRval const *arg : node->body->getArgs()) {
+                if (assignedRegs.contains(*arg)) {
+                    loopSubEffective = true;
+                    return; // TODO: early stop traversing
+                }
+            }
+        }
+    };
+    cfg.traverseBlocks(cfg.entryBlockId, visited, visitor);
+    return loopSubEffective;
+}
+
+/**
+ * Assume that loop has only 1 exit.
+ * First one is block inside loop, second one -- outside.
+ */
+std::pair<int, int> CfgCleaner::getLoopExit(LoopNode const &loop) {
+    for (int blockId : loop.blocks) {
+        IR_Block const &block = cfg.block(blockId);
+        auto const &term = block.getTerminator();
+        if (term->termType == IR_ExprTerminator::BRANCH) {
+            for (int next : block.next) {
+                if (!loop.blocks.contains(next))
+                    return { blockId, next };
+            }
+        }
+    }
+    throw cw39_internal_error("Wrong loop structure");
+}
+
+void CfgCleaner::removeUselessLoops() {
+    LoopsDetector loops(cfg);
+
+    for (auto &[loopId, loop] : loops.getLoops()) {
+        if (!isLoopEffective(loop)) {
+            // If loop is ineffective, it can have only 1 exit
+            auto loopExit = getLoopExit(loop);
+
+            IR_Block &head = cfg.block(loop.head.id);
+
+            IR_Block &cBlock = cfg.createBlock();
+            cBlock.phis = std::move(head.phis);
+            cBlock.setTerminator(IR_ExprTerminator::JUMP);
+            cBlock.next.push_back(loopExit.second);
+            cBlock.prev = std::move(head.prev);
+            for (int prev : cBlock.prev) {
+                IR_Block &prevBlock = cfg.block(prev);
+                for (int &next : prevBlock.next) {
+                    if (next == head.id)
+                        next = cBlock.id;
+                }
+            }
+
+            IR_Block &postExitBlock = cfg.block(loopExit.second);
+            for (int &prev : postExitBlock.prev) {
+                if (prev == head.id)
+                    prev = cBlock.id;
+            }
+        }
+    }
 }

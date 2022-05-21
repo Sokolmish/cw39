@@ -24,6 +24,10 @@ std::shared_ptr<IR_TypeFunc> IntermediateUnit::Function::getFuncType() const {
     return std::dynamic_pointer_cast<IR_TypeFunc>(fullType);
 }
 
+bool IntermediateUnit::Function::isPure() const {
+    return fspec & FSPEC_PURE;
+}
+
 
 IntermediateUnit::IntermediateUnit(const IntermediateUnit &oth) {
     blocksCounter = oth.blocksCounter;

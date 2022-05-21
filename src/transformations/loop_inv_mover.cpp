@@ -73,6 +73,7 @@ void LoopInvMover::passLoop(LoopNode const &loop) {
     }
 }
 
+// TODO: replace with LoopsDetector::traverseLoop
 void LoopInvMover::traverseLoop(const LoopNode &loop, const std::function<void(int)> &visit) {
     std::set<int> visited;
     std::stack<int> stack;
