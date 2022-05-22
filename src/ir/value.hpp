@@ -44,6 +44,7 @@ public:
 
     bool isVReg() const;
     bool isGlobal() const;
+    bool isFunParam() const;
 
     [[nodiscard]] std::string to_string() const;
     [[nodiscard]] std::string to_reg_name() const;

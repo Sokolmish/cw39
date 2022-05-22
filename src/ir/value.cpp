@@ -102,6 +102,11 @@ bool IRval::isGlobal() const {
     return valClass == IRval::GLOBAL;
 }
 
+bool IRval::isFunParam() const {
+    return valClass == IRval::FUN_PARAM;
+}
+
+
 const IRval::union_type &IRval::getVal() const {
     return val;
 }

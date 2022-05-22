@@ -189,7 +189,7 @@ public:
     void addNode(IR_Node node);
     void addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr);
 
-    void addNewPhiNode(IRval res);
+    IR_Node& addNewPhiNode(IRval res);
 
     void setTerminator(IR_ExprTerminator::TermType type);
     void setTerminator(IR_ExprTerminator::TermType type, IRval arg);

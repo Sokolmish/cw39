@@ -21,6 +21,7 @@ public:
     CFGraph copy(IntermediateUnit *iunit) const;
 
     IR_Block& createBlock();
+    IR_Block& insertBlock(IR_Block block);
     void linkBlocks(IR_Block &prev, IR_Block &next);
     void linkBlocks(int prevId, int nextId);
 
@@ -78,6 +79,7 @@ public:
         std::string getName() const;
         std::shared_ptr<IR_TypeFunc> getFuncType() const;
         bool isPure() const;
+        bool isInline() const;
 
     private:
         int id;

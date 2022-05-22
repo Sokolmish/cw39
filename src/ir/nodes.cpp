@@ -431,8 +431,9 @@ void IR_Block::addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr) 
         body.emplace_back(std::move(expr));
 }
 
-void IR_Block::addNewPhiNode(IRval res) {
-    phis.emplace_back(std::move(res), std::make_unique<IR_ExprPhi>());
+IR_Node& IR_Block::addNewPhiNode(IRval res) {
+    auto &it = phis.emplace_back(std::move(res), std::make_unique<IR_ExprPhi>());
+    return it;
 }
 
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type) {

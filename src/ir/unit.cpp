@@ -28,6 +28,10 @@ bool IntermediateUnit::Function::isPure() const {
     return fspec & FSPEC_PURE;
 }
 
+bool IntermediateUnit::Function::isInline() const {
+    return fspec & FSPEC_INLINE;
+}
+
 
 IntermediateUnit::IntermediateUnit(const IntermediateUnit &oth) {
     blocksCounter = oth.blocksCounter;
@@ -414,6 +418,13 @@ CFGraph CFGraph::copy(IntermediateUnit *iunit) const {
 IR_Block &CFGraph::createBlock() {
     int newId = par->blocksCounter++;
     auto it = blocks.emplace_hint(blocks.end(), newId, IR_Block(newId));
+    return it->second;
+}
+
+IR_Block &CFGraph::insertBlock(IR_Block block) {
+    int newId = par->blocksCounter++;
+    block.id = newId;
+    auto it = blocks.emplace_hint(blocks.end(), newId, std::move(block));
     return it->second;
 }
 

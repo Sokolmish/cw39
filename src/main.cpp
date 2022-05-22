@@ -12,7 +12,7 @@
 #include "transformations/vars_virtualizer.hpp"
 #include "transformations/ssa_generator.hpp"
 #include "transformations/computing_transformers.hpp"
-#include "transformations/tailrec_eliminator.hpp"
+#include "transformations/global_transformers.hpp"
 #include "transformations/loop_inv_mover.hpp"
 #include "transformations/intrinsics_detector.hpp"
 
@@ -90,9 +90,11 @@ static void optimizeFunction(IntermediateUnit::Function &func, CLIArgs const &ar
     cfg = TailrecEliminator(std::move(cfg), func.getId()).moveCfg();
 
     if (args.getOptLevel() >= 2) {
+        cfg = FunctionsInliner(std::move(cfg)).moveCfg();
         cfg = LoopInvMover(std::move(cfg)).moveCfg();
         if (args.isS1_Enabled()) {
             cfg = IntrinsicsDetector(std::move(cfg)).moveCfg();
+            cfg = CommonSubexprElim(std::move(cfg)).moveCfg(); // TODO: temporary
         }
     }
 
