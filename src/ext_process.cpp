@@ -32,10 +32,11 @@ void ExtProcess::createProcess() {
 
         close(fd[0]);
 
-        auto argv = std::make_unique<char *[]>(args.size() + 1);
+        auto argv = std::make_unique<char *[]>(args.size() + 2);
         argv[0] = const_cast<char *>(name.c_str());
         for (size_t i = 0; i < args.size(); i++)
             argv[i + 1] = const_cast<char *>(args[i].c_str());
+        argv[args.size()] = nullptr;
 
         if (execvp(name.c_str(), argv.get()) < 0)
             throw cw39_error(fmt::format("execvp '{}': {}", name, strerror(errno)));
