@@ -1,9 +1,8 @@
-#include "copy_propagator.hpp"
+#include "computing_transformers.hpp"
 #include "cfg_cleaner.hpp"
 #include "utils.hpp"
 #include "ir/generator.hpp"
 #include "ir/constants_folder.hpp"
-
 
 CopyPropagator::CopyPropagator(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
     changed = true;

@@ -11,9 +11,7 @@
 
 #include "transformations/vars_virtualizer.hpp"
 #include "transformations/ssa_generator.hpp"
-#include "transformations/algebraic_transformer.hpp"
-#include "transformations/common_subexpr_elim.hpp"
-#include "transformations/copy_propagator.hpp"
+#include "transformations/computing_transformers.hpp"
 #include "transformations/tailrec_eliminator.hpp"
 #include "transformations/loop_inv_mover.hpp"
 #include "transformations/intrinsics_detector.hpp"
@@ -138,7 +136,7 @@ static void process(CLIArgs  &args) {
 
     IntermediateUnit optUnit = *rawUnit;
     for (auto &[fId, func] : optUnit.getFuncsMut()) {
-        optimizeFunction(func, args.getOptLevel());
+        optimizeFunction(func, args);
     }
 
     if (args.outIR())
