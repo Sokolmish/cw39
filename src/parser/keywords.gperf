@@ -1,0 +1,50 @@
+%language=C++
+%includes
+%readonly-tables
+%compare-lengths
+%enum
+%switch=1
+%define lookup-function-name lookup
+%define class-name CoreKeywords
+%struct-type
+struct core_keyword { const char *name; yy::parser::token_kind_type id; };
+%%
+auto,           yy::parser::token::CORE_TOK_AUTO
+break,          yy::parser::token::CORE_TOK_BREAK
+case,           yy::parser::token::CORE_TOK_CASE
+char,           yy::parser::token::CORE_TOK_CHAR
+const,          yy::parser::token::CORE_TOK_CONST
+continue,       yy::parser::token::CORE_TOK_CONTINUE
+default,        yy::parser::token::CORE_TOK_DEFAULT
+do,             yy::parser::token::CORE_TOK_DO
+double,         yy::parser::token::CORE_TOK_DOUBLE
+else,           yy::parser::token::CORE_TOK_ELSE
+enum,           yy::parser::token::CORE_TOK_ENUM
+extern,         yy::parser::token::CORE_TOK_EXTERN
+float,          yy::parser::token::CORE_TOK_FLOAT
+for,            yy::parser::token::CORE_TOK_FOR
+goto,           yy::parser::token::CORE_TOK_GOTO
+if,             yy::parser::token::CORE_TOK_IF
+inline,         yy::parser::token::CORE_TOK_INLINE
+int,            yy::parser::token::CORE_TOK_INT
+long,           yy::parser::token::CORE_TOK_LONG
+register,       yy::parser::token::CORE_TOK_REGISTER
+restrict,       yy::parser::token::CORE_TOK_RESTRICT
+__restrict,     yy::parser::token::CORE_TOK_RESTRICT
+return,         yy::parser::token::CORE_TOK_RETURN
+short,          yy::parser::token::CORE_TOK_SHORT
+signed,         yy::parser::token::CORE_TOK_SIGNED
+sizeof,         yy::parser::token::CORE_TOK_SIZEOF
+static,         yy::parser::token::CORE_TOK_STATIC
+struct,         yy::parser::token::CORE_TOK_STRUCT
+switch,         yy::parser::token::CORE_TOK_SWITCH
+typedef,        yy::parser::token::CORE_TOK_TYPEDEF
+union,          yy::parser::token::CORE_TOK_UNION
+unsigned,       yy::parser::token::CORE_TOK_UNSIGNED
+void,           yy::parser::token::CORE_TOK_VOID
+volatile,       yy::parser::token::CORE_TOK_VOLATILE
+while,          yy::parser::token::CORE_TOK_WHILE
+__fconst,       yy::parser::token::CORE_TOK_EXT_FCONST
+__pure,         yy::parser::token::CORE_TOK_EXT_PURE
+__weak,         yy::parser::token::CORE_TOK_EXT_WEAK
+%%

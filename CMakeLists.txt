@@ -20,6 +20,8 @@ set(FLEX_LEXER_SRC              lexer.l)
 
 set(GPERF_DIRECTIVES_RES        directives_hashtable.cpp)
 set(GPERF_DIRECTIVES_SRC        directives.gperf)
+set(GPERF_KEYWORDS_RES        keywords_hashtable.cpp)
+set(GPERF_KEYWORDS_SRC        keywords.gperf)
 
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp
@@ -125,9 +127,21 @@ IF(NOT CW39_NO_GPERF)
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
             COMMENT "Generating preprocessor directives hastable"
     )
+
+    add_custom_command(
+            OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_KEYWORDS_RES}
+            COMMAND gperf -m 20
+            --output-file=${GPERF_KEYWORDS_RES}
+            ${GPERF_KEYWORDS_SRC}
+            DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_KEYWORDS_SRC}
+            WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
+            COMMENT "Generating keywords hastable"
+    )
+
     add_custom_target(
             pc_directives_hashtable_target
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_DIRECTIVES_RES}
+            DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_KEYWORDS_RES}
     )
     add_dependencies(cw39 pc_directives_hashtable_target)
 

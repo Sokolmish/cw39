@@ -107,8 +107,9 @@ static void optimizeFunction(IntermediateUnit::Function &func, CLIArgs const &ar
 template <typename T>
 static void printElapsedTime(std::string const &name, T const &time) {
     namespace chrono = std::chrono;
-    auto elapsed = chrono::duration_cast<chrono::microseconds>(time);
-    fmt::print(stderr, "{:15s}: {}\n", name, elapsed);
+    auto ms = chrono::duration_cast<chrono::milliseconds>(time);
+    auto us = chrono::duration_cast<chrono::microseconds>(time);
+    fmt::print(stderr, "{:13s}: {:5} ({})\n", name, ms, us);
 }
 
 static void process(CLIArgs  &args) {
@@ -190,6 +191,8 @@ static void process(CLIArgs  &args) {
         auto const &data = materializer.getLLVM_BC();
         writeOutBinary(*args.outBC(), data.data(), data.size());
     }
+    if (args.isShowTimes())
+        printElapsedTime("Materializer", stopTime - startTime);
 
     if (compilationLvl <= CompilationLevel::MATERIALIZE)
         return;

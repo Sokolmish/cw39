@@ -4,6 +4,9 @@
 %option noyywrap nounput noinput
 %option batch
 %option debug
+%option never-interactive
+%option ecs
+%option fast
 %option prefix="yycore"
 
 %{
@@ -13,6 +16,8 @@
     #include "core_driver.hpp"
     #include "common.hpp"
     #include "yy_parser.hpp"
+
+    #include "keywords_hashtable.cpp"
 
     #define YY_USER_ACTION loc.columns(yyleng);
 %}
@@ -33,46 +38,10 @@ ISF         (u|U|(u|U)?(ll?|LL?)|(ll?|LL?)(u|U))
     loc.step();
 %}
 
-"auto"                      return yy::parser::make_AUTO(loc);
-"break"                     return yy::parser::make_BREAK(loc);
-"case"                      return yy::parser::make_CASE(loc);
-"char"                      return yy::parser::make_CHAR(loc);
-"const"                     return yy::parser::make_CONST(loc);
-"continue"                  return yy::parser::make_CONTINUE(loc);
-"default"                   return yy::parser::make_DEFAULT(loc);
-"do"                        return yy::parser::make_DO(loc);
-"double"                    return yy::parser::make_DOUBLE(loc);
-"else"                      return yy::parser::make_ELSE(loc);
-"enum"                      return yy::parser::make_ENUM(loc);
-"extern"                    return yy::parser::make_EXTERN(loc);
-"float"                     return yy::parser::make_FLOAT(loc);
-"for"                       return yy::parser::make_FOR(loc);
-"goto"                      return yy::parser::make_GOTO(loc);
-"if"                        return yy::parser::make_IF(loc);
-"inline"                    return yy::parser::make_INLINE(loc);
-"int"                       return yy::parser::make_INT(loc);
-"long"                      return yy::parser::make_LONG(loc);
-"register"                  return yy::parser::make_REGISTER(loc);
-"restrict"                  return yy::parser::make_RESTRICT(loc);
-"__restrict"                return yy::parser::make_RESTRICT(loc); /* duplicate ext */
-"return"                    return yy::parser::make_RETURN(loc);
-"short"                     return yy::parser::make_SHORT(loc);
-"signed"                    return yy::parser::make_SIGNED(loc);
-"sizeof"                    return yy::parser::make_SIZEOF(loc);
-"static"                    return yy::parser::make_STATIC(loc);
-"struct"                    return yy::parser::make_STRUCT(loc);
-"switch"                    return yy::parser::make_SWITCH(loc);
-"typedef"                   return yy::parser::make_TYPEDEF(loc);
-"union"                     return yy::parser::make_UNION(loc);
-"unsigned"                  return yy::parser::make_UNSIGNED(loc);
-"void"                      return yy::parser::make_VOID(loc);
-"volatile"                  return yy::parser::make_VOLATILE(loc);
-"while"                     return yy::parser::make_WHILE(loc);
-"__fconst"                  return yy::parser::make_EXT_FCONST(loc);
-"__pure"                    return yy::parser::make_EXT_PURE(loc);
-"__weak"                    return yy::parser::make_EXT_WEAK(loc);
-
 {L}({L}|{D})*               {
+                                auto kw = CoreKeywords::lookup(yytext, yyleng);
+                                if (kw)
+                                    return yy::parser::symbol_type(kw->id, loc);
                                 string_id_t id = drv.ctx.getIdentId(yytext, yyleng);
                                 if (drv.isDefinedType(id))
                                     return yy::parser::make_TYPE_NAME(id, loc);
