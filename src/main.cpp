@@ -1,7 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <chrono>
 #include <fmt/core.h>
+#include <fmt/chrono.h>
 
 #include "cli_args.hpp"
 
@@ -101,20 +103,35 @@ static void optimizeFunction(IntermediateUnit::Function &func, CLIArgs const &ar
     func.cfg = std::move(cfg);
 }
 
+// I didn't even try to write these long chrono types
+template <typename T>
+static void printElapsedTime(std::string const &name, T const &time) {
+    namespace chrono = std::chrono;
+    auto elapsed = chrono::duration_cast<chrono::microseconds>(time);
+    fmt::print(stderr, "{:15s}: {}\n", name, elapsed);
+}
+
 static void process(CLIArgs  &args) {
+    using steady_clock = std::chrono::steady_clock;
+    steady_clock::time_point startTime, stopTime;
+
     auto compilationLvl = getCompilationLvl(args);
 
     if (args.inputFile().empty())
         throw cw39_error("No input file");
     std::string path = args.inputFile();
 
+    startTime = steady_clock::now();
     Preprocessor preproc(path, args.getDefines());
+    stopTime = steady_clock::now();
+
     std::string text = preproc.getText();
     auto ctx = preproc.getContext();
 
-    if (args.outPreproc()) {
+    if (args.outPreproc())
         writeOut(*args.outPreproc(), text);
-    }
+    if (args.isShowTimes())
+        printElapsedTime("Preprocessor", stopTime - startTime);
 
     if (compilationLvl <= CompilationLevel::PREPROCESS)
         return;
@@ -124,35 +141,51 @@ static void process(CLIArgs  &args) {
         parserDebugFlags |= CoreDriver::TRACE_SCANNER;
     if (args.isParserTracing())
         parserDebugFlags |= CoreDriver::TRACE_PARSER;
-    auto parser = std::make_unique<CoreDriver>(*ctx, text, parserDebugFlags);
-    std::shared_ptr<AbstractSyntaxTree> ast = parser->getAST();
-    if (args.outAST()) {
+
+    startTime = steady_clock::now();
+    CoreDriver parser(*ctx, text, parserDebugFlags);
+    stopTime = steady_clock::now();
+
+    std::shared_ptr<AbstractSyntaxTree> ast = parser.getAST();
+    if (args.outAST())
         writeOut(*args.outAST(), ast->top->getTreeNode(*ctx)->printHor());
-    }
+    if (args.isShowTimes())
+        printElapsedTime("Parser", stopTime - startTime);
 
     if (compilationLvl <= CompilationLevel::PARSE)
         return;
 
-    auto gen = std::make_unique<IR_Generator>(*ast, *ctx);
-    auto rawUnit = gen->getIR();
+    startTime = steady_clock::now();
+    IR_Generator gen(*ast, *ctx);
+    stopTime = steady_clock::now();
 
+    if (args.isShowTimes())
+        printElapsedTime("Generator", stopTime - startTime);
+
+    auto rawUnit = gen.getIR();
     IntermediateUnit optUnit = *rawUnit;
+
+    startTime = steady_clock::now();
     for (auto &[fId, func] : optUnit.getFuncsMut()) {
         optimizeFunction(func, args);
     }
+    stopTime = steady_clock::now();
 
     if (args.outIR())
         writeOut(*args.outIR(), optUnit.printIR());
     if (args.outCFG())
         writeOut(*args.outCFG(), optUnit.drawCFG());
+    if (args.isShowTimes())
+        printElapsedTime("Optimizator", stopTime - startTime);
 
     if (compilationLvl <= CompilationLevel::GENERATE)
         return;
 
+    startTime = steady_clock::now();
     IR2LLVM materializer(optUnit);
-    if (args.outLLVM()) {
+    stopTime = steady_clock::now();
+    if (args.outLLVM())
         writeOut(*args.outLLVM(), materializer.getLLVM_IR());
-    }
     if (args.outBC()) {
         auto const &data = materializer.getLLVM_BC();
         writeOutBinary(*args.outBC(), data.data(), data.size());

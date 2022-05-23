@@ -26,6 +26,7 @@ public:
 
     bool isScannerTracing() const;
     bool isParserTracing() const;
+    bool isShowTimes() const;
 
     std::string inputFile() const;
 

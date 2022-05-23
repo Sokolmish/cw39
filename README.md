@@ -108,10 +108,11 @@ There are following optimization levels:
 
 ### Debug options
 
-| Option         | Description               |
-|----------------|---------------------------|
-| `--tr-scanner` | Enable scanner debug mode |
-| `--tr-parser`  | Enable parser debug mode  |
+| Option         | Description                     |
+|----------------|---------------------------------|
+| `--times`      | Print elapsed time of each step |
+| `--tr-scanner` | Enable scanner debug mode       |
+| `--tr-parser`  | Enable parser debug mode        |
 
 
 ### External programs customization

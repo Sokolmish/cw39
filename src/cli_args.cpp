@@ -26,6 +26,7 @@ static constexpr const char *argNoS2 = "no-s2";
 
 static constexpr const char *argTraceScanner = "tr-scanner";
 static constexpr const char *argTraceParser = "tr-parser";
+static constexpr const char *argTimes = "times";
 
 static constexpr const char *envLLC = "CW39_LLC";
 static constexpr const char *defaultLLC = "llc";
@@ -71,6 +72,7 @@ CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc)
     auto opt3 = options.add_options("Debug");
     helpGroups.push_back("Debug");
 
+    opt3(argTimes, "Print elapsed time of each step into stderr");
     opt3(argTraceScanner, "Enable scanner tracing");
     opt3(argTraceParser, "Enable parser tracing");
 
@@ -171,6 +173,10 @@ bool CLIArgs::isScannerTracing() const {
 
 bool CLIArgs::isParserTracing() const {
     return impl->res.count(argTraceParser);
+}
+
+bool CLIArgs::isShowTimes() const {
+    return impl->res.count(argTimes);
 }
 
 
