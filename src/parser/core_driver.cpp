@@ -51,7 +51,7 @@ string_id_t CoreDriver::getDeclaredIdent(AST_Declarator const &decl) {
 }
 
 AST_Declaration* CoreDriver::parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child) {
-    if (spec->storage_specifier == AST_DeclSpecifiers::ST_TYPEDEF) {
+    if (spec->storage_specifier == AST_DeclSpecifiers::ST_TYPEDEF && child) {
         auto specQualsLst = ast->mkSpecQualLst(spec->type_specifiers, spec->type_qualifiers);
         for (auto const &decl : child->v) {
             string_id_t ident = getDeclaredIdent(*decl->declarator);
