@@ -142,9 +142,10 @@ static void process(CLIArgs  &args) {
         parserDebugFlags |= CoreDriver::TRACE_SCANNER;
     if (args.isParserTracing())
         parserDebugFlags |= CoreDriver::TRACE_PARSER;
+    std::string textCopy = text;
 
     startTime = steady_clock::now();
-    CoreDriver parser(*ctx, text, parserDebugFlags);
+    CoreDriver parser(*ctx, std::move(textCopy), parserDebugFlags);
     stopTime = steady_clock::now();
 
     std::shared_ptr<AbstractSyntaxTree> ast = parser.getAST();

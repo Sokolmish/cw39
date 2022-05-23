@@ -37,7 +37,7 @@ public:
 private:
     ParsingContext &ctx;
     std::shared_ptr<AbstractSyntaxTree> ast;
-    std::string text;
+    std::string text; // This string will be changed by lexer and cannot be used after it
     yy::location location; // TODO: fix tracking
 
     std::map<string_id_t, AST_TypeSpecifier*> typesAliases;

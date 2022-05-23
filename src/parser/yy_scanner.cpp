@@ -3233,7 +3233,8 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 void CoreDriver::scan_begin() {
     yylex_init(&scanner);
     yyset_debug(trace_scanning, scanner);
-    yy_scan_string(text.c_str(), scanner); // TODO: avoid copying
+    yy_scan_buffer(text.data(), text.size(), scanner);
+//    yy_scan_string(text.c_str(), scanner);
 //    bufState = yy_scan_string(text.c_str());
 }
 

@@ -14,6 +14,8 @@ CoreDriver::CoreDriver(ParsingContext &ctx, std::string program, int flags)
     if (text.empty() || isStringWhitespace(text))
         throw cw39_error("Cannot compile empty or whitespace file");
 
+    text += std::string("\0\0", 2); // Needed for lexer
+
     location.initialize(nullptr);
     scan_begin();
     yy::parser parse(scanner, *this);
