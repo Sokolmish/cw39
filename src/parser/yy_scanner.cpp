@@ -943,7 +943,7 @@ static const flex_int16_t yy_rule_linenum[97] =
     #include <string>
 
     #include "core_driver.hpp"
-    #include "lexer.hpp"
+    #include "common.hpp"
     #include "yy_parser.hpp"
 
     #define YY_USER_ACTION loc.columns(yyleng);
@@ -1279,7 +1279,7 @@ YY_DECL
 
 #line 31 "lexer.l"
     // A handy shortcut to the location held by the driver.
-    yy::location& loc = drv.location;
+    yy::location &loc = drv.location;
     // Code run each time yylex is called.
     loc.step();
 
@@ -1564,37 +1564,37 @@ YY_RULE_SETUP
 case 40:
 YY_RULE_SETUP
 #line 84 "lexer.l"
-return yy::parser::make_CONSTANT(get_integer(yytext), loc);
+return yy::parser::make_CONSTANT(drv.get_integer(yytext), loc);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 85 "lexer.l"
-return yy::parser::make_CONSTANT(get_integer(yytext), loc);
+return yy::parser::make_CONSTANT(drv.get_integer(yytext), loc);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 86 "lexer.l"
-return yy::parser::make_CONSTANT(get_integer(yytext), loc);
+return yy::parser::make_CONSTANT(drv.get_integer(yytext), loc);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
 #line 88 "lexer.l"
-return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
+return yy::parser::make_CONSTANT(drv.get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 89 "lexer.l"
-return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
+return yy::parser::make_CONSTANT(drv.get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 90 "lexer.l"
-return yy::parser::make_CONSTANT(get_float(yytext, yyleng), loc);
+return yy::parser::make_CONSTANT(drv.get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 92 "lexer.l"
-return yy::parser::make_CONSTANT(get_charval(yytext, yyleng), loc);
+return yy::parser::make_CONSTANT(drv.get_charval(yytext, yyleng), loc);
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
@@ -3146,5 +3146,131 @@ void CoreDriver::scan_begin() {
 void CoreDriver::scan_end() {
 //    yy_delete_buffer((YY_BUFFER_STATE)bufState);
     yylex_destroy(scanner);
+}
+
+
+enum class IntSuff {
+    ERR, U, L, LL
+};
+
+static IntSuff get_int_suff(const char **str) {
+    if (tolower((*str)[0]) == 'u') {
+        (*str)++;
+        return IntSuff::U;
+    }
+    else if (tolower((*str)[0]) == 'l') {
+        (*str)++;
+        if ((*str)[1] == (*str)[0]) {
+            (*str)++;
+            return IntSuff::LL;
+        }
+        return IntSuff::L;
+    }
+    else {
+        return IntSuff::ERR;
+    }
+}
+
+AST_Literal_t CoreDriver::get_integer(const char *str) {
+    const char *endptr, *suff;
+    uint64_t val = strtoull(str, (char**)(&endptr), 0);
+
+    AST_Literal res{
+        .type = AST_Literal::INTEGER,
+        .longCnt = 0,
+        .isUnsigned = 0,
+        .isFloat = 0,
+        .val = { 0ULL },
+    };
+
+    suff = endptr;
+    while (*endptr) {
+        enum IntSuff sf = get_int_suff(&endptr);
+        if (sf == IntSuff::U && !res.isUnsigned)
+            res.isUnsigned = 1;
+        else if (sf == IntSuff::L && !res.longCnt)
+            res.longCnt = 1;
+        else if (sf == IntSuff::LL && !res.longCnt)
+            res.longCnt = 2;
+        else
+            throw parser_exception(fmt::format("Bad integer suffix: {}", suff), "");
+    }
+
+    // TODO: overflow
+
+    if (res.isUnsigned) {
+        if (res.longCnt)
+            res.val.vu64 = static_cast<uint64_t>(val);
+        else
+            res.val.vu32 = static_cast<uint32_t>(val);
+    }
+    else {
+        if (res.longCnt)
+            res.val.vi64 = static_cast<int64_t>(val);
+        else
+            res.val.vi32 = static_cast<int32_t>(val);
+    }
+    return res;
+}
+
+AST_Literal_t CoreDriver::get_float(const char *str, size_t len) {
+    AST_Literal res{
+        .type = AST_Literal::FLOAT,
+        .longCnt = 0,
+        .isUnsigned = 0,
+        .isFloat = 0,
+        .val = { 0ULL },
+    };
+
+    std::string tmpStr(str);
+    if (tolower(tmpStr[len - 1]) == 'f') {
+        res.isFloat = 1;
+        tmpStr.pop_back();
+//        tmpStr[len - 1] = '\0';
+    }
+    else if (tolower(tmpStr[len - 1]) == 'l') {
+        throw parser_exception("Long double is not supported", "");
+    }
+
+    char *endptr = nullptr;
+    if (res.isFloat)
+        res.val.vf32 = strtof(tmpStr.c_str(), &endptr);
+    else
+        res.val.vf64 = strtod(tmpStr.c_str(), &endptr);
+    if (*endptr != '\0') {
+        throw parser_exception(fmt::format("Wrong floating-point literal: '{}'", tmpStr), "");
+    }
+
+    return res;
+}
+
+AST_Literal_t CoreDriver::get_charval(const char *str, size_t len) {
+    AST_Literal res{
+        .type = AST_Literal::CHARACTER,
+        .longCnt = 0,
+        .isUnsigned = 0,
+        .isFloat = 0,
+        .val = { 0ULL },
+    };
+
+    if (len == 3) {
+        if (str[1] == '\\')
+            throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
+        res.val.v_char = str[1];
+    }
+    else {
+        if (str[1] != '\\' || !(len == 4 || len == 6))
+            throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
+        if (len == 4) {
+            res.val.v_char = unescapeChar(str[2]);
+        }
+        else {
+            if (str[2] != 'x' || !isxdigit(str[3]) || !isxdigit(str[4]))
+                throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
+            res.val.v_char = parseXEscape(str[3], str[4]);
+        }
+    }
+
+    return res;
 }
 

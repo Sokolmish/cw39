@@ -24,7 +24,9 @@
 %code {
     #include "core_driver.hpp"
     #define yylex yycore_lex
-    #include "lexer.hpp"
+
+    // TODO: fix this
+    #define SL(node, loc) do { (node)->setLoc((loc)); } while (0)
 }
 
 %define api.token.prefix {CORE_TOK_}

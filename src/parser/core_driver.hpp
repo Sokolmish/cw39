@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include "yy_parser.hpp"
+#include "common.hpp"
 #include "parsing_context.hpp"
 #include "utils.hpp"
 
@@ -54,6 +55,10 @@ private:
     AST_Declaration* parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
     bool isDefinedType(string_id_t id);
     AST_TypeSpecifier* getDefinedType(string_id_t id);
+
+    AST_Literal_t get_integer(const char *str);
+    AST_Literal_t get_float(const char *str, size_t len);
+    AST_Literal_t get_charval(const char *str, size_t len);
 
     [[noreturn]] void lexer_error(std::string msg);
 

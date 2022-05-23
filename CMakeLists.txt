@@ -29,7 +29,6 @@ set(PROJ_SRCS
 
         ${PROJECT_SOURCE_DIR}/src/parser/parsing_context.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/preprocessor.cpp
-        ${PROJECT_SOURCE_DIR}/src/parser/lexer.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/ast.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/core_driver.cpp
 
