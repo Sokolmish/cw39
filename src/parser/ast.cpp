@@ -354,18 +354,14 @@ std::optional<AST_Binop::OpType> AST_Assignment::toBinop() const {
 
 // AST_CommaExpression
 
-AST_CommaExpression::AST_CommaExpression(AST_Expr *expr)
+AST_CommaExpression::AST_CommaExpression(AST_Expr *expr1, AST_Expr *expr2)
         : AST_Expr(AST_COMMA_EXPR) {
-    children.emplace_back(expr);
+    children.emplace_back(expr1);
+    children.emplace_back(expr2);
 }
 
-AST_CommaExpression* AbstractSyntaxTree::mkCommaExpr(AST_Expr *expr) {
-    return mkNode<AST_CommaExpression>(expr);
-}
-
-AST_CommaExpression* AST_CommaExpression::append(AST_Expr *expr) {
-    children.emplace_back(expr);
-    return this;
+AST_CommaExpression* AbstractSyntaxTree::mkCommaExpr(AST_Expr *expr1, AST_Expr *expr2) {
+    return mkNode<AST_CommaExpression>(expr1, expr2);
 }
 
 TreeNodeRef AST_CommaExpression::getTreeNode(ParsingContext const &pctx) const {

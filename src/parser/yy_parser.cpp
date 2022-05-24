@@ -1982,13 +1982,13 @@ namespace yy {
 
   case 77: // expr: assign_expr
 #line 291 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); /* TODO: fixme */ }
+                                                { yylhs.value.as < AST_Expr * > () = yystack_[0].value.as < AST_Expr * > (); }
 #line 1987 "yy_parser.cpp"
     break;
 
   case 78: // expr: expr "," assign_expr
 #line 292 "parser.y"
-                                                { yylhs.value.as < AST_Expr * > () = dynamic_cast<AST_CommaExpression*>(yystack_[2].value.as < AST_Expr * > ())->append(yystack_[0].value.as < AST_Expr * > ()); }
+                                                { yylhs.value.as < AST_Expr * > () = drv.ast->mkCommaExpr(yystack_[2].value.as < AST_Expr * > (), yystack_[0].value.as < AST_Expr * > ()); SL(yylhs.value.as < AST_Expr * > (), yylhs.location); }
 #line 1993 "yy_parser.cpp"
     break;
 

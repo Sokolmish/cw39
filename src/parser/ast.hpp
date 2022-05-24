@@ -185,8 +185,7 @@ struct AST_Assignment final : public AST_Expr {
 struct AST_CommaExpression final : public AST_Expr {
     std::vector<AST_Expr*> children;
 
-    explicit AST_CommaExpression(AST_Expr *expr);
-    AST_CommaExpression* append(AST_Expr *expr);
+    AST_CommaExpression(AST_Expr *expr1, AST_Expr *expr2);
     [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
 
@@ -645,7 +644,7 @@ public:
 
     AST_Assignment* mkAssign(AST_Assignment::OpType op, AST_Expr *lhs, AST_Expr *rhs);
 
-    AST_CommaExpression* mkCommaExpr(AST_Expr *expr);
+    AST_CommaExpression* mkCommaExpr(AST_Expr *expr1, AST_Expr *expr2);
 
     // Specifiers
 

@@ -288,8 +288,8 @@ assign_op
     ;
 
 expr
-    : assign_expr                               { $$ = $1; /* TODO: fixme */ }
-    | expr "," assign_expr                      { $$ = dynamic_cast<AST_CommaExpression*>($1)->append($3); }
+    : assign_expr                               { $$ = $1; }
+    | expr "," assign_expr                      { $$ = drv.ast->mkCommaExpr($1, $3); SL($$, @$); }
     ;
 
 const_expr
