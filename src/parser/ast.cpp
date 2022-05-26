@@ -5,8 +5,6 @@
 
 using namespace std::string_literals;
 
-AST_Node::AST_Node(int type) : node_type(type) {}
-
 void AST_Node::setLoc(yy::location loc_) {
     this->loc = std::move(loc_);
 }
@@ -15,12 +13,9 @@ void AST_Node::setLoc(yy::location loc_) {
 //                    Expressions
 // =================================================
 
-AST_Expr::AST_Expr(int type) : AST_Node(type) {}
-
 // AST_Primary
 
-AST_Primary::AST_Primary(PrimType type)
-    : AST_Expr(AST_PRIMARY), type(type) {}
+AST_Primary::AST_Primary(PrimType type) : type(type) {}
 
 AST_Primary* AbstractSyntaxTree::mkPrimIdent(string_id_t id, loc_t loc) {
     auto res = mkNode<AST_Primary>(std::move(loc), AST_Primary::IDENT);
@@ -98,8 +93,6 @@ TreeNodeRef AST_Primary::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_StringsSeq
 
-AST_StringsSeq::AST_StringsSeq() : AST_Node(AST_STR_SEQ) {}
-
 AST_StringsSeq* AbstractSyntaxTree::mkStringsSeq(loc_t loc) {
     return mkNode<AST_StringsSeq>(std::move(loc));
 }
@@ -121,8 +114,7 @@ TreeNodeRef AST_StringsSeq::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Postfix
 
-AST_Postfix::AST_Postfix(OpType type)
-    : AST_Expr(AST_POSTFIX), op(type) {}
+AST_Postfix::AST_Postfix(OpType type) : op(type) {}
 
 AST_Postfix* AbstractSyntaxTree::mkPostfArr(AST_Expr *base, AST_Expr *size, loc_t loc) {
     auto res = mkNode<AST_Postfix>(std::move(loc), AST_Postfix::INDEXATION);
@@ -201,8 +193,6 @@ string_id_t AST_Postfix::getIdent() const {
 
 // AST_ArgumentsList
 
-AST_ArgumentsList::AST_ArgumentsList() : AST_Node(AST_ARGUMENTS_LIST) {}
-
 AST_ArgumentsList* AbstractSyntaxTree::mkArgsLst(loc_t loc) {
     return mkNode<AST_ArgumentsList>(std::move(loc));
 }
@@ -222,11 +212,9 @@ TreeNodeRef AST_ArgumentsList::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Unop
 
-AST_Unop::AST_Unop(OpType op, AST_Expr *child)
-    : AST_Expr(AST_UNARY_OP), op(op), child(child) {}
+AST_Unop::AST_Unop(OpType op, AST_Expr *child) : op(op), child(child) {}
 
-AST_Unop::AST_Unop(OpType op, AST_TypeName *child)
-    : AST_Expr(AST_UNARY_OP), op(op), child(child) {}
+AST_Unop::AST_Unop(OpType op, AST_TypeName *child) : op(op), child(child) {}
 
 AST_Unop* AbstractSyntaxTree::mkUnop(AST_Unop::OpType op, AST_Expr *child, loc_t loc) {
     return mkNode<AST_Unop>(std::move(loc), op, child);
@@ -260,8 +248,7 @@ TreeNodeRef AST_Unop::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Cast
 
-AST_Cast::AST_Cast(AST_TypeName *type, AST_Expr *child)
-    : AST_Expr(AST_CAST), type_name(type), child(child) {}
+AST_Cast::AST_Cast(AST_TypeName *type, AST_Expr *child) : type_name(type), child(child) {}
 
 AST_Cast* AbstractSyntaxTree::mkCastop(AST_TypeName *type, AST_Expr *child, loc_t loc) {
     return mkNode<AST_Cast>(std::move(loc), type, child);
@@ -277,8 +264,7 @@ TreeNodeRef AST_Cast::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Binop
 
-AST_Binop::AST_Binop(OpType op, AST_Expr *lhs, AST_Expr *rhs)
-    : AST_Expr(AST_BINOP), op(op), lhs(lhs), rhs(rhs) {}
+AST_Binop::AST_Binop(OpType op, AST_Expr *lhs, AST_Expr *rhs) : op(op), lhs(lhs), rhs(rhs) {}
 
 AST_Binop* AbstractSyntaxTree::mkBinop(AST_Binop::OpType op, AST_Expr *lhs, AST_Expr *rhs, loc_t loc) {
     return mkNode<AST_Binop>(std::move(loc), op, lhs, rhs);
@@ -294,8 +280,7 @@ TreeNodeRef AST_Binop::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Ternary
 
-AST_Ternary::AST_Ternary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf)
-    : AST_Expr(AST_TERNARY), cond(cond), v_true(vt), v_false(vf) {}
+AST_Ternary::AST_Ternary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf) : cond(cond), v_true(vt), v_false(vf) {}
 
 AST_Ternary* AbstractSyntaxTree::mkTernary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf, loc_t loc) {
     return mkNode<AST_Ternary>(std::move(loc), cond, vt, vf);
@@ -312,8 +297,7 @@ TreeNodeRef AST_Ternary::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Assignment
 
-AST_Assignment::AST_Assignment(OpType op, AST_Expr *lhs, AST_Expr *rhs)
-    : AST_Expr(AST_ASSIGNMENT), op(op), lhs(lhs), rhs(rhs) {}
+AST_Assignment::AST_Assignment(OpType op, AST_Expr *lhs, AST_Expr *rhs) : op(op), lhs(lhs), rhs(rhs) {}
 
 AST_Assignment* AbstractSyntaxTree::mkAssign(AST_Assignment::OpType op, AST_Expr *lhs, AST_Expr *rhs, loc_t loc) {
     return mkNode<AST_Assignment>(std::move(loc), op, lhs, rhs);
@@ -356,11 +340,7 @@ std::optional<AST_Binop::OpType> AST_Assignment::toBinop() const {
 
 // AST_CommaExpression
 
-AST_CommaExpression::AST_CommaExpression(AST_Expr *expr1, AST_Expr *expr2)
-        : AST_Expr(AST_COMMA_EXPR) {
-    children.emplace_back(expr1);
-    children.emplace_back(expr2);
-}
+AST_CommaExpression::AST_CommaExpression(AST_Expr *expr1, AST_Expr *expr2) : children{ expr1, expr2 } {}
 
 AST_CommaExpression* AbstractSyntaxTree::mkCommaExpr(AST_Expr *expr1, AST_Expr *expr2, loc_t loc) {
     return mkNode<AST_CommaExpression>(std::move(loc), expr1, expr2);
@@ -396,12 +376,9 @@ static void update_type_qualifiers(AST_TypeQuals &list, AST_TypeQuals::QualType 
     }
 }
 
-AST_TypeQuals::AST_TypeQuals()
-    : AST_Node(AST_TYPE_QUALIFIERS), is_const(false), is_restrict(false), is_volatile(false) {}
+AST_TypeQuals::AST_TypeQuals() : is_const(false), is_restrict(false), is_volatile(false) {}
 
-AST_TypeQuals::AST_TypeQuals(QualType init_qual)
-    : AST_Node(AST_TYPE_QUALIFIERS), is_const(false), is_restrict(false), is_volatile(false)
-{
+AST_TypeQuals::AST_TypeQuals(QualType init_qual) : is_const(false), is_restrict(false), is_volatile(false) {
     update_type_qualifiers(*this, init_qual);
 }
 
@@ -433,16 +410,16 @@ TreeNodeRef AST_TypeQuals::getTreeNode(ParsingContext const &pctx) const {
 // AST_TypeSpecifier
 
 AST_TypeSpecifier::AST_TypeSpecifier(TypeSpec type)
-    : AST_Node(AST_TYPE_SPECIFIER), spec_type(type), v(nullptr) {}
+    : spec_type(type), v(nullptr) {}
 
 AST_TypeSpecifier::AST_TypeSpecifier(AST_UStructSpec *spec)
-    : AST_Node(AST_TYPE_SPECIFIER), spec_type(AST_TypeSpecifier::T_UNISTRUCT), v(spec) {}
+    : spec_type(AST_TypeSpecifier::T_UNISTRUCT), v(spec) {}
 
 AST_TypeSpecifier::AST_TypeSpecifier(AST_EnumSpecifier *spec)
-    : AST_Node(AST_TYPE_SPECIFIER), spec_type(AST_TypeSpecifier::T_ENUM), v(spec) {}
+    : spec_type(AST_TypeSpecifier::T_ENUM), v(spec) {}
 
 AST_TypeSpecifier::AST_TypeSpecifier(AST_TypeName *spec)
-    : AST_Node(AST_TYPE_SPECIFIER), spec_type(AST_TypeSpecifier::T_NAMED), v(spec) {}
+    : spec_type(AST_TypeSpecifier::T_NAMED), v(spec) {}
 
 
 AST_TypeSpecifier* AbstractSyntaxTree::mkTypeSpec(AST_TypeSpecifier::TypeSpec type, loc_t loc) {
@@ -473,8 +450,7 @@ TreeNodeRef AST_TypeSpecifier::getTreeNode(ParsingContext const &pctx) const {
 
 //AST_DeclSpecifiers
 
-AST_DeclSpecifiers::AST_DeclSpecifiers(AST_TypeQuals *quals)
-    : AST_Node(AST_DECL_SPECIFIERS), type_qualifiers(quals) {}
+AST_DeclSpecifiers::AST_DeclSpecifiers(AST_TypeQuals *quals) : type_qualifiers(quals) {}
 
 AST_DeclSpecifiers* AbstractSyntaxTree::mkDeclSpecs(loc_t loc) {
     return mkNode<AST_DeclSpecifiers>(loc, mkTypeQuals(loc));
@@ -527,7 +503,7 @@ TreeNodeRef AST_DeclSpecifiers::getTreeNode(ParsingContext const &pctx) const {
 // AST_StructDeclaration
 
 AST_StructDeclaration::AST_StructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child)
-    : AST_Node(AST_STRUCT_DECL), type(type), child(child) {}
+    : type(type), child(child) {}
 
 AST_StructDeclaration*
 AbstractSyntaxTree::mkStructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child, loc_t loc) {
@@ -545,7 +521,7 @@ TreeNodeRef AST_StructDeclaration::getTreeNode(ParsingContext const &pctx) const
 // AST_StructDeclarator
 
 AST_StructDeclarator::AST_StructDeclarator(AST_Declarator *decl, AST_Expr *width)
-    : AST_Node(AST_STRUCT_DECLARATOR), declarator(decl), bitwidth(width) {}
+    : declarator(decl), bitwidth(width) {}
 
 AST_StructDeclarator* AbstractSyntaxTree::mkStructDeclarator(AST_Declarator *decl, AST_Expr *width, loc_t loc) {
     return mkNode<AST_StructDeclarator>(std::move(loc), decl, width);
@@ -565,10 +541,7 @@ TreeNodeRef AST_StructDeclarator::getTreeNode(ParsingContext const &pctx) const 
 
 // AST_StructDeclaratorList
 
-AST_StructDeclaratorList::AST_StructDeclaratorList(AST_StructDeclarator *init) 
-        : AST_Node(AST_STRUCT_DECLARATOR_LST) {
-    children.emplace_back(init);
-}
+AST_StructDeclaratorList::AST_StructDeclaratorList(AST_StructDeclarator *init) : children{ init } {}
 
 AST_StructDeclaratorList* AbstractSyntaxTree::mkStructDeclaratorLst(AST_StructDeclarator *init, loc_t loc) {
     return mkNode<AST_StructDeclaratorList>(std::move(loc), init);
@@ -589,10 +562,7 @@ TreeNodeRef AST_StructDeclaratorList::getTreeNode(ParsingContext const &pctx) co
 
 // AST_StructDeclarationList
 
-AST_StructDeclarationList::AST_StructDeclarationList(AST_StructDeclaration *init)
-        : AST_Node(AST_STRUCT_DECL_LIST) {
-    children.emplace_back(init);
-}
+AST_StructDeclarationList::AST_StructDeclarationList(AST_StructDeclaration *init) : children{ init } {}
 
 AST_StructDeclarationList* AbstractSyntaxTree::mkStructDeclarationLst(AST_StructDeclaration *init, loc_t loc) {
     return mkNode<AST_StructDeclarationList>(std::move(loc), init);
@@ -614,15 +584,15 @@ TreeNodeRef AST_StructDeclarationList::getTreeNode(ParsingContext const &pctx) c
 // AST_SpecifierQualifierList
 
 AST_SpecsQualsList::AST_SpecsQualsList(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals)
-            : AST_Node(AST_SPEC_QUAL_LST), type_specifiers(specs), type_qualifiers(quals) {}
+            : type_specifiers(specs), type_qualifiers(quals) {}
 
 AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeQuals::QualType qual, AST_TypeQuals *quals)
-            : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(quals) {
+            : type_qualifiers(quals) {
     type_qualifiers->update(qual);
 }
 
 AST_SpecsQualsList::AST_SpecsQualsList(AST_TypeSpecifier* type, AST_TypeQuals *quals)
-            : AST_Node(AST_SPEC_QUAL_LST), type_qualifiers(quals) {
+            : type_qualifiers(quals) {
     type_specifiers.emplace_back(type);
 }
 
@@ -662,7 +632,7 @@ TreeNodeRef AST_SpecsQualsList::getTreeNode(ParsingContext const &pctx) const {
 // AST_StructOrUsionSpec
 
 AST_UStructSpec::AST_UStructSpec(bool is_uni, string_id_t name, AST_StructDeclarationList *body)
-    : AST_Node(AST_USTRUCT_SPEC), is_union(is_uni), name(name), body(body) {}
+    : is_union(is_uni), name(name), body(body) {}
 
 AST_UStructSpec* AbstractSyntaxTree::mkUstructSpec(bool is_uni, string_id_t name, AST_StructDeclarationList *body,
                                                    loc_t loc) {
@@ -683,7 +653,7 @@ TreeNodeRef AST_UStructSpec::getTreeNode(ParsingContext const &pctx) const {
 // AST_Enumerator
 
 AST_Enumerator::AST_Enumerator(string_id_t name, AST_Expr *val)
-    : AST_Node(AST_ENUMER), name(name), val(val) {}
+    : name(name), val(val) {}
 
 AST_Enumerator* AbstractSyntaxTree::mkEnumer(string_id_t name, AST_Expr *val, loc_t loc) {
     return mkNode<AST_Enumerator>(std::move(loc), name, val);
@@ -699,10 +669,7 @@ TreeNodeRef AST_Enumerator::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_EnumeratorList
 
-AST_EnumeratorList::AST_EnumeratorList(AST_Enumerator *init)
-        : AST_Node(AST_ENUMER_LST) {
-    v.emplace_back(init);
-}
+AST_EnumeratorList::AST_EnumeratorList(AST_Enumerator *init) : v{ init } {}
 
 AST_EnumeratorList* AbstractSyntaxTree::mkEnumLst(AST_Enumerator *init, loc_t loc) {
     return mkNode<AST_EnumeratorList>(std::move(loc), init);
@@ -724,7 +691,7 @@ TreeNodeRef AST_EnumeratorList::getTreeNode(ParsingContext const &pctx) const {
 // AST_EnumSpecifier
 
 AST_EnumSpecifier::AST_EnumSpecifier(string_id_t name, AST_EnumeratorList *body)
-    : AST_Node(AST_ENUM_SPEC), name(name), body(body) {}
+    : name(name), body(body) {}
 
 AST_EnumSpecifier* AbstractSyntaxTree::mkEnumSpec(string_id_t name, AST_EnumeratorList *body, loc_t loc) {
     return mkNode<AST_EnumSpecifier>(std::move(loc), name, body);
@@ -747,7 +714,7 @@ TreeNodeRef AST_EnumSpecifier::getTreeNode(ParsingContext const &pctx) const {
 // AST_InitDeclarator
 
 AST_InitDeclarator::AST_InitDeclarator(AST_Declarator *decl, AST_Initializer *init)
-    : AST_Node(AST_INIT_DECL), declarator(decl), initializer(init) {}
+    : declarator(decl), initializer(init) {}
 
 AST_InitDeclarator* AbstractSyntaxTree::mkInitDeclarator(AST_Declarator *decl, AST_Initializer *init, loc_t loc) {
     return mkNode<AST_InitDeclarator>(std::move(loc), decl, init);
@@ -764,10 +731,7 @@ TreeNodeRef AST_InitDeclarator::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_InitDeclaratorList
 
-AST_InitDeclaratorList::AST_InitDeclaratorList(AST_InitDeclarator *init)
-        : AST_Node(AST_INIT_DECL_LST) {
-    v.emplace_back(init);
-}
+AST_InitDeclaratorList::AST_InitDeclaratorList(AST_InitDeclarator *init) : v{ init } {}
 
 AST_InitDeclaratorList* AbstractSyntaxTree::mkInitDeclaratorLst(AST_InitDeclarator *init, loc_t loc) {
     return mkNode<AST_InitDeclaratorList>(std::move(loc), init);
@@ -789,7 +753,7 @@ TreeNodeRef AST_InitDeclaratorList::getTreeNode(ParsingContext const &pctx) cons
 // AST_Declaration
 
 AST_Declaration::AST_Declaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child)
-    : AST_Node(AST_DECLARATION), specifiers(spec), child(child) {}
+    : specifiers(spec), child(child) {}
 
 AST_Declaration* AbstractSyntaxTree::mkDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child, loc_t loc) {
     return mkNode<AST_Declaration>(std::move(loc), spec, child);
@@ -806,8 +770,7 @@ TreeNodeRef AST_Declaration::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_DirectDeclarator
 
-AST_DirDeclarator::AST_DirDeclarator(DeclType dtype)
-    : AST_Node(AST_DIR_DECLARATOR), type(dtype) {}
+AST_DirDeclarator::AST_DirDeclarator(DeclType dtype) : type(dtype) {}
 
 AST_DirDeclarator* AbstractSyntaxTree::mkDirDeclIdent(string_id_t ident, loc_t loc) {
     auto res = mkNode<AST_DirDeclarator>(std::move(loc), AST_DirDeclarator::NAME);
@@ -887,8 +850,7 @@ AST_Declarator const &AST_DirDeclarator::getBaseDecl() const {
 
 // AST_Pointer
 
-AST_Pointer::AST_Pointer(AST_TypeQuals *qual, AST_Pointer *child)
-    : AST_Node(AST_POINTER), qualifiers(qual), child(child) {}
+AST_Pointer::AST_Pointer(AST_TypeQuals *qual, AST_Pointer *child) : qualifiers(qual), child(child) {}
 
 AST_Pointer* AbstractSyntaxTree::mkPointer(AST_TypeQuals *qual, AST_Pointer *child, loc_t loc) {
     return mkNode<AST_Pointer>(std::move(loc), qual, child);
@@ -906,8 +868,7 @@ TreeNodeRef AST_Pointer::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Declarator
 
-AST_Declarator::AST_Declarator(AST_DirDeclarator *decl, AST_Pointer *ptr)
-    : AST_Node(AST_DECLARATOR), direct(decl), ptr(ptr) {}
+AST_Declarator::AST_Declarator(AST_DirDeclarator *decl, AST_Pointer *ptr) : direct(decl), ptr(ptr) {}
 
 AST_Declarator* AbstractSyntaxTree::mkDeclarator(AST_DirDeclarator *decl, AST_Pointer *ptr, loc_t loc) {
     return mkNode<AST_Declarator>(std::move(loc), decl, ptr);
@@ -929,7 +890,7 @@ TreeNodeRef AST_Declarator::getTreeNode(ParsingContext const &pctx) const {
 // AST_ParameterDeclaration
 
 AST_ParameterDeclaration::AST_ParameterDeclaration(AST_DeclSpecifiers *spec, AST_Declarator *child)
-    : AST_Node(AST_PARAM_DECL), specifiers(spec), child(child){}
+    : specifiers(spec), child(child) {}
 
 
 TreeNodeRef AST_ParameterDeclaration::getTreeNode(ParsingContext const &pctx) const {
@@ -943,10 +904,7 @@ TreeNodeRef AST_ParameterDeclaration::getTreeNode(ParsingContext const &pctx) co
 
 // AST_ParameterList
 
-AST_ParameterList::AST_ParameterList(AST_ParameterDeclaration *init)
-        : AST_Node(AST_PARAM_LST) {
-    v.emplace_back(init);
-}
+AST_ParameterList::AST_ParameterList(AST_ParameterDeclaration *init) : v{ init } {}
 
 AST_ParameterList* AbstractSyntaxTree::mkParamLst(AST_ParameterDeclaration *init, loc_t loc) {
     return mkNode<AST_ParameterList>(std::move(loc), init);
@@ -968,7 +926,7 @@ TreeNodeRef AST_ParameterList::getTreeNode(ParsingContext const &pctx) const {
 // AST_ParameterTypeList
 
 AST_ParameterTypeList::AST_ParameterTypeList(AST_ParameterList *child, bool ellipsis)
-    : AST_Node(AST_PARAM_TYPE_LST), v(child), has_ellipsis(ellipsis) {}
+    : v(child), has_ellipsis(ellipsis) {}
 
 AST_ParameterTypeList* AbstractSyntaxTree::mkParamTypeLst(AST_ParameterList *child, bool ellipsis, loc_t loc) {
     return mkNode<AST_ParameterTypeList>(std::move(loc), child, ellipsis);
@@ -987,10 +945,10 @@ TreeNodeRef AST_ParameterTypeList::getTreeNode(ParsingContext const &pctx) const
 // AST_TypeName
 
 AST_TypeName::AST_TypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl)
-    : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl ? decl : optDeclType()) {}
+    : qual(qual), declarator(decl ? decl : optDeclType()) {}
 
 AST_TypeName::AST_TypeName(AST_SpecsQualsList *qual, AST_Declarator *decl)
-    : AST_Node(AST_TYPE_NAME), qual(qual), declarator(decl ? decl : optDeclType()) {}
+    : qual(qual), declarator(decl ? decl : optDeclType()) {}
 
 AST_TypeName* AbstractSyntaxTree::mkTypeName(AST_SpecsQualsList *qual, std::nullptr_t decl, loc_t loc) {
     return mkNode<AST_TypeName>(std::move(loc), qual, static_cast<AST_AbstrDeclarator*>(decl));
@@ -1018,8 +976,7 @@ TreeNodeRef AST_TypeName::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_DirectAbstractDeclarator
 
-AST_DirAbstrDeclarator::AST_DirAbstrDeclarator(DeclType dtype)
-        : AST_Node(AST_DIR_ABSTRACT_DECL), type(dtype) {}
+AST_DirAbstrDeclarator::AST_DirAbstrDeclarator(DeclType dtype) : type(dtype) {}
 
 AST_DirAbstrDeclarator* AbstractSyntaxTree::mkDirAbstrDeclNested(AST_Node *decl, loc_t loc) {
     auto res = mkNode<AST_DirAbstrDeclarator>(std::move(loc), AST_DirAbstrDeclarator::NESTED);
@@ -1078,7 +1035,7 @@ AST_AbstrDeclarator const &AST_DirAbstrDeclarator::getBaseDecl() const {
 // AST_AbstractDeclarator
 
 AST_AbstrDeclarator::AST_AbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer)
-        : AST_Node(AST_ABSTRACT_DECL), direct(decl), ptr(pointer) {}
+        : direct(decl), ptr(pointer) {}
 
 AST_AbstrDeclarator* AbstractSyntaxTree::mkAbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer,
                                                            loc_t loc) {
@@ -1101,11 +1058,9 @@ TreeNodeRef AST_AbstrDeclarator::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Designator
 
-AST_Designator::AST_Designator(AST_Expr *val)
-    : AST_Node(AST_DESIGNATOR), val(val), is_index(true) {}
+AST_Designator::AST_Designator(AST_Expr *val) : val(val), is_index(true) {}
 
-AST_Designator::AST_Designator(string_id_t field)
-    : AST_Node(AST_DESIGNATOR), val(field), is_index(false) {}
+AST_Designator::AST_Designator(string_id_t field) : val(field), is_index(false) {}
 
 AST_Designator* AbstractSyntaxTree::mkDesignator(string_id_t field, loc_t loc) {
     return mkNode<AST_Designator>(std::move(loc), field);
@@ -1147,10 +1102,7 @@ TreeNodeRef AST_InitializerList::AST_InitializerListElem::getTreeNode(ParsingCon
 // AST_InitializerList
 
 AST_InitializerList::AST_InitializerList(AST_Initializer *init_v, AST_Designator *init_desig)
-        : AST_Node(AST_INITIALIZER_LST), children()
-{
-    children.emplace_back(init_v, init_desig);
-}
+        : children{ { init_v, init_desig } } {}
 
 AST_InitializerList* AbstractSyntaxTree::mkInitializerLst(AST_Initializer *init_v, AST_Designator *init_desig,
                                                           loc_t loc) {
@@ -1172,11 +1124,9 @@ TreeNodeRef AST_InitializerList::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_Initializer
 
-AST_Initializer::AST_Initializer(AST_InitializerList *nest)
-    : AST_Node(AST_INITIALIZER), is_compound(true), val(nest) {}
+AST_Initializer::AST_Initializer(AST_InitializerList *nest) : is_compound(true), val(nest) {}
 
-AST_Initializer::AST_Initializer(AST_Expr *val)
-    : AST_Node(AST_INITIALIZER), is_compound(false), val(val) {}
+AST_Initializer::AST_Initializer(AST_Expr *val) : is_compound(false), val(val) {}
 
 AST_Initializer* AbstractSyntaxTree::mkInitializer(AST_InitializerList *nest, loc_t loc) {
     return mkNode<AST_Initializer>(std::move(loc), nest);
@@ -1205,15 +1155,10 @@ TreeNodeRef AST_Initializer::getTreeNode(ParsingContext const &pctx) const {
 //                   Statements
 // =================================================
 
-// AST_Statement
-
-AST_Stmt::AST_Stmt(StmtType stype) : AST_Node(AST_STATEMENT), type(stype) {}
-
-
 // AST_LabeledStmt
 
 AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Stmt *stmt, LabelType type)
-      : AST_Stmt(AST_Stmt::LABEL), label(label), child(stmt), type(type)
+      : label(label), child(stmt), type(type)
 {
     if (type == AST_LabeledStmt::SIMPL)
         throw parser_exception("Wrong type for simple label", "");
@@ -1224,7 +1169,7 @@ AST_LabeledStmt::AST_LabeledStmt(AST_Expr *label, AST_Stmt *stmt, LabelType type
 }
 
 AST_LabeledStmt::AST_LabeledStmt(string_id_t label, AST_Stmt *stmt, LabelType type)
-      : AST_Stmt(AST_Stmt::LABEL), label(label), child(stmt), type(type)
+      : label(label), child(stmt), type(type)
 {
     if (type != AST_LabeledStmt::SIMPL)
         throw parser_exception("Wrong type for switch label", "");
@@ -1266,7 +1211,7 @@ AST_Expr const& AST_LabeledStmt::getExpr() const {
 
 // AST_BlockItemList
 
-AST_BlockItemList::AST_BlockItemList() : AST_Node(AST_BLOCK_ITEM_LST), v() {}
+AST_BlockItemList::AST_BlockItemList() : v() {}
 
 AST_BlockItemList* AbstractSyntaxTree::mkBlockItemLst(loc_t loc) {
     return mkNode<AST_BlockItemList>(std::move(loc));
@@ -1288,7 +1233,7 @@ TreeNodeRef AST_BlockItemList::getTreeNode(ParsingContext const &pctx) const {
 // AST_CompoundStmt
 
 AST_CompoundStmt::AST_CompoundStmt(AST_BlockItemList *body)
-    : AST_Stmt(AST_Stmt::COMPOUND), body(body) {}
+    : body(body) {}
 
 AST_CompoundStmt* AbstractSyntaxTree::mkCompoundStmt(AST_BlockItemList *body, loc_t loc) {
     return mkNode<AST_CompoundStmt>(std::move(loc), body);
@@ -1303,8 +1248,7 @@ TreeNodeRef AST_CompoundStmt::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_ExprStmt
 
-AST_ExprStmt::AST_ExprStmt(AST_Expr *child)
-    : AST_Stmt(AST_Stmt::EXPR), child(child) {}
+AST_ExprStmt::AST_ExprStmt(AST_Expr *child) : child(child) {}
 
 AST_ExprStmt* AbstractSyntaxTree::mkExprStmt(AST_Expr *child, loc_t loc) {
     return mkNode<AST_ExprStmt>(std::move(loc), child);
@@ -1320,8 +1264,7 @@ TreeNodeRef AST_ExprStmt::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_SelectionStmt
 
-AST_SelectionStmt::AST_SelectionStmt(bool sw)
-    : AST_Stmt(AST_Stmt::SELECT), is_switch(sw) {}
+AST_SelectionStmt::AST_SelectionStmt(bool sw) : is_switch(sw) {}
 
 AST_SelectionStmt* AbstractSyntaxTree::mkIfStmt(AST_Expr *cond, AST_Stmt *body, AST_Stmt *else_body, loc_t loc) {
     auto res = mkNode<AST_SelectionStmt>(std::move(loc), false);
@@ -1357,7 +1300,7 @@ TreeNodeRef AST_SelectionStmt::getTreeNode(ParsingContext const &pctx) const {
 // AST_IterationStmt
 
 AST_IterStmt::AST_IterStmt(LoopType ltype, AST_Stmt *body)
-    : AST_Stmt(AST_Stmt::ITER), type(ltype), body(body) {}
+    : type(ltype), body(body) {}
 
 AST_Expr* AST_IterStmt::getCond() const {
     if (type == AST_IterStmt::FOR_LOOP)
@@ -1418,14 +1361,11 @@ TreeNodeRef AST_IterStmt::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_JumpStmt
 
-AST_JumpStmt::AST_JumpStmt(JumpType jtype)
-    : AST_Stmt(AST_Stmt::JUMP), type(jtype), arg(nullptr) {}
+AST_JumpStmt::AST_JumpStmt(JumpType jtype) : type(jtype), arg(nullptr) {}
 
-AST_JumpStmt::AST_JumpStmt(JumpType jtype, AST_Expr *arg)
-    : AST_Stmt(AST_Stmt::JUMP), type(jtype), arg(arg) {}
+AST_JumpStmt::AST_JumpStmt(JumpType jtype, AST_Expr *arg) : type(jtype), arg(arg) {}
 
-AST_JumpStmt::AST_JumpStmt(JumpType jtype, string_id_t arg)
-    : AST_Stmt(AST_Stmt::JUMP), type(jtype), arg(arg) {}
+AST_JumpStmt::AST_JumpStmt(JumpType jtype, string_id_t arg) : type(jtype), arg(arg) {}
 
 AST_JumpStmt* AbstractSyntaxTree::mkJumpStmt(AST_JumpStmt::JumpType jtype, loc_t loc) {
     return mkNode<AST_JumpStmt>(std::move(loc), jtype);
@@ -1479,7 +1419,7 @@ string_id_t AST_JumpStmt::getIdent() const {
 // AST_FunctionDef
 
 AST_FunctionDef::AST_FunctionDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body)
-    : AST_Node(AST_FUNC_DEF), specifiers(spec), decl(decl), body(body) {}
+    : specifiers(spec), decl(decl), body(body) {}
 
 AST_FunctionDef* AbstractSyntaxTree::mkFunDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body,
                                               loc_t loc) {
@@ -1497,7 +1437,7 @@ TreeNodeRef AST_FunctionDef::getTreeNode(ParsingContext const &pctx) const {
 
 // AST_TranslationUnit
 
-AST_TranslationUnit::AST_TranslationUnit() : AST_Node(AST_TRANS_UNIT), children() {}
+AST_TranslationUnit::AST_TranslationUnit() : children() {}
 
 AST_TranslationUnit* AbstractSyntaxTree::mkTransUnit(loc_t loc) {
     if (top != nullptr)

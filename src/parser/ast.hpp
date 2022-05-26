@@ -13,29 +13,14 @@
 
 using ast_enum_t = int;
 
-enum : ast_enum_t {
-    AST_PRIMARY, AST_POSTFIX, AST_ARGUMENTS_LIST, AST_UNARY_OP, AST_CAST, AST_BINOP,
-    AST_TERNARY, AST_ASSIGNMENT, AST_COMMA_EXPR,
-    AST_TYPE_QUALIFIERS, AST_TYPE_SPECIFIER, AST_DECL_SPECIFIERS,
-    AST_USTRUCT_SPEC, AST_STRUCT_DECL_LIST, AST_STRUCT_DECL,
-    AST_SPEC_QUAL_LST, AST_STRUCT_DECLARATOR, AST_STRUCT_DECLARATOR_LST,
-    AST_ENUM_SPEC, AST_ENUMER, AST_ENUMER_LST,
-    AST_DECLARATION, AST_INIT_DECL_LST, AST_INIT_DECL, AST_DECLARATOR,
-    AST_DIR_DECLARATOR, AST_POINTER, AST_PARAM_DECL, AST_PARAM_TYPE_LST, AST_PARAM_LST,
-    AST_TYPE_NAME, AST_DESIGNATOR, AST_INITIALIZER_LST, AST_INITIALIZER,
-    AST_STATEMENT, AST_BLOCK_ITEM_LST, AST_FUNC_DEF, AST_TRANS_UNIT,
-    AST_DIR_ABSTRACT_DECL, AST_ABSTRACT_DECL, AST_STR_SEQ,
-};
-
 struct AST_Node {
     struct AST_Location {
         int line, col; // NOTE: Raw location
     };
 
-    int node_type;
     yy::location loc;
 
-    explicit AST_Node(int type);
+    AST_Node() = default;
     virtual ~AST_Node() = default;
 
     AST_Node(AST_Node const &) = delete;
@@ -60,14 +45,12 @@ struct AST_Stmt;
 //                    Expressions
 // =================================================
 
-struct AST_Expr : public AST_Node {
-    explicit AST_Expr(int type);
-};
+struct AST_Expr : public AST_Node {};
 
 struct AST_StringsSeq final : public AST_Node {
     std::vector<string_id_t> v;
 
-    AST_StringsSeq();
+    AST_StringsSeq() = default;
     AST_StringsSeq* append(string_id_t str);
     [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
@@ -97,7 +80,7 @@ struct AST_Primary final : public AST_Expr {
 struct AST_ArgumentsList final : public AST_Node {
     std::vector<AST_Expr*> children;
 
-    AST_ArgumentsList();
+    AST_ArgumentsList() = default;
     AST_ArgumentsList* append(AST_Expr *arg);
     [[nodiscard]] TreeNodeRef getTreeNode(ParsingContext const &pctx) const override;
 };
@@ -498,10 +481,7 @@ struct AST_Initializer final : public AST_Node {
 // =================================================
 
 struct AST_Stmt : public AST_Node {
-    enum StmtType : ast_enum_t {
-        LABEL, COMPOUND, EXPR, SELECT, ITER, JUMP
-    } type;
-    explicit AST_Stmt(StmtType stype);
+    AST_Stmt() = default;
 };
 
 struct AST_LabeledStmt final : public AST_Stmt {

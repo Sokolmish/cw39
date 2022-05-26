@@ -134,8 +134,8 @@ IRval IR_Generator::getPtrWithOffset(IRval const &base, IRval const &index, bool
 
 /** Store wrValue in object described by dest (variable, pointer, field, etc) */
 void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
-    if (dest.node_type == AST_PRIMARY) { // Identifiers
-        auto &assignee = static_cast<AST_Primary const &>(dest);
+    if (auto assigneeIdent = dynamic_cast<AST_Primary const *>(&dest)) { // Identifiers
+        auto &assignee = *assigneeIdent;
         if (assignee.type == AST_Primary::EXPR) {
             doAssignment(assignee.getExpr(), wrValue);
             return;
@@ -156,8 +156,8 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
         }
         emitStore(*destVar, std::move(valToStore));
     }
-    else if (dest.node_type == AST_UNARY_OP) { // Dereference write
-        auto &assignee = static_cast<AST_Unop const &>(dest);
+    else if (auto assigneeDeref = dynamic_cast<AST_Unop const *>(&dest)) { // Dereference write
+        auto &assignee = *assigneeDeref;
         if (assignee.op != AST_Unop::DEREF)
             semanticError(assignee.loc, "Cannot be assigned");
 
@@ -175,8 +175,8 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
         }
         emitStore(ptrVal, std::move(valToStore));
     }
-    else if (dest.node_type == AST_POSTFIX) { // Accessors
-        auto &assignee = static_cast<AST_Postfix const &>(dest);
+    else if (auto assigneeAccess = dynamic_cast<AST_Postfix const *>(&dest)) { // Accessors
+        auto &assignee = *assigneeAccess;
         if (assignee.op == AST_Postfix::DIR_ACCESS) {
             IRval base = evalExpr(*assignee.base);
             if (base.getType()->type != IR_Type::TSTRUCT)
@@ -403,37 +403,33 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
 
 /** Get value with address of expr */
 IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
-    if (expr.node_type == AST_PRIMARY) {
-        auto &subject = dynamic_cast<AST_Primary const &>(expr);
-        if (subject.type == AST_Primary::IDENT) {
-            std::optional<IRval> var = getPtrToVariable(subject.getIdent());
+    if (auto subjPrim = dynamic_cast<AST_Primary const *>(&expr)) {
+        if (subjPrim->type == AST_Primary::IDENT) {
+            std::optional<IRval> var = getPtrToVariable(subjPrim->getIdent());
             if (!var.has_value())
-                semanticError(subject.loc, "Unknown variable");
+                semanticError(subjPrim->loc, "Unknown variable");
             return var.value();
         }
-        else if (subject.type == AST_Primary::EXPR) {
-            return doAddrOf(subject.getExpr());
+        else if (subjPrim->type == AST_Primary::EXPR) {
+            return doAddrOf(subjPrim->getExpr());
         }
         else {
-            semanticError(subject.loc, "Cannot take address from such primary expression");
+            semanticError(subjPrim->loc, "Cannot take address from such primary expression");
         }
     }
-    else if (expr.node_type == AST_UNARY_OP) { // Dereference
-        auto &subject = dynamic_cast<AST_Unop const &>(expr);
-        if (subject.op != AST_Unop::DEREF)
-            semanticError(subject.loc, "Cannot take address from such unary expression");
-        return evalExpr(dynamic_cast<AST_Expr &>(*subject.child));
+    else if (auto subjUn = dynamic_cast<AST_Unop const *>(&expr)) { // Dereference
+        if (subjUn->op != AST_Unop::DEREF)
+            semanticError(subjUn->loc, "Cannot take address from such unary expression");
+        return evalExpr(dynamic_cast<AST_Expr &>(*subjUn->child));
     }
-    else if (expr.node_type == AST_CAST) {
-        auto &subject = dynamic_cast<AST_Cast const &>(expr);
-        IRval base = doAddrOf(*subject.child);
-        return emitCast(base, std::make_shared<IR_TypePtr>(getType(*subject.type_name)));
+    else if (auto subjCast = dynamic_cast<AST_Cast const *>(&expr)) {
+        IRval base = doAddrOf(*subjCast->child);
+        return emitCast(base, std::make_shared<IR_TypePtr>(getType(*subjCast->type_name)));
     }
-    else if (expr.node_type == AST_POSTFIX) { // Index, access
-        auto &subject = dynamic_cast<AST_Postfix const &>(expr);
-//        if (subject.op == AST_Postfix::INDEXATION) {
-//            IRval array = evalExpr(*subject.base);
-//            IRval index = evalExpr(subject.getExpr());
+    else if (auto subjPostf = dynamic_cast<AST_Postfix const *>(&expr)) { // Index, access
+//        if (subjPostf->op == AST_Postfix::INDEXATION) {
+//            IRval array = evalExpr(*subjPostf->base);
+//            IRval index = evalExpr(subjPostf->getExpr());
 //
 //            if (array.getType()->type != IR_Type::ARRAY)
 //                semanticError("Indexation cannot be performed on non-array type");
@@ -444,12 +440,12 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
 //                    IR_GEP, std::vector<IRval>{ array, index }))); // addOperNode
 //            return res;
 //        }
-//        else if (subject.op == AST_Postfix::DIR_ACCESS) {
-//            IRval object = evalExpr(*subject.base);
+//        else if (subjPostf->op == AST_Postfix::DIR_ACCESS) {
+//            IRval object = evalExpr(*subjPostf->base);
 //            if (object.getType()->type != IR_Type::TSTRUCT)
 //                semanticError("Element access cannot be performed on non-struct type");
 //            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(object.getType());
-//            auto field = structType->getField(subject.getIdent());
+//            auto field = structType->getField(subjPostf->getIdent());
 //            if (field == nullptr)
 //                semanticError("Structure has no such field");
 //
@@ -462,17 +458,17 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
 //            return res;
 //        }
 //        else
-        if (subject.op == AST_Postfix::PTR_ACCESS) {
-            IRval object = evalExpr(*subject.base);
+        if (subjPostf->op == AST_Postfix::PTR_ACCESS) {
+            IRval object = evalExpr(*subjPostf->base);
             if (object.getType()->type != IR_Type::POINTER)
-                semanticError(subject.base->loc, "Pointer access cannot be performed on non-pointer type");
+                semanticError(subjPostf->base->loc, "Pointer access cannot be performed on non-pointer type");
             auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
             if (structPtrType->child->type != IR_Type::TSTRUCT)
-                semanticError(subject.base->loc, "Element access cannot be performed on non-struct type");
+                semanticError(subjPostf->base->loc, "Element access cannot be performed on non-struct type");
             auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
-            auto field = structType->getField(subject.getIdent());
+            auto field = structType->getField(subjPostf->getIdent());
             if (field == nullptr)
-                semanticError(subject.base->loc, "Structure has no such field");
+                semanticError(subjPostf->base->loc, "Structure has no such field");
 
             IRval index = IRval::createVal(IR_TypeDirect::getI32(),
                                            static_cast<int32_t>(field->index));
@@ -481,7 +477,7 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
                     IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
         }
         else {
-            semanticError(subject.base->loc, "Cannot take address");
+            semanticError(subjPostf->base->loc, "Cannot take address");
         }
     }
     else {
@@ -494,10 +490,9 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
     int dirFuncId = -1;
     std::optional<IRval> funPtr;
 
-    if (expr.base->node_type == AST_PRIMARY) {
-        auto &funcBase = dynamic_cast<AST_Primary const &>(*expr.base);
-        if (funcBase.type == AST_Primary::IDENT) {
-            string_id_t baseIdent = funcBase.getIdent();
+    if (auto funcBase = dynamic_cast<AST_Primary const *>(expr.base)) {
+        if (funcBase->type == AST_Primary::IDENT) {
+            string_id_t baseIdent = funcBase->getIdent();
             auto funIt = functions.find(baseIdent);
             if (funIt != functions.end()) {
                 dirFuncId = funIt->second;
@@ -583,34 +578,24 @@ IRval IR_Generator::doIntrinsic(string_id_t intrIdent, AST_Postfix const &expr) 
 
 
 IRval IR_Generator::evalExpr(AST_Expr const &node) {
-    switch (node.node_type) {
-        case AST_COMMA_EXPR:
-            return evalCommaExpr(static_cast<AST_CommaExpression const &>(node));
-
-        case AST_ASSIGNMENT:
-            return evalAssignmentExpr(static_cast<AST_Assignment const &>(node));
-
-        case AST_TERNARY:
-            throw cw39_not_implemented("Ternary operator");
-
-        case AST_BINOP:
-            return evalBinopExpr(static_cast<AST_Binop const &>(node));
-
-        case AST_CAST:
-            return evalCastExpr(static_cast<AST_Cast const &>(node));
-
-        case AST_UNARY_OP:
-            return evalUnopExpr(static_cast<AST_Unop const &>(node));
-
-        case AST_POSTFIX:
-            return evalPostfixExpr(static_cast<AST_Postfix const &>(node));
-
-        case AST_PRIMARY:
-            return evalPrimaryExpr(static_cast<AST_Primary const &>(node));
-
-        default:
-            throw cw39_internal_error("Wrong node type in expression");
-    }
+    if (auto primary = dynamic_cast<AST_Primary const *>(&node))
+        return evalPrimaryExpr(*primary);
+    else if (auto binop = dynamic_cast<AST_Binop const *>(&node))
+        return evalBinopExpr(*binop);
+    else if (auto unop = dynamic_cast<AST_Unop const *>(&node))
+        return evalUnopExpr(*unop);
+    else if (auto postfix = dynamic_cast<AST_Postfix const *>(&node))
+        return evalPostfixExpr(*postfix);
+    else if (auto assign = dynamic_cast<AST_Assignment const *>(&node))
+        return evalAssignmentExpr(*assign);
+    else if (auto cast = dynamic_cast<AST_Cast const *>(&node))
+        return evalCastExpr(*cast);
+    else if (dynamic_cast<AST_Assignment const *>(&node))
+        throw cw39_not_implemented("Ternary operator"); // TODO
+    else if (auto comma = dynamic_cast<AST_CommaExpression const *>(&node))
+        return evalCommaExpr(*comma);
+    else
+        throw cw39_internal_error("Wrong node type in expression");
 }
 
 IRval IR_Generator::evalCommaExpr(AST_CommaExpression const &expr) {
