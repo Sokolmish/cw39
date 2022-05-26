@@ -52,7 +52,7 @@ private:
     void scan_end();
 
     /** Check for typedef. Pass it to AST anyway (it will be dropped in generator). */
-    AST_Declaration* parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
+    AST_Declaration* parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child, yy::location loc);
     bool isDefinedType(string_id_t id);
     AST_TypeSpecifier* getDefinedType(string_id_t id);
 

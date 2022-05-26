@@ -4,7 +4,7 @@ all: core_parser hashtables
 
 core_parser: yy_scanner.cpp yy_parser.cpp yy_parser.hpp
 
-hashtables: directives_hashtable.cpp
+hashtables: directives_hashtable.cpp keywords_hashtable.cpp
 
 clean:
 	rm -f scanner.cpp parser.cpp parser.hpp
@@ -23,4 +23,7 @@ yy_scanner.cpp: lexer.l
 # Gperf
 
 directives_hashtable.cpp: directives.gperf
+	gperf -m 20 --output-file=$@ $<
+
+keywords_hashtable.cpp: keywords.gperf
 	gperf -m 20 --output-file=$@ $<

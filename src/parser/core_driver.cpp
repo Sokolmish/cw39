@@ -50,16 +50,17 @@ string_id_t CoreDriver::getDeclaredIdent(AST_Declarator const &decl) {
     return getDeclaredIdentDirect(*decl.direct);
 }
 
-AST_Declaration* CoreDriver::parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child) {
+AST_Declaration* CoreDriver::parseDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child,
+                                              yy::location loc) {
     if (spec->storage_specifier == AST_DeclSpecifiers::ST_TYPEDEF && child) {
-        auto specQualsLst = ast->mkSpecQualLst(spec->type_specifiers, spec->type_qualifiers);
+        auto specQualsLst = ast->mkSpecQualLst(spec->type_specifiers, spec->type_qualifiers, loc);
         for (auto const &decl : child->v) {
             string_id_t ident = getDeclaredIdent(*decl->declarator);
-            auto typeName = ast->mkTypeName(specQualsLst, decl->declarator);
-            typesAliases.emplace(ident, ast->mkTypeSpec(typeName));
+            auto typeName = ast->mkTypeName(specQualsLst, decl->declarator, loc);
+            typesAliases.emplace(ident, ast->mkTypeSpec(typeName, loc));
         }
     }
-    return ast->mkDeclaration(spec, child);
+    return ast->mkDeclaration(spec, child, std::move(loc));
 }
 
 AST_TypeSpecifier* CoreDriver::getDefinedType(string_id_t id) {

@@ -612,148 +612,151 @@ struct AST_TranslationUnit final : public AST_Node {
 
 class AbstractSyntaxTree {
 public:
+    using loc_t = yy::location;
+
     AbstractSyntaxTree() = default;
 
     AST_TranslationUnit *top = nullptr;
 
     // Expressions
 
-    AST_Primary* mkPrimIdent(string_id_t id);
-    AST_Primary* mkPrimExpr(AST_Expr *expr);
-    AST_Primary* mkPrimStr(AST_StringsSeq *str);
-    AST_Primary* mkPrimConst(AST_Literal val);
-    AST_Primary* mkPrimCompound(AST_TypeName *compType, AST_InitializerList *init_lst);
+    AST_Primary* mkPrimIdent(string_id_t id, loc_t loc);
+    AST_Primary* mkPrimExpr(AST_Expr *expr, loc_t loc);
+    AST_Primary* mkPrimStr(AST_StringsSeq *str, loc_t loc);
+    AST_Primary* mkPrimConst(AST_Literal val, loc_t loc);
+    AST_Primary* mkPrimCompound(AST_TypeName *compType, AST_InitializerList *init_lst, loc_t loc);
 
-    AST_StringsSeq* mkStringsSeq();
+    AST_StringsSeq* mkStringsSeq(loc_t loc);
 
-    AST_Postfix* mkPostfArr(AST_Expr *base, AST_Expr *size);
-    AST_Postfix* mkPostfCall(AST_Expr *base, AST_ArgumentsList *args);
-    AST_Postfix* mkPostfAccesor(AST_Expr *base, string_id_t member, bool is_ptr);
-    AST_Postfix* mkPostfIncdec(AST_Expr *base, bool is_dec);
+    AST_Postfix* mkPostfArr(AST_Expr *base, AST_Expr *size, loc_t loc);
+    AST_Postfix* mkPostfCall(AST_Expr *base, AST_ArgumentsList *args, loc_t loc);
+    AST_Postfix* mkPostfAccesor(AST_Expr *base, string_id_t member, bool is_ptr, loc_t loc);
+    AST_Postfix* mkPostfIncdec(AST_Expr *base, bool is_dec, loc_t loc);
 
-    AST_ArgumentsList* mkArgsLst();
+    AST_ArgumentsList* mkArgsLst(loc_t loc);
 
-    AST_Unop* mkUnop(AST_Unop::OpType op, AST_Expr *child);
-    AST_Unop* mkUnop(AST_Unop::OpType op, AST_TypeName *child);
+    AST_Unop* mkUnop(AST_Unop::OpType op, AST_Expr *child, loc_t loc);
+    AST_Unop* mkUnop(AST_Unop::OpType op, AST_TypeName *child, loc_t loc);
 
-    AST_Binop* mkBinop(AST_Binop::OpType op, AST_Expr *lhs, AST_Expr *rhs);
+    AST_Binop* mkBinop(AST_Binop::OpType op, AST_Expr *lhs, AST_Expr *rhs, loc_t loc);
 
-    AST_Cast* mkCastop(AST_TypeName *type, AST_Expr *child);
+    AST_Cast* mkCastop(AST_TypeName *type, AST_Expr *child, loc_t loc);
 
-    AST_Ternary* mkTernary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf);
+    AST_Ternary* mkTernary(AST_Expr *cond, AST_Expr *vt, AST_Expr *vf, loc_t loc);
 
-    AST_Assignment* mkAssign(AST_Assignment::OpType op, AST_Expr *lhs, AST_Expr *rhs);
+    AST_Assignment* mkAssign(AST_Assignment::OpType op, AST_Expr *lhs, AST_Expr *rhs, loc_t loc);
 
-    AST_CommaExpression* mkCommaExpr(AST_Expr *expr1, AST_Expr *expr2);
+    AST_CommaExpression* mkCommaExpr(AST_Expr *expr1, AST_Expr *expr2, loc_t loc);
 
     // Specifiers
 
-    AST_TypeQuals* mkTypeQuals();
-    AST_TypeQuals* mkTypeQuals(AST_TypeQuals::QualType init_qual);
+    AST_TypeQuals* mkTypeQuals(loc_t loc);
+    AST_TypeQuals* mkTypeQuals(AST_TypeQuals::QualType init_qual, loc_t loc);
 
-    AST_TypeSpecifier* mkTypeSpec(AST_TypeSpecifier::TypeSpec type);
-    AST_TypeSpecifier* mkTypeSpec(AST_UStructSpec *spec);
-    AST_TypeSpecifier* mkTypeSpec(AST_TypeName *spec);
-    AST_TypeSpecifier* mkTypeSpec(AST_EnumSpecifier *spec);
+    AST_TypeSpecifier* mkTypeSpec(AST_TypeSpecifier::TypeSpec type, loc_t loc);
+    AST_TypeSpecifier* mkTypeSpec(AST_UStructSpec *spec, loc_t loc);
+    AST_TypeSpecifier* mkTypeSpec(AST_TypeName *spec, loc_t loc);
+    AST_TypeSpecifier* mkTypeSpec(AST_EnumSpecifier *spec, loc_t loc);
 
-    AST_DeclSpecifiers* mkDeclSpecs();
+    AST_DeclSpecifiers* mkDeclSpecs(loc_t loc);
 
-    AST_SpecsQualsList* mkSpecQualLst(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals);
-    AST_SpecsQualsList* mkSpecQualLst(AST_TypeQuals::QualType qual);
-    AST_SpecsQualsList* mkSpecQualLst(AST_TypeSpecifier* type);
+    AST_SpecsQualsList* mkSpecQualLst(std::vector<AST_TypeSpecifier*> specs, AST_TypeQuals *quals, loc_t loc);
+    AST_SpecsQualsList* mkSpecQualLst(AST_TypeQuals::QualType qual, loc_t loc);
+    AST_SpecsQualsList* mkSpecQualLst(AST_TypeSpecifier* type, loc_t loc);
 
-    AST_StructDeclarator* mkStructDeclarator(AST_Declarator *decl, AST_Expr *width);
+    AST_StructDeclarator* mkStructDeclarator(AST_Declarator *decl, AST_Expr *width, loc_t loc);
 
-    AST_StructDeclaratorList* mkStructDeclaratorLst(AST_StructDeclarator *init);
+    AST_StructDeclaratorList* mkStructDeclaratorLst(AST_StructDeclarator *init, loc_t loc);
 
-    AST_StructDeclaration* mkStructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child);
+    AST_StructDeclaration* mkStructDeclaration(AST_SpecsQualsList *type, AST_StructDeclaratorList *child, loc_t loc);
 
-    AST_StructDeclarationList* mkStructDeclarationLst(AST_StructDeclaration *init);
+    AST_StructDeclarationList* mkStructDeclarationLst(AST_StructDeclaration *init, loc_t loc);
 
-    AST_UStructSpec* mkUstructSpec(bool is_union, string_id_t name, AST_StructDeclarationList *body);
+    AST_UStructSpec* mkUstructSpec(bool is_union, string_id_t name, AST_StructDeclarationList *body, loc_t loc);
 
-    AST_Enumerator* mkEnumer(string_id_t name, AST_Expr *val);
+    AST_Enumerator* mkEnumer(string_id_t name, AST_Expr *val, loc_t loc);
 
-    AST_EnumeratorList* mkEnumLst(AST_Enumerator *init);
+    AST_EnumeratorList* mkEnumLst(AST_Enumerator *init, loc_t loc);
 
-    AST_EnumSpecifier* mkEnumSpec(string_id_t name, AST_EnumeratorList *body);
+    AST_EnumSpecifier* mkEnumSpec(string_id_t name, AST_EnumeratorList *body, loc_t loc);
 
     // Declarations
 
-    AST_InitDeclarator* mkInitDeclarator(AST_Declarator *decl, AST_Initializer *init);
+    AST_InitDeclarator* mkInitDeclarator(AST_Declarator *decl, AST_Initializer *init, loc_t loc);
 
-    AST_InitDeclaratorList* mkInitDeclaratorLst(AST_InitDeclarator *init);
+    AST_InitDeclaratorList* mkInitDeclaratorLst(AST_InitDeclarator *init, loc_t loc);
 
-    AST_Declaration* mkDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child);
+    AST_Declaration* mkDeclaration(AST_DeclSpecifiers *spec, AST_InitDeclaratorList *child, loc_t loc);
 
-    AST_DirDeclarator* mkDirDeclIdent(string_id_t ident);
-    AST_DirDeclarator* mkDirDeclNested(AST_Declarator *decl);
-    AST_DirDeclarator* mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz, bool isStatic);
-    AST_DirDeclarator* mkDirDeclFunc(AST_DirDeclarator *base, AST_ParameterTypeList *args);
+    AST_DirDeclarator* mkDirDeclIdent(string_id_t ident, loc_t loc);
+    AST_DirDeclarator* mkDirDeclNested(AST_Declarator *decl, loc_t loc);
+    AST_DirDeclarator* mkDirDeclArr(AST_DirDeclarator *base, AST_TypeQuals *qual, AST_Expr *sz, bool isStatic, loc_t loc);
+    AST_DirDeclarator* mkDirDeclFunc(AST_DirDeclarator *base, AST_ParameterTypeList *args, loc_t loc);
 
-    AST_Pointer* mkPointer(AST_TypeQuals *qual, AST_Pointer *child);
+    AST_Pointer* mkPointer(AST_TypeQuals *qual, AST_Pointer *child, loc_t loc);
 
-    AST_Declarator* mkDeclarator(AST_DirDeclarator *decl, AST_Pointer *ptr);
+    AST_Declarator* mkDeclarator(AST_DirDeclarator *decl, AST_Pointer *ptr, loc_t loc);
 
-    AST_ParameterDeclaration* mkParamDecl(AST_DeclSpecifiers *spec, AST_Declarator *child);
+    AST_ParameterDeclaration* mkParamDecl(AST_DeclSpecifiers *spec, AST_Declarator *child, loc_t loc);
 
-    AST_ParameterList* mkParamLst(AST_ParameterDeclaration *init);
+    AST_ParameterList* mkParamLst(AST_ParameterDeclaration *init, loc_t loc);
 
-    AST_ParameterTypeList* mkParamTypeLst(AST_ParameterList *child, bool ellipsis);
+    AST_ParameterTypeList* mkParamTypeLst(AST_ParameterList *child, bool ellipsis, loc_t loc);
 
-    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, std::nullptr_t decl);
-    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl);
-    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_Declarator *decl);
+    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, std::nullptr_t decl, loc_t loc);
+    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_AbstrDeclarator *decl, loc_t loc);
+    AST_TypeName* mkTypeName(AST_SpecsQualsList *qual, AST_Declarator *decl, loc_t loc);
 
-    AST_DirAbstrDeclarator* mkDirAbstrDeclNested(AST_Node *decl);
-    AST_DirAbstrDeclarator* mkDirAbstrDeclArr(AST_Node *base, AST_Expr *sz);
-    AST_DirAbstrDeclarator* mkDirAbstrDeclFunc(AST_Node *base, AST_ParameterTypeList *args);
+    AST_DirAbstrDeclarator* mkDirAbstrDeclNested(AST_Node *decl, loc_t loc);
+    AST_DirAbstrDeclarator* mkDirAbstrDeclArr(AST_Node *base, AST_Expr *sz, loc_t loc);
+    AST_DirAbstrDeclarator* mkDirAbstrDeclFunc(AST_Node *base, AST_ParameterTypeList *args, loc_t loc);
 
-    AST_AbstrDeclarator* mkAbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer);
+    AST_AbstrDeclarator* mkAbstrDeclarator(AST_DirAbstrDeclarator *decl, AST_Pointer *pointer, loc_t loc);
 
     // Initializers
 
-    AST_Designator* mkDesignator(AST_Expr *val);
-    AST_Designator* mkDesignator(string_id_t field);
+    AST_Designator* mkDesignator(AST_Expr *val, loc_t loc);
+    AST_Designator* mkDesignator(string_id_t field, loc_t loc);
 
-    AST_InitializerList* mkInitializerLst(AST_Initializer *init_v, AST_Designator *init_desig);
+    AST_InitializerList* mkInitializerLst(AST_Initializer *init_v, AST_Designator *init_desig, loc_t loc);
 
-    AST_Initializer* mkInitializer(AST_InitializerList *nest);
-    AST_Initializer* mkInitializer(AST_Expr *val);
+    AST_Initializer* mkInitializer(AST_InitializerList *nest, loc_t loc);
+    AST_Initializer* mkInitializer(AST_Expr *val, loc_t loc);
 
     // Statements
 
-    AST_LabeledStmt* mkLabelStmt(AST_Expr *label, AST_Stmt *stmt, AST_LabeledStmt::LabelType type);
-    AST_LabeledStmt* mkLabelStmt(string_id_t label, AST_Stmt *stmt, AST_LabeledStmt::LabelType type);
+    AST_LabeledStmt* mkLabelStmt(AST_Expr *label, AST_Stmt *stmt, AST_LabeledStmt::LabelType type, loc_t loc);
+    AST_LabeledStmt* mkLabelStmt(string_id_t label, AST_Stmt *stmt, AST_LabeledStmt::LabelType type, loc_t loc);
 
-    AST_BlockItemList* mkBlockItemLst();
+    AST_BlockItemList* mkBlockItemLst(loc_t loc);
 
-    AST_CompoundStmt* mkCompoundStmt(AST_BlockItemList *body);
+    AST_CompoundStmt* mkCompoundStmt(AST_BlockItemList *body, loc_t loc);
 
-    AST_ExprStmt* mkExprStmt(AST_Expr *child);
+    AST_ExprStmt* mkExprStmt(AST_Expr *child, loc_t loc);
 
-    AST_SelectionStmt* mkIfStmt(AST_Expr *cond, AST_Stmt *body, AST_Stmt *else_body);
-    AST_SelectionStmt* mkSwitchStmt(AST_Expr *cond, AST_Stmt *body);
+    AST_SelectionStmt* mkIfStmt(AST_Expr *cond, AST_Stmt *body, AST_Stmt *else_body, loc_t loc);
+    AST_SelectionStmt* mkSwitchStmt(AST_Expr *cond, AST_Stmt *body, loc_t loc);
 
-    AST_IterStmt* makeWhileStmt(AST_Stmt *body, AST_Expr *ctl, bool is_do);
-    AST_IterStmt* makeForStmt(AST_Stmt *body, AST_Node *decl, AST_ExprStmt *cond, AST_Expr *act);
+    AST_IterStmt* makeWhileStmt(AST_Stmt *body, AST_Expr *ctl, bool is_do, loc_t loc);
+    AST_IterStmt* makeForStmt(AST_Stmt *body, AST_Node *decl, AST_ExprStmt *cond, AST_Expr *act, loc_t loc);
 
-    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype);
-    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, AST_Expr *arg);
-    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, string_id_t arg);
+    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, loc_t loc);
+    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, AST_Expr *arg, loc_t loc);
+    AST_JumpStmt* mkJumpStmt(AST_JumpStmt::JumpType jtype, string_id_t arg, loc_t loc);
 
     // Top-level elements
 
-    AST_FunctionDef* mkFunDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body);
+    AST_FunctionDef* mkFunDef(AST_DeclSpecifiers *spec, AST_Declarator *decl, AST_CompoundStmt *body, loc_t loc);
 
-    AST_TranslationUnit* mkTransUnit();
+    AST_TranslationUnit* mkTransUnit(loc_t loc);
 
 private:
     std::vector<std::unique_ptr<AST_Node>> nodes;
 
     template <typename T, typename ...Us>
-    T* mkNode(Us&&... args) {
+    T* mkNode(loc_t loc, Us&&... args) {
         T *node = new T(std::forward<Us>(args)...);
+        node->setLoc(std::move(loc));
         nodes.emplace_back(std::unique_ptr<AST_Node>(node));
         return node;
     }
