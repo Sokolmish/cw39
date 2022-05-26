@@ -146,9 +146,9 @@ void PreprocessorImpl::processFile(const std::string &path) {
 
     auto it = raw.top().cbegin();
     while (noEnd(it)) {
-        globalSS.put('\n');
         globalLine++;
         processLine(it);
+        globalSS.put('\n');
         locations.top().line++;
         if (noEnd(it))
             it++;
