@@ -186,6 +186,7 @@ private:
     IRval evalUnopExpr(AST_Unop const &expr);
     IRval evalPostfixExpr(AST_Postfix const &expr);
     IRval evalPrimaryExpr(AST_Primary const &expr);
+    IRval evalTernaryExpr(AST_Ternary const &expr);
 
     IRval getPtrWithOffset(IRval const &base, IRval const &index, bool positive);
     void doAssignment(AST_Expr const &dest, IRval const &wrValue);

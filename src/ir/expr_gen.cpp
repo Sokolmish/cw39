@@ -357,6 +357,39 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
     }
 }
 
+IRval IR_Generator::evalTernaryExpr(AST_Ternary const &expr) {
+    IRval cond = evalExpr(*expr.cond);
+    curBlock().setTerminator(IR_ExprTerminator::BRANCH, cond);
+
+    IR_Block &blockTrue = curFunc->cfg.createBlock();
+    IR_Block &blockFalse = curFunc->cfg.createBlock();
+    IR_Block &blockAfter = curFunc->cfg.createBlock();
+
+    curFunc->cfg.linkBlocks(curBlock(), blockTrue);
+    curFunc->cfg.linkBlocks(curBlock(), blockFalse);
+
+    blockTrue.setTerminator(IR_ExprTerminator::JUMP);
+    curFunc->cfg.linkBlocks(blockTrue, blockAfter);
+
+    blockFalse.setTerminator(IR_ExprTerminator::JUMP);
+    curFunc->cfg.linkBlocks(blockFalse, blockAfter);
+
+    selectBlock(blockTrue);
+    IRval trueVal = evalExpr(*expr.v_true);
+    IRval res = iunit->createReg(trueVal.getType()); // Assume, that arguments has same type
+    emitMov(res, trueVal);
+
+    selectBlock(blockFalse);
+    IRval falseVal = evalExpr(*expr.v_false);
+    emitMov(res, falseVal);
+
+    if (!trueVal.getType()->equal(*falseVal.getType()))
+        semanticError(expr.loc, "Cannot do binary operation on different types");
+
+    selectBlock(blockAfter); // Can add PHI here
+    return res;
+}
+
 /** Create nodes and blocks for logical operation with short evaluation */
 IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, AST_Expr const &right,
                                    yy::location loc) {
@@ -590,8 +623,8 @@ IRval IR_Generator::evalExpr(AST_Expr const &node) {
         return evalAssignmentExpr(*assign);
     else if (auto cast = dynamic_cast<AST_Cast const *>(&node))
         return evalCastExpr(*cast);
-    else if (dynamic_cast<AST_Assignment const *>(&node))
-        throw cw39_not_implemented("Ternary operator"); // TODO
+    else if (auto ternary = dynamic_cast<AST_Ternary const *>(&node))
+        return evalTernaryExpr(*ternary);
     else if (auto comma = dynamic_cast<AST_CommaExpression const *>(&node))
         return evalCommaExpr(*comma);
     else

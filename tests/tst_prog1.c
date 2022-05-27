@@ -66,7 +66,7 @@ int main() {
     printf("%d %d\n", sss.field1, sss.field2);
 
     TestStruct_t ss2;
-    ss2.field1 = 333;
+    ss2.field1 = atoi("1") ? 333 : 52353423;
     printf("%d\n", ss2.field1);
 
     printf("%f\n", 2.3 + 0.7f);

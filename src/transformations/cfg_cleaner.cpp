@@ -228,7 +228,7 @@ void CfgCleaner::removeUnreachableBlocks() {
                 }
                 else {
                     toRemoveId = block.next[0];
-                    block.next = { block.next[1] };
+                    block.next = { block.next[1] }; // TODO: bug here, remove from prev
                 }
 
                 std::set<int> unreached = getDominatedByGiven(toRemoveId);
