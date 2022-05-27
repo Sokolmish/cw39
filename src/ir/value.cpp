@@ -8,15 +8,6 @@ IRval::IRval(ValueClass vclass, std::shared_ptr<IR_Type> type, IRval::union_type
 IRval::IRval(IRval::ValueClass vclass, std::shared_ptr<IR_Type> type, std::vector<IRval> vals) :
         valClass(vclass), type(std::move(type)), aggregateVals(std::move(vals)) {}
 
-
-IRval::ValueClass IRval::getValueClass() const {
-    return valClass;
-}
-
-std::shared_ptr<IR_Type> const& IRval::getType() const {
-    return type;
-}
-
 IRval IRval::createVal(std::shared_ptr<IR_Type> type, IRval::union_type v) {
     return IRval(IRval::VAL, std::move(type), v);
 }
@@ -90,27 +81,6 @@ IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
 }
 
 
-bool IRval::isConstant() const {
-    return isInList(valClass, IRval::VAL, IRval::ZEROINIT, IRval::AGGREGATE);
-}
-
-bool IRval::isVReg() const {
-    return valClass == IRval::VREG;
-}
-
-bool IRval::isGlobal() const {
-    return valClass == IRval::GLOBAL;
-}
-
-bool IRval::isFunParam() const {
-    return valClass == IRval::FUN_PARAM;
-}
-
-
-const IRval::union_type &IRval::getVal() const {
-    return val;
-}
-
 std::vector<IRval> const& IRval::getAggregateVal() const {
     if (valClass != IRval::AGGREGATE)
         throw std::runtime_error("Cannot get aggregate values from regular value");
@@ -166,7 +136,7 @@ std::string IRval::to_string() const {
             return ss.str();
         }
     }
-    throw cw39_internal_error("Invalid type of IRval");
+    throw std::logic_error("Invalid type of IRval");
 }
 
 std::string IRval::to_reg_name() const {
@@ -185,26 +155,4 @@ IRval IRval::copy() const {
     res.aggregateVals = newAggregateVals;
 
     return res;
-}
-
-// TODO: comparison with zeroinit?
-bool IRval::operator==(const IRval &oth) const {
-    return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
-}
-
-std::strong_ordering IRval::operator<=>(const IRval &oth) const {
-    if (valClass < oth.valClass)
-        return std::strong_ordering::less;
-    else if (valClass > oth.valClass)
-        return std::strong_ordering::greater;
-    else [[likely]] {
-        // NOTE: partial ordering (because of float), but in favor of speed it is ignored
-        auto valOrd = val <=> oth.val;
-        if (is_lt(valOrd)) // val < oth.val
-            return std::strong_ordering::less;
-        else if (is_gt(valOrd)) // val > oth.val
-            return std::strong_ordering::greater;
-        else
-            return std::strong_ordering::equal;
-    }
 }

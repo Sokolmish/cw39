@@ -19,35 +19,69 @@ public:
 
     IRval copy() const;
 
-    bool operator==(IRval const &oth) const;
+    bool operator==(IRval const &oth) const {
+        return valClass == oth.valClass && type->equal(*oth.type) && val == oth.val;
+    }
 
-    std::strong_ordering operator<=>(IRval const &oth) const;
+    std::strong_ordering operator<=>(IRval const &oth) const {
+        if (valClass < oth.valClass)
+            return std::strong_ordering::less;
+        else if (valClass > oth.valClass)
+            return std::strong_ordering::greater;
+        else [[likely]] {
+            // NOTE: partial ordering (because of float), but in favor of speed it is ignored
+            auto valOrd = val <=> oth.val;
+            if (is_lt(valOrd)) // val < oth.val
+                return std::strong_ordering::less;
+            else if (is_gt(valOrd)) // val > oth.val
+                return std::strong_ordering::greater;
+            else
+                return std::strong_ordering::equal;
+        }
+    }
 
-    [[nodiscard]] static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
-    [[nodiscard]] static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
-    [[nodiscard]] static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
-    [[nodiscard]] static IRval createString(uint64_t num);
-    [[nodiscard]] static IRval createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num);
-    [[nodiscard]] static IRval createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num);
-    [[nodiscard]] static IRval createUndef(std::shared_ptr<IR_Type> type);
-    [[nodiscard]] static IRval createZeroinit(std::shared_ptr<IR_Type> type);
-    [[nodiscard]] static IRval createAggregate(std::shared_ptr<IR_Type> type, std::vector<IRval> vals);
+    static IRval createVal(std::shared_ptr<IR_Type> type, union_type v);
+    static IRval createReg(std::shared_ptr<IR_Type> type, uint64_t id);
+    static IRval createFunArg(std::shared_ptr<IR_Type> type, uint64_t num);
+    static IRval createString(uint64_t num);
+    static IRval createGlobal(std::shared_ptr<IR_Type> globalType, uint64_t num);
+    static IRval createFunPtr(std::shared_ptr<IR_Type> funPtrType, uint64_t num);
+    static IRval createUndef(std::shared_ptr<IR_Type> type);
+    static IRval createZeroinit(std::shared_ptr<IR_Type> type);
+    static IRval createAggregate(std::shared_ptr<IR_Type> type, std::vector<IRval> vals);
 
-    [[nodiscard]] static IRval createDefault(std::shared_ptr<IR_Type> type);
+    static IRval createDefault(std::shared_ptr<IR_Type> type);
 
-    ValueClass getValueClass() const;
-    std::shared_ptr<IR_Type> const& getType() const;
-    union_type const& getVal() const;
+    ValueClass getValueClass() const {
+        return valClass;
+    }
 
-    /** Check if value is constant, zeroinit or aggregate (always constant) */
-    bool isConstant() const;
+    std::shared_ptr<IR_Type> const& getType() const {
+        return type;
+    }
 
-    bool isVReg() const;
-    bool isGlobal() const;
-    bool isFunParam() const;
+    union_type const& getVal() const {
+        return val;
+    }
 
-    [[nodiscard]] std::string to_string() const;
-    [[nodiscard]] std::string to_reg_name() const;
+    bool isConstant() const {
+        return isInList(valClass, IRval::VAL, IRval::ZEROINIT, IRval::AGGREGATE);
+    }
+
+    bool isVReg() const {
+        return valClass == IRval::VREG;
+    }
+
+    bool isGlobal() const {
+        return valClass == IRval::GLOBAL;
+    }
+
+    bool isFunParam() const {
+        return valClass == IRval::FUN_PARAM;
+    }
+
+    std::string to_string() const;
+    std::string to_reg_name() const;
 
     template <class T>
     T castValTo() const {
