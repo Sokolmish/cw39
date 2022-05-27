@@ -59,7 +59,7 @@ class IR_Generator {
 public:
     IR_Generator(AbstractSyntaxTree const &ast, ParsingContext &ctx);
 
-    [[nodiscard]] std::shared_ptr<IntermediateUnit> getIR() const;
+    std::shared_ptr<IntermediateUnit> getIR() const;
 
 private:
     ParsingContext &ctx;
@@ -155,6 +155,7 @@ private:
 
     void genTransUnit(AST_TranslationUnit const &tunit);
 
+    void checkNewGlobalName(string_id_t id, yy::location loc);
     void createFunction(AST_FunctionDef const &def);
     void fillBlock(AST_CompoundStmt const &compStmt);
     void insertGlobalDeclaration(AST_Declaration const &decl);

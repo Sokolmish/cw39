@@ -111,6 +111,24 @@ void IR_Generator::genTransUnit(AST_TranslationUnit const &tunit) {
     }
 }
 
+void IR_Generator::checkNewGlobalName(string_id_t id, yy::location loc) {
+    if (ctx.getReserved(id)) {
+        semanticError(std::move(loc), fmt::format(
+                "Cannot reuse reserved name ('{}')",
+                ctx.getIdentById(id)));
+    }
+    if (globals.contains(id)) {
+        semanticError(std::move(loc), fmt::format(
+                "Global variable with such name ('{}') has been already declared",
+                ctx.getIdentById(id)));
+    }
+    if (functions.contains(id)) {
+        semanticError(std::move(loc), fmt::format(
+                "Function with such name ('{}') has been already declared",
+                ctx.getIdentById(id)));
+    }
+}
+
 /** Insert global variable declaration, new struct type or function prototype */
 void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
     // Typedefs were processed in parser
@@ -141,9 +159,6 @@ void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
             functions.emplace(ident, fun.getId());
             continue; // break?
         }
-
-        if (globals.contains(ident)) // TODO: check in functions (not only there)
-            semanticError(singleDecl->loc, "Global variable already declared");
 
         IRval initVal = singleDecl->initializer ?
                         getInitializerVal(varType, *singleDecl->initializer) :
@@ -181,6 +196,8 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     variables.increaseLevel();
 
     string_id_t funcIdent = CoreDriver::getDeclaredIdent(*def.decl);
+    checkNewGlobalName(funcIdent, def.decl->loc);
+
     auto fullType = getType(*def.specifiers, *def.decl);
     auto linkage = getFunLinkage(def.specifiers->storage_specifier, def.loc);
     int fspec = getFspec(*def.specifiers);
@@ -194,6 +211,11 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
     auto declArgs = getDeclaredFuncArgs(*def.decl);
     int curArgNum = 0;
     for (auto const &[argIdent, argType] : declArgs) {
+        if (ctx.getReserved(argIdent))
+            semanticError(def.decl->loc, "Function parameter cannot have reserved name");
+        if (variables.hasOnTop(argIdent))
+            semanticError(def.decl->loc, "Variable with such name has been already declared");
+
         if (IR_TypeDirect::getVoid()->equal(*argType))
             semanticError(def.decl->loc, "Function parameter cannot be 'void'");
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
@@ -293,8 +315,10 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
             selectBlock(cur);
         }
 
+        if (ctx.getReserved(ident))
+            semanticError(singleDecl->loc, "Variable cannot have reserved name");
         if (variables.hasOnTop(ident))
-            semanticError(singleDecl->loc, "Variable already declared");
+            semanticError(singleDecl->loc, "Variable with such name has been already declared");
         variables.put(ident, *var);
 
         if (singleDecl->initializer) {
