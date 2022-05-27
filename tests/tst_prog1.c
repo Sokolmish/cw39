@@ -1,4 +1,4 @@
-#ifdef __GNUC__
+#ifndef __CW39__
 #define __pure
 #define __fconst
 #define __weak

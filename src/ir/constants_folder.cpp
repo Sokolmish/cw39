@@ -1,5 +1,6 @@
 #include "constants_folder.hpp"
 #include "utils.hpp"
+#include <bit>
 
 std::optional<IRval> ConstantsFolder::foldExpr(IR_Expr const &expr) {
     switch (expr.type) {
@@ -10,7 +11,7 @@ std::optional<IRval> ConstantsFolder::foldExpr(IR_Expr const &expr) {
         case IR_Expr::PHI:
             return foldPhi(dynamic_cast<IR_ExprPhi const &>(expr));
 
-        case IR_Expr::CALL: // TODO: pure functions
+        case IR_Expr::CALL:
         case IR_Expr::MEMORY:
         case IR_Expr::ACCESS:
         case IR_Expr::ALLOCATION:
@@ -95,7 +96,24 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
                     throw cw39_internal_error("Wrong integer operation");
             }
         }, intVariant);
-    } // TODO: intrisics evaluation (ctz, popcnt,...), but there is problem with types
+    }
+    else if (isIntrinsic(expr.op) && expr.op != IR_ExprOper::INTR_BITREV) {
+        // No bitrev because it isn't in standard library
+        using uintVariant_t = std::variant<uint8_t, uint32_t, uint64_t>;
+        uintVariant_t intVariant = variant_cast(expr.args[0].getVal());
+        return std::visit([&expr](auto const &a) -> IRval {
+            switch (expr.op) {
+                case IR_ExprOper::INTR_CTZ:
+                    return IRval::createVal(expr.args[0].getType(), std::countr_zero(a));
+                case IR_ExprOper::INTR_CLZ:
+                    return IRval::createVal(expr.args[0].getType(), std::countl_zero(a));
+                case IR_ExprOper::INTR_POPCNT:
+                    return IRval::createVal(expr.args[0].getType(), std::popcount(a));
+                default:
+                    throw cw39_internal_error("Wrong intrinsic operation");
+            }
+        }, intVariant);
+    }
     else {
         return {};
     }
