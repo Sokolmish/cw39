@@ -193,3 +193,7 @@ std::string CLIArgs::get_llc_name() const {
         return defaultLLC;
     return envVal;
 }
+
+std::string CLIArgs::getSelfVersion() {
+    return vers;
+}

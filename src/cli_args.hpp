@@ -32,6 +32,8 @@ public:
 
     std::string get_llc_name() const;
 
+    static std::string getSelfVersion();
+
     ~CLIArgs(); // For unique_ptr to implementation
     class CLIArgs_Impl;
 

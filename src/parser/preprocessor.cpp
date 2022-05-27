@@ -1,4 +1,5 @@
 #include "preprocessor.hpp"
+#include "cli_args.hpp" // For version
 #include <fstream>
 #include <sstream>
 #include <stack>
@@ -548,7 +549,7 @@ void PreprocessorImpl::putIdent(const std::string &ident) {
             return;
         }
         else if (ident == "__VERSION__") {
-            fmt::print(globalSS, "\"cw39 v0.2.0\""); // TODO
+            fmt::print(globalSS, "\"cw39 {}\"", CLIArgs::getSelfVersion());
             return;
         }
         else if (ident == "__INCLUDE_LEVEL__") {
