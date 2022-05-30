@@ -24,8 +24,7 @@ struct AST_Literal {
 
 struct AST_Attribute {
     enum AttrTypes {
-        ATTR_NONE,
-        ATTR_NOINLINE,
+        ATTR_NONE, ATTR_NOINLINE
     } attr_type;
 
     AST_Attribute() : attr_type(ATTR_NONE) {}
@@ -35,7 +34,7 @@ struct AST_Attribute {
 using string_id_t = int;
 #define NO_IDENT_ID 0
 
-/** Doesn't unescaping '\xhh' */
+/** Doesn't unescaping '\\xhh' */
 inline char unescapeChar(char ch) {
     switch (ch) {
         case 'a':
@@ -65,7 +64,7 @@ inline char unescapeChar(char ch) {
     }
 }
 
-/** Parses '\xHH' sequence. Assumes that c1 and c2 are xdigits. */
+/** Parses '\\xHH' sequence. Assumes that c1 and c2 are xdigits. */
 inline char parseXEscape(char c1, char c2) {
 //    std::array buf{ c1, c2, '\0' };
 //    return (char)strtol(buf.data(), nullptr, 16);

@@ -20,8 +20,8 @@ set(FLEX_LEXER_SRC              lexer.l)
 
 set(GPERF_DIRECTIVES_RES        directives_hashtable.cpp)
 set(GPERF_DIRECTIVES_SRC        directives.gperf)
-set(GPERF_KEYWORDS_RES        keywords_hashtable.cpp)
-set(GPERF_KEYWORDS_SRC        keywords.gperf)
+set(GPERF_KEYWORDS_RES          keywords_hashtable.cpp)
+set(GPERF_KEYWORDS_SRC          keywords.gperf)
 
 set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/main.cpp

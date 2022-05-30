@@ -61,7 +61,7 @@ enum class CompilationLevel {
     PREPROCESS,     // files -> text
     PARSE,          // text -> ast
     GENERATE,       // ast -> ir (+optimization)
-    MATERIALIZE,    // opt ir -> llvm
+    MATERIALIZE,    // ir -> llvm
     COMPILE,        // llvm -> asm
 };
 
@@ -120,10 +120,9 @@ static void process(CLIArgs  &args) {
 
     if (args.inputFile().empty())
         throw cw39_error("No input file");
-    std::string path = args.inputFile();
 
     startTime = steady_clock::now();
-    Preprocessor preproc(path, args.getDefines());
+    Preprocessor preproc(args.inputFile(), args.getDefines());
     stopTime = steady_clock::now();
 
     std::string text = preproc.getText();
@@ -186,6 +185,7 @@ static void process(CLIArgs  &args) {
     startTime = steady_clock::now();
     IR2LLVM materializer(optUnit);
     stopTime = steady_clock::now();
+
     if (args.outLLVM())
         writeOut(*args.outLLVM(), materializer.getLLVM_IR());
     if (args.outBC()) {
