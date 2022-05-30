@@ -56,11 +56,13 @@ private:
     bool isDefinedType(string_id_t id);
     AST_TypeSpecifier* getDefinedType(string_id_t id);
 
-    AST_Literal_t get_integer(const char *str);
-    AST_Literal_t get_float(const char *str, size_t len);
-    AST_Literal_t get_charval(const char *str, size_t len);
+    AST_Attribute get_attribute(string_id_t id) const;
 
-    [[noreturn]] void lexer_error(std::string msg);
+    AST_Literal get_integer(const char *str) const;
+    AST_Literal get_float(const char *str, size_t len) const;
+    AST_Literal get_charval(const char *str, size_t len) const;
+
+    [[noreturn]] void lexer_error(std::string msg) const;
 
     friend class yy::parser;
     friend YY_DECL;

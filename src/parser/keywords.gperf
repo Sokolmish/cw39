@@ -44,6 +44,7 @@ unsigned,       yy::parser::token::CORE_TOK_UNSIGNED
 void,           yy::parser::token::CORE_TOK_VOID
 volatile,       yy::parser::token::CORE_TOK_VOLATILE
 while,          yy::parser::token::CORE_TOK_WHILE
+__attribute__,  yy::parser::token::CORE_TOK_ATTRIBUTE
 __fconst,       yy::parser::token::CORE_TOK_EXT_FCONST
 __pure,         yy::parser::token::CORE_TOK_EXT_PURE
 __weak,         yy::parser::token::CORE_TOK_EXT_WEAK

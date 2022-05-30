@@ -159,7 +159,7 @@ static IntSuff get_int_suff(const char **str) {
     }
 }
 
-AST_Literal_t CoreDriver::get_integer(const char *str) {
+AST_Literal CoreDriver::get_integer(const char *str) const {
     const char *endptr, *suff;
     uint64_t val = strtoull(str, (char**)(&endptr), 0);
 
@@ -201,7 +201,7 @@ AST_Literal_t CoreDriver::get_integer(const char *str) {
     return res;
 }
 
-AST_Literal_t CoreDriver::get_float(const char *str, size_t len) {
+AST_Literal CoreDriver::get_float(const char *str, size_t len) const {
     AST_Literal res{
         .type = AST_Literal::FLOAT,
         .longCnt = 0,
@@ -232,7 +232,7 @@ AST_Literal_t CoreDriver::get_float(const char *str, size_t len) {
     return res;
 }
 
-AST_Literal_t CoreDriver::get_charval(const char *str, size_t len) {
+AST_Literal CoreDriver::get_charval(const char *str, size_t len) const {
     AST_Literal res{
         .type = AST_Literal::CHARACTER,
         .longCnt = 0,

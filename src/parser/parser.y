@@ -64,6 +64,7 @@
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
 %token STRUCT UNION ENUM ELLIPSIS
 %token CASE DEFAULT IF SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
+%token ATTRIBUTE
 
 %precedence IFX
 %precedence ELSE
@@ -144,6 +145,8 @@
 
 %type <AST_FunctionDef *> func_def
 %type <AST_TranslationUnit *> trans_unit
+
+%type <AST_Attribute> attr
 
 %%
 
@@ -576,6 +579,10 @@ trans_unit
 
 func_def
     : decl_specs declarator compound_stmt       { $$ = drv.ast->mkFunDef($1, $2, $3, @$); }
+    | attr func_def                             { $$ = $2; }
     ;
+
+attr
+    : ATTRIBUTE "(" "(" IDENTIFIER ")" ")"      { $$ = drv.get_attribute($4); }
 
 %%

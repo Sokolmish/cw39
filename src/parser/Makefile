@@ -8,7 +8,7 @@ hashtables: directives_hashtable.cpp keywords_hashtable.cpp
 
 clean:
 	rm -f scanner.cpp parser.cpp parser.hpp
-	rm -f directives_hashtable.cpp
+	rm -f directives_hashtable.cpp keywords_hashtable.cpp
 
 # Flex and Bison
 

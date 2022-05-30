@@ -4,7 +4,7 @@
 #include <string>
 #include <cstdint>
 
-typedef struct AST_Literal {
+struct AST_Literal {
     enum LiteralType { INTEGER, FLOAT, CHARACTER };
 
     LiteralType type;
@@ -20,7 +20,17 @@ typedef struct AST_Literal {
         float vf32;
         double vf64;
     } val;
-} AST_Literal_t;
+};
+
+struct AST_Attribute {
+    enum AttrTypes {
+        ATTR_NONE,
+        ATTR_NOINLINE,
+    } attr_type;
+
+    AST_Attribute() : attr_type(ATTR_NONE) {}
+    AST_Attribute(AttrTypes type) : attr_type(type) {}
+};
 
 using string_id_t = int;
 #define NO_IDENT_ID 0

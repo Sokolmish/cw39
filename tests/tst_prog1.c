@@ -16,6 +16,7 @@ typedef struct TestStruct {
     int field2;
 } TestStruct_t;
 
+__attribute__((noinline))
 __weak void store555(int *addr) {
     *addr = 554;
     (*addr)++;

@@ -416,38 +416,41 @@ namespace yy {
       // arg_expr_lst
       char dummy2[sizeof (AST_ArgumentsList *)];
 
+      // attr
+      char dummy3[sizeof (AST_Attribute)];
+
       // block_items
-      char dummy3[sizeof (AST_BlockItemList *)];
+      char dummy4[sizeof (AST_BlockItemList *)];
 
       // compound_stmt
-      char dummy4[sizeof (AST_CompoundStmt *)];
+      char dummy5[sizeof (AST_CompoundStmt *)];
 
       // decl_specs
-      char dummy5[sizeof (AST_DeclSpecifiers *)];
+      char dummy6[sizeof (AST_DeclSpecifiers *)];
 
       // declaration
-      char dummy6[sizeof (AST_Declaration *)];
+      char dummy7[sizeof (AST_Declaration *)];
 
       // declarator
-      char dummy7[sizeof (AST_Declarator *)];
+      char dummy8[sizeof (AST_Declarator *)];
 
       // designator
-      char dummy8[sizeof (AST_Designator *)];
+      char dummy9[sizeof (AST_Designator *)];
 
       // dir_abstr_decltor
-      char dummy9[sizeof (AST_DirAbstrDeclarator *)];
+      char dummy10[sizeof (AST_DirAbstrDeclarator *)];
 
       // dir_decltor
-      char dummy10[sizeof (AST_DirDeclarator *)];
+      char dummy11[sizeof (AST_DirDeclarator *)];
 
       // enum_specifier
-      char dummy11[sizeof (AST_EnumSpecifier *)];
+      char dummy12[sizeof (AST_EnumSpecifier *)];
 
       // enumerator
-      char dummy12[sizeof (AST_Enumerator *)];
+      char dummy13[sizeof (AST_Enumerator *)];
 
       // enumerator_list
-      char dummy13[sizeof (AST_EnumeratorList *)];
+      char dummy14[sizeof (AST_EnumeratorList *)];
 
       // primary_expr
       // postfix_expr
@@ -467,88 +470,88 @@ namespace yy {
       // assign_expr
       // expr
       // const_expr
-      char dummy14[sizeof (AST_Expr *)];
+      char dummy15[sizeof (AST_Expr *)];
 
       // expr_stmt
-      char dummy15[sizeof (AST_ExprStmt *)];
+      char dummy16[sizeof (AST_ExprStmt *)];
 
       // func_def
-      char dummy16[sizeof (AST_FunctionDef *)];
+      char dummy17[sizeof (AST_FunctionDef *)];
 
       // init_decltor
-      char dummy17[sizeof (AST_InitDeclarator *)];
+      char dummy18[sizeof (AST_InitDeclarator *)];
 
       // init_decltor_list
-      char dummy18[sizeof (AST_InitDeclaratorList *)];
+      char dummy19[sizeof (AST_InitDeclaratorList *)];
 
       // initializer
-      char dummy19[sizeof (AST_Initializer *)];
+      char dummy20[sizeof (AST_Initializer *)];
 
       // init_lst
-      char dummy20[sizeof (AST_InitializerList *)];
+      char dummy21[sizeof (AST_InitializerList *)];
 
       // loop_stmt
-      char dummy21[sizeof (AST_IterStmt *)];
+      char dummy22[sizeof (AST_IterStmt *)];
 
       // jmp_stmt
-      char dummy22[sizeof (AST_JumpStmt *)];
+      char dummy23[sizeof (AST_JumpStmt *)];
 
       // label_stmt
-      char dummy23[sizeof (AST_LabeledStmt *)];
+      char dummy24[sizeof (AST_LabeledStmt *)];
 
       // CONSTANT
-      char dummy24[sizeof (AST_Literal)];
+      char dummy25[sizeof (AST_Literal)];
 
       // parameter_declaration
-      char dummy25[sizeof (AST_ParameterDeclaration *)];
+      char dummy26[sizeof (AST_ParameterDeclaration *)];
 
       // param_lst
-      char dummy26[sizeof (AST_ParameterList *)];
+      char dummy27[sizeof (AST_ParameterList *)];
 
       // param_type_lst
-      char dummy27[sizeof (AST_ParameterTypeList *)];
+      char dummy28[sizeof (AST_ParameterTypeList *)];
 
       // pointer
-      char dummy28[sizeof (AST_Pointer *)];
+      char dummy29[sizeof (AST_Pointer *)];
 
       // select_stmt
-      char dummy29[sizeof (AST_SelectionStmt *)];
+      char dummy30[sizeof (AST_SelectionStmt *)];
 
       // spec_qual_lst
-      char dummy30[sizeof (AST_SpecsQualsList *)];
+      char dummy31[sizeof (AST_SpecsQualsList *)];
 
       // stmt
-      char dummy31[sizeof (AST_Stmt *)];
+      char dummy32[sizeof (AST_Stmt *)];
 
       // strings_seq
-      char dummy32[sizeof (AST_StringsSeq *)];
+      char dummy33[sizeof (AST_StringsSeq *)];
 
       // struct_declaration
-      char dummy33[sizeof (AST_StructDeclaration *)];
+      char dummy34[sizeof (AST_StructDeclaration *)];
 
       // struct_decls_lst
-      char dummy34[sizeof (AST_StructDeclarationList *)];
+      char dummy35[sizeof (AST_StructDeclarationList *)];
 
       // struct_declarator
-      char dummy35[sizeof (AST_StructDeclarator *)];
+      char dummy36[sizeof (AST_StructDeclarator *)];
 
       // struct_declarator_list
-      char dummy36[sizeof (AST_StructDeclaratorList *)];
+      char dummy37[sizeof (AST_StructDeclaratorList *)];
 
       // trans_unit
-      char dummy37[sizeof (AST_TranslationUnit *)];
+      char dummy38[sizeof (AST_TranslationUnit *)];
 
       // type_name
-      char dummy38[sizeof (AST_TypeName *)];
+      char dummy39[sizeof (AST_TypeName *)];
 
       // type_qual_lst
-      char dummy39[sizeof (AST_TypeQuals *)];
+      char dummy40[sizeof (AST_TypeQuals *)];
 
       // type_specifier
-      char dummy40[sizeof (AST_TypeSpecifier *)];
+      char dummy41[sizeof (AST_TypeSpecifier *)];
 
       // ustruct_spec
-      char dummy41[sizeof (AST_UStructSpec *)];
+      char dummy42[sizeof (AST_UStructSpec *)];
 
       // unary_operator
       // assign_op
@@ -556,13 +559,13 @@ namespace yy {
       // type_qual
       // function_specifier
       // ustruct
-      char dummy42[sizeof (short)];
+      char dummy43[sizeof (short)];
 
       // IDENTIFIER
       // TYPE_NAME
       // STRING_LITERAL
       // general_ident
-      char dummy43[sizeof (string_id_t)];
+      char dummy44[sizeof (string_id_t)];
     };
 
     /// The size of the largest semantic type.
@@ -697,12 +700,13 @@ namespace yy {
     CORE_TOK_CONTINUE = 337,       // CONTINUE
     CORE_TOK_BREAK = 338,          // BREAK
     CORE_TOK_RETURN = 339,         // RETURN
-    CORE_TOK_IFX = 340,            // IFX
-    CORE_TOK_ELSE = 341,           // ELSE
-    CORE_TOK_IDENTIFIER = 342,     // IDENTIFIER
-    CORE_TOK_TYPE_NAME = 343,      // TYPE_NAME
-    CORE_TOK_CONSTANT = 344,       // CONSTANT
-    CORE_TOK_STRING_LITERAL = 345  // STRING_LITERAL
+    CORE_TOK_ATTRIBUTE = 340,      // ATTRIBUTE
+    CORE_TOK_IFX = 341,            // IFX
+    CORE_TOK_ELSE = 342,           // ELSE
+    CORE_TOK_IDENTIFIER = 343,     // IDENTIFIER
+    CORE_TOK_TYPE_NAME = 344,      // TYPE_NAME
+    CORE_TOK_CONSTANT = 345,       // CONSTANT
+    CORE_TOK_STRING_LITERAL = 346  // STRING_LITERAL
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -719,7 +723,7 @@ namespace yy {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 91, ///< Number of tokens.
+        YYNTOKENS = 92, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // "end of file"
         S_YYerror = 1,                           // error
@@ -806,77 +810,79 @@ namespace yy {
         S_CONTINUE = 82,                         // CONTINUE
         S_BREAK = 83,                            // BREAK
         S_RETURN = 84,                           // RETURN
-        S_IFX = 85,                              // IFX
-        S_ELSE = 86,                             // ELSE
-        S_IDENTIFIER = 87,                       // IDENTIFIER
-        S_TYPE_NAME = 88,                        // TYPE_NAME
-        S_CONSTANT = 89,                         // CONSTANT
-        S_STRING_LITERAL = 90,                   // STRING_LITERAL
-        S_YYACCEPT = 91,                         // $accept
-        S_primary_expr = 92,                     // primary_expr
-        S_strings_seq = 93,                      // strings_seq
-        S_postfix_expr = 94,                     // postfix_expr
-        S_arg_expr_lst = 95,                     // arg_expr_lst
-        S_unary_expr = 96,                       // unary_expr
-        S_unary_operator = 97,                   // unary_operator
-        S_cast_expr = 98,                        // cast_expr
-        S_mult_expr = 99,                        // mult_expr
-        S_add_expr = 100,                        // add_expr
-        S_shift_expr = 101,                      // shift_expr
-        S_rel_expr = 102,                        // rel_expr
-        S_eq_expr = 103,                         // eq_expr
-        S_and_expr = 104,                        // and_expr
-        S_xor_expr = 105,                        // xor_expr
-        S_or_expr = 106,                         // or_expr
-        S_land_expr = 107,                       // land_expr
-        S_lor_expr = 108,                        // lor_expr
-        S_ternary_expr = 109,                    // ternary_expr
-        S_assign_expr = 110,                     // assign_expr
-        S_assign_op = 111,                       // assign_op
-        S_expr = 112,                            // expr
-        S_const_expr = 113,                      // const_expr
-        S_decl_specs = 114,                      // decl_specs
-        S_storage_class_specifier = 115,         // storage_class_specifier
-        S_type_specifier = 116,                  // type_specifier
-        S_type_qual = 117,                       // type_qual
-        S_function_specifier = 118,              // function_specifier
-        S_ustruct_spec = 119,                    // ustruct_spec
-        S_general_ident = 120,                   // general_ident
-        S_ustruct = 121,                         // ustruct
-        S_struct_decls_lst = 122,                // struct_decls_lst
-        S_struct_declaration = 123,              // struct_declaration
-        S_spec_qual_lst = 124,                   // spec_qual_lst
-        S_struct_declarator_list = 125,          // struct_declarator_list
-        S_struct_declarator = 126,               // struct_declarator
-        S_enum_specifier = 127,                  // enum_specifier
-        S_enumerator_list = 128,                 // enumerator_list
-        S_enumerator = 129,                      // enumerator
-        S_declaration = 130,                     // declaration
-        S_init_decltor_list = 131,               // init_decltor_list
-        S_init_decltor = 132,                    // init_decltor
-        S_declarator = 133,                      // declarator
-        S_pointer = 134,                         // pointer
-        S_dir_decltor = 135,                     // dir_decltor
-        S_type_qual_lst = 136,                   // type_qual_lst
-        S_param_type_lst = 137,                  // param_type_lst
-        S_param_lst = 138,                       // param_lst
-        S_parameter_declaration = 139,           // parameter_declaration
-        S_type_name = 140,                       // type_name
-        S_abstr_decltor = 141,                   // abstr_decltor
-        S_dir_abstr_decltor = 142,               // dir_abstr_decltor
-        S_initializer = 143,                     // initializer
-        S_init_lst = 144,                        // init_lst
-        S_designator = 145,                      // designator
-        S_stmt = 146,                            // stmt
-        S_label_stmt = 147,                      // label_stmt
-        S_compound_stmt = 148,                   // compound_stmt
-        S_block_items = 149,                     // block_items
-        S_expr_stmt = 150,                       // expr_stmt
-        S_select_stmt = 151,                     // select_stmt
-        S_loop_stmt = 152,                       // loop_stmt
-        S_jmp_stmt = 153,                        // jmp_stmt
-        S_trans_unit = 154,                      // trans_unit
-        S_func_def = 155                         // func_def
+        S_ATTRIBUTE = 85,                        // ATTRIBUTE
+        S_IFX = 86,                              // IFX
+        S_ELSE = 87,                             // ELSE
+        S_IDENTIFIER = 88,                       // IDENTIFIER
+        S_TYPE_NAME = 89,                        // TYPE_NAME
+        S_CONSTANT = 90,                         // CONSTANT
+        S_STRING_LITERAL = 91,                   // STRING_LITERAL
+        S_YYACCEPT = 92,                         // $accept
+        S_primary_expr = 93,                     // primary_expr
+        S_strings_seq = 94,                      // strings_seq
+        S_postfix_expr = 95,                     // postfix_expr
+        S_arg_expr_lst = 96,                     // arg_expr_lst
+        S_unary_expr = 97,                       // unary_expr
+        S_unary_operator = 98,                   // unary_operator
+        S_cast_expr = 99,                        // cast_expr
+        S_mult_expr = 100,                       // mult_expr
+        S_add_expr = 101,                        // add_expr
+        S_shift_expr = 102,                      // shift_expr
+        S_rel_expr = 103,                        // rel_expr
+        S_eq_expr = 104,                         // eq_expr
+        S_and_expr = 105,                        // and_expr
+        S_xor_expr = 106,                        // xor_expr
+        S_or_expr = 107,                         // or_expr
+        S_land_expr = 108,                       // land_expr
+        S_lor_expr = 109,                        // lor_expr
+        S_ternary_expr = 110,                    // ternary_expr
+        S_assign_expr = 111,                     // assign_expr
+        S_assign_op = 112,                       // assign_op
+        S_expr = 113,                            // expr
+        S_const_expr = 114,                      // const_expr
+        S_decl_specs = 115,                      // decl_specs
+        S_storage_class_specifier = 116,         // storage_class_specifier
+        S_type_specifier = 117,                  // type_specifier
+        S_type_qual = 118,                       // type_qual
+        S_function_specifier = 119,              // function_specifier
+        S_ustruct_spec = 120,                    // ustruct_spec
+        S_general_ident = 121,                   // general_ident
+        S_ustruct = 122,                         // ustruct
+        S_struct_decls_lst = 123,                // struct_decls_lst
+        S_struct_declaration = 124,              // struct_declaration
+        S_spec_qual_lst = 125,                   // spec_qual_lst
+        S_struct_declarator_list = 126,          // struct_declarator_list
+        S_struct_declarator = 127,               // struct_declarator
+        S_enum_specifier = 128,                  // enum_specifier
+        S_enumerator_list = 129,                 // enumerator_list
+        S_enumerator = 130,                      // enumerator
+        S_declaration = 131,                     // declaration
+        S_init_decltor_list = 132,               // init_decltor_list
+        S_init_decltor = 133,                    // init_decltor
+        S_declarator = 134,                      // declarator
+        S_pointer = 135,                         // pointer
+        S_dir_decltor = 136,                     // dir_decltor
+        S_type_qual_lst = 137,                   // type_qual_lst
+        S_param_type_lst = 138,                  // param_type_lst
+        S_param_lst = 139,                       // param_lst
+        S_parameter_declaration = 140,           // parameter_declaration
+        S_type_name = 141,                       // type_name
+        S_abstr_decltor = 142,                   // abstr_decltor
+        S_dir_abstr_decltor = 143,               // dir_abstr_decltor
+        S_initializer = 144,                     // initializer
+        S_init_lst = 145,                        // init_lst
+        S_designator = 146,                      // designator
+        S_stmt = 147,                            // stmt
+        S_label_stmt = 148,                      // label_stmt
+        S_compound_stmt = 149,                   // compound_stmt
+        S_block_items = 150,                     // block_items
+        S_expr_stmt = 151,                       // expr_stmt
+        S_select_stmt = 152,                     // select_stmt
+        S_loop_stmt = 153,                       // loop_stmt
+        S_jmp_stmt = 154,                        // jmp_stmt
+        S_trans_unit = 155,                      // trans_unit
+        S_func_def = 156,                        // func_def
+        S_attr = 157                             // attr
       };
     };
 
@@ -919,6 +925,10 @@ namespace yy {
 
       case symbol_kind::S_arg_expr_lst: // arg_expr_lst
         value.move< AST_ArgumentsList * > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_attr: // attr
+        value.move< AST_Attribute > (std::move (that.value));
         break;
 
       case symbol_kind::S_block_items: // block_items
@@ -1155,6 +1165,20 @@ namespace yy {
       {}
 #else
       basic_symbol (typename Base::kind_type t, const AST_ArgumentsList *& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, AST_Attribute&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const AST_Attribute& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -1765,6 +1789,10 @@ switch (yykind)
 
       case symbol_kind::S_arg_expr_lst: // arg_expr_lst
         value.template destroy< AST_ArgumentsList * > ();
+        break;
+
+      case symbol_kind::S_attr: // attr
+        value.template destroy< AST_Attribute > ();
         break;
 
       case symbol_kind::S_block_items: // block_items
@@ -3408,6 +3436,21 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_ATTRIBUTE (location_type l)
+      {
+        return symbol_type (token::CORE_TOK_ATTRIBUTE, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_ATTRIBUTE (const location_type& l)
+      {
+        return symbol_type (token::CORE_TOK_ATTRIBUTE, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_IFX (location_type l)
       {
         return symbol_type (token::CORE_TOK_IFX, std::move (l));
@@ -3839,9 +3882,9 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1441,     ///< Last index in yytable_.
-      yynnts_ = 65,  ///< Number of nonterminal symbols.
-      yyfinal_ = 56 ///< Termination state number.
+      yylast_ = 1561,     ///< Last index in yytable_.
+      yynnts_ = 66,  ///< Number of nonterminal symbols.
+      yyfinal_ = 59 ///< Termination state number.
     };
 
 
@@ -3895,10 +3938,10 @@ switch (yykind)
       55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
       65,    66,    67,    68,    69,    70,    71,    72,    73,    74,
       75,    76,    77,    78,    79,    80,    81,    82,    83,    84,
-      85,    86,    87,    88,    89,    90
+      85,    86,    87,    88,    89,    90,    91
     };
     // Last valid token kind.
-    const int code_max = 345;
+    const int code_max = 346;
 
     if (t <= 0)
       return symbol_kind::S_YYEOF;
@@ -3923,6 +3966,10 @@ switch (yykind)
 
       case symbol_kind::S_arg_expr_lst: // arg_expr_lst
         value.copy< AST_ArgumentsList * > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_attr: // attr
+        value.copy< AST_Attribute > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_block_items: // block_items
@@ -4151,6 +4198,10 @@ switch (yykind)
 
       case symbol_kind::S_arg_expr_lst: // arg_expr_lst
         value.move< AST_ArgumentsList * > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_attr: // attr
+        value.move< AST_Attribute > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_block_items: // block_items
@@ -4408,7 +4459,7 @@ switch (yykind)
 
 
 } // yy
-#line 4412 "yy_parser.hpp"
+#line 4463 "yy_parser.hpp"
 
 
 

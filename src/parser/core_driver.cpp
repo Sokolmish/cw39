@@ -72,7 +72,15 @@ bool CoreDriver::isDefinedType(string_id_t id) {
 }
 
 
-void CoreDriver::lexer_error(std::string msg) {
+AST_Attribute CoreDriver::get_attribute(string_id_t id) const {
+    std::string name = ctx.getIdentById(id);
+    if (name == "noinline")
+        return AST_Attribute(AST_Attribute::ATTR_NOINLINE); // TODO: it is lost anyway
+    return AST_Attribute(); // Unknown attribute
+}
+
+
+void CoreDriver::lexer_error(std::string msg) const {
     auto fixLoc = ctx.warps.getLoc(location.begin.line);
     std::string filename = ctx.warps.getFilename(fixLoc.filenum);
     std::string excLoc = fmt::format("{}:{}:{}", filename, fixLoc.line, location.begin.column);
