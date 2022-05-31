@@ -512,7 +512,7 @@ void PreprocessorImpl::directiveWarning(string_constit_t &it) {
 
 
 void PreprocessorImpl::putIdent(const std::string &ident) {
-    if (ident.starts_with("__")) { // Small optimization for predefined macros
+    if (ident.starts_with("__")) [[unlikely]] { // Small optimization for predefined macros
         if (ident == "__FILE__") {
             std::string const &filename = locations.top().file;
             fmt::print(globalSS, "\"{:s}\"", filename);
@@ -558,7 +558,11 @@ void PreprocessorImpl::putIdent(const std::string &ident) {
         }
     }
 
-    globalSS.write(ident.c_str(), ident.size());
+    auto it = par.defines.find(ident);
+    if (it != par.defines.end())
+        globalSS << it->second;
+    else
+        globalSS << ident;
 }
 
 
