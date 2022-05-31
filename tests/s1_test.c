@@ -1,5 +1,6 @@
 int printf(const char *format, ...);
 int atoi(const char *nptr);
+int rand(void);
 
 typedef unsigned int u32;
 
@@ -20,16 +21,26 @@ static inline int count_zeroes2(u32 mask) {
 int main(int argc, char **argv) {
     if (argc < 2)
         return 0;
-    u32 arg = atoi(argv[1]);
+    u32 arg;
     u32 space;
+
+    arg = atoi(argv[1]);
+
     for (int i = 0; i < 5000000; i++) { // 1000000000
         int x1 = 0, x3 = 0;
-        if (i % 2 == 0)
-            arg += 4;
-        else
-            arg -= 4;
+
+//        if (i % 2 == 0)
+//            arg += 4;
+//        else
+//            arg -= 4;
+
+        arg = rand() << (rand() % 30);
+        if (arg == 0)
+            arg = 1;
+
         x1 = __builtin_ctz(arg);
         x3 = count_zeroes2(arg);
+
 //        printf("%d %d\n", x1, x3);
         stop_dce(&space, x1);
         stop_dce(&space, x3);
