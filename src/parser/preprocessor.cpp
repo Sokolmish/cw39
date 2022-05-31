@@ -413,8 +413,11 @@ void PreprocessorImpl::directiveDefine(string_constit_t &it) {
     if (name.empty())
         printError("Directive #define expects argument");
 
-    assertNoArg(it);
-    par.defines.emplace(std::move(name), ""); // TODO: macros
+    std::stringstream ss;
+    while (noEnd(it) && *it != '\n')
+        ss << *(it++);
+
+    par.defines.emplace(std::move(name), std::move(ss).str());
 }
 
 void PreprocessorImpl::directiveUndef(string_constit_t &it) {

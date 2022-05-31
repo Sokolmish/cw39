@@ -7,7 +7,7 @@
 
 #include "incl_file.h"
 
-
+#define BEGIN_STR "Begin\n"
 //#define DO_WARN
 //#define DO_ERR
 
@@ -26,7 +26,7 @@ unsigned long strlen(const char *s); /*
  */int atoi(const char *nptr);
 
 int main() {
-    printf("Begin\n");
+    printf(BEGIN_STR);
 
 #ifdef PHRASE
 #ifdef HELLO
