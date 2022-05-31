@@ -94,7 +94,7 @@ PreprocessorImpl::PreprocessorImpl(Preprocessor &parent, std::string const &path
     baseFilename = path;
     usrCounter = 0;
     processFile(path);
-    par.finalText = globalSS.str();
+    par.finalText = std::move(globalSS).str();
 }
 
 
@@ -128,7 +128,7 @@ std::string PreprocessorImpl::readFile(std::string const &path) {
         printError(fmt::format("Cannot read file '{}'", path));
     std::stringstream ss;
     ss << ifs.rdbuf();
-    return ss.str();
+    return std::move(ss).str();
 }
 
 
@@ -149,7 +149,7 @@ void PreprocessorImpl::processFile(const std::string &path) {
     while (noEnd(it)) {
         globalLine++;
         processLine(it);
-        globalSS.put('\n');
+        globalSS << '\n';
         locations.top().line++;
         if (noEnd(it))
             it++;
@@ -163,7 +163,7 @@ void PreprocessorImpl::processLine(string_constit_t &it) {
     // Skip leading spaces
     while (noEnd(it) && isspace(*it) && *it != '\n') {
         if (!isSkip)
-            globalSS.put(' ');
+            globalSS << ' ';
         it++;
     }
 
@@ -212,10 +212,10 @@ void PreprocessorImpl::processLine(string_constit_t &it) {
 
             // There is no comment at this point
             ++it;
-            globalSS.put('/');
+            globalSS << '/';
         }
         else { // Other character
-            globalSS.put(*(it++));
+            globalSS << *(it++);
         }
     }
 }
@@ -231,12 +231,12 @@ std::string PreprocessorImpl::scanIdent(string_constit_t &it) {
 void PreprocessorImpl::passNumber(string_constit_t &it) {
     // Assume that current character is digit
     while (noEnd(it) && isalnum(*it)) // Doesn't care about number correctess
-        globalSS.put(*(it++));
+        globalSS << *(it++);
 }
 
 void PreprocessorImpl::passString(string_constit_t &it) {
     it++;
-    globalSS.put('"');
+    globalSS << '"';
     while (noEnd(it) && *it != '"' && *it != '\n') {
         if (*it == '\\') {
             it++;
@@ -245,48 +245,48 @@ void PreprocessorImpl::passString(string_constit_t &it) {
                 printError("Incomplete escape sequence");
 
             if (*it != '\n') { // Lines concatenator
-                globalSS.put('\\');
-                globalSS.put(*(it++));
+                globalSS << '\\';
+                globalSS << *(it++);
             }
         }
         else {
-            globalSS.put(*(it++));
+            globalSS << *(it++);
         }
     }
     if (!noEnd(it) || *it != '"')
         printError("Incomplete string");
 
     it++;
-    globalSS.put('"');
+    globalSS << '"';
 }
 
 void PreprocessorImpl::passChar(string_constit_t &it) {
     it++;
-    globalSS.put('\'');
+    globalSS << '\'';
     if (noEnd(it) && *it == '\\') {
         it++;
 
         if (!noEnd(it))
             printError("Incomplete escape sequence");
 
-        globalSS.put('\\');
+        globalSS << '\\';
         if (*it == 'x') {
-            globalSS.put(*(it++)); // x
-            globalSS.put(*(it++)); // H
-            globalSS.put(*(it++)); // H
+            globalSS << *(it++); // x
+            globalSS << *(it++); // H
+            globalSS << *(it++); // H
         }
         else
-            globalSS.put(*(it++));
+            globalSS << *(it++);
     }
     else if (noEnd(it)) {
-        globalSS.put(*(it++));
+        globalSS << *(it++);
     }
 
     if (!noEnd(it) || *it != '\'')
         printError("Incomplete character literal");
 
     it++;
-    globalSS.put('\'');
+    globalSS << '\'';
 }
 
 void PreprocessorImpl::processSLComment(string_constit_t &it) {
@@ -298,16 +298,16 @@ void PreprocessorImpl::processSLComment(string_constit_t &it) {
 void PreprocessorImpl::processMLComment(string_constit_t &it) {
     auto startLoc = locations.top();
     it += 2;
-    globalSS.write("  ", 2);
+    globalSS << "  ";
     while (true) {
         while (noEnd(it) && *it != '*') {
             if (*it == '\n') {
-                globalSS.put('\n');
+                globalSS << '\n';
                 locations.top().line++;
                 globalLine++;
             }
             else {
-                globalSS.put(' ');
+                globalSS << ' ';
             }
             it++;
         }
@@ -318,11 +318,11 @@ void PreprocessorImpl::processMLComment(string_constit_t &it) {
         }
 
         it++;
-        globalSS.put(' ');
+        globalSS << ' ';
 
         if (noEnd(it) && *it == '/') {
             it++;
-            globalSS.put(' ');
+            globalSS << ' ';
             break;
         }
     }
@@ -493,7 +493,7 @@ void PreprocessorImpl::directiveLine(string_constit_t &it) {
 
     locations.top().line = arg;
     if (!filename.empty())
-        locations.top().file = filename;
+        locations.top().file = std::move(filename);
     par.ctx->warps.appendWarpLoc(globalLine, locations.top().line, locations.top().file);
 }
 
@@ -583,7 +583,7 @@ std::string PreprocessorImpl::getStringArg(string_constit_t &it, bool angleBrack
         printError(fmt::format("Expected closing quote ('{}')", qclose));
     ++it;
 
-    return ss.str();
+    return std::move(ss).str();
 }
 
 uint32_t PreprocessorImpl::getLineNumArg(string_constit_t &it) {
@@ -591,7 +591,7 @@ uint32_t PreprocessorImpl::getLineNumArg(string_constit_t &it) {
     while (noEnd(it) && std::isdigit(*it))
         ss << *(it++);
 
-    std::string snum = ss.str();
+    std::string snum = std::move(ss).str();
     char *endptr;
     uint64_t val = std::strtoul(snum.c_str(), &endptr, 10);
 
@@ -609,7 +609,7 @@ std::string PreprocessorImpl::getIdentArg(string_constit_t &it) {
     ss << *(it++);
     while (noEnd(it) && (std::isalnum(*it) || *it == '_'))
         ss << *(it++);
-    return ss.str();
+    return std::move(ss).str();
 }
 
 void PreprocessorImpl::skipSpaces(string_constit_t &it) {
