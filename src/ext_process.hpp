@@ -9,10 +9,17 @@ class ExtProcess {
 public:
     ExtProcess(std::string name, std::vector<std::string> const &args);
 
-    void wait();
+    void start();
+
+    int getInputFd() const;
+    int getOutputFd() const;
+
+    void setOutputToStdout();
+
+    void join(); // calls wait() for process
 
     void sendString(std::string const &str);
-    void closeFd();
+    void closeInputFd();
 
     ~ExtProcess(); // Needed for unique_ptr to incomplete type
 
@@ -23,8 +30,7 @@ private:
     std::vector<std::string> args;
     std::unique_ptr<InternalData> data;
 
-    void createProcess();
+    bool outputToStdout = false;
 };
-
 
 #endif /* EXT_PROCESS_HPP_INCLUDED__ */

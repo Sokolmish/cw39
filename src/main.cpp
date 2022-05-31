@@ -19,7 +19,8 @@
 #include "transformations/intrinsics_detector.hpp"
 
 #include "ir_2_llvm.hpp"
-#include "ext_process.hpp"
+
+#include "subprocess.hpp"
 
 /** If path is not empty then write to it, else write to stdout */
 static void writeOut(std::string const &path, std::string const &data) {
@@ -199,10 +200,13 @@ static void process(CLIArgs  &args) {
         return;
 
     if (args.outASM()) {
-        ExtProcess llc_proc(args.get_llc_name(), {}); // TODO: catch output
-        llc_proc.sendString(materializer.getLLVM_IR()); // Can send bitcode
-        llc_proc.closeFd();
-        llc_proc.wait();
+        using namespace subprocess;
+        auto p = Popen({ args.get_llc_name() }, input(PIPE), output(PIPE));
+        auto &llvmIr = materializer.getLLVM_IR(); // Can send bitcode
+        auto res = p.communicate(llvmIr.c_str(), llvmIr.size());
+        auto asmStr(res.first.buf.data());
+
+        writeOut(*args.outASM(), asmStr);
     }
 
     if (compilationLvl <= CompilationLevel::COMPILE)
