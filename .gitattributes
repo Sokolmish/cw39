@@ -6,5 +6,5 @@ src/parser/yy_scanner.cpp linguist-generated
 src/parser/directives_hastable.cpp linguist-generated
 src/parser/keywords_hastable.cpp linguist-generated
 
-src/cxxopts.hpp linguist-generated
-src/subprocess.hpp linguist-generated
+src/cxxopts.hpp linguist-vendored
+src/subprocess.hpp linguist-vendored
