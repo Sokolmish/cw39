@@ -216,6 +216,7 @@ void CfgCleaner::removeUnreachableBlocks() {
             block.prev = std::move(newPrev);
     }
 
+#if 0 // TODO: bug below
     toRemoveList.clear();
 
     for (auto &[bId, block] : cfg.getBlocksData()) {
@@ -252,6 +253,7 @@ void CfgCleaner::removeUnreachableBlocks() {
         if (changed)
             block.prev = std::move(newPrev);
     }
+#endif
 }
 
 std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
