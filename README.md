@@ -4,7 +4,8 @@ This is an optimizing compiler for the subset of the C99 language producing LLVM
 It is my bachelor's diploma work.
 
 There are some examples of compilable code in the [test directory](/tests).
-All tests can be checked via [run_tests](/tests/run_tests.sh) script.
+All tests can be checked via [run_tests](/tests/run_tests.sh) script (one should set the
+path to the compiler executable via `CC_tst` variable inside this script).
 
 Following optimizations are implemented in this compiler:
 
@@ -153,4 +154,13 @@ cw39 --llvm ./test.c | lli - 1 2
 Draw CFG into the `graph.svg` file:
 ```sh
 cw39 --cfg ./test.c | dot -Tsvg -o graph.svg
+```
+Create executable file from assemly code via clang.
+```sh
+cw39 --asm=test.s ./test.c
+clang ./test.s
+# Or
+cw39 --asm ./test.c | clang -x assembler -
+# Or
+cw39 --llvm ./test.c | clang -x ir -
 ```
