@@ -3,7 +3,8 @@
 #include "loop_inv_mover.hpp"
 #include <stack>
 
-IntrinsicsDetector::IntrinsicsDetector(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)), loops(cfg) {
+IntrinsicsDetector::IntrinsicsDetector(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)), loops(cfg) {
     std::vector<LoopNode const*> leafLoops;
     for (auto const &[lId, loop] : loops.getLoops()) {
         if (loop.children.empty())
@@ -13,8 +14,8 @@ IntrinsicsDetector::IntrinsicsDetector(CFGraph rawCfg) : IRTransformer(std::move
         passLoop(*loop);
     }
 
-    cfg = LoopInvMover(std::move(cfg)).moveCfg();
-    CfgCleaner cleaner(std::move(cfg));
+    cfg = LoopInvMover(unit, std::move(cfg)).moveCfg();
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeUselessLoops();
     cleaner.removeUselessNodes();
     cleaner.removeNops();
@@ -78,7 +79,7 @@ void IntrinsicsDetector::passLoop(LoopNode const &loop) {
     if (outerSuccId == -1)
         throw cw39_internal_error("Something wrong with loop structure");
 
-    IRval newCtzRes = cfg.getParentUnit()->createReg(oldCtzRes->getType());
+    IRval newCtzRes = cfg.createReg(oldCtzRes->getType());
     head.addNode(newCtzRes, std::make_unique<IR_ExprOper>(
             IR_ExprOper::INTR_CTZ, std::vector<IRval>{ *ctzArg }));
 

@@ -4,10 +4,11 @@
 
 // TailrecEliminator
 
-TailrecEliminator::TailrecEliminator(CFGraph rawCfg, int funcId) : IRTransformer(std::move(rawCfg)) {
+TailrecEliminator::TailrecEliminator(IntermediateUnit const &unit, CFGraph rawCfg, int funcId)
+        : IRTransformer(std::move(rawCfg)), iunit(&unit) {
     passFunction(funcId);
 
-    CfgCleaner cleaner(std::move(cfg));
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeNops();
     cleaner.removeUselessNodes();
     cfg = std::move(cleaner).moveCfg();
@@ -28,11 +29,11 @@ void TailrecEliminator::passFunction(int funcId) {
 
     std::vector<IRval> newArgs;
     std::vector<IR_ExprPhi *> phis;
-    auto const &argsTypes = cfg.getParentUnit()->getFunction(funcId).getFuncType()->args;
+    auto const &argsTypes = iunit->getFunction(funcId).getFuncType()->args;
 
     // Place phis in oldHead (there are no other phis because it was entry block)
     for (uint64_t an = 0; auto const &argType : argsTypes) {
-        IRval arg = cfg.getParentUnit()->createReg(argType);
+        IRval arg = cfg.createReg(argType);
         newArgs.push_back(arg);
 
         auto phi = std::make_unique<IR_ExprPhi>();
@@ -119,7 +120,8 @@ void TailrecEliminator::replaceParams(int entryId, std::vector<IRval> const &new
 
 // Inliner
 
-FunctionsInliner::FunctionsInliner(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
+FunctionsInliner::FunctionsInliner(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)), iunit(&unit) {
     bool changed = true;
     while (changed) {
         changed = false;
@@ -131,14 +133,13 @@ FunctionsInliner::FunctionsInliner(CFGraph rawCfg) : IRTransformer(std::move(raw
         }
     }
 
-    CfgCleaner cleaner(std::move(cfg));
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeTransitBlocks();
     cleaner.removeNops();
     cfg = std::move(cleaner).moveCfg();
 }
 
 bool FunctionsInliner::passBlock(IR_Block &block) {
-    auto iunit = cfg.getParentUnit();
     for (auto nodeIt = block.body.begin(); nodeIt != block.body.end(); ++nodeIt) {
         IR_Node &node = *nodeIt;
         if (node.body && node.body->type == IR_Expr::CALL) {
@@ -245,13 +246,12 @@ IR_Block& FunctionsInliner::inlineFunc(IntermediateUnit::Function const &func, I
 
 void FunctionsInliner::reenumerateRegisters(std::vector<IR_Block*> const &blocks, IR_Node const &callingNode) {
     std::map<IRval, IRval> replacementMap;
-    auto iunit = cfg.getParentUnit();
 
     for (IR_Block *block : blocks) {
         for (IR_Node *node : block->getAllNodes()) {
             if (!node->res)
                 continue;
-            auto newReg = iunit->createReg(node->res->getType());
+            auto newReg = cfg.createReg(node->res->getType());
             replacementMap.emplace(*node->res, newReg);
             *node->res = std::move(newReg);
         }

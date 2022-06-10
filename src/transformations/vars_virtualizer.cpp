@@ -4,10 +4,10 @@
 #include <deque>
 #include <set>
 
-VarsVirtualizer::VarsVirtualizer(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
+VarsVirtualizer::VarsVirtualizer(IntermediateUnit const &unit, CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
     passFunction();
 
-    CfgCleaner cleaner(std::move(cfg));
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeNops();
     cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
@@ -85,7 +85,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
             auto it = toRedudeList.find(*instr.res);
             if (it != toRedudeList.end()) {
                 auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
-                it->second = cfg.getParentUnit()->createReg(alloc.type);
+                it->second = cfg.createReg(alloc.type);
                 instr = IR_Node::nop();
                 continue;
             }

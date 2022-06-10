@@ -10,7 +10,7 @@
 
 class SSA_Generator : public IRTransformer {
 public:
-    explicit SSA_Generator(CFGraph in_cfg);
+    explicit SSA_Generator(IntermediateUnit const &unit, CFGraph in_cfg);
 
 private:
     std::unique_ptr<GraphInfo> gInfo;

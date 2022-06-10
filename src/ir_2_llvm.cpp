@@ -331,6 +331,9 @@ void IR2LLVM_Impl::createPrototypes() {
 
 void IR2LLVM_Impl::createFunctions() {
     for (auto const &[fId, func] : parent->iunit.getFuncs()) {
+        blocksMap.clear();
+        regsMap.clear();
+
         GraphInfo gInfo(func.cfg);
 
         auto irFuncType = std::dynamic_pointer_cast<IR_TypeFunc>(func.fullType);

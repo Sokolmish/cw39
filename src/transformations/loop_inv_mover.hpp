@@ -6,7 +6,7 @@
 
 class LoopInvMover : public IRTransformer {
 public:
-    LoopInvMover(CFGraph rawCfg);
+    LoopInvMover(IntermediateUnit const &unit, CFGraph rawCfg);
 
 private:
     LoopsDetector loops;

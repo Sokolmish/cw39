@@ -4,7 +4,8 @@
 #include "ir/generator.hpp"
 #include "ir/constants_folder.hpp"
 
-CopyPropagator::CopyPropagator(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
+CopyPropagator::CopyPropagator(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)) {
     changed = true;
     while (changed) {
         changed = false;
@@ -12,7 +13,7 @@ CopyPropagator::CopyPropagator(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)
         foldConstants();
     }
 
-    CfgCleaner cleaner(std::move(cfg));
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeNops();
     cleaner.removeUselessNodes();
     cleaner.removeUnreachableBlocks();

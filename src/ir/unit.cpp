@@ -4,12 +4,12 @@
 #include <sstream>
 #include <stack>
 
-IntermediateUnit::Function::Function(IntermediateUnit *iunit, int id, std::string name, int isProto)
-        : cfg(iunit), isProto(isProto), id(id), name(std::move(name)) {}
+IntermediateUnit::Function::Function(int id, std::string name, int isProto)
+        : cfg(), isProto(isProto), id(id), name(std::move(name)) {}
 
-IntermediateUnit::Function::Function(IntermediateUnit *iunit, const Function &oth)
+IntermediateUnit::Function::Function(const Function &oth)
         : storage(oth.storage), fullType(oth.fullType->copy()), fspec(oth.fspec),
-          cfg(oth.cfg.copy(iunit)), isProto(oth.isProto), id(oth.id), name(oth.name) {}
+          cfg(oth.cfg.copy()), isProto(oth.isProto), id(oth.id), name(oth.name) {}
 
 
 int IntermediateUnit::Function::getId() const {
@@ -34,16 +34,14 @@ bool IntermediateUnit::Function::isInline() const {
 
 
 IntermediateUnit::IntermediateUnit(const IntermediateUnit &oth) {
-    blocksCounter = oth.blocksCounter;
-    regs_counter = oth.regs_counter;
     funcsCounter = oth.funcsCounter;
     stringsCounter = oth.stringsCounter;
     globalsCounter = oth.globalsCounter;
 
     for (const auto &[id, func]: oth.funcs)
-        funcs.emplace_hint(funcs.end(), id, Function(this, func));
+        funcs.emplace_hint(funcs.end(), id, Function(func));
     for (const auto &[id, func]: oth.prototypes)
-        prototypes.emplace_hint(prototypes.end(), id, Function(this, func));
+        prototypes.emplace_hint(prototypes.end(), id, Function(func));
     for (const auto &[id, irStruct]: oth.structs)
         structs.emplace_hint(structs.end(), id, irStruct);
     strings = oth.strings;
@@ -73,10 +71,6 @@ IntermediateUnit::Function const& IntermediateUnit::getFunction(int id) const {
     throw cw39_internal_error("No functions with given id");
 }
 
-IRval IntermediateUnit::createReg(std::shared_ptr<IR_Type> type) {
-    return IRval::createReg(std::move(type), regs_counter++);
-}
-
 /** Expects ptr type */
 IRval IntermediateUnit::createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init, VarLinkage stor) {
     auto newId = globalsCounter++;
@@ -93,7 +87,7 @@ IRval IntermediateUnit::createGlobal(std::string name, std::shared_ptr<IR_Type> 
 
 IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, FunLinkage stor, int fspec,
                                                              std::shared_ptr<IR_Type> fullType) {
-    Function func(this, funcsCounter++, std::move(name), false);
+    Function func(funcsCounter++, std::move(name), false);
     func.storage = stor;
     func.fspec = fspec;
     func.fullType = std::move(fullType);
@@ -103,7 +97,7 @@ IntermediateUnit::Function& IntermediateUnit::createFunction(std::string name, F
 
 IntermediateUnit::Function& IntermediateUnit::createPrototype(std::string name, FunLinkage stor,
                                                               std::shared_ptr<IR_Type> fullType) {
-    Function func(this, funcsCounter++, std::move(name), true);
+    Function func(funcsCounter++, std::move(name), true);
     func.storage = stor;
     func.fspec = Function::FuncSpec::FSPEC_NONE;
     func.fullType = std::move(fullType);
@@ -403,26 +397,26 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) c
 }
 
 
-CFGraph::CFGraph(IntermediateUnit *iunit) : par(iunit) {}
-
-CFGraph CFGraph::copy(IntermediateUnit *iunit) const {
-    CFGraph res(iunit);
+CFGraph CFGraph::copy() const {
+    CFGraph res;
     res.entryBlockId = entryBlockId;
     for (const auto &[id, block]: blocks) {
 //        res.blocks.emplace_hint(res.blocks.end(), id, block.copy());
         res.blocks.emplace(id, block.copy());
     }
+    res.regsCounter = regsCounter;
+    res.blocksCounter = blocksCounter;
     return res;
 }
 
 IR_Block &CFGraph::createBlock() {
-    int newId = par->blocksCounter++;
+    int newId = blocksCounter++;
     auto it = blocks.emplace_hint(blocks.end(), newId, IR_Block(newId));
     return it->second;
 }
 
 IR_Block &CFGraph::insertBlock(IR_Block block) {
-    int newId = par->blocksCounter++;
+    int newId = blocksCounter++;
     block.id = newId;
     auto it = blocks.emplace_hint(blocks.end(), newId, std::move(block));
     return it->second;
@@ -455,10 +449,6 @@ std::map<int, IR_Block> &CFGraph::getBlocksData() {
     return blocks;
 }
 
-IntermediateUnit* CFGraph::getParentUnit() {
-    return par;
-}
-
 void CFGraph::traverseBlocks(int blockId, std::set<int> &visited,
                              std::function<void(int)> const &action) const {
     if (visited.contains(blockId))
@@ -468,4 +458,8 @@ void CFGraph::traverseBlocks(int blockId, std::set<int> &visited,
     for (int nextId : this->block(blockId).next)
         if (!visited.contains(nextId))
             traverseBlocks(nextId, visited, action);
+}
+
+IRval CFGraph::createReg(std::shared_ptr<IR_Type> type) {
+    return IRval::createReg(std::move(type), regsCounter++);
 }

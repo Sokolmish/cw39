@@ -7,7 +7,7 @@
 
 class CfgCleaner : public IRTransformer {
 public:
-    explicit CfgCleaner(CFGraph rawCfg);
+    explicit CfgCleaner(IntermediateUnit const &unit, CFGraph rawCfg);
 
     void removeNops();
     void removeUselessNodes(); // Makes deep clean. Maybe also create fast clean?
@@ -17,6 +17,8 @@ public:
     void removeUselessLoops();
 
 private:
+    IntermediateUnit const *iunit;
+
     std::set<IRval> getPrimaryEffectiveRegs();
     std::set<IRval> extendEffectiveRegsSet(std::set<IRval> const &regsSet);
     void removeUnusedNodes(std::set<IRval> const &usedRegs);

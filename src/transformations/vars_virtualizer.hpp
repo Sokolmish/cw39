@@ -7,7 +7,7 @@
 
 class VarsVirtualizer : public IRTransformer {
 public:
-    explicit VarsVirtualizer(CFGraph rawCfg);
+    explicit VarsVirtualizer(IntermediateUnit const &unit, CFGraph rawCfg);
 
 private:
     std::map<IRval, std::optional<IRval>> toRedudeList;

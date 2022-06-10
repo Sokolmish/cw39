@@ -30,6 +30,7 @@ public:
     CoreDriver(ParsingContext &ctx, std::string program, int debugFlags);
 
     std::shared_ptr<AbstractSyntaxTree> getAST();
+    std::shared_ptr<AbstractSyntaxTree> moveAST() &&;
 
     static string_id_t getDeclaredIdentDirect(AST_DirDeclarator const &decl);
     static string_id_t getDeclaredIdent(AST_Declarator const &decl);

@@ -22,6 +22,10 @@
 
 #include "subprocess.hpp"
 
+using steady_clock = std::chrono::steady_clock;
+using time_point = steady_clock::time_point;
+using duration = steady_clock::duration;
+
 /** If path is not empty then write to it, else write to stdout */
 static void writeOut(std::string const &path, std::string const &data) {
     if (path.empty() || path == "-") {
@@ -58,6 +62,18 @@ static void writeOutBinary(std::string const &path, char const *data, size_t siz
     }
 }
 
+static void writeOutBinary(std::string const &path, std::vector<char> const &data) {
+    writeOutBinary(path, data.data(), data.size());
+}
+
+static void printElapsedTime(std::string const &name, duration const &time) {
+    namespace chrono = std::chrono;
+    auto ms = chrono::duration_cast<chrono::milliseconds>(time);
+    auto us = chrono::duration_cast<chrono::microseconds>(time);
+    fmt::print(stderr, "{:13s}: {:5} ({})\n", name, ms, us);
+}
+
+
 enum class CompilationLevel {
     PREPROCESS,     // files -> text
     PARSE,          // text -> ast
@@ -81,144 +97,218 @@ static CompilationLevel getCompilationLvl(CLIArgs const &args) {
         return CompilationLevel::MATERIALIZE; // Default level
 }
 
-static void optimizeFunction(IntermediateUnit::Function &func, CLIArgs const &args) {
+struct CompilationContext {
+    CLIArgs const &args;
+    CompilationLevel compilationLevel;
+
+    std::string preprocessedText = "";
+    std::shared_ptr<ParsingContext> parsingCtx;
+
+    std::shared_ptr<AbstractSyntaxTree> ast;
+    IntermediateUnit iunit;
+
+    std::string llvmIR;
+    std::vector<char> llvmBC;
+
+    std::string assembly;
+
+    CompilationContext(CLIArgs const &args) : args(args) {
+        compilationLevel = getCompilationLvl(args);
+    }
+};
+
+struct StepResult {
+    duration elapsedTime;
+    bool lastStep;
+};
+
+
+static StepResult doPreprocessing(CompilationContext &ctx) {
+    time_point startTm = steady_clock::now();
+    Preprocessor preproc(ctx.args.inputFile(), ctx.args.getDefines());
+    time_point stopTm = steady_clock::now();
+
+    std::tie(ctx.preprocessedText, ctx.parsingCtx) = std::move(preproc).moveData();
+
+    if (ctx.args.outPreproc())
+        writeOut(*ctx.args.outPreproc(), ctx.preprocessedText);
+    return {
+        .elapsedTime = stopTm - startTm,
+        .lastStep = ctx.compilationLevel <= CompilationLevel::PREPROCESS,
+    };
+}
+
+static StepResult doParsing(CompilationContext &ctx) {
+    int parserDebugFlags = 0;
+    if (ctx.args.isScannerTracing())
+        parserDebugFlags |= CoreDriver::TRACE_SCANNER;
+    if (ctx.args.isParserTracing())
+        parserDebugFlags |= CoreDriver::TRACE_PARSER;
+
+    std::string textCopy = ctx.preprocessedText;
+
+    time_point startTm = steady_clock::now();
+    CoreDriver parser(*ctx.parsingCtx, std::move(textCopy), parserDebugFlags);
+    time_point stopTm = steady_clock::now();
+
+    ctx.ast = std::move(parser).moveAST();
+
+    if (ctx.args.outAST())
+        writeOut(*ctx.args.outAST(), ctx.ast->top->getTreeNode(*ctx.parsingCtx)->printHor());
+    return {
+        .elapsedTime = stopTm - startTm,
+        .lastStep = ctx.compilationLevel <= CompilationLevel::PARSE,
+    };
+}
+
+static StepResult doIRGeneration(CompilationContext &ctx) {
+    time_point startTm = steady_clock::now();
+    IR_Generator gen(*ctx.ast, *ctx.parsingCtx);
+    time_point stopTm = steady_clock::now();
+
+    ctx.iunit = std::move(*std::move(gen).moveIR());
+
+    return {
+        .elapsedTime = stopTm - startTm,
+        .lastStep = false, // There is also optimization step
+    };
+}
+
+
+static void optimizeFunction(IntermediateUnit const &unit, IntermediateUnit::Function &func, CLIArgs const &args) {
     if (args.getOptLevel() == 0)
         return;
+
     CFGraph cfg = std::move(func.cfg);
-    cfg = VarsVirtualizer(std::move(cfg)).moveCfg();
-    cfg = SSA_Generator(std::move(cfg)).moveCfg();
-    cfg = AlgebraicTransformer(std::move(cfg)).moveCfg();
-    cfg = CommonSubexprElim(std::move(cfg)).moveCfg();
-    cfg = CopyPropagator(std::move(cfg)).moveCfg();
-    cfg = TailrecEliminator(std::move(cfg), func.getId()).moveCfg();
+    cfg = VarsVirtualizer(unit, std::move(cfg)).moveCfg();
+    cfg = SSA_Generator(unit, std::move(cfg)).moveCfg();
+    cfg = AlgebraicTransformer(unit, std::move(cfg)).moveCfg();
+    cfg = CommonSubexprElim(unit, std::move(cfg)).moveCfg();
+    cfg = CopyPropagator(unit, std::move(cfg)).moveCfg();
+    cfg = TailrecEliminator(unit, std::move(cfg), func.getId()).moveCfg();
 
     if (args.getOptLevel() >= 2) {
-        cfg = FunctionsInliner(std::move(cfg)).moveCfg();
-        cfg = LoopInvMover(std::move(cfg)).moveCfg();
+        cfg = FunctionsInliner(unit, std::move(cfg)).moveCfg();
+        cfg = LoopInvMover(unit, std::move(cfg)).moveCfg();
         if (args.isS1_Enabled()) {
-            cfg = IntrinsicsDetector(std::move(cfg)).moveCfg();
-            cfg = CommonSubexprElim(std::move(cfg)).moveCfg(); // TODO: temporary
+            cfg = IntrinsicsDetector(unit, std::move(cfg)).moveCfg();
+            cfg = CommonSubexprElim(unit, std::move(cfg)).moveCfg(); // TODO: temporary
         }
     }
 
     func.cfg = std::move(cfg);
 }
 
-// I didn't even try to write these long chrono types
-template <typename T>
-static void printElapsedTime(std::string const &name, T const &time) {
-    namespace chrono = std::chrono;
-    auto ms = chrono::duration_cast<chrono::milliseconds>(time);
-    auto us = chrono::duration_cast<chrono::microseconds>(time);
-    fmt::print(stderr, "{:13s}: {:5} ({})\n", name, ms, us);
+static StepResult doOptimizations(CompilationContext &ctx) {
+    time_point startTm = steady_clock::now();
+    if (ctx.args.getOptLevel() != 0) {
+        for (auto &[fId, func] : ctx.iunit.getFuncsMut()) {
+            optimizeFunction(ctx.iunit, func, ctx.args);
+        }
+    }
+    time_point stopTm = steady_clock::now();
+
+    if (ctx.args.outIR())
+        writeOut(*ctx.args.outIR(), ctx.iunit.printIR());
+    if (ctx.args.outCFG())
+        writeOut(*ctx.args.outCFG(), ctx.iunit.drawCFG());
+    return {
+        .elapsedTime = stopTm - startTm,
+        .lastStep = ctx.compilationLevel <= CompilationLevel::GENERATE,
+    };
 }
 
-static void process(CLIArgs  &args) {
-    using steady_clock = std::chrono::steady_clock;
-    steady_clock::time_point startTime, stopTime;
+static StepResult doMaterialization(CompilationContext &ctx) {
+    time_point startTm = steady_clock::now();
+    IR2LLVM materializer(ctx.iunit);
+    time_point stopTm = steady_clock::now();
 
-    auto compilationLvl = getCompilationLvl(args);
+    std::tie(ctx.llvmIR, ctx.llvmBC) = std::move(materializer).moveData();
 
+    if (ctx.args.outLLVM())
+        writeOut(*ctx.args.outLLVM(), ctx.llvmIR);
+    if (ctx.args.outBC())
+        writeOutBinary(*ctx.args.outBC(), ctx.llvmBC);
+    return {
+        .elapsedTime = stopTm - startTm,
+        .lastStep = ctx.compilationLevel <= CompilationLevel::MATERIALIZE,
+    };
+}
+
+static StepResult doCompilation(CompilationContext &ctx) {
+    namespace sp = subprocess;
+
+    std::string llc_args = ctx.args.get_llc_name();
+    if (ctx.args.getLLCArgs()) {
+        llc_args += " " + *ctx.args.getLLCArgs(); // TODO: doesn't handle quoted args
+    }
+    else { // Default LLC arguments
+        llc_args += " -O0 -mcpu=native";
+    }
+
+    time_point startTm = steady_clock::now();
+    // TODO: handle exceptions here
+    auto p = sp::Popen(llc_args, sp::input(sp::PIPE), sp::output(sp::PIPE));
+    auto &llvmIr = ctx.llvmIR; // Can send bitcode
+    auto res = p.communicate(llvmIr.c_str(), llvmIr.size());
+    time_point stopTm = steady_clock::now();
+
+    ctx.assembly = res.first.buf.data();
+
+    if (ctx.args.outASM())
+        writeOut(*ctx.args.outASM(), ctx.assembly);
+    return {
+        .elapsedTime = stopTm - startTm, // Times here are not so informative
+        .lastStep = ctx.compilationLevel <= CompilationLevel::COMPILE,
+    };
+}
+
+
+static void process(CLIArgs &args) {
     if (args.inputFile().empty())
         throw cw39_error("No input file");
 
-    startTime = steady_clock::now();
-    Preprocessor preproc(args.inputFile(), args.getDefines());
-    stopTime = steady_clock::now();
+    CompilationContext ctx(args);
+    StepResult stepRes;
 
-    std::string text = preproc.getText();
-    auto ctx = preproc.getContext();
-
-    if (args.outPreproc())
-        writeOut(*args.outPreproc(), text);
+    // Preprocessor
+    stepRes = doPreprocessing(ctx);
     if (args.isShowTimes())
-        printElapsedTime("Preprocessor", stopTime - startTime);
-
-    if (compilationLvl <= CompilationLevel::PREPROCESS)
+        printElapsedTime("Preprocessor", stepRes.elapsedTime);
+    if (stepRes.lastStep)
         return;
 
-    int parserDebugFlags = 0;
-    if (args.isScannerTracing())
-        parserDebugFlags |= CoreDriver::TRACE_SCANNER;
-    if (args.isParserTracing())
-        parserDebugFlags |= CoreDriver::TRACE_PARSER;
-    std::string textCopy = text;
-
-    startTime = steady_clock::now();
-    CoreDriver parser(*ctx, std::move(textCopy), parserDebugFlags);
-    stopTime = steady_clock::now();
-
-    std::shared_ptr<AbstractSyntaxTree> ast = parser.getAST();
-    if (args.outAST())
-        writeOut(*args.outAST(), ast->top->getTreeNode(*ctx)->printHor());
+    // Parser
+    stepRes = doParsing(ctx);
     if (args.isShowTimes())
-        printElapsedTime("Parser", stopTime - startTime);
-
-    if (compilationLvl <= CompilationLevel::PARSE)
+        printElapsedTime("Parser", stepRes.elapsedTime);
+    if (stepRes.lastStep)
         return;
 
-    startTime = steady_clock::now();
-    IR_Generator gen(*ast, *ctx);
-    stopTime = steady_clock::now();
-
+    // IR generator
+    stepRes = doIRGeneration(ctx);
     if (args.isShowTimes())
-        printElapsedTime("Generator", stopTime - startTime);
+        printElapsedTime("Generator", stepRes.elapsedTime);
 
-    auto rawUnit = gen.getIR();
-    IntermediateUnit optUnit = *rawUnit;
-
-    startTime = steady_clock::now();
-    for (auto &[fId, func] : optUnit.getFuncsMut()) {
-        optimizeFunction(func, args);
-    }
-    stopTime = steady_clock::now();
-
-    if (args.outIR())
-        writeOut(*args.outIR(), optUnit.printIR());
-    if (args.outCFG())
-        writeOut(*args.outCFG(), optUnit.drawCFG());
+    // Optimizations (or nothig if -O0)
+    stepRes = doOptimizations(ctx);
     if (args.isShowTimes())
-        printElapsedTime("Optimizator", stopTime - startTime);
-
-    if (compilationLvl <= CompilationLevel::GENERATE)
+        printElapsedTime("Optimizer", stepRes.elapsedTime);
+    if (stepRes.lastStep)
         return;
 
-    startTime = steady_clock::now();
-    IR2LLVM materializer(optUnit);
-    stopTime = steady_clock::now();
-
-    if (args.outLLVM())
-        writeOut(*args.outLLVM(), materializer.getLLVM_IR());
-    if (args.outBC()) {
-        auto const &data = materializer.getLLVM_BC();
-        writeOutBinary(*args.outBC(), data.data(), data.size());
-    }
+    // Materializer
+    stepRes = doMaterialization(ctx);
     if (args.isShowTimes())
-        printElapsedTime("Materializer", stopTime - startTime);
-
-    if (compilationLvl <= CompilationLevel::MATERIALIZE)
+        printElapsedTime("Materializer", stepRes.elapsedTime);
+    if (stepRes.lastStep)
         return;
 
-    if (args.outASM()) {
-        using namespace subprocess;
-
-        std::string llc_args = args.get_llc_name();
-        if (args.getLLCArgs()) {
-            llc_args += " " + *args.getLLCArgs(); // TODO: doesn't handle quoted args
-        }
-        else { // Default LLC arguments
-            llc_args += " -O0 -mcpu=native";
-        }
-
-        auto p = Popen(llc_args, input(PIPE), output(PIPE)); // TODO: handle exceptions here
-        auto &llvmIr = materializer.getLLVM_IR(); // Can send bitcode
-        auto res = p.communicate(llvmIr.c_str(), llvmIr.size());
-        auto asmStr(res.first.buf.data());
-
-        writeOut(*args.outASM(), asmStr);
-    }
-
-    if (compilationLvl <= CompilationLevel::COMPILE)
+    // Compilation
+    stepRes = doCompilation(ctx);
+    if (args.isShowTimes())
+        printElapsedTime("Compilation", stepRes.elapsedTime);
+    if (stepRes.lastStep)
         return;
 }
 

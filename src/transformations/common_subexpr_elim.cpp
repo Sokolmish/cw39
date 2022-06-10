@@ -1,7 +1,8 @@
 #include "computing_transformers.hpp"
 #include <map>
 
-CommonSubexprElim::CommonSubexprElim(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
+CommonSubexprElim::CommonSubexprElim(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)) {
     std::map<std::pair<std::vector<IRval>, IR_ExprOper::IR_Ops>, IRval> operExprs;
 
     auto visitor = [this, &operExprs](int blockId) {

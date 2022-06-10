@@ -61,6 +61,10 @@ public:
 
     std::shared_ptr<IntermediateUnit> getIR() const;
 
+    std::shared_ptr<IntermediateUnit> moveIR() && {
+        return std::move(iunit);
+    }
+
 private:
     ParsingContext &ctx;
 

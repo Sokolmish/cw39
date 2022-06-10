@@ -15,14 +15,14 @@ public:
         return std::move(cfg);
     };
 
-    bool isPassEffective() const {
+    bool isPassEffective() const { // TODO: not working
         return pass_changed;
     }
 
 protected:
     CFGraph cfg;
 
-    void setPassChanged() { // TODO: use it in all transformers
+    void setPassChanged() {
         pass_changed = true;
     }
 

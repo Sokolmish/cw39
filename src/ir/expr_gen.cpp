@@ -34,7 +34,7 @@ std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::u
     else {
         std::optional<IRval> res = {};
         if (ret)
-            res = iunit->createReg(std::move(ret));
+            res = curFunc->cfg.createReg(std::move(ret));
         return emitNode(res, std::move(expr));
     }
 }
@@ -376,7 +376,7 @@ IRval IR_Generator::evalTernaryExpr(AST_Ternary const &expr) {
 
     selectBlock(blockTrue);
     IRval trueVal = evalExpr(*expr.v_true);
-    IRval res = iunit->createReg(trueVal.getType()); // Assume, that arguments has same type
+    IRval res = curFunc->cfg.createReg(trueVal.getType()); // Assume, that arguments has same type
     emitMov(res, trueVal);
 
     selectBlock(blockFalse);
@@ -404,7 +404,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     if (!ltype.isInteger())
         semanticError(loc, "Cannon perform logical operation on non-integer type");
 
-    IRval res = iunit->createReg(lhs.getType());
+    IRval res = curFunc->cfg.createReg(lhs.getType());
     emitMov(res, lhs);
 
     IR_Block &blockLong = curFunc->cfg.createBlock();

@@ -13,12 +13,11 @@ class IntermediateUnit;
 
 class CFGraph {
 public:
-    explicit CFGraph(IntermediateUnit *iunit);
-
+    CFGraph() = default;
     CFGraph(CFGraph &&) noexcept = default;
     CFGraph& operator=(CFGraph &&) noexcept = default;
 
-    CFGraph copy(IntermediateUnit *iunit) const;
+    CFGraph copy() const;
 
     IR_Block& createBlock();
     IR_Block& insertBlock(IR_Block block);
@@ -32,15 +31,16 @@ public:
     std::map<int, IR_Block> const& getBlocks() const;
     std::map<int, IR_Block>& getBlocksData();
 
-    IntermediateUnit* getParentUnit();
-
     void traverseBlocks(int blockId, std::set<int> &visited,
                         std::function<void(int)> const &action) const;
+
+    IRval createReg(std::shared_ptr<IR_Type> type);
 
     int entryBlockId = -1;
 
 private:
-    IntermediateUnit *par;
+    uint64_t regsCounter = 0;
+    int blocksCounter = 0;
 
     std::map<int, IR_Block> blocks;
 
@@ -53,39 +53,7 @@ public:
     enum class FunLinkage { EXTERN, STATIC, WEAK };
     enum class VarLinkage { DEFAULT, EXTERN, STATIC, TENTATIVE, WEAK };
 
-    class Function {
-    public:
-        FunLinkage storage;
-        std::shared_ptr<IR_Type> fullType;
-
-        enum FuncSpec : int {
-            FSPEC_NONE   = 0,
-            FSPEC_INLINE = 0x1,
-            FSPEC_FCONST = 0x2,
-            FSPEC_PURE   = 0x4,
-            FSPEC_GOTOED = 0x8,
-        };
-        int fspec;
-
-        CFGraph cfg;
-
-        bool isProto;
-
-        Function(IntermediateUnit *iunit, int id, std::string name, int isProto = false);
-        Function(IntermediateUnit *iunit, Function const &oth);
-        Function(Function &&) noexcept = default;
-
-        int getId() const;
-        std::string getName() const;
-        std::shared_ptr<IR_TypeFunc> getFuncType() const;
-        bool isPure() const;
-        bool isInline() const;
-
-    private:
-        int id;
-        std::string name;
-        friend class IntermediateUnit;
-    };
+    class Function;
 
     struct GlobalVar {
         int id;
@@ -97,12 +65,11 @@ public:
 
     IntermediateUnit() = default;
     IntermediateUnit(IntermediateUnit const &oth);
-    IntermediateUnit(IntermediateUnit &&oth) noexcept = default;
-    IntermediateUnit& operator=(IntermediateUnit &&oth) noexcept = default;
+    IntermediateUnit(IntermediateUnit&&) noexcept = default;
+    IntermediateUnit& operator=(IntermediateUnit&&) noexcept = default;
 
     Function& createFunction(std::string name, FunLinkage stor, int fspec, std::shared_ptr<IR_Type> fullType);
     Function& createPrototype(std::string name, FunLinkage stor, std::shared_ptr<IR_Type> fullType);
-    IRval createReg(std::shared_ptr<IR_Type> type);
     IRval createGlobal(std::string name, std::shared_ptr<IR_Type> type, IRval init, VarLinkage stor);
 
     Function& getFunction(int id);
@@ -121,8 +88,6 @@ public:
     [[nodiscard]] std::string drawCFG() const;
 
 private:
-    int blocksCounter = 0;
-    uint64_t regs_counter = 0;
     int funcsCounter = 0;
     uint64_t stringsCounter = 0;
     int globalsCounter = 0;
@@ -139,6 +104,42 @@ private:
     void printExpr(std::stringstream &ss, IR_Expr const &rawExpr) const;
     void printBlock(std::stringstream &ss, IR_Block const &block) const;
     void drawBlock(std::stringstream &ss, IR_Block const &block) const;
+};
+
+class IntermediateUnit::Function {
+public:
+    FunLinkage storage;
+    std::shared_ptr<IR_Type> fullType;
+
+    enum FuncSpec : int {
+        FSPEC_NONE   = 0,
+        FSPEC_INLINE = 0x1,
+        FSPEC_FCONST = 0x2,
+        FSPEC_PURE   = 0x4,
+        FSPEC_GOTOED = 0x8,
+    };
+    int fspec;
+
+    CFGraph cfg;
+
+    bool isProto;
+
+    Function(int id, std::string name, int isProto = false);
+    Function(Function const &oth);
+
+    Function(Function&&) noexcept = default;
+    Function& operator=(Function&&) noexcept = default;
+
+    int getId() const;
+    std::string getName() const;
+    std::shared_ptr<IR_TypeFunc> getFuncType() const;
+    bool isPure() const;
+    bool isInline() const;
+
+private:
+    int id;
+    std::string name;
+    friend class IntermediateUnit;
 };
 
 #endif /* IR_UNIT_HPP_INCLUDED__ */

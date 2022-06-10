@@ -9,6 +9,8 @@
 
 class Preprocessor {
 public:
+    static const constexpr size_t MAX_INCLUDES_DEPTH = 64;
+
     /** Raw defines in format "macro=value" */
     Preprocessor(std::string const &path, std::vector<std::string> const &rawDefines);
 
@@ -18,7 +20,11 @@ public:
     std::string getText() const;
     std::shared_ptr<ParsingContext> getContext() const;
 
-    static const constexpr size_t MAX_INCLUDES_DEPTH = 64;
+    auto moveData() && {
+        return std::make_tuple(
+                std::move(finalText),
+                std::move(ctx));
+    }
 
 private:
     std::string finalText;

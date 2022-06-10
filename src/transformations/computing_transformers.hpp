@@ -5,7 +5,7 @@
 
 class CopyPropagator : public IRTransformer {
 public:
-    explicit CopyPropagator(CFGraph rawCfg);
+    explicit CopyPropagator(IntermediateUnit const &iunit, CFGraph rawCfg);
 
 private:
     std::map<IRval, IRval> remlacementMap;
@@ -17,7 +17,7 @@ private:
 
 class AlgebraicTransformer : public IRTransformer {
 public:
-    explicit AlgebraicTransformer(CFGraph rawCfg);
+    explicit AlgebraicTransformer(IntermediateUnit const &unit, CFGraph rawCfg);
 
 private:
     void processNode(IR_Node *node);
@@ -25,7 +25,7 @@ private:
 
 class CommonSubexprElim : public IRTransformer {
 public:
-    CommonSubexprElim(CFGraph rawCfg);
+    CommonSubexprElim(IntermediateUnit const &iunit, CFGraph rawCfg);
 };
 
 #endif /* COMPUTING_TRANSFORMERS_HPP_INCLUDED__ */

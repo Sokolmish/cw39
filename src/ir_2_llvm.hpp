@@ -15,6 +15,12 @@ public:
     std::string const& getLLVM_IR() const;
     std::vector<char> const& getLLVM_BC() const;
 
+    auto moveData() && {
+        return std::make_tuple(
+                std::move(llvmIR),
+                std::move(llvmBC));
+    }
+
     ~IR2LLVM(); // Needed for unique_ptr to incomplete type
 
     class IR2LLVM_Impl;

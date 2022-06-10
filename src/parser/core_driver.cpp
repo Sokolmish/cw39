@@ -31,6 +31,10 @@ std::shared_ptr<AbstractSyntaxTree> CoreDriver::getAST() {
     return ast;
 }
 
+std::shared_ptr<AbstractSyntaxTree> CoreDriver::moveAST() && {
+    return std::move(ast);
+}
+
 string_id_t CoreDriver::getDeclaredIdentDirect(AST_DirDeclarator const &decl) {
     if (decl.type == AST_DirDeclarator::NAME) {
         return decl.getIdent();

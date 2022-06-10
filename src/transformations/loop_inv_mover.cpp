@@ -2,7 +2,8 @@
 #include "cfg_cleaner.hpp"
 #include <stack>
 
-LoopInvMover::LoopInvMover(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)), loops(cfg) {
+LoopInvMover::LoopInvMover(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)), loops(cfg) {
     std::vector<LoopNode const *> topLoops;
     for (auto const &[lId, loop] : loops.getLoops()) {
         if (loop.parent == nullptr)
@@ -12,7 +13,7 @@ LoopInvMover::LoopInvMover(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)), l
         passNestedLoops(*loop);
     }
 
-    CfgCleaner cleaner(std::move(cfg));
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeNops();
     cleaner.removeTransitBlocks();
     cfg = std::move(cleaner).moveCfg();

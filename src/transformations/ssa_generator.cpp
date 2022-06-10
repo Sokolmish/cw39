@@ -3,7 +3,7 @@
 #include <vector>
 #include <stack>
 
-SSA_Generator::SSA_Generator(CFGraph in_cfg) : IRTransformer(std::move(in_cfg)) {
+SSA_Generator::SSA_Generator(IntermediateUnit const &unit, CFGraph in_cfg) : IRTransformer(std::move(in_cfg)) {
     gInfo = std::make_unique<GraphInfo>(cfg);
 
     placePhis();
@@ -11,7 +11,7 @@ SSA_Generator::SSA_Generator(CFGraph in_cfg) : IRTransformer(std::move(in_cfg)) 
 
     gInfo.reset();
 
-    CfgCleaner cleaner(std::move(cfg));
+    CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeUselessNodes();
     cleaner.removeNops();
     cfg = std::move(cleaner).moveCfg();
@@ -149,7 +149,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
         // Phis
         for (auto &phiNode : curBlock.phis) {
             if (phiNode.res == var) {
-                IRval rg = cfg.getParentUnit()->createReg(var.getType());
+                IRval rg = cfg.createReg(var.getType());
                 phiNode.res = rg;
                 versions.push(std::move(rg));
 
@@ -168,7 +168,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
                 }
             }
             if (node.res == var) {
-                IRval rg = cfg.getParentUnit()->createReg(var.getType());
+                IRval rg = cfg.createReg(var.getType());
                 node.res = rg;
                 versions.push(std::move(rg));
 

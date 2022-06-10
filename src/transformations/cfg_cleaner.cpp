@@ -6,7 +6,8 @@
 
 namespace rng = std::ranges;
 
-CfgCleaner::CfgCleaner(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {}
+CfgCleaner::CfgCleaner(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)), iunit(&unit) {}
 
 void CfgCleaner::removeNops() {
     for (auto const &[bId, block] : cfg.getBlocks()) {
@@ -36,7 +37,7 @@ void CfgCleaner::removeUselessNodes() {
         if (sizeBefore == usedRegs.size())
             break;
     }
-    usedRegs.merge(extension); // TODO: Make this function more simplier...
+    usedRegs.merge(extension); // TODO: Make this function more simple...
     removeUnusedNodes(usedRegs);
 }
 
@@ -60,7 +61,7 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
                     usedRegs.insert(callExpr.getFuncPtr());
                 }
                 else {
-                    auto const &func = cfg.getParentUnit()->getFunction(callExpr.getFuncId());
+                    auto const &func = iunit->getFunction(callExpr.getFuncId());
                     if (func.isPure())
                         continue;
                 }
@@ -291,7 +292,7 @@ bool CfgCleaner::isNodeGeneralEffective(IR_Node const &node) {
         auto &callExpr = node.body->getCall();
         if (callExpr.isIndirect())
             return true;
-        auto const &func = cfg.getParentUnit()->getFunction(callExpr.getFuncId());
+        auto const &func = iunit->getFunction(callExpr.getFuncId());
         if (!func.isPure())
             return true;
     }

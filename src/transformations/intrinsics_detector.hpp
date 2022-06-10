@@ -6,7 +6,7 @@
 
 class IntrinsicsDetector : public IRTransformer {
 public:
-    IntrinsicsDetector(CFGraph rawCfg);
+    IntrinsicsDetector(IntermediateUnit const &unit, CFGraph rawCfg);
 
 private:
     LoopsDetector loops;
