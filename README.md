@@ -94,18 +94,26 @@ Without any of these options, compiler will print nothing but errors.
 
 ### Compilation options
 
-| Option       | Description                                          |
-|--------------|------------------------------------------------------|
-| `-O <lvl>`   | Set optimization level (0-2, default is 2)           |
-| `-D <macro>` | Define a macro with optional value                   |
-| `--no-s1`    | Disable special optimization 1 (intrinsics detector) |
-| `--no-s2`    | ~~Disable special optimization 2 (fixpoints)~~       |
+| Option              | Description                                          |
+|---------------------|------------------------------------------------------|
+| `-D <macro>`        | Define a macro with optional value                   |
+| `-O <lvl>`          | Set optimization level (0-2, default is 2)           |
+| `--no-s1`           | Disable special optimization 1 (intrinsics detector) |
+| `--no-s2`           | ~~Disable special optimization 2 (fixpoints)~~       |
+| `--llc-args <args>` | Specify arguments for llc program                    |
 
 There are following optimization levels:
 
 - 0: no optimizations
 - 1: most common optimizations (without loops optimizations)
 - 2: all available optimizations
+
+Note, that specifying any llc argument disables default arguments: `-O0 -mcpu=native`.
+There are some llc arguments, that can be interesting:
+
+- `-march=<arch>`: specify destination architecture (e.g. `x86-64`)
+- `-mcpu=<cpu>`: specify destination CPU (e.g. `native`, `skylake`)
+- `-O<lvl>`: Set LLC optimization level
 
 ### Debug options
 
@@ -155,6 +163,7 @@ Draw CFG into the `graph.svg` file:
 ```sh
 cw39 --cfg ./test.c | dot -Tsvg -o graph.svg
 ```
+
 Create executable file from assemly code via clang.
 ```sh
 cw39 --asm=test.s ./test.c
@@ -163,4 +172,9 @@ clang ./test.s
 cw39 --asm ./test.c | clang -x assembler -
 # Or
 cw39 --llvm ./test.c | clang -x ir -
+```
+
+Create executable with LLVM optimizations.
+```sh
+cw39 --asm --llc-args="-O3 -mcpu=native" test.c | clang-10 -x assembler -
 ```

@@ -19,10 +19,11 @@ public:
     std::optional<std::string> outBC() const;
     std::optional<std::string> outASM() const;
 
-    uint getOptLevel() const;
     std::vector<std::string> getDefines() const;
+    uint getOptLevel() const;
     bool isS1_Enabled() const;
     bool isS2_Enabled() const;
+    std::optional<std::string> getLLCArgs() const;
 
     bool isScannerTracing() const;
     bool isParserTracing() const;
@@ -38,8 +39,6 @@ public:
     class CLIArgs_Impl;
 
 private:
-    std::string getString(std::string const &name) const;
-
     friend class CLIArgs_Impl;
     std::unique_ptr<CLIArgs_Impl> impl;
 };

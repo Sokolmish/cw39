@@ -201,7 +201,16 @@ static void process(CLIArgs  &args) {
 
     if (args.outASM()) {
         using namespace subprocess;
-        auto p = Popen({ args.get_llc_name() }, input(PIPE), output(PIPE));
+
+        std::string llc_args = args.get_llc_name();
+        if (args.getLLCArgs()) {
+            llc_args += " " + *args.getLLCArgs(); // TODO: doesn't handle quoted args
+        }
+        else { // Default LLC arguments
+            llc_args += " -O0 -mcpu=native";
+        }
+
+        auto p = Popen(llc_args, input(PIPE), output(PIPE)); // TODO: handle exceptions here
         auto &llvmIr = materializer.getLLVM_IR(); // Can send bitcode
         auto res = p.communicate(llvmIr.c_str(), llvmIr.size());
         auto asmStr(res.first.buf.data());
@@ -220,6 +229,10 @@ int main(int argc, char **argv) {
     }
     catch (cw39_exception &exc) {
         std::cerr << exc.prettyWhat();
+        return EXIT_FAILURE;
+    }
+    catch (std::exception &exc) {
+        std::cerr << "Something went wrong:\n\t" << exc.what() << std::endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

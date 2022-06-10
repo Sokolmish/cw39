@@ -21,6 +21,7 @@ static constexpr const char *argASM = "asm";
 
 static constexpr const char *argOpt = "O";
 static constexpr const char *argAddDefine = "D";
+static constexpr const char *argLLCArgs = "llc-args";
 static constexpr const char *argNoS1 = "no-s1";
 static constexpr const char *argNoS2 = "no-s2";
 
@@ -64,10 +65,11 @@ CLIArgs::CLIArgs_Impl::CLIArgs_Impl(int argc, char **argv) : options(name, desc)
     auto opt2 = options.add_options("Compilation");
     helpGroups.push_back("Compilation");
 
-    opt2(argOpt, "Set optimization level from 0 to 2", value<uint>()->default_value("2"), "<lvl>");
     opt2(argAddDefine, "Add preprocessor macro", value<std::vector<std::string>>(), "<macro>");
+    opt2(argOpt, "Set optimization level from 0 to 2", value<uint>()->default_value("2"), "<lvl>");
     opt2(argNoS1, "Disable S1 optimization");
     opt2(argNoS2, "Disable S2 optimization");
+    opt2(argLLCArgs, "Specify llc args", value<std::string>(), "<args>");
 
     auto opt3 = options.add_options("Debug");
     helpGroups.push_back("Debug");
@@ -109,14 +111,12 @@ CLIArgs::CLIArgs(int argc, char **argv)
 
 CLIArgs::~CLIArgs() = default;
 
-std::string CLIArgs::getString(const std::string &sname) const {
-    return impl->res[sname].as<std::string>();
-}
+// Optput options getters
 
 std::optional<std::string> CLIArgs::getOutParam(const char *pname) const {
     if (impl->res.count(pname))
-        return getString(pname);
-    return std::optional<std::string>();
+        return impl->res[pname].as<std::string>();
+    return std::nullopt;
 }
 
 std::optional<std::string> CLIArgs::outPreproc() const {
@@ -147,6 +147,7 @@ std::optional<std::string> CLIArgs::outASM() const {
     return getOutParam(argASM);
 }
 
+// Compilation options getters
 
 uint32_t CLIArgs::getOptLevel() const {
     return impl->res[argOpt].as<uint>();
@@ -166,6 +167,13 @@ bool CLIArgs::isS2_Enabled() const {
     return !impl->res.count(argNoS2);
 }
 
+std::optional<std::string> CLIArgs::getLLCArgs() const {
+    if (impl->res.count(argLLCArgs))
+        return impl->res[argLLCArgs].as<std::string>();
+    return std::nullopt;
+}
+
+// Debug options getters
 
 bool CLIArgs::isScannerTracing() const {
     return impl->res.count(argTraceScanner);
@@ -179,6 +187,7 @@ bool CLIArgs::isShowTimes() const {
     return impl->res.count(argTimes);
 }
 
+// Other getters + env
 
 std::string CLIArgs::inputFile() const {
     if (!impl->res.count(argPosFilename))
