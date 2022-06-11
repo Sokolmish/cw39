@@ -361,6 +361,7 @@ IRval IR_Generator::evalTernaryExpr(AST_Ternary const &expr) {
     IRval cond = evalExpr(*expr.cond);
     curBlock().setTerminator(IR_ExprTerminator::BRANCH, cond);
 
+    IR_Block &oldBlock = *selectedBlock;
     IR_Block &blockTrue = curFunc->cfg.createBlock();
     IR_Block &blockFalse = curFunc->cfg.createBlock();
     IR_Block &blockAfter = curFunc->cfg.createBlock();
@@ -376,18 +377,25 @@ IRval IR_Generator::evalTernaryExpr(AST_Ternary const &expr) {
 
     selectBlock(blockTrue);
     IRval trueVal = evalExpr(*expr.v_true);
-    IRval res = curFunc->cfg.createReg(trueVal.getType()); // Assume, that arguments has same type
-    emitMov(res, trueVal);
+
+    selectBlock(oldBlock);
+    auto resType = trueVal.getType(); // Assume, that arguments has same type
+    auto ptrType = std::make_shared<IR_TypePtr>(resType);
+    IRval resAddr = emitAlloc(ptrType, resType);
+
+    selectBlock(blockTrue);
+    emitStore(resAddr, trueVal);
 
     selectBlock(blockFalse);
     IRval falseVal = evalExpr(*expr.v_false);
-    emitMov(res, falseVal);
+    emitStore(resAddr, falseVal);
 
     if (!trueVal.getType()->equal(*falseVal.getType()))
-        semanticError(expr.loc, "Cannot do binary operation on different types");
+        semanticError(expr.loc, "Cannot do ternary operation on different types");
 
     selectBlock(blockAfter); // Can add PHI here
-    return res;
+    auto resVal = emitLoad(resType, resAddr);
+    return resVal;
 }
 
 /** Create nodes and blocks for logical operation with short evaluation */
@@ -404,8 +412,9 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     if (!ltype.isInteger())
         semanticError(loc, "Cannon perform logical operation on non-integer type");
 
-    IRval res = curFunc->cfg.createReg(lhs.getType());
-    emitMov(res, lhs);
+    auto ptrType = std::make_shared<IR_TypePtr>(lhs.getType());
+    IRval resAddr = emitAlloc(ptrType, lhs.getType());
+    emitStore(resAddr, lhs);
 
     IR_Block &blockLong = curFunc->cfg.createBlock();
     IR_Block &blockAfter = curFunc->cfg.createBlock();
@@ -426,12 +435,14 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     if (!lhs.getType()->equal(*rhs.getType()))
         semanticError(loc, "Cannot do binary operation on different types");
 
-    emitMov(res, rhs);
+    emitStore(resAddr, rhs);
+
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
     curFunc->cfg.linkBlocks(curBlock(), blockAfter);
 
     selectBlock(blockAfter);
-    return res; // Maybe PHI node here?
+    IRval resVal = emitLoad(lhs.getType(), resAddr);
+    return resVal; // Maybe PHI node here?
 }
 
 /** Get value with address of expr */
