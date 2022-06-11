@@ -2,7 +2,8 @@
 #include "utils.hpp"
 #include <bit>
 
-AlgebraicTransformer::AlgebraicTransformer(CFGraph rawCfg) : IRTransformer(std::move(rawCfg)) {
+AlgebraicTransformer::AlgebraicTransformer(IntermediateUnit const &unit, CFGraph rawCfg)
+        : IRTransformer(std::move(rawCfg)) {
     std::set<int> visited;
     cfg.traverseBlocks(cfg.entryBlockId, visited, [this](int blockId) {
         auto &curBlock = cfg.block(blockId);
