@@ -32,7 +32,7 @@ std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::u
         return val;
     }
     else {
-        std::optional<IRval> res = {};
+        std::optional<IRval> res = std::nullopt;
         if (ret)
             res = curFunc->cfg.createReg(std::move(ret));
         return emitNode(res, std::move(expr));
@@ -585,11 +585,20 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
         semanticError(expr.loc, "Too few argument in function call");
     }
 
-    // TODO: void return type?
-    if (dirFuncId != -1)
-        return *emitCall(funType->ret, dirFuncId, args);
-    else
-        return *emitIndirCall(funType->ret, *funPtr, args);
+    if (IR_TypeDirect::getVoid()->equal(*funType->ret)) {
+        if (dirFuncId != -1)
+            emitCall(nullptr, dirFuncId, args);
+        else
+            emitIndirCall(nullptr, *funPtr, args);
+        // It is easier to assume that all calls always returns some value
+        return IRval::createUndef(IR_TypeDirect::getVoid());
+    }
+    else {
+        if (dirFuncId != -1)
+            return emitCall(funType->ret, dirFuncId, args).value();
+        else
+            return emitIndirCall(funType->ret, *funPtr, args).value();
+    }
 }
 
 IRval IR_Generator::doIntrinsic(string_id_t intrIdent, AST_Postfix const &expr) {
