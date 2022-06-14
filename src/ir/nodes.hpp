@@ -200,6 +200,8 @@ public:
     IR_ExprTerminator const* getTerminator() const;
 
     std::vector<IR_Node*> getAllNodes();
+
+    void removePredecessor(int pred);
 };
 
 #endif /* IR_NODES_HPP_INCLUDED__ */

@@ -509,3 +509,12 @@ IR_ExprTerminator const* IR_Block::getTerminator() const {
         return nullptr;
     return dynamic_cast<IR_ExprTerminator *>(termNode->body.get());
 }
+
+void IR_Block::removePredecessor(int pred) {
+    std::vector<int> newPrev;
+    for (int blockId : prev) {
+        if (blockId != pred)
+            newPrev.push_back(blockId);
+    }
+    prev = std::move(newPrev);
+}

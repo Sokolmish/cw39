@@ -23,8 +23,7 @@
 #include "subprocess.hpp"
 
 using steady_clock = std::chrono::steady_clock;
-using time_point = steady_clock::time_point;
-using duration = steady_clock::duration;
+
 
 /** If path is not empty then write to it, else write to stdout */
 static void writeOut(std::string const &path, std::string const &data) {
@@ -38,7 +37,6 @@ static void writeOut(std::string const &path, std::string const &data) {
         file << data << std::endl;
     }
 }
-
 
 static void writeOutBinary(std::string const &path, char const *data, size_t size) {
     if (path.empty() || path == "-") {
@@ -66,7 +64,7 @@ static void writeOutBinary(std::string const &path, std::vector<char> const &dat
     writeOutBinary(path, data.data(), data.size());
 }
 
-static void printElapsedTime(std::string const &name, duration const &time) {
+static void printElapsedTime(std::string const &name, steady_clock::duration const &time) {
     namespace chrono = std::chrono;
     auto ms = chrono::duration_cast<chrono::milliseconds>(time);
     auto us = chrono::duration_cast<chrono::microseconds>(time);
@@ -118,15 +116,15 @@ struct CompilationContext {
 };
 
 struct StepResult {
-    duration elapsedTime;
+    steady_clock::duration elapsedTime;
     bool lastStep;
 };
 
 
 static StepResult doPreprocessing(CompilationContext &ctx) {
-    time_point startTm = steady_clock::now();
+    auto startTm = steady_clock::now();
     Preprocessor preproc(ctx.args.inputFile(), ctx.args.getDefines());
-    time_point stopTm = steady_clock::now();
+    auto stopTm = steady_clock::now();
 
     std::tie(ctx.preprocessedText, ctx.parsingCtx) = std::move(preproc).moveData();
 
@@ -147,9 +145,9 @@ static StepResult doParsing(CompilationContext &ctx) {
 
     std::string textCopy = ctx.preprocessedText;
 
-    time_point startTm = steady_clock::now();
+    auto startTm = steady_clock::now();
     CoreDriver parser(*ctx.parsingCtx, std::move(textCopy), parserDebugFlags);
-    time_point stopTm = steady_clock::now();
+    auto stopTm = steady_clock::now();
 
     ctx.ast = std::move(parser).moveAST();
 
@@ -162,9 +160,9 @@ static StepResult doParsing(CompilationContext &ctx) {
 }
 
 static StepResult doIRGeneration(CompilationContext &ctx) {
-    time_point startTm = steady_clock::now();
+    auto startTm = steady_clock::now();
     IR_Generator gen(*ctx.ast, *ctx.parsingCtx);
-    time_point stopTm = steady_clock::now();
+    auto stopTm = steady_clock::now();
 
     ctx.iunit = std::move(*std::move(gen).moveIR());
 
@@ -200,13 +198,13 @@ static void optimizeFunction(IntermediateUnit const &unit, IntermediateUnit::Fun
 }
 
 static StepResult doOptimizations(CompilationContext &ctx) {
-    time_point startTm = steady_clock::now();
+    auto startTm = steady_clock::now();
     if (ctx.args.getOptLevel() != 0) {
         for (auto &[fId, func] : ctx.iunit.getFuncsMut()) {
             optimizeFunction(ctx.iunit, func, ctx.args);
         }
     }
-    time_point stopTm = steady_clock::now();
+    auto stopTm = steady_clock::now();
 
     if (ctx.args.outIR())
         writeOut(*ctx.args.outIR(), ctx.iunit.printIR());
@@ -219,9 +217,9 @@ static StepResult doOptimizations(CompilationContext &ctx) {
 }
 
 static StepResult doMaterialization(CompilationContext &ctx) {
-    time_point startTm = steady_clock::now();
+    auto startTm = steady_clock::now();
     IR2LLVM materializer(ctx.iunit);
-    time_point stopTm = steady_clock::now();
+    auto stopTm = steady_clock::now();
 
     std::tie(ctx.llvmIR, ctx.llvmBC) = std::move(materializer).moveData();
 
@@ -246,12 +244,12 @@ static StepResult doCompilation(CompilationContext &ctx) {
         llc_args += " -O0 -mcpu=native";
     }
 
-    time_point startTm = steady_clock::now();
+    auto startTm = steady_clock::now();
     // TODO: handle exceptions here
-    auto p = sp::Popen(llc_args, sp::input(sp::PIPE), sp::output(sp::PIPE));
-    auto &llvmIr = ctx.llvmIR; // Can send bitcode
-    auto res = p.communicate(llvmIr.c_str(), llvmIr.size());
-    time_point stopTm = steady_clock::now();
+    sp::Popen proc(llc_args, sp::input(sp::PIPE), sp::output(sp::PIPE));
+    std::string &llvmIr = ctx.llvmIR; // Can send bitcode
+    auto res = proc.communicate(llvmIr.c_str(), llvmIr.size());
+    auto stopTm = steady_clock::now();
 
     ctx.assembly = res.first.buf.data();
 

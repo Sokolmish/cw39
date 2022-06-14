@@ -128,7 +128,6 @@ void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
 }
 
 
-// TODO: non-empty transit blocks
 void CfgCleaner::removeTransitBlocks() {
     removeUselessBranches();
 
@@ -145,7 +144,7 @@ void CfgCleaner::removeTransitBlocks() {
                 IR_Block &prevBlock = cfg.block(block.prev[0]);
                 IR_Block &nextBlock = cfg.block(block.next[0]);
 
-                // TODO: select op and phis folding
+                // TODO: phis folding
                 if (!nextBlock.phis.empty()) {
                     if (rng::find(nextBlock.prev, block.prev[0]) != nextBlock.next.end())
                         continue;
@@ -217,7 +216,7 @@ void CfgCleaner::removeUnreachableBlocks() {
             block.prev = std::move(newPrev);
     }
 
-#if 0 // TODO: bug below
+#if 0
     toRemoveList.clear();
 
     for (auto &[bId, block] : cfg.getBlocksData()) {
@@ -230,8 +229,11 @@ void CfgCleaner::removeUnreachableBlocks() {
                 }
                 else {
                     toRemoveId = block.next[0];
-                    block.next = { block.next[1] }; // TODO: bug here, remove from prev
+                    block.next = { block.next[1] };
                 }
+
+                // TODO: because we can remove some predcessors, some PHIs can become broken
+                // cfg.block(toRemoveId).removePredecessor(block.id);
 
                 std::set<int> unreached = getDominatedByGiven(toRemoveId);
                 toRemoveList.insert(unreached.begin(), unreached.end());
