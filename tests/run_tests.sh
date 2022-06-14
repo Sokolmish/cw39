@@ -6,6 +6,7 @@ CC_ref=clang-10
 CC_tst=../cmake-build-debug/cw39
 
 ref_exe='ref_exe.out'
+tst_exe='tst_exe.out'
 ref_out='ref_out.txt'
 tst_out='tst_out.txt'
 
@@ -20,6 +21,8 @@ nb='\033[0m'
 fail_str="$(echo -en "[${red}FAILED${nc}]")"
 ok_str="$(echo -en "[${green}OK${nc}]")"
 
+test_vg=$([[ -n "$1" && "$1" == 'vg' ]] && echo 1 || echo 0)
+
 run_testcase() {
     local file=$1
     shift
@@ -28,7 +31,8 @@ run_testcase() {
     $CC_ref -o $ref_exe $file
     local ref_rc="$($ref_exe $args >$ref_out 2>&1; echo $?)"
 
-    local tst_rc="$($CC_tst --llvm $file | lli-13 - $args >$tst_out 2>&1; echo $?)"
+    $CC_tst --asm $file | $CC_ref -x assembler -o $tst_exe -
+    local tst_rc="$($tst_exe $args >$tst_out 2>&1; echo $?)"
 
     if [[ "$ref_rc" != "$tst_rc" ]]; then
         echo "${fail_str} Test '$file': Exit codes differs ($ref_rc, $tst_rc)"
@@ -45,7 +49,16 @@ run_testcase() {
         return 1
     fi
 
-    rm $ref_exe
+    if [[ "$test_vg" == '1' ]]; then
+        local vg_rc=$(valgrind --leak-check=full --show-reachable=yes --error-exitcode=255 \
+            $tst_exe >/dev/null 2>/dev/null; echo $?)
+        if [[ "vg_rc" == '255' ]]; then
+            echo "${fail_str} Test '$file': Valgrind shows errors"
+            return 1
+        fi
+    fi
+
+    rm $ref_exe $tst_exe
     rm $ref_out $tst_out
 
     echo "${ok_str} Test '$file' passed"
