@@ -329,7 +329,10 @@ bool LoopsDetector::hasLoops() const {
 }
 
 std::set<int> LoopsDetector::getBlockLoops(int blockId) const {
-    return lblocks.at(blockId).loops;
+    auto it = lblocks.find(blockId);
+    if (it == lblocks.end())
+        return {};
+    return it->second.loops;
 }
 
 const std::map<int, LoopsDetector::LoopNode>& LoopsDetector::getLoops() const {
