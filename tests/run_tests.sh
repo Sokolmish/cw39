@@ -21,10 +21,10 @@ nb='\033[0m'
 fail_str="$(echo -en "[${red}FAILED${nc}]")"
 ok_str="$(echo -en "[${green}OK${nc}]")"
 
-test_vg=$([[ -n "$1" && "$1" == 'vg' ]] && echo 1 || echo 0)
+test_vg=$([[ "${1-}" == 'vg' ]] && echo 1 || echo 0)
 
 run_testcase() {
-    local file=$1
+    local file="$1"
     shift
     local args="$@"
 
