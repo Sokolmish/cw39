@@ -12,15 +12,21 @@ CfgCleaner::CfgCleaner(IntermediateUnit const &unit, CFGraph rawCfg)
 void CfgCleaner::removeNops() {
     for (auto const &[bId, block] : cfg.getBlocks()) {
         std::vector<IR_Node> newPhis;
-        for (IR_Node &node : cfg.block(bId).phis)
+        for (IR_Node &node : cfg.block(bId).phis) {
             if (node.body)
                 newPhis.push_back(std::move(node));
+            else
+                setPassChanged();
+        }
         cfg.block(bId).phis = std::move(newPhis);
 
         std::vector<IR_Node> newBody;
-        for (IR_Node &node : cfg.block(bId).body)
+        for (IR_Node &node : cfg.block(bId).body) {
             if (node.body)
                 newBody.push_back(std::move(node));
+            else
+                setPassChanged();
+        }
         cfg.block(bId).body = std::move(newBody);
     }
 }
@@ -110,14 +116,18 @@ void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
             if (!node->res || !usedRegs.contains(*node->res)) {
                 if (isInList(node->body->type, IR_Expr::CALL, IR_Expr::TERM)) {
                     node->res = {};
+                    setPassChanged();
                 }
                 else if (node->body->type == IR_Expr::MEMORY) {
                     auto &memExpr = node->body->getMem();
-                    if (memExpr.op == IR_ExprMem::LOAD) // TODO: volatile read
+                    if (memExpr.op == IR_ExprMem::LOAD) { // TODO: volatile read
                         *node = IR_Node::nop();
+                        setPassChanged();
+                    }
                 }
                 else {
                     *node = IR_Node::nop();
+                    setPassChanged();
                 }
             }
         }
@@ -172,8 +182,10 @@ void CfgCleaner::removeTransitBlocks() {
         }
     }
 
-    for (int id : toRemoveList)
+    for (int id : toRemoveList) {
         cfg.getBlocksData().erase(id);
+        setPassChanged();
+    }
 
     // In case if some dual branches were created
     removeUselessBranches();
@@ -185,6 +197,7 @@ void CfgCleaner::removeUselessBranches() {
             if (block.next.at(0) == block.next.at(1)) {
                 block.next = { block.next.at(0) };
                 block.setTerminator(IR_ExprTerminator::JUMP);
+                setPassChanged();
             }
         }
     }
@@ -201,8 +214,11 @@ void CfgCleaner::removeUnreachableBlocks() {
         if (!visited.contains(bId))
             toRemoveList.insert(bId);
 
-    for (int id : toRemoveList)
+    for (int id : toRemoveList) {
         cfg.getBlocksData().erase(id);
+        setPassChanged();
+    }
+
     for (auto &[bId, block] : cfg.getBlocksData()) {
         std::vector<int> newPrev;
         bool changed = false;
@@ -212,8 +228,10 @@ void CfgCleaner::removeUnreachableBlocks() {
             else
                 changed = true;
         }
-        if (changed)
+        if (changed) {
             block.prev = std::move(newPrev);
+            setPassChanged();
+        }
     }
 
 #if 0
@@ -238,12 +256,15 @@ void CfgCleaner::removeUnreachableBlocks() {
                 std::set<int> unreached = getDominatedByGiven(toRemoveId);
                 toRemoveList.insert(unreached.begin(), unreached.end());
                 block.setTerminator(IR_ExprTerminator::JUMP);
+                setPassChanged();
             }
         }
     }
 
-    for (int id : toRemoveList)
+    for (int id : toRemoveList) {
         cfg.getBlocksData().erase(id);
+        setPassChanged();
+    }
     for (auto &[bId, block] : cfg.getBlocksData()) { // TODO: duplicate
         std::vector<int> newPrev;
         bool changed = false;
@@ -253,8 +274,10 @@ void CfgCleaner::removeUnreachableBlocks() {
             else
                 changed = true;
         }
-        if (changed)
+        if (changed) {
             block.prev = std::move(newPrev);
+            setPassChanged();
+        }
     }
 #endif
 }
@@ -400,6 +423,8 @@ void CfgCleaner::removeUselessLoops() {
                 if (prev == head.id)
                     prev = cBlock.id;
             }
+
+            setPassChanged();
         }
     }
 }

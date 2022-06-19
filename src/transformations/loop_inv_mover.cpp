@@ -16,6 +16,8 @@ LoopInvMover::LoopInvMover(IntermediateUnit const &unit, CFGraph rawCfg)
     CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeNops();
     cleaner.removeTransitBlocks();
+    if (cleaner.isPassEffective())
+        setPassChanged();
     cfg = std::move(cleaner).moveCfg();
 }
 
@@ -70,6 +72,7 @@ void LoopInvMover::passLoop(LoopNode const &loop) {
     } while (varsInLoop.size() != lastSize);
 
     if (!invNodes.empty()) {
+        setPassChanged();
         moveInvariantNodes(loop, std::move(invNodes));
     }
 }

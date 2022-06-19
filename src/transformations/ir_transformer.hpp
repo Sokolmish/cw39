@@ -15,7 +15,7 @@ public:
         return std::move(cfg);
     };
 
-    bool isPassEffective() const { // TODO: not working
+    bool isPassEffective() const {
         return pass_changed;
     }
 

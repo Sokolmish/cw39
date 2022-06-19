@@ -11,25 +11,30 @@ CopyPropagator::CopyPropagator(IntermediateUnit const &unit, CFGraph rawCfg)
         changed = false;
         propagateCopies();
         foldConstants();
-    }
+        if (changed)
+            setPassChanged();
 
-    CfgCleaner cleaner(unit, std::move(cfg));
-    cleaner.removeNops();
-    cleaner.removeUselessNodes();
-    cleaner.removeUnreachableBlocks();
-    cleaner.removeTransitBlocks();
-    cfg = std::move(cleaner).moveCfg();
+        CfgCleaner cleaner(unit, std::move(cfg));
+        cleaner.removeNops();
+        cleaner.removeUselessNodes();
+        cleaner.removeUnreachableBlocks();
+        cleaner.removeTransitBlocks();
+        if (cleaner.isPassEffective())
+            setPassChanged();
+        cfg = std::move(cleaner).moveCfg();
+    }
 }
 
 void CopyPropagator::propagateCopies() {
     std::set<int> visited;
 
-    changed = true;
-    while (changed) {
-        changed = false;
+    bool localChanged = true;
+
+    while (localChanged) {
+        localChanged = false;
         visited.clear();
 
-        cfg.traverseBlocks(cfg.entryBlockId, visited, [this](int blockId) {
+        cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &localChanged](int blockId) {
             auto &curBlock = cfg.block(blockId);
 
             for (IR_Node *node : curBlock.getAllNodes()) {
@@ -39,7 +44,7 @@ void CopyPropagator::propagateCopies() {
                 if (node->res && node->res->isVReg() && node->body->type == IR_Expr::OPERATION) {
                     auto oper = dynamic_cast<IR_ExprOper &>(*node->body);
                     if (oper.op == IR_ExprOper::MOV) {
-                        changed = true;
+                        localChanged = true;
                         setPassChanged();
                         remlacementMap.emplace(*node->res, oper.args.at(0));
                         *node = IR_Node::nop();
@@ -50,7 +55,7 @@ void CopyPropagator::propagateCopies() {
                     for (auto *arg : node->body->getArgs()) {
                         auto it = remlacementMap.find(*arg);
                         if (it != remlacementMap.end()) {
-                            changed = true;
+                            localChanged = true;
                             setPassChanged();
                             *arg = it->second;
                         }
@@ -58,18 +63,21 @@ void CopyPropagator::propagateCopies() {
                 }
             }
         });
+
+        if (localChanged)
+            changed = true;
     }
 }
 
 void CopyPropagator::foldConstants() {
     std::set<int> visited;
+    bool localChanged = true;
 
-    changed = true;
-    while (changed) {
-        changed = false;
+    while (localChanged) {
+        localChanged = false;
         visited.clear();
 
-        cfg.traverseBlocks(cfg.entryBlockId, visited, [this](int blockId) {
+        cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &localChanged](int blockId) {
             auto &curBlock = cfg.block(blockId);
             for (auto *node : curBlock.getAllNodes()) {
                 if (!node->body)
@@ -94,7 +102,7 @@ void CopyPropagator::foldConstants() {
 
                     auto newVal = ConstantsFolder::foldExpr(operExpr);
                     if (newVal) {
-                        changed = true;
+                        localChanged = true;
                         setPassChanged();
                         operExpr.op = IR_ExprOper::MOV;
                         operExpr.args = { *newVal };
@@ -106,7 +114,7 @@ void CopyPropagator::foldConstants() {
                     if (!castExpr.arg.isConstant())
                         continue;
 
-//                        changed = true;
+//                        localChanged = true;
 //                        setPassChanged();
                     // TODO
                 }
@@ -126,12 +134,15 @@ void CopyPropagator::foldConstants() {
                     if (!isConst)
                         continue;
 
-                    changed = true;
+                    localChanged = true;
                     setPassChanged();
                     node->body = std::make_unique<IR_ExprOper>(
                             IR_ExprOper::MOV, std::vector<IRval>{ commonVal });
                 }
             }
         });
+
+        if (localChanged)
+            changed = true;
     }
 }

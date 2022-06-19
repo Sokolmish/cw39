@@ -11,6 +11,8 @@ VarsVirtualizer::VarsVirtualizer(IntermediateUnit const &unit, CFGraph rawCfg) :
     cleaner.removeNops();
     cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
+    if (cleaner.isPassEffective())
+        setPassChanged();
     cfg = std::move(cleaner).moveCfg();
 }
 
@@ -87,6 +89,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
                 auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
                 it->second = cfg.createReg(alloc.type);
                 instr = IR_Node::nop();
+                setPassChanged();
                 continue;
             }
         }
@@ -101,6 +104,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
                         instr.res = it->second;
                         instr.body = std::make_unique<IR_ExprOper>(
                                 IR_ExprOper::MOV, std::vector<IRval>{ *oper->val });
+                        setPassChanged();
                     }
                 }
                 else if (oper->op == IR_ExprMem::LOAD) {
@@ -108,6 +112,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
                     if (it != toRedudeList.end()) {
                         instr.body = std::make_unique<IR_ExprOper>(
                                 IR_ExprOper::MOV, std::vector<IRval>{ *it->second });
+                        setPassChanged();
                     }
                 }
             }
@@ -117,8 +122,10 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         if (instr.body) {
             for (auto arg: instr.body->getArgs()) {
                 auto it = toRedudeList.find(*arg);
-                if (it != toRedudeList.end())
+                if (it != toRedudeList.end()) {
                     *arg = *it->second;
+                    setPassChanged();
+                }
             }
         }
     }
@@ -128,8 +135,10 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         auto &terminator = dynamic_cast<IR_ExprTerminator &>(*block.termNode->body);
         if (terminator.arg.has_value()) {
             auto it = toRedudeList.find(*terminator.arg);
-            if (it != toRedudeList.end())
+            if (it != toRedudeList.end()) {
                 terminator.arg = *it->second;
+                setPassChanged();
+            }
         }
     }
 }

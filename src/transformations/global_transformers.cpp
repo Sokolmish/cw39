@@ -7,10 +7,11 @@
 TailrecEliminator::TailrecEliminator(IntermediateUnit const &unit, CFGraph rawCfg, int funcId)
         : IRTransformer(std::move(rawCfg)), iunit(&unit) {
     passFunction(funcId);
-
     CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeNops();
     cleaner.removeUselessNodes();
+    if (cleaner.isPassEffective())
+        setPassChanged();
     cfg = std::move(cleaner).moveCfg();
 }
 
@@ -18,6 +19,8 @@ void TailrecEliminator::passFunction(int funcId) {
     std::vector<int> tailrecBlocks = findTailCalls(funcId);
     if (tailrecBlocks.empty())
         return;
+
+    setPassChanged();
 
     IR_Block &oldHead = cfg.block(cfg.entryBlockId);
 
@@ -128,6 +131,7 @@ FunctionsInliner::FunctionsInliner(IntermediateUnit const &unit, CFGraph rawCfg)
         for (auto &[blockId, block] : cfg.getBlocksData()) {
             if (passBlock(block)) {
                 changed = true;
+                setPassChanged();
                 break;
             }
         }
@@ -136,6 +140,8 @@ FunctionsInliner::FunctionsInliner(IntermediateUnit const &unit, CFGraph rawCfg)
     CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeTransitBlocks();
     cleaner.removeNops();
+    if (cleaner.isPassEffective())
+        setPassChanged();
     cfg = std::move(cleaner).moveCfg();
 }
 

@@ -14,6 +14,8 @@ SSA_Generator::SSA_Generator(IntermediateUnit const &unit, CFGraph in_cfg) : IRT
     CfgCleaner cleaner(unit, std::move(cfg));
     cleaner.removeUselessNodes();
     cleaner.removeNops();
+    if (cleaner.isPassEffective())
+        setPassChanged();
     cfg = std::move(cleaner).moveCfg();
 }
 
@@ -151,8 +153,9 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
             if (phiNode.res == var) {
                 IRval rg = cfg.createReg(var.getType());
                 phiNode.res = rg;
-                versions.push(std::move(rg));
+                setPassChanged();
 
+                versions.push(std::move(rg));
                 phiRess.insert(*phiNode.res);
                 rollbackCnt++;
                 break;
@@ -165,13 +168,15 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
                 if (*arg == var) {
                     IRval v = versions.top(); // CLion warnings...
                     *arg = std::move(v);
+                    setPassChanged();
                 }
             }
             if (node.res == var) {
                 IRval rg = cfg.createReg(var.getType());
                 node.res = rg;
-                versions.push(std::move(rg));
+                setPassChanged();
 
+                versions.push(std::move(rg));
                 rollbackCnt++;
             }
         }
@@ -181,6 +186,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
             auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
             if (terminator.arg == var) {
                 terminator.arg = versions.top();
+                setPassChanged();
             }
         }
 
@@ -200,6 +206,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
                     IRval phiArg = versions.top();
                     auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
                     phiExpr.args.emplace(j, phiArg);
+                    setPassChanged();
                     break;
                 }
             }

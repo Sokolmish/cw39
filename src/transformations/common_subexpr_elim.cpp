@@ -17,6 +17,7 @@ CommonSubexprElim::CommonSubexprElim(IntermediateUnit const &unit, CFGraph rawCf
                 else { // Found
                     node.body = std::make_unique<IR_ExprOper>(
                             IR_ExprOper::MOV, std::vector<IRval>{ it->second });
+                    setPassChanged();
                 }
             }
         }

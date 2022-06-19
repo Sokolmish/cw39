@@ -22,6 +22,8 @@ IntrinsicsDetector::IntrinsicsDetector(IntermediateUnit const &unit, CFGraph raw
     cleaner.removeUselessBranches();
     cleaner.removeUnreachableBlocks();
     cleaner.removeTransitBlocks();
+    if (cleaner.isPassEffective())
+        setPassChanged();
     cfg = std::move(cleaner).moveCfg();
 }
 
@@ -96,6 +98,8 @@ void IntrinsicsDetector::passLoop(LoopNode const &loop) {
     std::set<int> visited;
     visited.insert(head.id); // Prevent entering into loop
     cfg.traverseBlocks(outerSuccId, visited, visitor);
+
+    setPassChanged();
 }
 
 struct BinCommutativeArgs {

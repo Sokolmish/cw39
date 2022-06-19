@@ -172,29 +172,49 @@ static StepResult doIRGeneration(CompilationContext &ctx) {
     };
 }
 
+static inline CFGraph applyPass(bool &passed, IRTransformer &&transformer) {
+    if (transformer.isPassEffective())
+        passed = true;
+    return std::move(transformer).moveCfg();
+}
 
 static void optimizeFunction(IntermediateUnit const &unit, IntermediateUnit::Function &func, CLIArgs const &args) {
     if (args.getOptLevel() == 0)
         return;
 
-    CFGraph cfg = std::move(func.cfg);
-    cfg = VarsVirtualizer(unit, std::move(cfg)).moveCfg();
-    cfg = SSA_Generator(unit, std::move(cfg)).moveCfg();
-    cfg = AlgebraicTransformer(unit, std::move(cfg)).moveCfg();
-    cfg = CommonSubexprElim(unit, std::move(cfg)).moveCfg();
-    cfg = CopyPropagator(unit, std::move(cfg)).moveCfg();
-    cfg = TailrecEliminator(unit, std::move(cfg), func.getId()).moveCfg();
+    size_t maxIter = args.getOptLevel() == 1 ? 10 : 20;
+    bool changed = false;
 
-    if (args.getOptLevel() >= 2) {
-        cfg = FunctionsInliner(unit, std::move(cfg)).moveCfg();
-        cfg = LoopInvMover(unit, std::move(cfg)).moveCfg();
-        if (args.isS1_Enabled()) {
-            cfg = IntrinsicsDetector(unit, std::move(cfg)).moveCfg();
-            cfg = CommonSubexprElim(unit, std::move(cfg)).moveCfg(); // TODO: temporary
+    CFGraph cfg = std::move(func.cfg);
+    cfg = applyPass(changed, VarsVirtualizer(unit, std::move(cfg)));
+    cfg = applyPass(changed, SSA_Generator(unit, std::move(cfg)));
+
+    changed = true;
+    size_t iter = 0;
+    while (changed && iter < maxIter) { // TODO: test for early exit
+        changed = false;
+        iter++;
+
+        cfg = applyPass(changed, AlgebraicTransformer(unit, std::move(cfg)));
+        cfg = applyPass(changed, CommonSubexprElim(unit, std::move(cfg)));
+        cfg = applyPass(changed, CopyPropagator(unit, std::move(cfg)));
+        cfg = applyPass(changed, TailrecEliminator(unit, std::move(cfg), func.getId()));
+
+        if (args.getOptLevel() >= 2) {
+            cfg = applyPass(changed, FunctionsInliner(unit, std::move(cfg)));
+            cfg = applyPass(changed, LoopInvMover(unit, std::move(cfg)));
+            if (args.isS1_Enabled()) {
+                cfg = applyPass(changed, IntrinsicsDetector(unit, std::move(cfg)));
+                cfg = applyPass(changed, CommonSubexprElim(unit, std::move(cfg)));
+            }
+//        cfg = applyPass(changed, InductiveOptimizer(unit, std::move(cfg)));
         }
     }
 
     func.cfg = std::move(cfg);
+
+//    if (args.isShowTimes())
+//        fmt::print(stderr, "Opt iterations: {}\n", iter);
 }
 
 static StepResult doOptimizations(CompilationContext &ctx) {
