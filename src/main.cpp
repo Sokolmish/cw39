@@ -265,13 +265,19 @@ static StepResult doCompilation(CompilationContext &ctx) {
     }
 
     auto startTm = steady_clock::now();
-    // TODO: handle exceptions here
-    sp::Popen proc(llc_args, sp::input(sp::PIPE), sp::output(sp::PIPE));
-    std::string &llvmIr = ctx.llvmIR; // Can send bitcode
-    auto res = proc.communicate(llvmIr.c_str(), llvmIr.size());
-    auto stopTm = steady_clock::now();
+    auto stopTm = steady_clock::now(); // Just early defenition
 
-    ctx.assembly = res.first.buf.data();
+    try {
+        sp::Popen proc(llc_args, sp::input(sp::PIPE), sp::output(sp::PIPE));
+        std::string &llvmIr = ctx.llvmIR; // Can send bitcode
+        auto res = proc.communicate(llvmIr.c_str(), llvmIr.size());
+        stopTm = steady_clock::now();
+
+        ctx.assembly = res.first.buf.data();
+    }
+    catch (std::exception &exc) { // TODO: narrow exception
+        throw cw39_error(fmt::format("Error while generating ASM with LLC:\n{}", exc.what()));
+    }
 
     if (ctx.args.outASM())
         writeOut(*ctx.args.outASM(), ctx.assembly);
