@@ -6,12 +6,14 @@ producing LLVM assembler.  It is my bachelor's diploma work.
 There are some examples of compilable code in the [directory with tests](/tests).
 All tests can be checked via [run_tests](/tests/run_tests.sh) script.
 To do this, one should set the path to the compiler executable
-via `CC_tst` variable inside this script.
+via `CC_tst` variable inside this script.  Also, one should change the value
+of `CW39_LLC` in this script (see below).
 
 Following optimizations are implemented in this compiler:
 
 - Memmory to registers conversion, SSA-form creating
 - Tail recursion elimination
+- Functions inlining (manual detection)
 - Dead code elimination
 - Copy propagation and constants folding
 - Algebraic simplifications and common subexpressions elimination
