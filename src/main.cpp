@@ -46,8 +46,14 @@ static void writeOutBinary(std::string const &path, char const *data, size_t siz
                              "Use `--bc=-` to force this (can break something).");
         }
         FILE *out = fdopen(dup(fileno(stdout)), "wb");
-        fwrite(data, 1, size, out); // TODO: missed check
+        size_t written = fwrite(data, 1, size, out);
+        int err = errno;
         fclose(out);
+        if (written != size) {
+            throw cw39_error(fmt::format(
+                    "Error while writting binary output:\nfwrite: {}",
+                    strerror(err)));
+        }
 #else
         throw cw39_error("Binary output into stdout is not available for current platform");
 #endif
