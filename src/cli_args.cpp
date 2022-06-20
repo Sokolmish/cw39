@@ -3,7 +3,7 @@
 #include <fmt/core.h>
 
 static constexpr const char *name = "cw39";
-static constexpr const char *vers = "v0.2.0";
+static constexpr const char *vers = "v2.1";
 static constexpr const char *desc =
         "An optimizing compiler for the subset of the C language.\n"
         "Created by Mikhail Sokolovskiy in 2022.\n"
