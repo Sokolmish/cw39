@@ -103,7 +103,7 @@ private:
 
     void printExpr(std::stringstream &ss, IR_Expr const &rawExpr) const;
     void printBlock(std::stringstream &ss, IR_Block const &block) const;
-    void drawBlock(std::stringstream &ss, IR_Block const &block) const;
+    void drawBlock(std::stringstream &ss, IR_Block const &block, int funcId) const;
 };
 
 class IntermediateUnit::Function {

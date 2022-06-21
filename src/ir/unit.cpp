@@ -310,9 +310,10 @@ std::string IntermediateUnit::drawCFG() const {
         while (!stack.empty()) {
             IR_Block const &curBlock = func.cfg.block(stack.top());
             stack.pop();
-            drawBlock(ss, curBlock);
+            drawBlock(ss, curBlock, func.id);
             for (int ind = 0; int nextId : curBlock.next) {
-                fmt::print(ss, "bl{} -> bl{}", curBlock.id, nextId);
+                fmt::print(ss, "bl{}_f{} -> bl{}_f{}",
+                           curBlock.id, func.id, nextId, func.id);
 //                if (curBlock.next.size() == 2) {
 //                    fmt::print(ss, "[dir=both, arrowtail={}]",
 //                               ind == 0 ? "noneodot" : "noneobox");
@@ -334,7 +335,7 @@ std::string IntermediateUnit::drawCFG() const {
     return ss.str();
 }
 
-void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) const {
+void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block, int funcId) const {
     using namespace std::string_literals;
     static const std::string rightArrow = "\u2192"s; // ->
     static const std::string leftArrow = "\u2190"s;  // <-
@@ -392,8 +393,7 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block) c
     else {
         fmt::print(ssb, "; Unknown terminator\\l");
     }
-
-    fmt::print(ss, "bl{} [label=\"{}\"]\n", block.id, ssb.str());
+    fmt::print(ss, "bl{}_f{} [label=\"{}\"]\n", block.id, funcId, ssb.str());
 }
 
 
