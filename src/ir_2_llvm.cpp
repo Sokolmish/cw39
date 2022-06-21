@@ -559,39 +559,65 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
             break;
 
         case IR_ExprOper::EQ:
-            res = builder->CreateICmpEQ(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            if (dirType->isInteger())
+                res = builder->CreateICmpEQ(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateFCmpOEQ(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
         case IR_ExprOper::NE:
-            res = builder->CreateICmpNE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            if (dirType->isInteger())
+                res = builder->CreateICmpNE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            else
+                res = builder->CreateFCmpONE(getValue(oper.args[0]), getValue(oper.args[1]), name);
             break;
 
         case IR_ExprOper::GT:
-            if (dirType->isSigned())
-                res = builder->CreateICmpSGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
-            else
-                res = builder->CreateICmpUGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            if (dirType->isInteger()) {
+                if (dirType->isSigned())
+                    res = builder->CreateICmpSGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+                else
+                    res = builder->CreateICmpUGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
+            else {
+                res = builder->CreateFCmpOGT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
             break;
 
         case IR_ExprOper::LT:
-            if (dirType->isSigned())
-                res = builder->CreateICmpSLT(getValue(oper.args[0]), getValue(oper.args[1]), name);
-            else
-                res = builder->CreateICmpULT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            if (dirType->isInteger()) {
+                if (dirType->isSigned())
+                    res = builder->CreateICmpSLT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+                else
+                    res = builder->CreateICmpULT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
+            else {
+                res = builder->CreateFCmpOLT(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
             break;
 
         case IR_ExprOper::GE:
-            if (dirType->isSigned())
-                res = builder->CreateICmpSGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
-            else
-                res = builder->CreateICmpUGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            if (dirType->isInteger()) {
+                if (dirType->isSigned())
+                    res = builder->CreateICmpSGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+                else
+                    res = builder->CreateICmpUGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
+            else {
+                res = builder->CreateFCmpOGE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
             break;
 
         case IR_ExprOper::LE:
-            if (dirType->isSigned())
-                res = builder->CreateICmpSLE(getValue(oper.args[0]), getValue(oper.args[1]), name);
-            else
-                res = builder->CreateICmpULE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            if (dirType->isInteger()) {
+                if (dirType->isSigned())
+                    res = builder->CreateICmpSLE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+                else
+                    res = builder->CreateICmpULE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
+            else {
+                res = builder->CreateFCmpOLE(getValue(oper.args[0]), getValue(oper.args[1]), name);
+            }
             break;
 
         case IR_ExprOper::MOV:
