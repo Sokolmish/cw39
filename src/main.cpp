@@ -195,32 +195,40 @@ static void optimizeFunction(IntermediateUnit const &unit, IntermediateUnit::Fun
     cfg = applyPass(changed, VarsVirtualizer(unit, std::move(cfg)));
     cfg = applyPass(changed, SSA_Generator(unit, std::move(cfg)));
 
+    cfg = applyPass(changed, TailrecEliminator(unit, std::move(cfg), func.getId()));
+    if (args.getOptLevel() >= 2) {
+        cfg = applyPass(changed, FunctionsInliner(unit, std::move(cfg)));
+    }
+
     changed = true;
     size_t iter = 0;
     while (changed && iter < maxIter) { // TODO: test for early exit
         changed = false;
         iter++;
 
-        cfg = applyPass(changed, AlgebraicTransformer(unit, std::move(cfg)));
-        cfg = applyPass(changed, CommonSubexprElim(unit, std::move(cfg)));
-        cfg = applyPass(changed, CopyPropagator(unit, std::move(cfg)));
-        cfg = applyPass(changed, TailrecEliminator(unit, std::move(cfg), func.getId()));
+        bool changed2 = true;
+        size_t iter2 = 0;
+        while (changed2 && iter2 < 10) { // TODO: do this better
+            changed2 = false;
+            cfg = applyPass(changed2, AlgebraicTransformer(unit, std::move(cfg)));
+            cfg = applyPass(changed2, CommonSubexprElim(unit, std::move(cfg)));
+            cfg = applyPass(changed2, CopyPropagator(unit, std::move(cfg)));
+            if (changed2)
+                changed = true;
+            iter2++;
+        }
 
         if (args.getOptLevel() >= 2) {
-            cfg = applyPass(changed, FunctionsInliner(unit, std::move(cfg)));
             cfg = applyPass(changed, LoopInvMover(unit, std::move(cfg)));
             if (args.isS1_Enabled()) {
                 cfg = applyPass(changed, IntrinsicsDetector(unit, std::move(cfg)));
-                cfg = applyPass(changed, CommonSubexprElim(unit, std::move(cfg)));
+//                cfg = applyPass(changed, CommonSubexprElim(unit, std::move(cfg)));
             }
 //        cfg = applyPass(changed, InductiveOptimizer(unit, std::move(cfg)));
         }
     }
 
     func.cfg = std::move(cfg);
-
-//    if (args.isShowTimes())
-//        fmt::print(stderr, "Opt iterations: {}\n", iter);
 }
 
 static StepResult doOptimizations(CompilationContext &ctx) {
