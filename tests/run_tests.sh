@@ -73,6 +73,7 @@ run_testcase ./tst_prog4.c
 run_testcase ./tst_prog5.c
 run_testcase ./tst_prog6.c
 run_testcase ./tst_prog7.c
+run_testcase ./tst_prog8.c
 run_testcase ./s1_test.c 800
 
 echo -e "[${green}PASSED${nc}] ${bold}All tests finished successfully${nb}"
