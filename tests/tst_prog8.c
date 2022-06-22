@@ -1,17 +1,20 @@
 int printf(const char *fmt, ...);
 
 void f(int c) {
-    int i = 0;
-loop:
-    if (i < c * 2)
-        printf("%d ", i);
-    else
-        printf("%d\n", i);
-    if (i++ < c * 2)
-        goto loop;
+    int i = 0, j = 0;
+    while (i < c) {
+        printf("%d: ", i);
+        j = 0;
+        nested:
+        j++;
+        printf(j < i ? "%d " : "%d\n", j + c * 2);
+        if (j < i)
+            goto nested;
+        i++;
+    }
 }
 
 int main() {
-    f(3);
+    f(5);
     return 0;
 }
