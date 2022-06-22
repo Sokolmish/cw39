@@ -1224,12 +1224,12 @@ static const struct yy_trans_info *yy_start_state_list[3] =
 
 static const flex_int16_t yy_rule_linenum[59] =
     {   0,
-       42,   53,   54,   55,   57,   58,   59,   61,   63,   68,
-       69,   70,   71,   72,   73,   74,   75,   76,   77,   78,
-       79,   80,   81,   82,   83,   84,   85,   86,   87,   88,
-       89,   90,   91,   92,   93,   94,   95,   96,   97,   98,
-       99,  100,  101,  102,  103,  104,  105,  106,  107,  108,
-      109,  110,  111,  112,  113,  115,  116,  118
+       43,   54,   55,   56,   58,   59,   60,   62,   64,   69,
+       70,   71,   72,   73,   74,   75,   76,   77,   78,   79,
+       80,   81,   82,   83,   84,   85,   86,   87,   88,   89,
+       90,   91,   92,   93,   94,   95,   96,   97,   98,   99,
+      100,  101,  102,  103,  104,  105,  106,  107,  108,  109,
+      110,  111,  112,  113,  114,  116,  117,  119
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -1241,7 +1241,8 @@ static const flex_int16_t yy_rule_linenum[59] =
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "lexer.l"
 #define YY_NO_INPUT 1
-#line 13 "lexer.l"
+#define YY_NO_UNISTD_H 1
+#line 14 "lexer.l"
     #include <cstdlib>
     #include <string>
 
@@ -1252,8 +1253,8 @@ static const flex_int16_t yy_rule_linenum[59] =
     #include "keywords_hashtable.cpp"
 
     #define YY_USER_ACTION loc.columns(yyleng);
-#line 1255 "yy_scanner.cpp"
 #line 1256 "yy_scanner.cpp"
+#line 1257 "yy_scanner.cpp"
 
 #define INITIAL 0
 
@@ -1562,18 +1563,18 @@ YY_DECL
 
 	{
 /* %% [7.0] user's declarations go here */
-#line 32 "lexer.l"
+#line 33 "lexer.l"
 
 
 
-#line 36 "lexer.l"
+#line 37 "lexer.l"
     // A handy shortcut to the location held by the driver.
     yy::location &loc = drv.location;
     // Code run each time yylex is called.
     loc.step();
 
 
-#line 1576 "yy_scanner.cpp"
+#line 1577 "yy_scanner.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1650,7 +1651,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 42 "lexer.l"
+#line 43 "lexer.l"
 {
                                 auto kw = CoreKeywords::lookup(yytext, yyleng);
                                 if (kw)
@@ -1664,42 +1665,42 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 53 "lexer.l"
+#line 54 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_integer(yytext), loc);
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 54 "lexer.l"
+#line 55 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_integer(yytext), loc);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 55 "lexer.l"
+#line 56 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_integer(yytext), loc);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 57 "lexer.l"
+#line 58 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 58 "lexer.l"
+#line 59 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 59 "lexer.l"
+#line 60 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_float(yytext, yyleng), loc);
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 61 "lexer.l"
+#line 62 "lexer.l"
 return yy::parser::make_CONSTANT(drv.get_charval(yytext, yyleng), loc);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 63 "lexer.l"
+#line 64 "lexer.l"
 {
                                 string_id_t id = drv.ctx.getStringId(yytext, yyleng, true);
                                 return yy::parser::make_STRING_LITERAL(id, loc);
@@ -1707,263 +1708,263 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 68 "lexer.l"
+#line 69 "lexer.l"
 return yy::parser::make_ELLIPSIS(loc);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 69 "lexer.l"
+#line 70 "lexer.l"
 return yy::parser::make_RIGHT_ASSIGN(loc);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 70 "lexer.l"
+#line 71 "lexer.l"
 return yy::parser::make_LEFT_ASSIGN(loc);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 71 "lexer.l"
+#line 72 "lexer.l"
 return yy::parser::make_ADD_ASSIGN(loc);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 72 "lexer.l"
+#line 73 "lexer.l"
 return yy::parser::make_SUB_ASSIGN(loc);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 73 "lexer.l"
+#line 74 "lexer.l"
 return yy::parser::make_MUL_ASSIGN(loc);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 74 "lexer.l"
+#line 75 "lexer.l"
 return yy::parser::make_DIV_ASSIGN(loc);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 75 "lexer.l"
+#line 76 "lexer.l"
 return yy::parser::make_MOD_ASSIGN(loc);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 76 "lexer.l"
+#line 77 "lexer.l"
 return yy::parser::make_AND_ASSIGN(loc);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 77 "lexer.l"
+#line 78 "lexer.l"
 return yy::parser::make_XOR_ASSIGN(loc);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 78 "lexer.l"
+#line 79 "lexer.l"
 return yy::parser::make_OR_ASSIGN(loc);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 79 "lexer.l"
+#line 80 "lexer.l"
 return yy::parser::make_RIGHT_OP(loc);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 80 "lexer.l"
+#line 81 "lexer.l"
 return yy::parser::make_LEFT_OP(loc);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 81 "lexer.l"
+#line 82 "lexer.l"
 return yy::parser::make_INC_OP(loc);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 82 "lexer.l"
+#line 83 "lexer.l"
 return yy::parser::make_DEC_OP(loc);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 83 "lexer.l"
+#line 84 "lexer.l"
 return yy::parser::make_PTR_OP(loc);
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 84 "lexer.l"
+#line 85 "lexer.l"
 return yy::parser::make_AND_OP(loc);
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 85 "lexer.l"
+#line 86 "lexer.l"
 return yy::parser::make_OR_OP(loc);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 86 "lexer.l"
+#line 87 "lexer.l"
 return yy::parser::make_LE_OP(loc);
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 87 "lexer.l"
+#line 88 "lexer.l"
 return yy::parser::make_GE_OP(loc);
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 88 "lexer.l"
+#line 89 "lexer.l"
 return yy::parser::make_EQ_OP(loc);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 89 "lexer.l"
+#line 90 "lexer.l"
 return yy::parser::make_NE_OP(loc);
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 90 "lexer.l"
+#line 91 "lexer.l"
 return yy::parser::make_SEMICOLON(loc);
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 91 "lexer.l"
+#line 92 "lexer.l"
 return yy::parser::make_LBRACE(loc);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 92 "lexer.l"
+#line 93 "lexer.l"
 return yy::parser::make_RBRACE(loc);
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 93 "lexer.l"
+#line 94 "lexer.l"
 return yy::parser::make_COMMA(loc);
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 94 "lexer.l"
+#line 95 "lexer.l"
 return yy::parser::make_COLON(loc);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 95 "lexer.l"
+#line 96 "lexer.l"
 return yy::parser::make_ASSIGN(loc);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 96 "lexer.l"
+#line 97 "lexer.l"
 return yy::parser::make_LPAREN(loc);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 97 "lexer.l"
+#line 98 "lexer.l"
 return yy::parser::make_RPAREN(loc);
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 98 "lexer.l"
+#line 99 "lexer.l"
 return yy::parser::make_LBRACKET(loc);
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 99 "lexer.l"
+#line 100 "lexer.l"
 return yy::parser::make_RBRACKET(loc);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 100 "lexer.l"
+#line 101 "lexer.l"
 return yy::parser::make_DOT(loc);
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 101 "lexer.l"
+#line 102 "lexer.l"
 return yy::parser::make_AMPERSAND(loc);
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 102 "lexer.l"
+#line 103 "lexer.l"
 return yy::parser::make_EXCMARK(loc);
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 103 "lexer.l"
+#line 104 "lexer.l"
 return yy::parser::make_TILDA(loc);
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 104 "lexer.l"
+#line 105 "lexer.l"
 return yy::parser::make_MINUS(loc);
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 105 "lexer.l"
+#line 106 "lexer.l"
 return yy::parser::make_PLUS(loc);
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 106 "lexer.l"
+#line 107 "lexer.l"
 return yy::parser::make_ASTERISK(loc);
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 107 "lexer.l"
+#line 108 "lexer.l"
 return yy::parser::make_SLASH(loc);
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 108 "lexer.l"
+#line 109 "lexer.l"
 return yy::parser::make_PERCENT(loc);
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 109 "lexer.l"
+#line 110 "lexer.l"
 return yy::parser::make_LANGLE(loc);
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 110 "lexer.l"
+#line 111 "lexer.l"
 return yy::parser::make_RANGLE(loc);
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 111 "lexer.l"
+#line 112 "lexer.l"
 return yy::parser::make_CIRCUM(loc);
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 112 "lexer.l"
+#line 113 "lexer.l"
 return yy::parser::make_VBAR(loc);
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 113 "lexer.l"
+#line 114 "lexer.l"
 return yy::parser::make_QUESTMARK(loc);
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 115 "lexer.l"
+#line 116 "lexer.l"
 { loc.step(); }
 	YY_BREAK
 case 57:
 /* rule 57 can match eol */
 YY_RULE_SETUP
-#line 116 "lexer.l"
+#line 117 "lexer.l"
 { loc.lines(yyleng); loc.step(); }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 118 "lexer.l"
+#line 119 "lexer.l"
 {
                     char ch = yytext[0];
                     drv.lexer_error(fmt::format("Unexpected symbol '{:c}' (0x{:02X})", ch, ch));
                 }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 123 "lexer.l"
+#line 124 "lexer.l"
 return yy::parser::make_YYEOF(loc);
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 125 "lexer.l"
+#line 126 "lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1966 "yy_scanner.cpp"
+#line 1967 "yy_scanner.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3227,7 +3228,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 /* %ok-for-header */
 
-#line 125 "lexer.l"
+#line 126 "lexer.l"
 
 
 void CoreDriver::scan_begin() {

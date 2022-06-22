@@ -8,6 +8,7 @@
 %option ecs
 %option fast
 %option prefix="yycore"
+%option nounistd
 
 %{
     #include <cstdlib>
