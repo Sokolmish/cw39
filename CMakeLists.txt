@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(cw39 VERSION 0.2.0)
+project(cw39 VERSION 2.2)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
