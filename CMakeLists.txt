@@ -8,8 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 #set(CMAKE_C_EXTENSIONS OFF)
 #set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_options(-Wall -Wextra)
-add_compile_options("-Wno-unused-parameter") # Because of warnings in LLVM headers
+if(MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Wno-unused-parameter) # Because of warnings in LLVM headers
+endif()
 
 set(BISON_PARSER_RES            yy_parser.cpp)
 set(BISON_HEADER_RES            yy_parser.hpp)
