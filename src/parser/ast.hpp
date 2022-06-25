@@ -14,10 +14,6 @@
 using ast_enum_t = int;
 
 struct AST_Node {
-    struct AST_Location {
-        int line, col; // NOTE: Raw location
-    };
-
     yy::location loc;
 
     AST_Node() = default;
@@ -25,8 +21,6 @@ struct AST_Node {
 
     AST_Node(AST_Node const &) = delete;
     AST_Node& operator=(AST_Node const &) = delete;
-
-    void setLoc(yy::location loc);
 
     [[nodiscard]] virtual TreeNodeRef getTreeNode(ParsingContext const &pctx) const = 0;
 };
@@ -736,7 +730,7 @@ private:
     template <typename T, typename ...Us>
     T* mkNode(loc_t loc, Us&&... args) {
         T *node = new T(std::forward<Us>(args)...);
-        node->setLoc(std::move(loc));
+        node->loc = std::move(loc);
         nodes.emplace_back(std::unique_ptr<AST_Node>(node));
         return node;
     }

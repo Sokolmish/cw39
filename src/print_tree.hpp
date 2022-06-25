@@ -28,6 +28,6 @@ public:
     [[nodiscard]] std::string printHor() const;
 };
 
-typedef std::shared_ptr<TreeNode> TreeNodeRef;
+using TreeNodeRef = std::shared_ptr<TreeNode>;
 
 #endif /* PRINT_TREE_HPP_INCLUDED__ */

@@ -5,10 +5,6 @@
 
 using namespace std::string_literals;
 
-void AST_Node::setLoc(yy::location loc_) {
-    this->loc = std::move(loc_);
-}
-
 // =================================================
 //                    Expressions
 // =================================================
