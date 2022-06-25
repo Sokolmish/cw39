@@ -3,31 +3,21 @@
 #include <bit>
 
 std::optional<IRval> ConstantsFolder::foldExpr(IR_Expr const &expr) {
-    switch (expr.type) {
-        case IR_Expr::OPERATION:
-            return foldOper(dynamic_cast<IR_ExprOper const &>(expr));
-        case IR_Expr::CAST:
-            return foldCast(dynamic_cast<IR_ExprCast const &>(expr));
-        case IR_Expr::PHI:
-            return foldPhi(dynamic_cast<IR_ExprPhi const &>(expr));
-
-        case IR_Expr::CALL:
-        case IR_Expr::MEMORY:
-        case IR_Expr::ACCESS:
-        case IR_Expr::ALLOCATION:
-        case IR_Expr::TERM:
-            return {};
-
-        default:
-            throw std::logic_error("Wrong IR expression type");
-    }
+    if (auto exprOper = dynamic_cast<IR_ExprOper const *>(&expr))
+        return foldOper(*exprOper);
+    else if (auto exprCast = dynamic_cast<IR_ExprCast const *>(&expr))
+        return foldCast(*exprCast);
+    else if (auto exprPhi = dynamic_cast<IR_ExprPhi const *>(&expr))
+        return foldPhi(*exprPhi);
+    else
+        return std::nullopt;
 }
 
 std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
     // TODO: extract from aggregate?
     for (auto const &arg : expr.args)
         if (arg.getValueClass() != IRval::VAL)
-            return {};
+            return std::nullopt;
 
     if (isGeneralNumOp(expr.op)) {
         return std::visit([&expr](auto const &l) -> IRval {
@@ -115,7 +105,7 @@ std::optional<IRval> ConstantsFolder::foldOper(const IR_ExprOper &expr) {
         }, intVariant);
     }
     else {
-        return {};
+        return std::nullopt;
     }
 }
 
@@ -149,9 +139,9 @@ constexpr bool ConstantsFolder::isIntrinsic(IR_ExprOper::IR_Ops op) {
 
 std::optional<IRval> ConstantsFolder::foldCast(const IR_ExprCast &expr) {
     if (expr.dest->type != IR_Type::DIRECT)
-        return {};
+        return std::nullopt;
     if (expr.arg.getValueClass() != IRval::VAL)
-        return {};
+        return std::nullopt;
 
     auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(expr.dest);
     switch (dirType->spec) {
@@ -186,7 +176,7 @@ std::optional<IRval> ConstantsFolder::foldPhi(const IR_ExprPhi &expr) {
     IRval const &common = expr.args.at(0);
     for (auto const &[pos, arg] : expr.args) {
         if (arg != common)
-            return {};
+            return std::nullopt;
     }
     return common;
 }

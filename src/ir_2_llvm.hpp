@@ -34,5 +34,4 @@ private:
     std::vector<char> llvmBC;
 };
 
-
 #endif /* IR_2_LLVM_HPP_INCLUDED__ */

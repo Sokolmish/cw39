@@ -46,33 +46,31 @@ void VarsVirtualizer::passFunction() {
 
 void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
     for (IR_Node const &instr: block.body) {
-        if (instr.body->type == IR_Expr::ALLOCATION && instr.res.has_value() && instr.res->isVReg()) {
-            auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
-            if (!isInList(alloc.type->type, IR_Type::DIRECT, IR_Type::POINTER))
-                continue;
-            if (alloc.isOnHeap)
-                continue;
-            toRedudeList.emplace(*instr.res, std::optional<IRval>());
-        }
-        else {
-            auto oper = dynamic_cast<IR_ExprMem const *>(instr.body.get());
-            if (oper) {
-                if (oper->op == IR_ExprMem::LOAD) {
+        if (auto exprAlloc = dynamic_cast<IR_ExprAlloc const *>(instr.body.get())) {
+            if (instr.res.has_value() && instr.res->isVReg()) {
+                if (!isInList(exprAlloc->type->type, IR_Type::DIRECT, IR_Type::POINTER))
                     continue;
-                }
-                else if (oper->op == IR_ExprMem::STORE) {
-                    auto it = toRedudeList.find(*oper->val);
-                    if (it != toRedudeList.end())
-                        toRedudeList.erase(it);
+                if (exprAlloc->isOnHeap)
                     continue;
-                }
+                toRedudeList.emplace(*instr.res, std::optional<IRval>());
             }
-
-            for (auto arg: instr.body->getArgs()) {
-                auto it = toRedudeList.find(*arg);
+        }
+        else if (auto exprMem = dynamic_cast<IR_ExprMem const *>(instr.body.get())) {
+            if (exprMem->op == IR_ExprMem::LOAD) {
+                continue;
+            }
+            else if (exprMem->op == IR_ExprMem::STORE) {
+                auto it = toRedudeList.find(*exprMem->val);
                 if (it != toRedudeList.end())
                     toRedudeList.erase(it);
+                continue;
             }
+        }
+
+        for (auto arg: instr.body->getArgs()) {
+            auto it = toRedudeList.find(*arg);
+            if (it != toRedudeList.end())
+                toRedudeList.erase(it);
         }
     }
 }
@@ -95,25 +93,22 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         }
 
         // Replace memory instructions
-        if (instr.body->type == IR_Expr::MEMORY) {
-            auto oper = dynamic_cast<IR_ExprMem const *>(instr.body.get());
-            if (oper) {
-                if (oper->op == IR_ExprMem::STORE) {
-                    auto it = toRedudeList.find(oper->addr);
-                    if (it != toRedudeList.end()) {
-                        instr.res = it->second;
-                        instr.body = std::make_unique<IR_ExprOper>(
-                                IR_ExprOper::MOV, std::vector<IRval>{ *oper->val });
-                        setPassChanged();
-                    }
+        if (auto oper = dynamic_cast<IR_ExprMem const *>(instr.body.get())) {
+            if (oper->op == IR_ExprMem::STORE) {
+                auto it = toRedudeList.find(oper->addr);
+                if (it != toRedudeList.end()) {
+                    instr.res = it->second;
+                    instr.body = std::make_unique<IR_ExprOper>(
+                            IR_ExprOper::MOV, std::vector<IRval>{ *oper->val });
+                    setPassChanged();
                 }
-                else if (oper->op == IR_ExprMem::LOAD) {
-                    auto it = toRedudeList.find(oper->addr);
-                    if (it != toRedudeList.end()) {
-                        instr.body = std::make_unique<IR_ExprOper>(
-                                IR_ExprOper::MOV, std::vector<IRval>{ *it->second });
-                        setPassChanged();
-                    }
+            }
+            else if (oper->op == IR_ExprMem::LOAD) {
+                auto it = toRedudeList.find(oper->addr);
+                if (it != toRedudeList.end()) {
+                    instr.body = std::make_unique<IR_ExprOper>(
+                            IR_ExprOper::MOV, std::vector<IRval>{ *it->second });
+                    setPassChanged();
                 }
             }
         }

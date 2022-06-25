@@ -4,8 +4,6 @@
 
 // Expressions
 
-IR_Expr::IR_Expr(IR_Expr::Type type) : type(type) {}
-
 IR_ExprOper const &IR_Expr::getOper() const {
     return dynamic_cast<IR_ExprOper const &>(*this);
 }
@@ -39,8 +37,7 @@ IR_ExprPhi const& IR_Expr::getPhi() const {
 }
 
 
-IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) :
-        IR_Expr(IR_Expr::OPERATION), op(op), args(std::move(args)) {
+IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) : op(op), args(std::move(args)) {
     // TODO: check args count
 }
 
@@ -99,10 +96,10 @@ std::string IR_ExprOper::to_string() const {
 // IR_ExprMem
 
 IR_ExprMem::IR_ExprMem(IR_ExprMem::MemOps op, IRval ptr)
-        : IR_Expr(MEMORY), op(op), addr(std::move(ptr)), val() {}
+        : op(op), addr(std::move(ptr)), val() {}
 
 IR_ExprMem::IR_ExprMem(IR_ExprMem::MemOps op, IRval ptr, IRval val)
-        : IR_Expr(MEMORY), op(op), addr(std::move(ptr)), val(std::move(val)) {}
+        : op(op), addr(std::move(ptr)), val(std::move(val)) {}
 
 std::unique_ptr<IR_Expr> IR_ExprMem::copy() const {
     if (op == LOAD)
@@ -135,10 +132,10 @@ std::string IR_ExprMem::to_string() const {
 
 // TODO: check op
 IR_ExprAccess::IR_ExprAccess(IR_ExprAccess::AccessOps op, IRval base, std::vector<IRval> ind)
-        : IR_Expr(ACCESS), op(op), base(std::move(base)), indices(std::move(ind)) {}
+        : op(op), base(std::move(base)), indices(std::move(ind)) {}
 
 IR_ExprAccess::IR_ExprAccess(IR_ExprAccess::AccessOps op, IRval base, IRval val, std::vector<IRval> ind)
-        : IR_Expr(ACCESS), op(op), base(std::move(base)), indices(std::move(ind)), val(std::move(val)) {}
+        : op(op), base(std::move(base)), indices(std::move(ind)), val(std::move(val)) {}
 
 std::unique_ptr<IR_Expr> IR_ExprAccess::copy() const {
     std::vector<IRval> newIndices;
@@ -186,11 +183,11 @@ std::string IR_ExprAccess::to_string() const {
 
 // IR_ExprAlloc
 
-IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size) :
-        IR_Expr(ALLOCATION), type(std::move(type)), size(size) {}
+IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size)
+        : type(std::move(type)), size(size) {}
 
-IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap) :
-        IR_Expr(ALLOCATION), type(std::move(type)), size(size), isOnHeap(onHeap) {}
+IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap)
+        : type(std::move(type)), size(size), isOnHeap(onHeap) {}
 
 std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
     return std::make_unique<IR_ExprAlloc>(type->copy(), size, isOnHeap);
@@ -209,7 +206,7 @@ std::vector<IRval*> IR_ExprAlloc::getArgs() {
 // IR_ExprCast
 
 IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
-        : IR_Expr(CAST), arg(std::move(sourceVal)), dest(std::move(cdest)) {
+        : arg(std::move(sourceVal)), dest(std::move(cdest)) {
     const auto &source = arg.getType();
     if (source->equal(*dest))
         throw cw39_internal_error("Casting equal types");
@@ -310,11 +307,9 @@ std::string IR_ExprCast::to_string() const {
 
 // IR_ExprCall
 
-IR_ExprCall::IR_ExprCall(int callee, std::vector<IRval> args)
-        : IR_Expr(CALL), callee(callee), args(std::move(args)) {}
+IR_ExprCall::IR_ExprCall(int callee, std::vector<IRval> args) : callee(callee), args(std::move(args)) {}
 
-IR_ExprCall::IR_ExprCall(IRval callee, std::vector<IRval> args)
-        : IR_Expr(CALL), callee(callee), args(std::move(args)) {}
+IR_ExprCall::IR_ExprCall(IRval callee, std::vector<IRval> args) : callee(callee), args(std::move(args)) {}
 
 std::unique_ptr<IR_Expr> IR_ExprCall::copy() const {
     std::vector<IRval> newArgs;
@@ -350,7 +345,7 @@ IRval IR_ExprCall::getFuncPtr() const {
 
 // IR_ExprPhi
 
-IR_ExprPhi::IR_ExprPhi() : IR_Expr(PHI) {}
+IR_ExprPhi::IR_ExprPhi() = default;
 
 std::unique_ptr<IR_Expr> IR_ExprPhi::copy() const {
     auto res = std::make_unique<IR_ExprPhi>();
@@ -370,10 +365,10 @@ std::vector<IRval *> IR_ExprPhi::getArgs() {
 // IR_ExprTerminator
 
 IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type)
-        : IR_Expr(TERM), termType(type), arg() {}
+        : termType(type), arg() {}
 
 IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type, IRval val)
-        : IR_Expr(TERM), termType(type), arg(std::move(val)) {}
+        : termType(type), arg(std::move(val)) {}
 
 std::unique_ptr<IR_Expr> IR_ExprTerminator::copy() const {
     if (arg.has_value())

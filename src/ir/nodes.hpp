@@ -25,17 +25,12 @@ struct IR_ExprTerminator;
 struct IR_ExprPhi;
 
 struct IR_Expr {
-    enum Type {
-        OPERATION, MEMORY, ACCESS, ALLOCATION, CAST, CALL, TERM, PHI
-    };
-    Type type;
-
-    explicit IR_Expr(Type type);
+    IR_Expr() = default;
     virtual ~IR_Expr() = default;
     virtual std::unique_ptr<IR_Expr> copy() const = 0;
     virtual std::vector<IRval*> getArgs() = 0;
 
-    IR_ExprOper const& getOper() const;
+    IR_ExprOper const& getOper() const; // TODO: needless? pointers?
     IR_ExprMem const& getMem() const;
     IR_ExprAccess const& getAccess() const;
     IR_ExprAlloc const& getAlloc() const;

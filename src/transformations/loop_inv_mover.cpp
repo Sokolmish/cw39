@@ -29,6 +29,9 @@ void LoopInvMover::passNestedLoops(const LoopNode &topLoop) {
 }
 
 static bool isNodeInvariant(IR_Node const &node, std::set<IRval> const &varsInLoop) {
+    if (hasType<IR_ExprCall*, IR_ExprAccess*, IR_ExprAlloc*>(node.body.get()))
+        return false;
+
     auto args = node.body->getArgs();
     for (IRval const *arg : args) {
         if (varsInLoop.contains(*arg))
@@ -54,8 +57,6 @@ void LoopInvMover::passLoop(LoopNode const &loop) {
         IR_Block &block = cfg.block(blockId);
         for (auto &node : block.body) {
             if (node.body) {
-                if (isInList(node.body->type, IR_Expr::CALL, IR_Expr::ACCESS, IR_Expr::ALLOCATION))
-                    continue;
                 if (isNodeInvariant(node, varsInLoop)) {
                     if (node.res.has_value())
                         varsInLoop.erase(*node.res);

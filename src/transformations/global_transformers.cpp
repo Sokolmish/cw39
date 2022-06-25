@@ -83,11 +83,13 @@ std::vector<int> TailrecEliminator::findTailCalls(int funcId) {
 
         // TODO: check if can reorder
         auto const &lastNode = curBlock.body.back();
-        if (!lastNode.body || lastNode.body->type != IR_Expr::CALL)
+        if (!lastNode.body)
+            return;
+        auto callExpr = dynamic_cast<IR_ExprCall const *>(lastNode.body.get());
+        if (!callExpr)
             return;
 
-        auto const &callExpr = dynamic_cast<IR_ExprCall const &>(*lastNode.body);
-        if (callExpr.isIndirect() || callExpr.getFuncId() != funcId)
+        if (callExpr->isIndirect() || callExpr->getFuncId() != funcId)
             return;
 
         // Check if returns result of recursive call or nothing
@@ -148,11 +150,12 @@ FunctionsInliner::FunctionsInliner(IntermediateUnit const &unit, CFGraph rawCfg)
 bool FunctionsInliner::passBlock(IR_Block &block) {
     for (auto nodeIt = block.body.begin(); nodeIt != block.body.end(); ++nodeIt) {
         IR_Node &node = *nodeIt;
-        if (node.body && node.body->type == IR_Expr::CALL) {
-            auto const &callExpr = node.body->getCall();
-            if (callExpr.isIndirect())
+        if (!node.body)
+            continue;
+        if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node.body.get())) {
+            if (callExpr->isIndirect())
                 continue;
-            auto const &func = iunit->getFunction(callExpr.getFuncId());
+            auto const &func = iunit->getFunction(callExpr->getFuncId());
             if (func.isInline()) {
                 IR_Block &retBlock = cfg.createBlock();
                 IR_Block &entry = inlineFunc(func, retBlock, node);

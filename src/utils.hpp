@@ -45,6 +45,11 @@ constexpr inline bool isInList(T const &val, Us const&&... elems) {
     return ((val == elems) || ...);
 }
 
+template <typename... Us, typename T>
+constexpr inline bool hasType(T const &val) {
+    return ((dynamic_cast<Us>(val)) || ...);
+}
+
 
 // https://stackoverflow.com/questions/61046705/casting-a-variant-to-super-set-variant-or-a-subset-variant
 template <class... Args>

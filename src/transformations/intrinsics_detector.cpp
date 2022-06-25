@@ -138,26 +138,25 @@ IntrinsicsDetector::examForCTZ(LoopNode const &loop, IR_Node const &phi, IRval c
     IRval const *testVal = nullptr;
 
     for (IR_Node const &node : loop.head.body) {
-        // All necessary nodes are Operations
-        if (node.body->type != IR_Expr::OPERATION)
+        auto oper = dynamic_cast<IR_ExprOper const *>(node.body.get());
+        if (!oper) // All necessary nodes are Operations
             continue;
-        auto const &oper = node.body->getOper();
 
         if (chainStep == STEP_SHIFT) {
-            if (oper.op != IR_ExprOper::SHR)
+            if (oper->op != IR_ExprOper::SHR)
                 continue;
-            if (oper.args.at(1) != counterVal)
+            if (oper->args.at(1) != counterVal)
                 continue;
 
-            argVal = &oper.args.at(0);
+            argVal = &oper->args.at(0);
             shiftedVal = &node.res.value();
             chainStep = STEP_AND1;
         }
         else if (chainStep == STEP_AND1) {
-            if (oper.op != IR_ExprOper::AND)
+            if (oper->op != IR_ExprOper::AND)
                 continue;
 
-            auto commArgs = splitBinCommArgs(oper);
+            auto commArgs = splitBinCommArgs(*oper);
             if (!commArgs)
                 continue;
             if (*commArgs->varVal != *shiftedVal)
@@ -169,10 +168,10 @@ IntrinsicsDetector::examForCTZ(LoopNode const &loop, IR_Node const &phi, IRval c
             chainStep = STEP_EQ0;
         }
         else { // chainStep == STEP_EQ0
-            if (oper.op != IR_ExprOper::EQ) // TODO: inverted, also can be GT, ...
+            if (oper->op != IR_ExprOper::EQ) // TODO: inverted, also can be GT, ...
                 continue;
 
-            auto commArgs = splitBinCommArgs(oper);
+            auto commArgs = splitBinCommArgs(*oper);
             if (!commArgs)
                 continue;
             if (*commArgs->varVal != *bitVal)
@@ -215,13 +214,11 @@ IntrinsicsDetector::examForCTZ(LoopNode const &loop, IR_Node const &phi, IRval c
         if (!inductiveNode)
             return true; // Not in this block
 
-        if (inductiveNode->body->type != IR_Expr::OPERATION)
-            return false;
-        auto const &oper = inductiveNode->body->getOper();
-        if (oper.op != IR_ExprOper::ADD)
+        auto oper = dynamic_cast<IR_ExprOper const *>(inductiveNode->body.get());
+        if (!oper || oper->op != IR_ExprOper::ADD)
             return false;
 
-        auto commArgs = splitBinCommArgs(oper);
+        auto commArgs = splitBinCommArgs(*oper);
         if (!commArgs)
             return false;
         if (*commArgs->varVal != counterVal)

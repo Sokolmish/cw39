@@ -141,30 +141,29 @@ std::map<uint64_t, std::string> const& IntermediateUnit::getStrings() const {
  */
 
 void IntermediateUnit::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) const {
-    if (rawExpr.type == IR_Expr::OPERATION) {
-        ss << dynamic_cast<IR_ExprOper const &>(rawExpr).to_string();
+    if (auto exprOper = dynamic_cast<IR_ExprOper const *>(&rawExpr)) {
+        ss << exprOper->to_string();
     }
-    else if (rawExpr.type == IR_Expr::ALLOCATION) {
-        ss << dynamic_cast<IR_ExprAlloc const &>(rawExpr).to_string();
+    else if (auto exprMem = dynamic_cast<IR_ExprMem const *>(&rawExpr)) {
+        ss << exprMem->to_string();
     }
-    else if (rawExpr.type == IR_Expr::MEMORY) {
-        ss << dynamic_cast<IR_ExprMem const &>(rawExpr).to_string();
+    else if (auto exprAccess = dynamic_cast<IR_ExprAccess const *>(&rawExpr)) {
+        ss << exprAccess->to_string();
     }
-    else if (rawExpr.type == IR_Expr::ACCESS) {
-        ss << dynamic_cast<IR_ExprAccess const &>(rawExpr).to_string();
+    else if (auto exprCast = dynamic_cast<IR_ExprCast const *>(&rawExpr)) {
+        ss << exprCast->to_string();
     }
-    else if (rawExpr.type == IR_Expr::CAST) {
-        ss << dynamic_cast<IR_ExprCast const &>(rawExpr).to_string();
-    }
-    else if (rawExpr.type == IR_Expr::CALL) {
-        auto const &expr = dynamic_cast<IR_ExprCall const &>(rawExpr);
-        if (expr.isIndirect())
-            fmt::print(ss, "call {} ( ", expr.getFuncPtr().to_string());
+    else if (auto exprCall = dynamic_cast<IR_ExprCall const *>(&rawExpr)) {
+        if (exprCall->isIndirect())
+            fmt::print(ss, "call {} ( ", exprCall->getFuncPtr().to_string());
         else
-            fmt::print(ss, "call {} ( ", getFunction(expr.getFuncId()).name);
-        for (auto const &arg : expr.args)
+            fmt::print(ss, "call {} ( ", getFunction(exprCall->getFuncId()).name);
+        for (auto const &arg : exprCall->args)
             fmt::print(ss, "{} ", arg.to_string());
         fmt::print(ss, ")");
+    }
+    else if (auto exprAlloc = dynamic_cast<IR_ExprAlloc const *>(&rawExpr)) {
+        ss << exprAlloc->to_string();
     }
     else { // TODO: PHI and term
         throw cw39_not_implemented("Printing phi-functions and terminators");

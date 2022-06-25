@@ -41,13 +41,14 @@ void CopyPropagator::propagateCopies() {
                 if (!node->body)
                     continue;
 
-                if (node->res && node->res->isVReg() && node->body->type == IR_Expr::OPERATION) {
-                    auto oper = dynamic_cast<IR_ExprOper &>(*node->body);
-                    if (oper.op == IR_ExprOper::MOV) {
-                        localChanged = true;
-                        setPassChanged();
-                        remlacementMap.emplace(*node->res, oper.args.at(0));
-                        *node = IR_Node::nop();
+                if (node->res && node->res->isVReg()) {
+                    if (auto oper = dynamic_cast<IR_ExprOper *>(node->body.get())) {
+                        if (oper->op == IR_ExprOper::MOV) {
+                            localChanged = true;
+                            setPassChanged();
+                            remlacementMap.emplace(*node->res, oper->args.at(0));
+                            *node = IR_Node::nop();
+                        }
                     }
                 }
 
@@ -83,15 +84,12 @@ void CopyPropagator::foldConstants() {
                 if (!node->body)
                     continue;
 
-                // TODO: access operations
-                if (node->body->type == IR_Expr::OPERATION) {
-                    auto &operExpr = dynamic_cast<IR_ExprOper &>(*node->body);
-
-                    if (operExpr.op == IR_ExprOper::MOV)
+                if (auto operExpr = dynamic_cast<IR_ExprOper *>(node->body.get())) {
+                    if (operExpr->op == IR_ExprOper::MOV)
                         continue;
 
                     bool isConst = true;
-                    for (auto const &arg : operExpr.args) {
+                    for (auto const &arg : operExpr->args) {
                         if (!arg.isConstant()) {
                             isConst = false;
                             break;
@@ -100,31 +98,27 @@ void CopyPropagator::foldConstants() {
                     if (!isConst)
                         continue;
 
-                    auto newVal = ConstantsFolder::foldExpr(operExpr);
+                    auto newVal = ConstantsFolder::foldExpr(*operExpr);
                     if (newVal) {
                         localChanged = true;
                         setPassChanged();
-                        operExpr.op = IR_ExprOper::MOV;
-                        operExpr.args = { *newVal };
+                        operExpr->op = IR_ExprOper::MOV;
+                        operExpr->args = { *newVal };
                     }
                 }
-                else if (node->body->type == IR_Expr::CAST) {
-                    auto &castExpr = dynamic_cast<IR_ExprCast &>(*node->body);
-
-                    if (!castExpr.arg.isConstant())
+                else if (auto castExpr = dynamic_cast<IR_ExprCast *>(node->body.get())) {
+                    if (!castExpr->arg.isConstant())
                         continue;
 
 //                        localChanged = true;
 //                        setPassChanged();
                     // TODO
                 }
-                else if (node->body->type == IR_Expr::PHI) {
-                    auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*node->body);
-
-                    IRval commonVal = phiExpr.args.at(0);
+                else if (auto phiExpr = dynamic_cast<IR_ExprPhi *>(node->body.get())) {
+                    IRval commonVal = phiExpr->args.at(0);
 
                     bool isConst = true;
-                    for (auto const &[pos, arg] : phiExpr.args) {
+                    for (auto const &[pos, arg] : phiExpr->args) {
                         // TODO: also collapse on same non-const values
                         if (!arg.isConstant() || arg != commonVal) {
                             isConst = false;

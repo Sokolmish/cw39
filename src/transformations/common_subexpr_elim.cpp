@@ -8,11 +8,10 @@ CommonSubexprElim::CommonSubexprElim(IntermediateUnit const &unit, CFGraph rawCf
     auto visitor = [this, &operExprs](int blockId) {
         IR_Block &block = cfg.block(blockId);
         for (IR_Node &node : block.body) {
-            if (node.body->type == IR_Expr::OPERATION) {
-                auto expr = dynamic_cast<IR_ExprOper const &>(*node.body);
-                auto it = operExprs.find({ expr.args, expr.op });
+            if (auto exprOper = dynamic_cast<IR_ExprOper const *>(node.body.get())) {
+                auto it = operExprs.find({ exprOper->args, exprOper->op });
                 if (it == operExprs.end()) {
-                    operExprs.emplace(std::make_pair(expr.args, expr.op), node.res.value());
+                    operExprs.emplace(std::make_pair(exprOper->args, exprOper->op), node.res.value());
                 }
                 else { // Found
                     node.body = std::make_unique<IR_ExprOper>(

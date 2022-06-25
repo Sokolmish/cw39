@@ -421,37 +421,24 @@ void IR2LLVM_Impl::createBlock(IR_Block const &block) {
     }
 
     for (auto const &node : block.body) {
-        switch (node.body->type) {
-            case IR_Expr::OPERATION:
-                buildOperation(node);
-                break;
-            case IR_Expr::MEMORY:
-                buildMemOp(node);
-                break;
-            case IR_Expr::ACCESS:
-                buildAccessOp(node);
-                break;
-            case IR_Expr::ALLOCATION: {
-                auto allocExpr = node.body->getAlloc();
-                std::string resName = node.res->to_reg_name();
-                Value *res = builder->CreateAlloca(getType(*allocExpr.type), nullptr, resName);
-                regsMap.emplace(*node.res, res);
-                break;
-            }
-            case IR_Expr::CAST:
-                buildCast(node);
-                break;
-            case IR_Expr::CALL:
-                buildCall(node);
-                break;
-
-            case IR_Expr::TERM:
-                throw mat_exception("Term node in general list");
-            case IR_Expr::PHI:
-                throw mat_exception("Phi node in general list");
-            default:
-                throw std::logic_error("Wrong node type");
+        // TODO: Send already dyn_casted values
+        if (dynamic_cast<IR_ExprOper const *>(node.body.get()))
+            buildOperation(node);
+        else if (dynamic_cast<IR_ExprCast const *>(node.body.get()))
+            buildCast(node);
+        else if (dynamic_cast<IR_ExprCall const *>(node.body.get()))
+            buildCall(node);
+        else if (dynamic_cast<IR_ExprMem const *>(node.body.get()))
+            buildMemOp(node);
+        else if (dynamic_cast<IR_ExprAccess const *>(node.body.get()))
+            buildAccessOp(node);
+        else if (auto allocExpr = dynamic_cast<IR_ExprAlloc const *>(node.body.get())) {
+            std::string resName = node.res->to_reg_name();
+            Value *res = builder->CreateAlloca(getType(*allocExpr->type), nullptr, resName);
+            regsMap.emplace(*node.res, res);
         }
+        else
+            throw std::logic_error("Wrong node type");
     }
 
     if (!block.termNode.has_value())
