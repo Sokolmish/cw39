@@ -283,8 +283,7 @@ static StepResult doCompilation(CompilationContext &ctx) {
 
     try {
         sp::Popen proc(llc_args, sp::input(sp::PIPE), sp::output(sp::PIPE));
-        std::string &llvmIr = ctx.llvmIR; // Can send bitcode
-        auto res = proc.communicate(llvmIr.c_str(), llvmIr.size());
+        auto res = proc.communicate(ctx.llvmIR); // Can send bitcode
         stopTm = steady_clock::now();
 
         ctx.assembly = res.first.buf.data();
