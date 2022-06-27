@@ -57,6 +57,11 @@ void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
         }
         else if (auto exprMem = instr.body->toMem()) {
             if (exprMem->op == IR_ExprMem::LOAD) {
+                if (exprMem->isVolatile) {
+                    auto it = toRedudeList.find(*exprMem->val);
+                    if (it != toRedudeList.end())
+                        toRedudeList.erase(it);
+                }
                 continue;
             }
             else if (exprMem->op == IR_ExprMem::STORE) {

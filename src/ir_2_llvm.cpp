@@ -645,12 +645,13 @@ void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
         case IR_ExprMem::LOAD: {
             auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.addr.getType());
             std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
-            Value *res = builder->CreateLoad(getType(*ptrTp.child), getValue(oper.addr), name);
+            Value *res = builder->CreateLoad(getType(*ptrTp.child), getValue(oper.addr),
+                                             oper.isVolatile, name);
             regsMap.emplace(*node.res, res);
             break;
         }
         case IR_ExprMem::STORE: {
-            builder->CreateStore(getValue(*oper.val), getValue(oper.addr));
+            builder->CreateStore(getValue(*oper.val), getValue(oper.addr), oper.isVolatile);
             break;
         }
         default:

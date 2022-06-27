@@ -48,13 +48,15 @@ std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
     return emitNode(std::move(dst), std::move(expr));
 }
 
-void IR_Generator::emitStore(IRval addr, IRval val) {
+void IR_Generator::emitStore(IRval addr, IRval val, bool isVolatile) {
     auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::STORE, std::move(addr), std::move(val));
+    expr->isVolatile = isVolatile;
     emitNode(std::nullopt, std::move(expr));
 }
 
-IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr) {
+IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr, bool isVolatile) {
     auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::LOAD, std::move(addr));
+    expr->isVolatile = isVolatile;
     return *emitNode(std::move(ret), std::move(expr));
 }
 
@@ -154,7 +156,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             // semanticError(assignee.loc, "Cannot assign values of different types");
             valToStore = emitCast(std::move(valToStore), destVarPtrType->child);
         }
-        emitStore(*destVar, std::move(valToStore));
+        emitStore(*destVar, std::move(valToStore), false); // TODO: volatile
     }
     else if (auto assigneeDeref = dynamic_cast<AST_Unop const *>(&dest)) { // Dereference write
         auto &assignee = *assigneeDeref;
@@ -173,7 +175,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             // semanticError(assignee.loc, "Cannot assign values of different types");
             valToStore = emitCast(std::move(valToStore), ptrType->child);
         }
-        emitStore(ptrVal, std::move(valToStore));
+        emitStore(ptrVal, std::move(valToStore), false); // TODO: volatile
     }
     else if (auto assigneeAccess = dynamic_cast<AST_Postfix const *>(&dest)) { // Accessors
         auto &assignee = *assigneeAccess;
@@ -218,7 +220,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             auto fieldPtrType = std::make_shared<IR_TypePtr>(field->irType);
             IRval elemPtr = emitGEP(fieldPtrType, std::move(object), {
                     IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
-            emitStore(std::move(elemPtr), wrValue);
+            emitStore(std::move(elemPtr), wrValue, false); // TODO: volatile
         }
         else if (assignee.op == AST_Postfix::INDEXATION) {
             IRval base = evalExpr(*assignee.base);
@@ -242,7 +244,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
                     // semanticError(assignee.loc, "Cannot assign values of different types");
                     valToStore = emitCast(std::move(valToStore), ptrType->child);
                 }
-                emitStore(finPtr, std::move(valToStore));
+                emitStore(finPtr, std::move(valToStore), false); // TODO: volatile
             }
             else { // base.getType()->type
                 semanticError(assignee.loc, "Wrong type for indexation");
@@ -384,17 +386,17 @@ IRval IR_Generator::evalTernaryExpr(AST_Ternary const &expr) {
     IRval resAddr = emitAlloc(ptrType, resType);
 
     selectBlock(blockTrue);
-    emitStore(resAddr, trueVal);
+    emitStore(resAddr, trueVal, false);
 
     selectBlock(blockFalse);
     IRval falseVal = evalExpr(*expr.v_false);
-    emitStore(resAddr, falseVal);
+    emitStore(resAddr, falseVal, false);
 
     if (!trueVal.getType()->equal(*falseVal.getType()))
         semanticError(expr.loc, "Cannot do ternary operation on different types");
 
     selectBlock(blockAfter); // Can add PHI here
-    auto resVal = emitLoad(resType, resAddr);
+    auto resVal = emitLoad(resType, resAddr, false);
     return resVal;
 }
 
@@ -414,7 +416,7 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
 
     auto ptrType = std::make_shared<IR_TypePtr>(lhs.getType());
     IRval resAddr = emitAlloc(ptrType, lhs.getType());
-    emitStore(resAddr, lhs);
+    emitStore(resAddr, lhs, false);
 
     IR_Block &blockLong = curFunc->cfg.createBlock();
     IR_Block &blockAfter = curFunc->cfg.createBlock();
@@ -435,13 +437,13 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
     if (!lhs.getType()->equal(*rhs.getType()))
         semanticError(loc, "Cannot do binary operation on different types");
 
-    emitStore(resAddr, rhs);
+    emitStore(resAddr, rhs, false);
 
     curBlock().setTerminator(IR_ExprTerminator::JUMP);
     curFunc->cfg.linkBlocks(curBlock(), blockAfter);
 
     selectBlock(blockAfter);
-    IRval resVal = emitLoad(lhs.getType(), resAddr);
+    IRval resVal = emitLoad(lhs.getType(), resAddr, false);
     return resVal; // Maybe PHI node here?
 }
 
@@ -743,7 +745,7 @@ IRval IR_Generator::evalUnopExpr(AST_Unop const &expr) {
             auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
             if (ptrType->child->type == IR_Type::FUNCTION)
                 semanticError(expr.loc, "Pointer to function cannot be dereferenced");
-            return emitLoad(ptrType->child, ptrVal);
+            return emitLoad(ptrType->child, ptrVal, false); // TODO: volatile
         }
 
         case AST_Unop::ADDR_OF: {
@@ -781,7 +783,7 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
             if (array.getType()->type == IR_Type::POINTER) {
                 auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
                 IRval finPtr = getPtrWithOffset(array, index, true);
-                return emitLoad(ptrType->child, finPtr);
+                return emitLoad(ptrType->child, finPtr, false); // TODO: volatile
             }
             else if (array.getType()->type == IR_Type::ARRAY) {
                 // At generation stage one can't get array value directly
@@ -825,7 +827,7 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
             auto fieldPtrType = std::make_shared<IR_TypePtr>(field->irType);
             IRval elemPtr = emitGEP(fieldPtrType, std::move(object), {
                     IRval::createVal(IR_TypeDirect::getI32(), 0), std::move(index) });
-            return emitLoad(field->irType, std::move(elemPtr));
+            return emitLoad(field->irType, std::move(elemPtr), false); // TODO: volatile
         }
 
         default: {
@@ -871,7 +873,7 @@ IRval IR_Generator::evalPrimaryExpr(AST_Primary const &expr) {
                 return emitCast(*var, ptrType);
             }
             else {
-                return emitLoad(resType, *var);
+                return emitLoad(resType, *var, false); // TODO: volatile
             }
         }
 

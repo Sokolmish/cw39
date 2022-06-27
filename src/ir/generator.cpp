@@ -221,8 +221,7 @@ void IR_Generator::createFunction(AST_FunctionDef const &def) {
         auto argPtrType = std::make_shared<IR_TypePtr>(argType);
         IRval argPtr = emitAlloc(argPtrType, argType);
 
-        auto argVal = IRval::createFunArg(argType, curArgNum);
-        emitStore(argPtr, argVal);
+        emitStore(argPtr, IRval::createFunArg(argType, curArgNum), false);
 
         variables.put(argIdent, argPtr);
         curArgNum++;
@@ -301,7 +300,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
             semanticError(singleDecl->declarator->loc, "Functions are not allowed inside compound statements");
 
         // TODO: check for void allocation (and in globals too)
-        std::shared_ptr<IR_Type> ptrType = std::make_shared<IR_TypePtr>(varType);
+        auto ptrType = std::make_shared<IR_TypePtr>(varType);
 
         auto topmostLoop = getTopmostLoop();
         std::optional<IRval> var;
@@ -323,7 +322,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
 
         if (singleDecl->initializer) {
             IRval initVal = getInitializerVal(varType, *singleDecl->initializer);
-            emitStore(*var, initVal);
+            emitStore(*var, initVal, false); // TODO: volatile
         }
     }
 }

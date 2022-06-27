@@ -144,8 +144,8 @@ private:
     std::optional<IRval> emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr);
 
     IRval emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args);
-    void emitStore(IRval addr, IRval val);
-    IRval emitLoad(std::shared_ptr<IR_Type> ret, IRval addr);
+    void emitStore(IRval addr, IRval val, bool isVolatile);
+    IRval emitLoad(std::shared_ptr<IR_Type> ret, IRval addr, bool isVolatile);
     std::optional<IRval> emitMov(IRval dst, IRval src);
     IRval emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst);
     std::optional<IRval> emitCall(std::shared_ptr<IR_Type> ret, int callee, std::vector<IRval> args);

@@ -58,7 +58,9 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
                     usedRegs.insert(memExpr->addr);
                     usedRegs.insert(memExpr->val.value());
                 }
-                // TODO: volatile read
+                else if (memExpr->op == IR_ExprMem::LOAD && memExpr->isVolatile) {
+                    usedRegs.insert(memExpr->addr);
+                }
             }
             else if (auto callExpr = node->body->toCall()) {
                 if (callExpr->isIndirect()) {
@@ -116,7 +118,7 @@ void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
                     setPassChanged();
                 }
                 else if (auto memExpr = node->body->toMem()) {
-                    if (memExpr->op == IR_ExprMem::LOAD) { // TODO: volatile read
+                    if (memExpr->op == IR_ExprMem::LOAD && !memExpr->isVolatile) {
                         *node = IR_Node::nop();
                         setPassChanged();
                     }
@@ -306,7 +308,8 @@ bool CfgCleaner::isNodeGeneralEffective(IR_Node const &node) {
     if (auto memExpr = node.body->toMem()) {
         if (memExpr->op == IR_ExprMem::STORE)
             return true;
-        // TODO: volatile read
+        else if (memExpr->op == IR_ExprMem::LOAD && memExpr->isVolatile)
+            return true;
     }
     else if (auto callExpr = node.body->toCall()) {
         if (callExpr->isIndirect())

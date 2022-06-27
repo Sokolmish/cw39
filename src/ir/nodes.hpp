@@ -72,9 +72,11 @@ struct IR_ExprMem final : public IR_Expr {
     MemOps op;
     IRval addr;
     std::optional<IRval> val;
+    bool isVolatile = false;
 
     IR_ExprMem(MemOps op, IRval ptr);
     IR_ExprMem(MemOps op, IRval ptr, IRval val);
+
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
     std::string to_string() const;
