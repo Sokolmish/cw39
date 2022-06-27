@@ -8,7 +8,7 @@ CommonSubexprElim::CommonSubexprElim(IntermediateUnit const &unit, CFGraph rawCf
     auto visitor = [this, &operExprs](int blockId) {
         IR_Block &block = cfg.block(blockId);
         for (IR_Node &node : block.body) {
-            if (auto exprOper = dynamic_cast<IR_ExprOper const *>(node.body.get())) {
+            if (auto exprOper = node.body->toOper()) {
                 auto it = operExprs.find({ exprOper->args, exprOper->op });
                 if (it == operExprs.end()) {
                     operExprs.emplace(std::make_pair(exprOper->args, exprOper->op), node.res.value());

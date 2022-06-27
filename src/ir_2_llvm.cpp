@@ -390,9 +390,9 @@ void IR2LLVM_Impl::createFunctions() {
         for (int blockId : visited) {
             auto const &cfgBlock = func.cfg.block(blockId);
             for (auto const &phiNode : cfgBlock.phis) {
-                auto cfgPhiFunc = phiNode.body->getPhi();
+                auto cfgPhiFunc = phiNode.body->toPHI();
                 PHINode *ph = unfilledPhis.at(*phiNode.res);
-                for (auto const &[pos, arg] : cfgPhiFunc.args) {
+                for (auto const &[pos, arg] : cfgPhiFunc->args) {
                     ph->addIncoming(getValue(arg), blocksMap.at(cfgBlock.prev.at(pos)));
                 }
             }
@@ -414,7 +414,7 @@ void IR2LLVM_Impl::createBlock(IR_Block const &block) {
     for (auto const &phiNode : block.phis) {
         PHINode *phiFunc = builder->CreatePHI(
                 getType(*phiNode.res->getType()),
-                phiNode.body->getPhi().args.size(),
+                phiNode.body->toPHI()->args.size(),
                 phiNode.res->to_reg_name());
         unfilledPhis.emplace(*phiNode.res, phiFunc);
         regsMap.emplace(*phiNode.res, phiFunc);
@@ -422,17 +422,17 @@ void IR2LLVM_Impl::createBlock(IR_Block const &block) {
 
     for (auto const &node : block.body) {
         // TODO: Send already dyn_casted values
-        if (dynamic_cast<IR_ExprOper const *>(node.body.get()))
+        if (node.body->toOper())
             buildOperation(node);
-        else if (dynamic_cast<IR_ExprCast const *>(node.body.get()))
+        else if (node.body->toCast())
             buildCast(node);
-        else if (dynamic_cast<IR_ExprCall const *>(node.body.get()))
+        else if (node.body->toCall())
             buildCall(node);
-        else if (dynamic_cast<IR_ExprMem const *>(node.body.get()))
+        else if (node.body->toMem())
             buildMemOp(node);
-        else if (dynamic_cast<IR_ExprAccess const *>(node.body.get()))
+        else if (node.body->toAccess())
             buildAccessOp(node);
-        else if (auto allocExpr = dynamic_cast<IR_ExprAlloc const *>(node.body.get())) {
+        else if (auto allocExpr = node.body->toAlloc()) {
             std::string resName = node.res->to_reg_name();
             Value *res = builder->CreateAlloca(getType(*allocExpr->type), nullptr, resName);
             regsMap.emplace(*node.res, res);
@@ -454,7 +454,7 @@ void IR2LLVM_Impl::createBlock(IR_Block const &block) {
 }
 
 void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
-    const IR_ExprOper &oper = node.body->getOper();
+    const IR_ExprOper &oper = *node.body->toOper();
 
     auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper.args[0].getType());
     std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
@@ -640,7 +640,7 @@ void IR2LLVM_Impl::buildOperation(IR_Node const &node) {
 }
 
 void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
-    const IR_ExprMem &oper = node.body->getMem();
+    const IR_ExprMem &oper = *node.body->toMem();
     switch (oper.op) {
         case IR_ExprMem::LOAD: {
             auto const &ptrTp = dynamic_cast<IR_TypePtr const &>(*oper.addr.getType());
@@ -659,7 +659,7 @@ void IR2LLVM_Impl::buildMemOp(IR_Node const &node) {
 }
 
 void IR2LLVM::IR2LLVM_Impl::buildAccessOp(const IR_Node &node) {
-    const IR_ExprAccess &acc = node.body->getAccess();
+    const IR_ExprAccess &acc = *node.body->toAccess();
     std::string name = node.res.has_value() ? node.res->to_reg_name() : "";
 
     if (acc.op == IR_ExprAccess::GEP) {
@@ -725,7 +725,7 @@ static auto getCastOp(IR_ExprCast::CastType op) {
 }
 
 void IR2LLVM_Impl::buildCast(IR_Node const &node) {
-    auto const &castExpr = node.body->getCast();
+    auto const &castExpr = *node.body->toCast();
 
     Value *argVal = getValue(castExpr.arg);
     Type *destType = getType(*castExpr.dest);
@@ -737,7 +737,7 @@ void IR2LLVM_Impl::buildCast(IR_Node const &node) {
 }
 
 void IR2LLVM::IR2LLVM_Impl::buildCall(const IR_Node &node) {
-    auto const &callExpr = node.body->getCall();
+    auto const &callExpr = *node.body->toCall();
 
     std::vector<Value *> args;
     for (IRval const &arg: callExpr.args)

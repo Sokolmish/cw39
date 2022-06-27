@@ -42,7 +42,7 @@ void CopyPropagator::propagateCopies() {
                     continue;
 
                 if (node->res && node->res->isVReg()) {
-                    if (auto oper = dynamic_cast<IR_ExprOper *>(node->body.get())) {
+                    if (auto oper = node->body->toOper()) {
                         if (oper->op == IR_ExprOper::MOV) {
                             localChanged = true;
                             setPassChanged();
@@ -84,7 +84,7 @@ void CopyPropagator::foldConstants() {
                 if (!node->body)
                     continue;
 
-                if (auto operExpr = dynamic_cast<IR_ExprOper *>(node->body.get())) {
+                if (auto operExpr = node->body->toOper()) {
                     if (operExpr->op == IR_ExprOper::MOV)
                         continue;
 
@@ -106,7 +106,7 @@ void CopyPropagator::foldConstants() {
                         operExpr->args = { *newVal };
                     }
                 }
-                else if (auto castExpr = dynamic_cast<IR_ExprCast *>(node->body.get())) {
+                else if (auto castExpr = node->body->toCast()) {
                     if (!castExpr->arg.isConstant())
                         continue;
 
@@ -114,7 +114,7 @@ void CopyPropagator::foldConstants() {
 //                        setPassChanged();
                     // TODO
                 }
-                else if (auto phiExpr = dynamic_cast<IR_ExprPhi *>(node->body.get())) {
+                else if (auto phiExpr = node->body->toPHI()) {
                     IRval commonVal = phiExpr->args.at(0);
 
                     bool isConst = true;

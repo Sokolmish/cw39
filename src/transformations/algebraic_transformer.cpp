@@ -26,7 +26,7 @@ static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
 }
 
 void AlgebraicTransformer::processNode(IR_Node *node) {
-    auto oper = dynamic_cast<IR_ExprOper *>(node->body.get());
+    auto oper = node->body->toOper();
     if (!oper)
         return;
 

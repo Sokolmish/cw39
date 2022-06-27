@@ -53,8 +53,8 @@ void IntrinsicsDetector::passLoop(LoopNode const &loop) {
     std::optional<IRval> oldCtzRes;
 
     for (IR_Node const &phi : loop.head.phis) {
-        IRval const &cntInit = phi.body->getPhi().args.at(outPredNum);
-        IRval const &cntInductive = phi.body->getPhi().args.at(inPredNum);
+        IRval const &cntInit = phi.body->toPHI()->args.at(outPredNum);
+        IRval const &cntInductive = phi.body->toPHI()->args.at(inPredNum);
         if (cntInit.isConstant() && cntInit.castValTo<uint64_t>() == 0) {
             if (!cntInductive.isVReg()) // Additional early check
                 continue;
@@ -138,7 +138,7 @@ IntrinsicsDetector::examForCTZ(LoopNode const &loop, IR_Node const &phi, IRval c
     IRval const *testVal = nullptr;
 
     for (IR_Node const &node : loop.head.body) {
-        auto oper = dynamic_cast<IR_ExprOper const *>(node.body.get());
+        auto oper = node.body->toOper();
         if (!oper) // All necessary nodes are Operations
             continue;
 
@@ -188,7 +188,7 @@ IntrinsicsDetector::examForCTZ(LoopNode const &loop, IR_Node const &phi, IRval c
     if (chainStep != STEP_BRANCH)
         return {};
 
-    auto const &term = loop.head.termNode.value().body->getTerm();
+    auto const &term = *loop.head.termNode.value().body->toTerm();
     if (term.termType != IR_ExprTerminator::BRANCH || term.arg != *testVal)
         return {};
 
@@ -214,7 +214,7 @@ IntrinsicsDetector::examForCTZ(LoopNode const &loop, IR_Node const &phi, IRval c
         if (!inductiveNode)
             return true; // Not in this block
 
-        auto oper = dynamic_cast<IR_ExprOper const *>(inductiveNode->body.get());
+        auto oper = inductiveNode->body->toOper();
         if (!oper || oper->op != IR_ExprOper::ADD)
             return false;
 

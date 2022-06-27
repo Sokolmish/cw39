@@ -4,39 +4,6 @@
 
 // Expressions
 
-IR_ExprOper const &IR_Expr::getOper() const {
-    return dynamic_cast<IR_ExprOper const &>(*this);
-}
-
-IR_ExprMem const &IR_Expr::getMem() const {
-    return dynamic_cast<IR_ExprMem const &>(*this);
-}
-
-IR_ExprAccess const &IR_Expr::getAccess() const {
-    return dynamic_cast<IR_ExprAccess const &>(*this);
-}
-
-IR_ExprAlloc const &IR_Expr::getAlloc() const {
-    return dynamic_cast<IR_ExprAlloc const &>(*this);
-}
-
-IR_ExprCast const &IR_Expr::getCast() const {
-    return dynamic_cast<IR_ExprCast const &>(*this);
-}
-
-IR_ExprCall const &IR_Expr::getCall() const {
-    return dynamic_cast<IR_ExprCall const &>(*this);
-}
-
-IR_ExprTerminator const &IR_Expr::getTerm() const {
-    return dynamic_cast<IR_ExprTerminator const &>(*this);
-}
-
-IR_ExprPhi const& IR_Expr::getPhi() const {
-    return dynamic_cast<IR_ExprPhi const &>(*this);
-}
-
-
 IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) : op(op), args(std::move(args)) {
     // TODO: check args count
 }

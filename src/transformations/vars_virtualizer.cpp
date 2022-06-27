@@ -46,7 +46,7 @@ void VarsVirtualizer::passFunction() {
 
 void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
     for (IR_Node const &instr: block.body) {
-        if (auto exprAlloc = dynamic_cast<IR_ExprAlloc const *>(instr.body.get())) {
+        if (auto exprAlloc = instr.body->toAlloc()) {
             if (instr.res.has_value() && instr.res->isVReg()) {
                 if (!isInList(exprAlloc->type->type, IR_Type::DIRECT, IR_Type::POINTER))
                     continue;
@@ -55,7 +55,7 @@ void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
                 toRedudeList.emplace(*instr.res, std::optional<IRval>());
             }
         }
-        else if (auto exprMem = dynamic_cast<IR_ExprMem const *>(instr.body.get())) {
+        else if (auto exprMem = instr.body->toMem()) {
             if (exprMem->op == IR_ExprMem::LOAD) {
                 continue;
             }
@@ -84,7 +84,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         if (instr.res) {
             auto it = toRedudeList.find(*instr.res);
             if (it != toRedudeList.end()) {
-                auto const &alloc = dynamic_cast<IR_ExprAlloc const &>(*instr.body);
+                auto const &alloc = *instr.body->toAlloc();
                 it->second = cfg.createReg(alloc.type);
                 instr = IR_Node::nop();
                 setPassChanged();
@@ -93,7 +93,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
         }
 
         // Replace memory instructions
-        if (auto oper = dynamic_cast<IR_ExprMem const *>(instr.body.get())) {
+        if (auto oper = instr.body->toMem()) {
             if (oper->op == IR_ExprMem::STORE) {
                 auto it = toRedudeList.find(oper->addr);
                 if (it != toRedudeList.end()) {
@@ -127,7 +127,7 @@ void VarsVirtualizer::optimizeBlock(IR_Block &block) {
 
     // TODO: use getAllNodes
     if (block.termNode.has_value()) {
-        auto &terminator = dynamic_cast<IR_ExprTerminator &>(*block.termNode->body);
+        auto &terminator = *block.termNode.value().body->toTerm();
         if (terminator.arg.has_value()) {
             auto it = toRedudeList.find(*terminator.arg);
             if (it != toRedudeList.end()) {

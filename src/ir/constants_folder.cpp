@@ -3,11 +3,11 @@
 #include <bit>
 
 std::optional<IRval> ConstantsFolder::foldExpr(IR_Expr const &expr) {
-    if (auto exprOper = dynamic_cast<IR_ExprOper const *>(&expr))
+    if (auto exprOper = expr.toOper())
         return foldOper(*exprOper);
-    else if (auto exprCast = dynamic_cast<IR_ExprCast const *>(&expr))
+    else if (auto exprCast = expr.toCast())
         return foldCast(*exprCast);
-    else if (auto exprPhi = dynamic_cast<IR_ExprPhi const *>(&expr))
+    else if (auto exprPhi = expr.toPHI())
         return foldPhi(*exprPhi);
     else
         return std::nullopt;

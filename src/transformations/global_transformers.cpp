@@ -54,7 +54,7 @@ void TailrecEliminator::passFunction(int funcId) {
         cfg.linkBlocks(tailBlock, oldHead);
 
         auto &lastNode = tailBlock.body.back();
-        auto const &callExpr = dynamic_cast<IR_ExprCall const &>(*lastNode.body);
+        auto const &callExpr = *lastNode.body->toCall();
         for (uint64_t an = 0; an < argsTypes.size(); an++) {
             phis[an]->args.emplace(i, callExpr.args[an].copy());
         }
@@ -85,7 +85,7 @@ std::vector<int> TailrecEliminator::findTailCalls(int funcId) {
         auto const &lastNode = curBlock.body.back();
         if (!lastNode.body)
             return;
-        auto callExpr = dynamic_cast<IR_ExprCall const *>(lastNode.body.get());
+        auto callExpr = lastNode.body->toCall();
         if (!callExpr)
             return;
 
@@ -152,7 +152,7 @@ bool FunctionsInliner::passBlock(IR_Block &block) {
         IR_Node &node = *nodeIt;
         if (!node.body)
             continue;
-        if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node.body.get())) {
+        if (auto callExpr = node.body->toCall()) {
             if (callExpr->isIndirect())
                 continue;
             auto const &func = iunit->getFunction(callExpr->getFuncId());
@@ -221,7 +221,7 @@ IR_Block& FunctionsInliner::inlineFunc(IntermediateUnit::Function const &func, I
         for (int &id : block->prev)
             id = idsMap.at(id);
 
-        auto &term = dynamic_cast<IR_ExprTerminator &>(*block->termNode.value().body);
+        auto &term = *block->termNode.value().body->toTerm();
         if (term.termType == IR_ExprTerminator::RET) {
             if (term.arg) {
                 retValues.emplace(retBlock.prev.size(), std::move(*term.arg));
@@ -245,7 +245,7 @@ IR_Block& FunctionsInliner::inlineFunc(IntermediateUnit::Function const &func, I
         }
         else {
             IR_Node &phiNode = retBlock.addNewPhiNode(*callingNode.res);
-            auto &phi = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
+            auto &phi = *phiNode.body->toPHI();
             phi.args = std::move(retValues);
         }
     }
@@ -279,7 +279,7 @@ void FunctionsInliner::reenumerateRegisters(std::vector<IR_Block*> const &blocks
                 }
                 else if (arg->isFunParam()) {
                     int num = arg->castValTo<int>();
-                    *arg = callingNode.body->getCall().args.at(num);
+                    *arg = callingNode.body->toCall()->args.at(num);
                 }
             }
         }

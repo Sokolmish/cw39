@@ -30,14 +30,22 @@ struct IR_Expr {
     virtual std::unique_ptr<IR_Expr> copy() const = 0;
     virtual std::vector<IRval*> getArgs() = 0;
 
-    IR_ExprOper const& getOper() const; // TODO: needless? pointers?
-    IR_ExprMem const& getMem() const;
-    IR_ExprAccess const& getAccess() const;
-    IR_ExprAlloc const& getAlloc() const;
-    IR_ExprCast const& getCast() const;
-    IR_ExprCall const& getCall() const;
-    IR_ExprTerminator const& getTerm() const;
-    IR_ExprPhi const& getPhi() const;
+    IR_ExprOper* toOper();
+    IR_ExprOper const* toOper() const;
+    IR_ExprMem* toMem();
+    IR_ExprMem const* toMem() const;
+    IR_ExprAccess* toAccess();
+    IR_ExprAccess const* toAccess() const;
+    IR_ExprAlloc* toAlloc();
+    IR_ExprAlloc const* toAlloc() const;
+    IR_ExprCast* toCast();
+    IR_ExprCast const* toCast() const;
+    IR_ExprCall* toCall();
+    IR_ExprCall const* toCall() const;
+    IR_ExprTerminator* toTerm();
+    IR_ExprTerminator const* toTerm() const;
+    IR_ExprPhi* toPHI();
+    IR_ExprPhi const* toPHI() const;
 };
 
 struct IR_ExprOper final : public IR_Expr {
@@ -149,6 +157,24 @@ struct IR_ExprPhi final : public IR_Expr {
     std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
 };
+
+
+// Casts
+
+#define CREATE_IR_EXPR_CASTER(expr_type, name) \
+    inline expr_type* IR_Expr::to##name() { return dynamic_cast<expr_type *>(this); } \
+    inline expr_type const* IR_Expr::to##name() const { return dynamic_cast<expr_type const *>(this); }
+
+CREATE_IR_EXPR_CASTER(IR_ExprPhi, PHI)
+CREATE_IR_EXPR_CASTER(IR_ExprOper, Oper)
+CREATE_IR_EXPR_CASTER(IR_ExprMem, Mem)
+CREATE_IR_EXPR_CASTER(IR_ExprAccess, Access)
+CREATE_IR_EXPR_CASTER(IR_ExprAlloc, Alloc)
+CREATE_IR_EXPR_CASTER(IR_ExprCast, Cast)
+CREATE_IR_EXPR_CASTER(IR_ExprCall, Call)
+CREATE_IR_EXPR_CASTER(IR_ExprTerminator, Term)
+
+#undef CREATE_IR_EXPR_CASTER
 
 
 // Nodes

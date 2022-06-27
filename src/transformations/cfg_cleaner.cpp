@@ -53,14 +53,14 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
     auto visitor = [this, &usedRegs](int blockId) {
         auto &curBlock = cfg.block(blockId);
         for (IR_Node const *node : curBlock.getAllNodes()) {
-            if (auto memExpr = dynamic_cast<IR_ExprMem const *>(node->body.get())) {
+            if (auto memExpr = node->body->toMem()) {
                 if (memExpr->op == IR_ExprMem::STORE) {
                     usedRegs.insert(memExpr->addr);
                     usedRegs.insert(memExpr->val.value());
                 }
                 // TODO: volatile read
             }
-            else if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node->body.get())) {
+            else if (auto callExpr = node->body->toCall()) {
                 if (callExpr->isIndirect()) {
                     usedRegs.insert(callExpr->getFuncPtr());
                 }
@@ -74,7 +74,7 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
                         usedRegs.insert(arg);
                 }
             }
-            else if (auto termExpr = dynamic_cast<IR_ExprTerminator const *>(node->body.get())) {
+            else if (auto termExpr = node->body->toTerm()) {
                 if (termExpr->arg)
                     usedRegs.insert(*termExpr->arg);
             }
@@ -111,17 +111,17 @@ void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
         for (IR_Node *node : curBlock.getAllNodes()) {
             // If node has needless result (none or unused) then consider to remove it
             if (!node->res || !usedRegs.contains(*node->res)) {
-                if (dynamic_cast<IR_ExprCall *>(node->body.get())) {
+                if (node->body->toCall()) {
                     node->res = {};
                     setPassChanged();
                 }
-                else if (auto memExpr = dynamic_cast<IR_ExprMem const *>(node->body.get())) {
+                else if (auto memExpr = node->body->toMem()) {
                     if (memExpr->op == IR_ExprMem::LOAD) { // TODO: volatile read
                         *node = IR_Node::nop();
                         setPassChanged();
                     }
                 }
-                else if (!dynamic_cast<IR_ExprTerminator *>(node->body.get())) {
+                else if (!node->body->toTerm()) {
                     *node = IR_Node::nop();
                     setPassChanged();
                 }
@@ -303,19 +303,19 @@ std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
 
 /** Returns true if node is write, volatile read, non-pure call or return */
 bool CfgCleaner::isNodeGeneralEffective(IR_Node const &node) {
-    if (auto memExpr = dynamic_cast<IR_ExprMem const *>(node.body.get())) {
+    if (auto memExpr = node.body->toMem()) {
         if (memExpr->op == IR_ExprMem::STORE)
             return true;
         // TODO: volatile read
     }
-    else if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node.body.get())) {
+    else if (auto callExpr = node.body->toCall()) {
         if (callExpr->isIndirect())
             return true;
         auto const &func = iunit->getFunction(callExpr->getFuncId());
         if (!func.isPure())
             return true;
     }
-    else if (auto termExpr = dynamic_cast<IR_ExprTerminator const *>(node.body.get())) {
+    else if (auto termExpr = node.body->toTerm()) {
         if (termExpr->termType == IR_ExprTerminator::RET)
             return true;
     }
@@ -331,7 +331,7 @@ bool CfgCleaner::isLoopEffective(LoopNode const &loop) {
         for (IR_Node const *node : block.getAllNodes()) {
             if (isNodeGeneralEffective(*node))
                 return true;
-            if (auto termExpr = dynamic_cast<IR_ExprTerminator const *>(node->body.get())) {
+            if (auto termExpr = node->body->toTerm()) {
                 if (termExpr->termType == IR_ExprTerminator::BRANCH) {
                     for (int next : block.next) {
                         if (!loop.blocks.contains(next)) {

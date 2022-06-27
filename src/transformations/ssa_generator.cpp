@@ -183,7 +183,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
 
         // Terminator
         if (curBlock.termNode.has_value()) {
-            auto &terminator = dynamic_cast<IR_ExprTerminator &>(*curBlock.termNode->body);
+            auto &terminator = *curBlock.termNode.value().body->toTerm();
             if (terminator.arg == var) {
                 terminator.arg = versions.top();
                 setPassChanged();
@@ -204,7 +204,7 @@ void SSA_Generator::traverseForVar(int startBlockId, const IRval &var) {
             for (auto &phiNode : nextBlock.phis) {
                 if (phiNode.res && phiRess.contains(*phiNode.res)) {
                     IRval phiArg = versions.top();
-                    auto &phiExpr = dynamic_cast<IR_ExprPhi &>(*phiNode.body);
+                    auto &phiExpr = *phiNode.body->toPHI();
                     phiExpr.args.emplace(j, phiArg);
                     setPassChanged();
                     break;
