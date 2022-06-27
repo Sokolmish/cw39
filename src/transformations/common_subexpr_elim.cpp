@@ -7,15 +7,15 @@ CommonSubexprElim::CommonSubexprElim(IntermediateUnit const &unit, CFGraph rawCf
 
     auto visitor = [this, &operExprs](int blockId) {
         IR_Block &block = cfg.block(blockId);
-        for (IR_Node &node : block.body) {
-            if (auto exprOper = dynamic_cast<IR_ExprOper const *>(node.body.get())) {
+        for (auto &node : block.body) {
+            if (auto exprOper = node->toOper()) {
                 auto it = operExprs.find({ exprOper->args, exprOper->op });
                 if (it == operExprs.end()) {
-                    operExprs.emplace(std::make_pair(exprOper->args, exprOper->op), node.res.value());
+                    operExprs.emplace(std::make_pair(exprOper->args, exprOper->op), node->res.value());
                 }
                 else { // Found
-                    node.body = std::make_unique<IR_ExprOper>(
-                            IR_ExprOper::MOV, std::vector<IRval>{ it->second });
+                    node = std::make_unique<IR_ExprOper>(
+                            std::move(node->res), IR_ExprOper::MOV, std::vector<IRval>{ it->second });
                     setPassChanged();
                 }
             }

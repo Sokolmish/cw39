@@ -39,10 +39,10 @@ void TailrecEliminator::passFunction(int funcId) {
         IRval arg = cfg.createReg(argType);
         newArgs.push_back(arg);
 
-        auto phi = std::make_unique<IR_ExprPhi>();
+        auto phi = std::make_unique<IR_ExprPhi>(arg);
         phi->args.emplace(0, IRval::createFunArg(argType, an));
         phis.push_back(phi.get());
-        oldHead.phis.emplace_back(arg, std::move(phi));
+        oldHead.phis.emplace_back(std::move(phi));
 
         an++;
     }
@@ -54,11 +54,11 @@ void TailrecEliminator::passFunction(int funcId) {
         cfg.linkBlocks(tailBlock, oldHead);
 
         auto &lastNode = tailBlock.body.back();
-        auto const &callExpr = dynamic_cast<IR_ExprCall const &>(*lastNode.body);
+        auto const &callExpr = *lastNode->toCall();
         for (uint64_t an = 0; an < argsTypes.size(); an++) {
             phis[an]->args.emplace(i, callExpr.args[an].copy());
         }
-        lastNode = IR_Node::nop();
+        lastNode = std::make_unique<IR_ExprNOP>();
 
         i++;
     }
@@ -83,9 +83,8 @@ std::vector<int> TailrecEliminator::findTailCalls(int funcId) {
 
         // TODO: check if can reorder
         auto const &lastNode = curBlock.body.back();
-        if (!lastNode.body)
-            return;
-        auto callExpr = dynamic_cast<IR_ExprCall const *>(lastNode.body.get());
+
+        auto callExpr = lastNode->toCall();
         if (!callExpr)
             return;
 
@@ -94,9 +93,9 @@ std::vector<int> TailrecEliminator::findTailCalls(int funcId) {
 
         // Check if returns result of recursive call or nothing
         if (terminator->arg.has_value()) {
-            if (!lastNode.res.has_value()) // TODO: also can be tailcall
+            if (!lastNode->res.has_value()) // TODO: also can be tailcall
                 return;
-            if (*lastNode.res != *terminator->arg)
+            if (*lastNode->res != *terminator->arg)
                 return;
         }
 
@@ -111,12 +110,10 @@ void TailrecEliminator::replaceParams(int entryId, std::vector<IRval> const &new
     std::set<int> visited;
     auto visitor = [this, &newArgs](int blockId) {
         IR_Block &block = cfg.block(blockId);
-        for (IR_Node &node : block.body) {
-            if (node.body) {
-                for (auto arg: node.body->getArgs()) {
-                    if (arg->getValueClass() == IRval::FUN_PARAM)
-                        *arg = newArgs.at(arg->castValTo<int>());
-                }
+        for (auto &node : block.body) {
+            for (auto arg: node->getArgs()) {
+                if (arg->getValueClass() == IRval::FUN_PARAM)
+                    *arg = newArgs.at(arg->castValTo<int>());
             }
         }
     };
@@ -149,16 +146,14 @@ FunctionsInliner::FunctionsInliner(IntermediateUnit const &unit, CFGraph rawCfg)
 
 bool FunctionsInliner::passBlock(IR_Block &block) {
     for (auto nodeIt = block.body.begin(); nodeIt != block.body.end(); ++nodeIt) {
-        IR_Node &node = *nodeIt;
-        if (!node.body)
-            continue;
-        if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node.body.get())) {
+        auto &node = *nodeIt;
+        if (auto callExpr = node->toCall()) {
             if (callExpr->isIndirect())
                 continue;
             auto const &func = iunit->getFunction(callExpr->getFuncId());
             if (func.isInline()) {
                 IR_Block &retBlock = cfg.createBlock();
-                IR_Block &entry = inlineFunc(func, retBlock, node);
+                IR_Block &entry = inlineFunc(func, retBlock, *node);
 
                 IR_Block &remBlock = cfg.createBlock();
                 retBlock.setTerminator(IR_ExprTerminator::JUMP);
@@ -166,10 +161,10 @@ bool FunctionsInliner::passBlock(IR_Block &block) {
                 remBlock.prev = { retBlock.id };
 
                 // Move remaining instructions
-                *nodeIt = IR_Node::nop();
+                *nodeIt = std::make_unique<IR_ExprNOP>();
                 ++nodeIt;
                 while (nodeIt != block.body.end()) {
-                    remBlock.body.push_back(std::exchange(*nodeIt, IR_Node::nop()));
+                    remBlock.body.push_back(std::exchange(*nodeIt, std::make_unique<IR_ExprNOP>()));
                     ++nodeIt;
                 }
 
@@ -200,7 +195,7 @@ bool FunctionsInliner::passBlock(IR_Block &block) {
  * and returns local entry block.
  */
 IR_Block& FunctionsInliner::inlineFunc(IntermediateUnit::Function const &func, IR_Block &retBlock,
-                                       IR_Node const &callingNode) {
+                                       IR_Expr const &callingNode) {
     std::map<int, int> idsMap;
     std::vector<IR_Block*> newBlocks;
     IR_Block *newEntry = nullptr;

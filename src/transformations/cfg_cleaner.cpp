@@ -11,18 +11,19 @@ CfgCleaner::CfgCleaner(IntermediateUnit const &unit, CFGraph rawCfg)
 
 void CfgCleaner::removeNops() {
     for (auto const &[bId, block] : cfg.getBlocks()) {
-        std::vector<IR_Node> newPhis;
-        for (IR_Node &node : cfg.block(bId).phis) {
-            if (node.body)
+        std::vector<std::unique_ptr<IR_Expr>> newPhis;
+        newPhis.reserve(cfg.block(bId).phis.size());
+        for (auto &node : cfg.block(bId).phis) {
+            if (!node->isNop())
                 newPhis.push_back(std::move(node));
             else
                 setPassChanged();
         }
         cfg.block(bId).phis = std::move(newPhis);
 
-        std::vector<IR_Node> newBody;
-        for (IR_Node &node : cfg.block(bId).body) {
-            if (node.body)
+        std::vector<std::unique_ptr<IR_Expr>> newBody;
+        for (auto &node : cfg.block(bId).body) {
+            if (!node->isNop())
                 newBody.push_back(std::move(node));
             else
                 setPassChanged();
@@ -52,15 +53,15 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
 
     auto visitor = [this, &usedRegs](int blockId) {
         auto &curBlock = cfg.block(blockId);
-        for (IR_Node const *node : curBlock.getAllNodes()) {
-            if (auto memExpr = dynamic_cast<IR_ExprMem const *>(node->body.get())) {
+        for (IR_Expr const *node : curBlock.getAllNodes()) {
+            if (auto memExpr = node->toMem()) {
                 if (memExpr->op == IR_ExprMem::STORE) {
                     usedRegs.insert(memExpr->addr);
                     usedRegs.insert(memExpr->val.value());
                 }
                 // TODO: volatile read
             }
-            else if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node->body.get())) {
+            else if (auto callExpr = node->toCall()) {
                 if (callExpr->isIndirect()) {
                     usedRegs.insert(callExpr->getFuncPtr());
                 }
@@ -74,7 +75,7 @@ std::set<IRval> CfgCleaner::getPrimaryEffectiveRegs() {
                         usedRegs.insert(arg);
                 }
             }
-            else if (auto termExpr = dynamic_cast<IR_ExprTerminator const *>(node->body.get())) {
+            else if (auto termExpr = node->toTerm()) {
                 if (termExpr->arg)
                     usedRegs.insert(*termExpr->arg);
             }
@@ -91,9 +92,9 @@ std::set<IRval> CfgCleaner::extendEffectiveRegsSet(std::set<IRval> const &regsSe
 
     auto visitor = [this, &extension, &regsSet](int blockId) {
         auto &curBlock = cfg.block(blockId);
-        for (IR_Node const *node : curBlock.getAllNodes()) {
-            if (node->body && node->res && regsSet.contains(*node->res)) {
-                for (IRval const *arg : node->body->getArgs()) {
+        for (IR_Expr *node : curBlock.getAllNodes()) {
+            if (node->res && regsSet.contains(*node->res)) {
+                for (IRval const *arg : node->getArgs()) {
                     extension.insert(*arg);
                 }
             }
@@ -108,21 +109,21 @@ std::set<IRval> CfgCleaner::extendEffectiveRegsSet(std::set<IRval> const &regsSe
 void CfgCleaner::removeUnusedNodes(std::set<IRval> const &usedRegs) {
     auto visitor = [this, &usedRegs](int blockId) {
         auto &curBlock = cfg.block(blockId);
-        for (IR_Node *node : curBlock.getAllNodes()) {
+        for (IR_Expr *node : curBlock.getAllNodes()) {
             // If node has needless result (none or unused) then consider to remove it
             if (!node->res || !usedRegs.contains(*node->res)) {
-                if (dynamic_cast<IR_ExprCall *>(node->body.get())) {
+                if (node->toCall()) {
                     node->res = {};
                     setPassChanged();
                 }
-                else if (auto memExpr = dynamic_cast<IR_ExprMem const *>(node->body.get())) {
+                else if (auto memExpr = node->toMem()) {
                     if (memExpr->op == IR_ExprMem::LOAD) { // TODO: volatile read
-                        *node = IR_Node::nop();
+                        *node = IR_ExprNOP();
                         setPassChanged();
                     }
                 }
-                else if (!dynamic_cast<IR_ExprTerminator *>(node->body.get())) {
-                    *node = IR_Node::nop();
+                else if (!node->toTerm()) {
+                    *node = IR_ExprNOP();
                     setPassChanged();
                 }
             }
@@ -302,20 +303,20 @@ std::set<int> CfgCleaner::getDominatedByGiven(int startId) {
 
 
 /** Returns true if node is write, volatile read, non-pure call or return */
-bool CfgCleaner::isNodeGeneralEffective(IR_Node const &node) {
-    if (auto memExpr = dynamic_cast<IR_ExprMem const *>(node.body.get())) {
+bool CfgCleaner::isNodeGeneralEffective(IR_Expr const &node) {
+    if (auto memExpr = node.toMem()) {
         if (memExpr->op == IR_ExprMem::STORE)
             return true;
         // TODO: volatile read
     }
-    else if (auto callExpr = dynamic_cast<IR_ExprCall const *>(node.body.get())) {
+    else if (auto callExpr = node.toCall()) {
         if (callExpr->isIndirect())
             return true;
         auto const &func = iunit->getFunction(callExpr->getFuncId());
         if (!func.isPure())
             return true;
     }
-    else if (auto termExpr = dynamic_cast<IR_ExprTerminator const *>(node.body.get())) {
+    else if (auto termExpr = node.toTerm()) {
         if (termExpr->termType == IR_ExprTerminator::RET)
             return true;
     }
@@ -328,10 +329,10 @@ bool CfgCleaner::isLoopEffective(LoopNode const &loop) {
     bool alreadyExited = false; // Can have only 1 exit from loop
     for (int blockId : loop.blocks) {
         IR_Block &block = cfg.block(blockId);
-        for (IR_Node const *node : block.getAllNodes()) {
+        for (IR_Expr const *node : block.getAllNodes()) {
             if (isNodeGeneralEffective(*node))
                 return true;
-            if (auto termExpr = dynamic_cast<IR_ExprTerminator const *>(node->body.get())) {
+            if (auto termExpr = node->toTerm()) {
                 if (termExpr->termType == IR_ExprTerminator::BRANCH) {
                     for (int next : block.next) {
                         if (!loop.blocks.contains(next)) {
@@ -356,8 +357,8 @@ bool CfgCleaner::isLoopEffective(LoopNode const &loop) {
         if (loop.blocks.contains(blockId))
             return;
         IR_Block &block = cfg.block(blockId);
-        for (IR_Node const *node : block.getAllNodes()) {
-            for (IRval const *arg : node->body->getArgs()) {
+        for (IR_Expr *node : block.getAllNodes()) {
+            for (IRval const *arg : node->getArgs()) {
                 if (assignedRegs.contains(*arg)) {
                     loopSubEffective = true;
                     return; // TODO: early stop traversing

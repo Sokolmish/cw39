@@ -4,48 +4,32 @@
 
 // Expressions
 
-IR_ExprOper const &IR_Expr::getOper() const {
-    return dynamic_cast<IR_ExprOper const &>(*this);
-}
+IR_Expr::IR_Expr(std::optional<IRval> res) : res(std::move(res)) {}
 
-IR_ExprMem const &IR_Expr::getMem() const {
-    return dynamic_cast<IR_ExprMem const &>(*this);
-}
-
-IR_ExprAccess const &IR_Expr::getAccess() const {
-    return dynamic_cast<IR_ExprAccess const &>(*this);
-}
-
-IR_ExprAlloc const &IR_Expr::getAlloc() const {
-    return dynamic_cast<IR_ExprAlloc const &>(*this);
-}
-
-IR_ExprCast const &IR_Expr::getCast() const {
-    return dynamic_cast<IR_ExprCast const &>(*this);
-}
-
-IR_ExprCall const &IR_Expr::getCall() const {
-    return dynamic_cast<IR_ExprCall const &>(*this);
-}
-
-IR_ExprTerminator const &IR_Expr::getTerm() const {
-    return dynamic_cast<IR_ExprTerminator const &>(*this);
-}
-
-IR_ExprPhi const& IR_Expr::getPhi() const {
-    return dynamic_cast<IR_ExprPhi const &>(*this);
+std::unique_ptr<IR_Expr> IR_Expr::copy() const {
+    auto newExpr = copyBody();
+    if (res)
+        newExpr->res = res->copy();
+    else
+        newExpr->res = std::nullopt;
+    return newExpr;
 }
 
 
-IR_ExprOper::IR_ExprOper(IR_Ops op, std::vector<IRval> args) : op(op), args(std::move(args)) {
-    // TODO: check args count
-}
+// IR_ExprOper
 
-std::unique_ptr<IR_Expr> IR_ExprOper::copy() const {
+IR_ExprOper::IR_ExprOper(std::optional<IRval> res, IR_ExprOper::IR_Ops op, std::vector<IRval> args)
+        : IR_Expr(std::move(res)), op(op), args(std::move(args)) {} // TODO: check args count
+
+std::unique_ptr<IR_ExprOper> IR_ExprOper::copyTyped() const {
     std::vector<IRval> newArgs;
     for (auto const &arg : args)
         newArgs.push_back(arg.copy());
-    return std::make_unique<IR_ExprOper>(op, std::move(newArgs));
+    return std::make_unique<IR_ExprOper>(std::nullopt, op, std::move(newArgs));
+}
+
+std::unique_ptr<IR_Expr> IR_ExprOper::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval*> IR_ExprOper::getArgs() {
@@ -95,19 +79,23 @@ std::string IR_ExprOper::to_string() const {
 
 // IR_ExprMem
 
-IR_ExprMem::IR_ExprMem(IR_ExprMem::MemOps op, IRval ptr)
-        : op(op), addr(std::move(ptr)), val() {}
+IR_ExprMem::IR_ExprMem(std::optional<IRval> res, IR_ExprMem::MemOps op, IRval ptr)
+        : IR_Expr(std::move(res)), op(op), addr(std::move(ptr)), val() {}
 
-IR_ExprMem::IR_ExprMem(IR_ExprMem::MemOps op, IRval ptr, IRval val)
-        : op(op), addr(std::move(ptr)), val(std::move(val)) {}
+IR_ExprMem::IR_ExprMem(std::optional<IRval> res, IR_ExprMem::MemOps op, IRval ptr, IRval val)
+        : IR_Expr(std::move(res)), op(op), addr(std::move(ptr)), val(std::move(val)) {}
 
-std::unique_ptr<IR_Expr> IR_ExprMem::copy() const {
+std::unique_ptr<IR_ExprMem> IR_ExprMem::copyTyped() const {
     if (op == LOAD)
-        return std::make_unique<IR_ExprMem>(op, addr.copy());
+        return std::make_unique<IR_ExprMem>(std::nullopt, op, addr.copy());
     else if (op == STORE)
-        return std::make_unique<IR_ExprMem>(op, addr.copy(), val->copy());
+        return std::make_unique<IR_ExprMem>(std::nullopt, op, addr.copy(), val->copy());
     else
         throw std::logic_error("Wrong memory operation");
+}
+
+std::unique_ptr<IR_Expr> IR_ExprMem::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval *> IR_ExprMem::getArgs() {
@@ -131,20 +119,26 @@ std::string IR_ExprMem::to_string() const {
 // IR_ExprAccess
 
 // TODO: check op
-IR_ExprAccess::IR_ExprAccess(IR_ExprAccess::AccessOps op, IRval base, std::vector<IRval> ind)
-        : op(op), base(std::move(base)), indices(std::move(ind)) {}
+IR_ExprAccess::IR_ExprAccess(std::optional<IRval> res, IR_ExprAccess::AccessOps op,
+                             IRval base, std::vector<IRval> ind)
+        : IR_Expr(std::move(res)), op(op), base(std::move(base)), indices(std::move(ind)) {}
 
-IR_ExprAccess::IR_ExprAccess(IR_ExprAccess::AccessOps op, IRval base, IRval val, std::vector<IRval> ind)
-        : op(op), base(std::move(base)), indices(std::move(ind)), val(std::move(val)) {}
+IR_ExprAccess::IR_ExprAccess(std::optional<IRval> res, IR_ExprAccess::AccessOps op,
+                             IRval base, IRval val, std::vector<IRval> ind)
+        : IR_Expr(std::move(res)), op(op), base(std::move(base)), indices(std::move(ind)), val(std::move(val)) {}
 
-std::unique_ptr<IR_Expr> IR_ExprAccess::copy() const {
+std::unique_ptr<IR_ExprAccess> IR_ExprAccess::copyTyped() const {
     std::vector<IRval> newIndices;
     for (auto const &ind : indices)
         newIndices.push_back(ind.copy());
     if (val.has_value())
-        return std::make_unique<IR_ExprAccess>(op, base.copy(), val->copy(), std::move(newIndices));
+        return std::make_unique<IR_ExprAccess>(std::nullopt, op, base.copy(), val->copy(), std::move(newIndices));
     else
-        return std::make_unique<IR_ExprAccess>(op, base.copy(), std::move(newIndices));
+        return std::make_unique<IR_ExprAccess>(std::nullopt, op, base.copy(), std::move(newIndices));
+}
+
+std::unique_ptr<IR_Expr> IR_ExprAccess::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval *> IR_ExprAccess::getArgs() {
@@ -183,14 +177,18 @@ std::string IR_ExprAccess::to_string() const {
 
 // IR_ExprAlloc
 
-IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size)
-        : type(std::move(type)), size(size) {}
+IR_ExprAlloc::IR_ExprAlloc(std::optional<IRval> res, std::shared_ptr<IR_Type> type, size_t size)
+        : IR_Expr(std::move(res)), type(std::move(type)), size(size) {}
 
-IR_ExprAlloc::IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap)
-        : type(std::move(type)), size(size), isOnHeap(onHeap) {}
+IR_ExprAlloc::IR_ExprAlloc(std::optional<IRval> res, std::shared_ptr<IR_Type> type, size_t size, bool onHeap)
+        : IR_Expr(std::move(res)), type(std::move(type)), size(size), isOnHeap(onHeap) {}
 
-std::unique_ptr<IR_Expr> IR_ExprAlloc::copy() const {
-    return std::make_unique<IR_ExprAlloc>(type->copy(), size, isOnHeap);
+std::unique_ptr<IR_ExprAlloc> IR_ExprAlloc::copyTyped() const {
+    return std::make_unique<IR_ExprAlloc>(std::nullopt, type->copy(), size, isOnHeap);
+}
+
+std::unique_ptr<IR_Expr> IR_ExprAlloc::copyBody() const {
+    return copyTyped();
 }
 
 std::string IR_ExprAlloc::to_string() const {
@@ -205,8 +203,8 @@ std::vector<IRval*> IR_ExprAlloc::getArgs() {
 
 // IR_ExprCast
 
-IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
-        : arg(std::move(sourceVal)), dest(std::move(cdest)) {
+IR_ExprCast::IR_ExprCast(std::optional<IRval> res, IRval sourceVal, std::shared_ptr<IR_Type> cdest)
+        : IR_Expr(std::move(res)), arg(std::move(sourceVal)), dest(std::move(cdest)) {
     const auto &source = arg.getType();
     if (source->equal(*dest))
         throw cw39_internal_error("Casting equal types");
@@ -274,15 +272,19 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
     }
 }
 
-std::unique_ptr<IR_Expr> IR_ExprCast::copy() const {
-    return std::make_unique<IR_ExprCast>(arg.copy(), dest->copy());
+std::unique_ptr<IR_ExprCast> IR_ExprCast::copyTyped() const {
+    return std::make_unique<IR_ExprCast>(std::nullopt, arg.copy(), dest->copy());
+}
+
+std::unique_ptr<IR_Expr> IR_ExprCast::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval*> IR_ExprCast::getArgs() {
     return std::vector<IRval*>{ &arg };
 }
 
-std::string castOpToStr(IR_ExprCast::CastType op)  {
+static std::string castOpToStr(IR_ExprCast::CastType op)  {
     switch (op) {
         case IR_ExprCast::BITCAST:   return "bitcast";
         case IR_ExprCast::SEXT:      return "sext";
@@ -307,18 +309,24 @@ std::string IR_ExprCast::to_string() const {
 
 // IR_ExprCall
 
-IR_ExprCall::IR_ExprCall(int callee, std::vector<IRval> args) : callee(callee), args(std::move(args)) {}
+IR_ExprCall::IR_ExprCall(std::optional<IRval> res, int callee, std::vector<IRval> args)
+        : IR_Expr(std::move(res)), callee(callee), args(std::move(args)) {}
 
-IR_ExprCall::IR_ExprCall(IRval callee, std::vector<IRval> args) : callee(callee), args(std::move(args)) {}
+IR_ExprCall::IR_ExprCall(std::optional<IRval> res, IRval callee, std::vector<IRval> args)
+        : IR_Expr(std::move(res)), callee(callee), args(std::move(args)) {}
 
-std::unique_ptr<IR_Expr> IR_ExprCall::copy() const {
+std::unique_ptr<IR_ExprCall> IR_ExprCall::copyTyped() const {
     std::vector<IRval> newArgs;
     for (auto const &arg : args)
         newArgs.push_back(arg.copy());
     if (isIndirect())
-        return std::make_unique<IR_ExprCall>(getFuncPtr().copy(), std::move(newArgs));
+        return std::make_unique<IR_ExprCall>(std::nullopt, getFuncPtr().copy(), std::move(newArgs));
     else
-        return std::make_unique<IR_ExprCall>(getFuncId(), std::move(newArgs));
+        return std::make_unique<IR_ExprCall>(std::nullopt, getFuncId(), std::move(newArgs));
+}
+
+std::unique_ptr<IR_Expr> IR_ExprCall::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval*> IR_ExprCall::getArgs() {
@@ -345,13 +353,17 @@ IRval IR_ExprCall::getFuncPtr() const {
 
 // IR_ExprPhi
 
-IR_ExprPhi::IR_ExprPhi() = default;
+IR_ExprPhi::IR_ExprPhi(std::optional<IRval> res) : IR_Expr(std::move(res)) {}
 
-std::unique_ptr<IR_Expr> IR_ExprPhi::copy() const {
-    auto res = std::make_unique<IR_ExprPhi>();
+std::unique_ptr<IR_ExprPhi> IR_ExprPhi::copyTyped() const {
+    auto res = std::make_unique<IR_ExprPhi>(std::nullopt);
     for (auto const &[pos, arg] : args)
         res->args.emplace(pos, arg.copy());
     return res;
+}
+
+std::unique_ptr<IR_Expr> IR_ExprPhi::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval *> IR_ExprPhi::getArgs() {
@@ -365,16 +377,20 @@ std::vector<IRval *> IR_ExprPhi::getArgs() {
 // IR_ExprTerminator
 
 IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type)
-        : termType(type), arg() {}
+        : IR_Expr(std::nullopt), termType(type), arg() {}
 
 IR_ExprTerminator::IR_ExprTerminator(IR_ExprTerminator::TermType type, IRval val)
-        : termType(type), arg(std::move(val)) {}
+        : IR_Expr(std::nullopt), termType(type), arg(std::move(val)) {}
 
-std::unique_ptr<IR_Expr> IR_ExprTerminator::copy() const {
+std::unique_ptr<IR_ExprTerminator> IR_ExprTerminator::copyTyped() const {
     if (arg.has_value())
         return std::make_unique<IR_ExprTerminator>(termType, arg->copy());
     else
         return std::make_unique<IR_ExprTerminator>(termType);
+}
+
+std::unique_ptr<IR_Expr> IR_ExprTerminator::copyBody() const {
+    return copyTyped();
 }
 
 std::vector<IRval *> IR_ExprTerminator::getArgs() {
@@ -385,29 +401,16 @@ std::vector<IRval *> IR_ExprTerminator::getArgs() {
 }
 
 
-// IR_Node
+// IR_ExprNOP
 
-IR_Node::IR_Node(IRval res, std::unique_ptr<IR_Expr> body) : res(res), body(std::move(body)) {}
+IR_ExprNOP::IR_ExprNOP() : IR_Expr(std::nullopt) {}
 
-IR_Node::IR_Node(std::unique_ptr<IR_Expr> body) : res(), body(std::move(body)) {}
-
-IR_Node IR_Node::copy() const {
-    if (res.has_value()) {
-        if (body)
-            return IR_Node(res->copy(), body->copy());
-        else
-            return IR_Node(res->copy(), nullptr);
-    }
-    else {
-        if (body)
-            return IR_Node(body->copy());
-        else
-            return IR_Node(nullptr);
-    }
+std::vector<IRval *> IR_ExprNOP::getArgs() {
+    return {};
 }
 
-IR_Node IR_Node::nop() {
-    return IR_Node(nullptr);
+std::unique_ptr<IR_Expr> IR_ExprNOP::copyBody() const {
+    return std::make_unique<IR_ExprNOP>();
 }
 
 
@@ -415,44 +418,37 @@ IR_Node IR_Node::nop() {
 
 IR_Block::IR_Block(int id) : id(id) {}
 
-void IR_Block::addNode(IR_Node node) {
-    body.push_back(std::move(node));
+void IR_Block::addNode(std::unique_ptr<IR_Expr> expr) {
+    body.emplace_back(std::move(expr));
 }
 
-void IR_Block::addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr) {
-    if (res.has_value())
-        body.emplace_back(res.value(), std::move(expr));
-    else
-        body.emplace_back(std::move(expr));
-}
-
-IR_Node& IR_Block::addNewPhiNode(IRval res) {
-    auto &it = phis.emplace_back(std::move(res), std::make_unique<IR_ExprPhi>());
-    return it;
+IR_ExprPhi& IR_Block::addNewPhiNode(IRval res) {
+    auto &it = phis.emplace_back(std::make_unique<IR_ExprPhi>(std::move(res)));
+    return static_cast<IR_ExprPhi&>(*it);
 }
 
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type) {
     if (type == IR_ExprTerminator::BRANCH)
         throw cw39_internal_error("Branck term statement needs argument");
-    termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type));
+    termNode = std::make_unique<IR_ExprTerminator>(type);
 }
 
 void IR_Block::setTerminator(IR_ExprTerminator::TermType type, IRval arg) {
     if (type == IR_ExprTerminator::JUMP)
         throw cw39_internal_error("Jump term statement doesn't have arguments");
-    termNode = IR_Node(std::make_unique<IR_ExprTerminator>(type, std::move(arg)));
+    termNode = std::make_unique<IR_ExprTerminator>(type, std::move(arg));
 }
 
 IR_Block IR_Block::copy() const {
     IR_Block newBlock(id);
     for (auto const &phiNode : phis)
-        newBlock.phis.push_back(phiNode.copy());
+        newBlock.phis.push_back(phiNode->copy());
     for (auto const &node : body)
-        newBlock.body.push_back(node.copy());
+        newBlock.body.push_back(node->copy());
     newBlock.prev = prev;
     newBlock.next = next;
     if (termNode)
-        newBlock.termNode = termNode->copy();
+        newBlock.termNode = termNode->copyTyped();
     else
         newBlock.termNode = {};
     return newBlock;
@@ -461,48 +457,49 @@ IR_Block IR_Block::copy() const {
 std::vector<IRval> IR_Block::getDefinitions() const {
     std::vector<IRval> defs;
     for (auto const &phiNode : phis)
-        if (phiNode.res && phiNode.res->isVReg())
-            defs.push_back(*phiNode.res);
+        if (phiNode->res && phiNode->res->isVReg())
+            defs.push_back(*phiNode->res);
     for (auto const &node : body)
-        if (node.res && node.res->isVReg())
-            defs.push_back(*node.res);
+        if (node->res && node->res->isVReg())
+            defs.push_back(*node->res);
     return defs;
 }
 
 std::vector<IRval> IR_Block::getReferences() const {
     std::vector<IRval> refs;
-    for (auto const &phiNode : phis)
-        if (phiNode.body)
-            for (IRval *arg : phiNode.body->getArgs())
+    for (auto const &phiNode : phis) {
+        if (phiNode)
+            for (IRval *arg : phiNode->getArgs())
                 if (arg->isVReg())
                     refs.push_back(*arg);
-    for (auto const &node : body)
-        if (node.body)
-            for (IRval *arg : node.body->getArgs())
+    }
+    for (auto const &node : body) {
+        if (node)
+            for (IRval *arg : node->getArgs())
                 if (arg->isVReg())
                     refs.push_back(*arg);
-    if (termNode)
-        for (IRval *arg : termNode->body->getArgs())
+    }
+    if (termNode) {
+        for (IRval *arg : termNode->getArgs())
             if (arg->isVReg())
                 refs.push_back(*arg);
+    }
     return refs;
 }
 
-std::vector<IR_Node*> IR_Block::getAllNodes() {
-    std::vector<IR_Node*> res;
+std::vector<IR_Expr*> IR_Block::getAllNodes() {
+    std::vector<IR_Expr*> res;
     for (auto &phiNode : phis)
-        res.push_back(&phiNode);
+        res.push_back(phiNode.get());
     for (auto &node : body)
-        res.push_back(&node);
-    if (termNode.has_value())
-        res.push_back(&*termNode);
+        res.push_back(node.get());
+    if (termNode)
+        res.push_back(termNode.get());
     return res;
 }
 
 IR_ExprTerminator const* IR_Block::getTerminator() const {
-    if (!termNode)
-        return nullptr;
-    return dynamic_cast<IR_ExprTerminator *>(termNode->body.get());
+    return termNode.get();
 }
 
 void IR_Block::removePredecessor(int pred) {

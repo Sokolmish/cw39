@@ -19,81 +19,87 @@ constexpr bool IR_Generator::isComparsionOp(AST_Binop::OpType op) {
 
 // Emitters
 
-std::optional<IRval> IR_Generator::emitNode(std::optional<IRval> ret, std::unique_ptr<IR_Expr> expr) {
-    // TODO: check if in global context
-    curBlock().addNode(ret, std::move(expr));
-    return ret;
+std::optional<IRval> IR_Generator::emitNode(std::unique_ptr<IR_Expr> expr) {
+    auto res = expr->res;
+    curBlock().addNode(std::move(expr)); // TODO: check if in global context
+    return res;
 }
 
-std::optional<IRval> IR_Generator::emitNode(std::shared_ptr<IR_Type> ret, std::unique_ptr<IR_Expr> expr) {
-    // Store and non-pure calls will never be folded
-    auto val = ConstantsFolder::foldExpr(*expr);
-    if (val.has_value()) {
-        return val;
-    }
-    else {
-        std::optional<IRval> res = std::nullopt;
-        if (ret)
-            res = curFunc->cfg.createReg(std::move(ret));
-        return emitNode(res, std::move(expr));
-    }
+static std::optional<IRval> createRet(CFGraph &cfg, std::shared_ptr<IR_Type> type) {
+    if (type)
+        return cfg.createReg(std::move(type));
+    return std::nullopt;
+}
+
+/**
+ * Constructs expression with args but without result register.
+ * Then if it can be evaluated, returns result. Otherwise if ret is not null,
+ * creates and assignes new result register and returns it.
+ * If ret is null returns std::nullopt.
+ */
+template <typename T, typename... Args>
+std::optional<IRval> IR_Generator::emitOrEvalNode(std::shared_ptr<IR_Type> ret, Args&& ...args) {
+    auto expr = std::make_unique<T>(std::nullopt, std::forward<Args>(args)...);
+    std::optional<IRval> val = ConstantsFolder::foldExpr(*expr);
+    if (val.has_value())
+        return val; // Cast to ret here?
+
+    if (ret)
+        expr->res = curFunc->cfg.createReg(std::move(ret));
+    return emitNode(std::move(expr));
 }
 
 IRval IR_Generator::emitOp(std::shared_ptr<IR_Type> ret, IR_ExprOper::IR_Ops op, std::vector<IRval> args) {
-    return *emitNode(std::move(ret), std::make_unique<IR_ExprOper>(op, std::move(args)));
+    return *emitOrEvalNode<IR_ExprOper>(std::move(ret), op, std::move(args));
 }
 
 std::optional<IRval> IR_Generator::emitMov(IRval dst, IRval src) {
-    auto expr = std::make_unique<IR_ExprOper>(IR_ExprOper::MOV, std::vector<IRval>{ std::move(src) });
-    return emitNode(std::move(dst), std::move(expr));
+    return emitNode(std::make_unique<IR_ExprOper>(
+            std::move(dst), IR_ExprOper::MOV, std::vector<IRval>{ std::move(src) }));
 }
 
 void IR_Generator::emitStore(IRval addr, IRval val) {
-    auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::STORE, std::move(addr), std::move(val));
-    emitNode(std::nullopt, std::move(expr));
+    emitNode(std::make_unique<IR_ExprMem>(
+            std::nullopt, IR_ExprMem::STORE, std::move(addr), std::move(val)));
 }
 
 IRval IR_Generator::emitLoad(std::shared_ptr<IR_Type> ret, IRval addr) {
-    auto expr = std::make_unique<IR_ExprMem>(IR_ExprMem::LOAD, std::move(addr));
-    return *emitNode(std::move(ret), std::move(expr));
+    return *emitOrEvalNode<IR_ExprMem>(std::move(ret), IR_ExprMem::LOAD, std::move(addr));
 }
 
-IRval IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> dst) {
+IRval IR_Generator::emitCast(IRval srcVal, std::shared_ptr<IR_Type> const &dst) {
     if (srcVal.getType()->equal(*dst))
         return srcVal;
-
-    auto dstCopy = dst;
-    auto expr = std::make_unique<IR_ExprCast>(std::move(srcVal), std::move(dst));
-    return *emitNode(std::move(dstCopy), std::move(expr));
+    return *emitOrEvalNode<IR_ExprCast>(dst, std::move(srcVal), dst);
 }
 
 std::optional<IRval>
 IR_Generator::emitCall(std::shared_ptr<IR_Type> ret, int callee, std::vector<IRval> args) {
-    return emitNode(std::move(ret), std::make_unique<IR_ExprCall>(callee, std::move(args)));
+    return emitOrEvalNode<IR_ExprCall>(std::move(ret), callee, std::move(args));
 }
 
 std::optional<IRval>
 IR_Generator::emitIndirCall(std::shared_ptr<IR_Type> ret, IRval callee, std::vector<IRval> args) {
-    return emitNode(std::move(ret), std::make_unique<IR_ExprCall>(std::move(callee), std::move(args)));
+    return emitOrEvalNode<IR_ExprCall>(std::move(ret), callee, std::move(args));
 }
 
 IRval IR_Generator::emitAlloc(std::shared_ptr<IR_Type> ret, std::shared_ptr<IR_Type> type, bool onHeap) {
-    return *emitNode(std::move(ret), std::make_unique<IR_ExprAlloc>(std::move(type), onHeap));
+    return *emitOrEvalNode<IR_ExprAlloc>(std::move(ret), std::move(type), onHeap);
 }
 
 IRval IR_Generator::emitExtract(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
-    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
-            IR_ExprAccess::EXTRACT, std::move(base), std::move(indices)));
+    return *emitOrEvalNode<IR_ExprAccess>(
+            std::move(ret),IR_ExprAccess::EXTRACT, std::move(base), std::move(indices));
 }
 
 IRval IR_Generator::emitInsert(std::shared_ptr<IR_Type> ret, IRval base, IRval val, std::vector<IRval> ind) {
-    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
-            IR_ExprAccess::INSERT, std::move(base), std::move(val), std::move(ind)));
+    return *emitOrEvalNode<IR_ExprAccess>(
+            std::move(ret), IR_ExprAccess::INSERT, std::move(base), std::move(val), std::move(ind));
 }
 
 IRval IR_Generator::emitGEP(std::shared_ptr<IR_Type> ret, IRval base, std::vector<IRval> indices) {
-    return *emitNode(std::move(ret), std::make_unique<IR_ExprAccess>(
-            IR_ExprAccess::GEP, std::move(base), std::move(indices)));
+    return *emitOrEvalNode<IR_ExprAccess>(
+            std::move(ret), IR_ExprAccess::GEP, std::move(base), std::move(indices));
 }
 
 
@@ -105,7 +111,7 @@ std::optional<IRval> IR_Generator::evalConstantExpr(AST_Expr const &node) {
     if (val.has_value() && val->getValueClass() == IRval::VAL)
         return val;
     else
-        return {};
+        return std::nullopt;
 }
 
 

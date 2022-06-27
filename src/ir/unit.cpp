@@ -141,19 +141,19 @@ std::map<uint64_t, std::string> const& IntermediateUnit::getStrings() const {
  */
 
 void IntermediateUnit::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) const {
-    if (auto exprOper = dynamic_cast<IR_ExprOper const *>(&rawExpr)) {
+    if (auto exprOper = rawExpr.toOper()) {
         ss << exprOper->to_string();
     }
-    else if (auto exprMem = dynamic_cast<IR_ExprMem const *>(&rawExpr)) {
+    else if (auto exprMem = rawExpr.toMem()) {
         ss << exprMem->to_string();
     }
-    else if (auto exprAccess = dynamic_cast<IR_ExprAccess const *>(&rawExpr)) {
+    else if (auto exprAccess = rawExpr.toAccess()) {
         ss << exprAccess->to_string();
     }
-    else if (auto exprCast = dynamic_cast<IR_ExprCast const *>(&rawExpr)) {
+    else if (auto exprCast = rawExpr.toCast()) {
         ss << exprCast->to_string();
     }
-    else if (auto exprCall = dynamic_cast<IR_ExprCall const *>(&rawExpr)) {
+    else if (auto exprCall = rawExpr.toCall()) {
         if (exprCall->isIndirect())
             fmt::print(ss, "call {} ( ", exprCall->getFuncPtr().to_string());
         else
@@ -162,8 +162,11 @@ void IntermediateUnit::printExpr(std::stringstream &ss, const IR_Expr &rawExpr) 
             fmt::print(ss, "{} ", arg.to_string());
         fmt::print(ss, ")");
     }
-    else if (auto exprAlloc = dynamic_cast<IR_ExprAlloc const *>(&rawExpr)) {
+    else if (auto exprAlloc = rawExpr.toAlloc()) {
         ss << exprAlloc->to_string();
+    }
+    else if (rawExpr.isNop()) {
+        ss << "nop";
     }
     else { // TODO: PHI and term
         throw cw39_not_implemented("Printing phi-functions and terminators");
@@ -181,30 +184,26 @@ void IntermediateUnit::printBlock(std::stringstream &ss, IR_Block const &block) 
     fmt::print(ss, "\n");
 
     // PHI nodes
-    for (auto const &[phiRes, phiFunc] : block.phis) {
-        if (!phiFunc) {
+    for (auto const &rawPhi : block.phis) {
+        if (auto phi = rawPhi->toPHI()) {
+            if (phi->res)
+                fmt::print(ss, "{} <- ", phi->res->to_string());
+            fmt::print(ss, "rawPhi( ");
+            for (auto const &[index, val] : phi->args)
+                fmt::print(ss, "{}[{}] ", val.to_string(), index);
+            fmt::print(ss, ")\n");
+        }
+        else {
             fmt::print(ss, "nop\n");
             continue;
         }
-
-        if (phiRes)
-            fmt::print(ss, "{} <- ", phiRes->to_string());
-        fmt::print(ss, "phi( ");
-        auto const &phiExpr = dynamic_cast<IR_ExprPhi const &>(*phiFunc);
-        for (auto const &[index, val] : phiExpr.args)
-            fmt::print(ss, "{}[{}] ", val.to_string(), index);
-        fmt::print(ss, ")\n");
     }
 
     // Instructions
     for (auto const &node : block.body) {
-        if (!node.body) {
-            fmt::print(ss, "nop\n");
-            continue;
-        }
-        if (node.res.has_value())
-            fmt::print(ss, "{} <- ", node.res->to_string());
-        printExpr(ss, *node.body);
+        if (node->res)
+            fmt::print(ss, "{} <- ", node->res->to_string());
+        printExpr(ss, *node);
         ss << "\n";
     }
 
@@ -345,29 +344,27 @@ void IntermediateUnit::drawBlock(std::stringstream &ss, IR_Block const &block, i
     fmt::print(ssb, "block {}\\n\\n", block.id);
 
     // PHIs
-    for (auto const &[phiRes, phiFunc]: block.phis) {
-        if (!phiFunc) {
+    for (auto const &rawPhi: block.phis) {
+        if (auto phi = rawPhi->toPHI()) {
+            if (phi->res)
+                fmt::print(ssb, "{} {} ", phi->res->to_string(), leftArrow);
+            fmt::print(ssb, "{} ( ", phiSign);
+            auto const &phiExpr = dynamic_cast<IR_ExprPhi const &>(*phi);
+            for (auto const &[index, val]: phiExpr.args)
+                fmt::print(ssb, "{}[ b{} ] ", val.to_string(), block.prev.at(index));
+            fmt::print(ssb, ")\\l");
+        }
+        else {
             fmt::print(ssb, "nop\\l");
             continue;
         }
-        if (phiRes)
-            fmt::print(ssb, "{} {} ", phiRes->to_string(), leftArrow);
-        fmt::print(ssb, "{} ( ", phiSign);
-        auto const &phiExpr = dynamic_cast<IR_ExprPhi const &>(*phiFunc);
-        for (auto const &[index, val]: phiExpr.args)
-            fmt::print(ssb, "{}[ b{} ] ", val.to_string(), block.prev.at(index));
-        fmt::print(ssb, ")\\l");
     }
 
     // Instructions
     for (auto const &node: block.body) {
-        if (!node.body) {
-            fmt::print(ssb, "nop\\l");
-            continue;
-        }
-        if (node.res.has_value())
-            fmt::print(ssb, "{} {} ", node.res->to_string(), leftArrow);
-        printExpr(ssb, *node.body);
+        if (node->res.has_value())
+            fmt::print(ssb, "{} {} ", node->res->to_string(), leftArrow);
+        printExpr(ssb, *node);
         ssb << "\\l";
     }
 

@@ -27,7 +27,7 @@ private:
     std::set<int> getDominatedByGiven(int startId);
 
     using LoopNode = LoopsDetector::LoopNode;
-    bool isNodeGeneralEffective(IR_Node const &node);
+    bool isNodeGeneralEffective(IR_Expr const &node);
     bool isLoopEffective(LoopNode const &loop);
     std::pair<int, int> getLoopExit(LoopNode const &loop);
 };

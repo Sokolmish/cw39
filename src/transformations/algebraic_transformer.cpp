@@ -25,8 +25,8 @@ static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
         return ir_val.castValTo<uint64_t>() == num_val;
 }
 
-void AlgebraicTransformer::processNode(IR_Node *node) {
-    auto oper = dynamic_cast<IR_ExprOper *>(node->body.get());
+void AlgebraicTransformer::processNode(IR_Expr *node) {
+    auto oper = dynamic_cast<IR_ExprOper *>(node);
     if (!oper)
         return;
 

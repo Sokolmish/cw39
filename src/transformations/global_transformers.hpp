@@ -24,8 +24,8 @@ private:
     IntermediateUnit const *iunit;
 
     bool passBlock(IR_Block &block);
-    IR_Block& inlineFunc(IntermediateUnit::Function const &func, IR_Block &retBlock, IR_Node const &callingNode);
-    void reenumerateRegisters(std::vector<IR_Block*> const &blocks, IR_Node const &callingNode);
+    IR_Block& inlineFunc(IntermediateUnit::Function const &func, IR_Block &retBlock, IR_Expr const &callingNode);
+    void reenumerateRegisters(std::vector<IR_Block*> const &blocks, IR_Expr const &callingNode);
 };
 
 #endif /* GLOBAL_TRANSFORMERS_HPP_INCLUDED__ */

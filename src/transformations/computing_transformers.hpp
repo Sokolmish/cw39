@@ -20,7 +20,7 @@ public:
     explicit AlgebraicTransformer(IntermediateUnit const &unit, CFGraph rawCfg);
 
 private:
-    void processNode(IR_Node *node);
+    void processNode(IR_Expr *node);
 };
 
 class CommonSubexprElim : public IRTransformer {

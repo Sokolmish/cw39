@@ -15,32 +15,56 @@
 
 // Expressions
 
-struct IR_ExprOper;
-struct IR_ExprMem;
-struct IR_ExprAccess;
-struct IR_ExprAlloc;
-struct IR_ExprCast;
-struct IR_ExprCall;
-struct IR_ExprTerminator;
-struct IR_ExprPhi;
+class IR_ExprOper;
+class IR_ExprMem;
+class IR_ExprAccess;
+class IR_ExprAlloc;
+class IR_ExprCast;
+class IR_ExprCall;
+class IR_ExprTerminator;
+class IR_ExprPhi;
+class IR_ExprNOP;
 
-struct IR_Expr {
-    IR_Expr() = default;
+class IR_Expr {
+public:
+    std::optional<IRval> res;
+
+    IR_Expr(std::optional<IRval> res);
     virtual ~IR_Expr() = default;
-    virtual std::unique_ptr<IR_Expr> copy() const = 0;
+
+    IR_Expr(IR_Expr&&) noexcept = default;
+    IR_Expr& operator=(IR_Expr&&) noexcept = default;
+
+    std::unique_ptr<IR_Expr> copy() const;
+
     virtual std::vector<IRval*> getArgs() = 0;
 
-    IR_ExprOper const& getOper() const; // TODO: needless? pointers?
-    IR_ExprMem const& getMem() const;
-    IR_ExprAccess const& getAccess() const;
-    IR_ExprAlloc const& getAlloc() const;
-    IR_ExprCast const& getCast() const;
-    IR_ExprCall const& getCall() const;
-    IR_ExprTerminator const& getTerm() const;
-    IR_ExprPhi const& getPhi() const;
+    bool isNop() const;
+
+    IR_ExprOper* toOper();
+    IR_ExprOper const* toOper() const;
+    IR_ExprMem* toMem();
+    IR_ExprMem const* toMem() const;
+    IR_ExprAccess* toAccess();
+    IR_ExprAccess const* toAccess() const;
+    IR_ExprAlloc* toAlloc();
+    IR_ExprAlloc const* toAlloc() const;
+    IR_ExprCast* toCast();
+    IR_ExprCast const* toCast() const;
+    IR_ExprCall* toCall();
+    IR_ExprCall const* toCall() const;
+    IR_ExprTerminator* toTerm();
+    IR_ExprTerminator const* toTerm() const;
+    IR_ExprPhi* toPHI();
+    IR_ExprPhi const* toPHI() const;
+
+
+private:
+    virtual std::unique_ptr<IR_Expr> copyBody() const = 0;
 };
 
-struct IR_ExprOper final : public IR_Expr {
+class IR_ExprOper final : public IR_Expr {
+public:
     enum IR_Ops {
         MUL, DIV, REM, ADD, SUB, SHR, SHL,
         XOR, AND, OR, LAND, LOR,
@@ -52,54 +76,82 @@ struct IR_ExprOper final : public IR_Expr {
     IR_Ops op;
     std::vector<IRval> args;
 
-    IR_ExprOper(IR_Ops op, std::vector<IRval> args);
-    std::unique_ptr<IR_Expr> copy() const override;
+    IR_ExprOper(std::optional<IRval> res, IR_Ops op, std::vector<IRval> args);
+
+    std::unique_ptr<IR_ExprOper> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
     std::string to_string() const;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprMem final : public IR_Expr {
+class IR_ExprMem final : public IR_Expr {
+public:
     enum MemOps { LOAD, STORE };
 
     MemOps op;
     IRval addr;
     std::optional<IRval> val;
 
-    IR_ExprMem(MemOps op, IRval ptr);
-    IR_ExprMem(MemOps op, IRval ptr, IRval val);
-    std::unique_ptr<IR_Expr> copy() const override;
+    IR_ExprMem(std::optional<IRval> res, MemOps op, IRval ptr);
+    IR_ExprMem(std::optional<IRval> res, MemOps op, IRval ptr, IRval val);
+
+    std::unique_ptr<IR_ExprMem> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
     std::string to_string() const;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprAccess final : public IR_Expr {
+class IR_ExprAccess final : public IR_Expr {
+public:
     enum AccessOps { EXTRACT, INSERT, GEP };
 
     AccessOps op;
     IRval base;
     std::vector<IRval> indices;
-    std::optional<IRval> val = {};
+    std::optional<IRval> val = std::nullopt;
 
-    IR_ExprAccess(AccessOps op, IRval base, std::vector<IRval> ind);
-    IR_ExprAccess(AccessOps op, IRval base, IRval val, std::vector<IRval> ind);
-    std::unique_ptr<IR_Expr> copy() const override;
+    IR_ExprAccess(std::optional<IRval> res, AccessOps op, IRval base, std::vector<IRval> ind);
+    IR_ExprAccess(std::optional<IRval> res, AccessOps op, IRval base, IRval val, std::vector<IRval> ind);
+
+    std::unique_ptr<IR_ExprAccess> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
     std::string to_string() const;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprAlloc final : public IR_Expr {
+class IR_ExprAlloc final : public IR_Expr {
+public:
     std::shared_ptr<IR_Type> type;
     size_t size;
     bool isOnHeap = false;
 
-    IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size);
-    IR_ExprAlloc(std::shared_ptr<IR_Type> type, size_t size, bool onHeap);
-    std::unique_ptr<IR_Expr> copy() const override;
+    IR_ExprAlloc(std::optional<IRval> res, std::shared_ptr<IR_Type> type, size_t size);
+    IR_ExprAlloc(std::optional<IRval> res, std::shared_ptr<IR_Type> type, size_t size, bool onHeap);
+
+    std::unique_ptr<IR_ExprAlloc> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
     std::string to_string() const;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprCast final : public IR_Expr {
+class IR_ExprCast final : public IR_Expr {
+public:
     IRval arg;
     std::shared_ptr<IR_Type> dest;
 
@@ -110,59 +162,100 @@ struct IR_ExprCast final : public IR_Expr {
         FPEXT, FPTRUNC,
     } castOp;
 
-    IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> dest);
-    std::unique_ptr<IR_Expr> copy() const override;
+    IR_ExprCast(std::optional<IRval> res, IRval sourceVal, std::shared_ptr<IR_Type> dest);
+
+    std::unique_ptr<IR_ExprCast> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
     std::string to_string() const;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprCall final : public IR_Expr {
+class IR_ExprCall final : public IR_Expr {
+public:
     std::variant<int, IRval> callee;
     std::vector<IRval> args;
 
-    IR_ExprCall(int callee, std::vector<IRval> args);
-    IR_ExprCall(IRval callee, std::vector<IRval> args);
+    IR_ExprCall(std::optional<IRval> res, int callee, std::vector<IRval> args);
+    IR_ExprCall(std::optional<IRval> res, IRval callee, std::vector<IRval> args);
 
-    std::unique_ptr<IR_Expr> copy() const override;
     std::vector<IRval*> getArgs() override;
+
+    std::unique_ptr<IR_ExprCall> copyTyped() const;
 
     bool isIndirect() const;
     int getFuncId() const;
     IRval getFuncPtr() const;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprTerminator final : public IR_Expr {
+class IR_ExprTerminator final : public IR_Expr {
+public:
     enum TermType { RET, BRANCH, JUMP } termType;
     std::optional<IRval> arg;
 
     explicit IR_ExprTerminator(TermType type);
     IR_ExprTerminator(TermType type, IRval val);
-    std::unique_ptr<IR_Expr> copy() const override;
+
+    std::unique_ptr<IR_ExprTerminator> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
-struct IR_ExprPhi final : public IR_Expr {
+class IR_ExprPhi final : public IR_Expr {
+public:
     /** Key is position of argument */
     std::map<int, IRval> args;
 
-    IR_ExprPhi();
-    std::unique_ptr<IR_Expr> copy() const override;
+    IR_ExprPhi(std::optional<IRval> res);
+
+    std::unique_ptr<IR_ExprPhi> copyTyped() const;
+
     std::vector<IRval*> getArgs() override;
+
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
 
 
-// Nodes
+class IR_ExprNOP final : public IR_Expr {
+public:
+    IR_ExprNOP();
+    std::vector<IRval*> getArgs() override;
 
-struct IR_Node {
-    std::optional<IRval> res;
-    std::unique_ptr<IR_Expr> body;
-
-    explicit IR_Node(std::unique_ptr<IR_Expr> body);
-    IR_Node(IRval res, std::unique_ptr<IR_Expr> body);
-    IR_Node copy() const;
-
-    static IR_Node nop();
+private:
+    std::unique_ptr<IR_Expr> copyBody() const override;
 };
+
+
+// Casts
+
+bool IR_Expr::isNop() const {
+    return bool(dynamic_cast<IR_ExprNOP const *>(this));
+}
+
+#define CREATE_IR_EXPR_CASTER(expr_type, name) \
+    expr_type* IR_Expr::to##name() { return dynamic_cast<expr_type *>(this); } \
+    expr_type const* IR_Expr::to##name() const { return dynamic_cast<expr_type const *>(this); }
+
+CREATE_IR_EXPR_CASTER(IR_ExprPhi, PHI)
+CREATE_IR_EXPR_CASTER(IR_ExprOper, Oper)
+CREATE_IR_EXPR_CASTER(IR_ExprMem, Mem)
+CREATE_IR_EXPR_CASTER(IR_ExprAccess, Access)
+CREATE_IR_EXPR_CASTER(IR_ExprAlloc, Alloc)
+CREATE_IR_EXPR_CASTER(IR_ExprCast, Cast)
+CREATE_IR_EXPR_CASTER(IR_ExprCall, Call)
+CREATE_IR_EXPR_CASTER(IR_ExprTerminator, Term)
+
+#undef CREATE_IR_EXPR_CASTER
 
 
 // Blocks
@@ -171,9 +264,10 @@ class IR_Block {
 public:
     int id;
 
-    std::vector<IR_Node> phis;
-    std::vector<IR_Node> body;
-    std::optional<IR_Node> termNode;
+    std::vector<std::unique_ptr<IR_Expr>> phis; // Base calss because of NOPs
+    std::vector<std::unique_ptr<IR_Expr>> body;
+
+    std::unique_ptr<IR_ExprTerminator> termNode;
 
     std::vector<int> prev;
     std::vector<int> next;
@@ -181,10 +275,9 @@ public:
     explicit IR_Block(int id);
     IR_Block copy() const;
 
-    void addNode(IR_Node node);
-    void addNode(std::optional<IRval> res, std::unique_ptr<IR_Expr> expr);
+    void addNode(std::unique_ptr<IR_Expr> expr);
 
-    IR_Node& addNewPhiNode(IRval res);
+    IR_ExprPhi& addNewPhiNode(IRval res);
 
     void setTerminator(IR_ExprTerminator::TermType type);
     void setTerminator(IR_ExprTerminator::TermType type, IRval arg);
@@ -194,7 +287,7 @@ public:
 
     IR_ExprTerminator const* getTerminator() const;
 
-    std::vector<IR_Node*> getAllNodes();
+    std::vector<IR_Expr*> getAllNodes();
 
     void removePredecessor(int pred);
 };

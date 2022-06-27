@@ -37,29 +37,24 @@ void CopyPropagator::propagateCopies() {
         cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &localChanged](int blockId) {
             auto &curBlock = cfg.block(blockId);
 
-            for (IR_Node *node : curBlock.getAllNodes()) {
-                if (!node->body)
-                    continue;
-
+            for (IR_Expr *node : curBlock.getAllNodes()) {
                 if (node->res && node->res->isVReg()) {
-                    if (auto oper = dynamic_cast<IR_ExprOper *>(node->body.get())) {
+                    if (auto oper = node->toOper()) {
                         if (oper->op == IR_ExprOper::MOV) {
                             localChanged = true;
                             setPassChanged();
                             remlacementMap.emplace(*node->res, oper->args.at(0));
-                            *node = IR_Node::nop();
+                            *node = IR_ExprNOP();
                         }
                     }
                 }
 
-                if (node->body) {
-                    for (auto *arg : node->body->getArgs()) {
-                        auto it = remlacementMap.find(*arg);
-                        if (it != remlacementMap.end()) {
-                            localChanged = true;
-                            setPassChanged();
-                            *arg = it->second;
-                        }
+                for (auto *arg : node->getArgs()) {
+                    auto it = remlacementMap.find(*arg);
+                    if (it != remlacementMap.end()) {
+                        localChanged = true;
+                        setPassChanged();
+                        *arg = it->second;
                     }
                 }
             }
@@ -80,11 +75,8 @@ void CopyPropagator::foldConstants() {
 
         cfg.traverseBlocks(cfg.entryBlockId, visited, [this, &localChanged](int blockId) {
             auto &curBlock = cfg.block(blockId);
-            for (auto *node : curBlock.getAllNodes()) {
-                if (!node->body)
-                    continue;
-
-                if (auto operExpr = dynamic_cast<IR_ExprOper *>(node->body.get())) {
+            for (auto node : curBlock.getAllNodes()) {
+                if (auto operExpr = node->toOper()) {
                     if (operExpr->op == IR_ExprOper::MOV)
                         continue;
 
@@ -106,7 +98,7 @@ void CopyPropagator::foldConstants() {
                         operExpr->args = { *newVal };
                     }
                 }
-                else if (auto castExpr = dynamic_cast<IR_ExprCast *>(node->body.get())) {
+                else if (auto castExpr = node->toCast()) {
                     if (!castExpr->arg.isConstant())
                         continue;
 
@@ -114,7 +106,7 @@ void CopyPropagator::foldConstants() {
 //                        setPassChanged();
                     // TODO
                 }
-                else if (auto phiExpr = dynamic_cast<IR_ExprPhi *>(node->body.get())) {
+                else if (auto phiExpr = node->toPHI()) {
                     IRval commonVal = phiExpr->args.at(0);
 
                     bool isConst = true;
@@ -130,8 +122,8 @@ void CopyPropagator::foldConstants() {
 
                     localChanged = true;
                     setPassChanged();
-                    node->body = std::make_unique<IR_ExprOper>(
-                            IR_ExprOper::MOV, std::vector<IRval>{ commonVal });
+                    *node = IR_ExprOper(std::move(node->res), IR_ExprOper::MOV,
+                                        std::vector<IRval>{ commonVal });
                 }
             }
         });
