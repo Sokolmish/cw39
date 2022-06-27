@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdint>
+#include <variant>
 
 struct AST_Literal {
     enum LiteralType { INTEGER, FLOAT, CHARACTER };
@@ -11,15 +12,10 @@ struct AST_Literal {
     int longCnt;
     int isUnsigned;
     int isFloat;
-    union {
-        char v_char;
-        uint32_t vu32;
-        uint64_t vu64;
-        int32_t vi32;
-        int64_t vi64;
-        float vf32;
-        double vf64;
-    } val;
+
+    std::variant<
+        char, uint32_t, uint64_t, int32_t, int64_t, float, double
+    > val;
 };
 
 struct AST_Attribute {

@@ -909,27 +909,27 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
         case AST_Literal::INTEGER: {
             if (lit.isUnsigned) {
                 if (lit.longCnt)
-                    return IRval::createVal(valType, lit.val.vu64);
+                    return IRval::createVal(valType, std::get<uint64_t>(lit.val));
                 else
-                    return IRval::createVal(valType, lit.val.vu32);
+                    return IRval::createVal(valType, std::get<uint32_t>(lit.val));
             }
             else { // Signed
                 if (lit.longCnt)
-                    return IRval::createVal(valType, lit.val.vi64);
+                    return IRval::createVal(valType, std::get<int64_t>(lit.val));
                 else
-                    return IRval::createVal(valType, lit.val.vi32);
+                    return IRval::createVal(valType, std::get<int32_t>(lit.val));
             }
         }
 
         case AST_Literal::FLOAT: {
             if (lit.isFloat)
-                return IRval::createVal(valType, lit.val.vf32);
+                return IRval::createVal(valType, std::get<float>(lit.val));
             else
-                return IRval::createVal(valType, lit.val.vf64);
+                return IRval::createVal(valType, std::get<double>(lit.val));
         }
 
         case AST_Literal::CHARACTER: {
-            return IRval::createVal(valType, static_cast<int8_t>(lit.val.v_char));
+            return IRval::createVal(valType, static_cast<int8_t>(std::get<char>(lit.val)));
         }
 
         default: {

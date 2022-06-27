@@ -189,15 +189,15 @@ AST_Literal CoreDriver::get_integer(const char *str) const {
 
     if (res.isUnsigned) {
         if (res.longCnt)
-            res.val.vu64 = static_cast<uint64_t>(val);
+            res.val = static_cast<uint64_t>(val);
         else
-            res.val.vu32 = static_cast<uint32_t>(val);
+            res.val = static_cast<uint32_t>(val);
     }
     else {
         if (res.longCnt)
-            res.val.vi64 = static_cast<int64_t>(val);
+            res.val = static_cast<int64_t>(val);
         else
-            res.val.vi32 = static_cast<int32_t>(val);
+            res.val = static_cast<int32_t>(val);
     }
     return res;
 }
@@ -223,9 +223,9 @@ AST_Literal CoreDriver::get_float(const char *str, size_t len) const {
 
     char *endptr = nullptr;
     if (res.isFloat)
-        res.val.vf32 = strtof(tmpStr.c_str(), &endptr);
+        res.val = strtof(tmpStr.c_str(), &endptr);
     else
-        res.val.vf64 = strtod(tmpStr.c_str(), &endptr);
+        res.val = strtod(tmpStr.c_str(), &endptr);
     if (*endptr != '\0') {
         throw parser_exception(fmt::format("Wrong floating-point literal: '{}'", tmpStr), "");
     }
@@ -245,18 +245,18 @@ AST_Literal CoreDriver::get_charval(const char *str, size_t len) const {
     if (len == 3) {
         if (str[1] == '\\')
             throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
-        res.val.v_char = str[1];
+        res.val = str[1];
     }
     else {
         if (str[1] != '\\' || !(len == 4 || len == 6))
             throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
         if (len == 4) {
-            res.val.v_char = unescapeChar(str[2]);
+            res.val = unescapeChar(str[2]);
         }
         else {
             if (str[2] != 'x' || !isxdigit(str[3]) || !isxdigit(str[4]))
                 throw parser_exception(fmt::format("Wrong character literal: '{}'", str), "");
-            res.val.v_char = parseXEscape(str[3], str[4]);
+            res.val = parseXEscape(str[3], str[4]);
         }
     }
 
