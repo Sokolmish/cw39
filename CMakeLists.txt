@@ -66,6 +66,7 @@ set(PROJ_SRCS
 
 set(PROJ_INCLUDES
         ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/libs
         )
 
 
