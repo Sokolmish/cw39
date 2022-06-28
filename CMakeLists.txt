@@ -5,8 +5,6 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-#set(CMAKE_C_EXTENSIONS OFF)
-#set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
     add_compile_options(/W4)
@@ -32,6 +30,7 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/print_tree.cpp
         ${PROJECT_SOURCE_DIR}/src/cli_args.cpp
         ${PROJECT_SOURCE_DIR}/src/utils.cpp
+        ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
 
         ${PROJECT_SOURCE_DIR}/src/parser/parsing_context.cpp
         ${PROJECT_SOURCE_DIR}/src/parser/preprocessor.cpp
@@ -61,14 +60,14 @@ set(PROJ_SRCS
         ${PROJECT_SOURCE_DIR}/src/transformations/common_subexpr_elim.cpp
         ${PROJECT_SOURCE_DIR}/src/transformations/intrinsics_detector.cpp
 
-        ${PROJECT_SOURCE_DIR}/src/ir_2_llvm.cpp
+        # ${PROJECT_SOURCE_DIR}/src/transformations/inductive_detector.cpp
+        # ${PROJECT_SOURCE_DIR}/src/transformations/fixpoints.cpp
         )
 
 set(PROJ_INCLUDES
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/libs
         )
-
 
 add_executable(cw39 ${PROJ_SRCS})
 target_include_directories(cw39 PRIVATE ${PROJ_INCLUDES})
@@ -90,12 +89,9 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 llvm_map_components_to_libnames(llvm_libs support core irreader bitwriter)
 target_link_libraries(cw39 ${llvm_libs})
 
-# Flex and Bison
-
 IF(NOT CW39_NO_BISON)
     # There are problems with changing version of flex and bison
     #   so there are no FIND_PACKAGE commands and direct names are used
-
     add_custom_command(
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${BISON_PARSER_RES}
                     ${PROJECT_SOURCE_DIR}/src/parser/${BISON_HEADER_RES}
@@ -109,7 +105,6 @@ IF(NOT CW39_NO_BISON)
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
             COMMENT "Generating core parser with bison"
     )
-
     add_custom_command(
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${FLEX_LEXER_RES}
             COMMAND flex
@@ -131,22 +126,19 @@ IF(NOT CW39_NO_GPERF)
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
             COMMENT "Generating preprocessor directives hastable"
     )
-
     add_custom_command(
             OUTPUT  ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_KEYWORDS_RES}
             COMMAND gperf -m 20
-            --output-file=${GPERF_KEYWORDS_RES}
-            ${GPERF_KEYWORDS_SRC}
+                    --output-file=${GPERF_KEYWORDS_RES}
+                    ${GPERF_KEYWORDS_SRC}
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_KEYWORDS_SRC}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/parser
             COMMENT "Generating keywords hastable"
     )
-
     add_custom_target(
             pc_directives_hashtable_target
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_DIRECTIVES_RES}
             DEPENDS ${PROJECT_SOURCE_DIR}/src/parser/${GPERF_KEYWORDS_RES}
     )
     add_dependencies(cw39 pc_directives_hashtable_target)
-
 ENDIF()
