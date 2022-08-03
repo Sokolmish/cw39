@@ -48,7 +48,8 @@ void VarsVirtualizer::analyzeBlock(IR_Block const &block) {
     for (IR_Node const &instr: block.body) {
         if (auto exprAlloc = instr.body->toAlloc()) {
             if (instr.res.has_value() && instr.res->isVReg()) {
-                if (!isInList(exprAlloc->type->type, IR_Type::DIRECT, IR_Type::POINTER))
+                auto &allocType = exprAlloc->type;
+                if (!allocType->castType<IR_TypeDirect>() && !allocType->castType<IR_TypePtr>())
                     continue;
                 if (exprAlloc->isOnHeap)
                     continue;

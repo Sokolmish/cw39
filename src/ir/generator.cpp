@@ -148,7 +148,7 @@ void IR_Generator::insertGlobalDeclaration(AST_Declaration const &decl) {
         string_id_t ident = CoreDriver::getDeclaredIdent(*singleDecl->declarator);
 
         // Function prototype
-        if (varType->type == IR_Type::FUNCTION) {
+        if (varType->castType<IR_TypeFunc>()) {
             if (decl.child->v.size() > 1)
                 semanticError(decl.loc, "Only one function can be declared per one declaration");
             if (singleDecl->initializer)
@@ -296,7 +296,7 @@ void IR_Generator::insertDeclaration(AST_Declaration const &decl) {
         auto varType = getType(*decl.specifiers, *singleDecl->declarator);
         string_id_t ident = CoreDriver::getDeclaredIdent(*singleDecl->declarator);
 
-        if (varType->type == IR_Type::FUNCTION)
+        if (varType->castType<IR_TypeFunc>())
             semanticError(singleDecl->declarator->loc, "Functions are not allowed inside compound statements");
 
         // TODO: check for void allocation (and in globals too)

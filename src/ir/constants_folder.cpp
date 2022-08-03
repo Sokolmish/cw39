@@ -137,13 +137,13 @@ constexpr bool ConstantsFolder::isIntrinsic(IR_ExprOper::IR_Ops op) {
 }
 
 
-std::optional<IRval> ConstantsFolder::foldCast(const IR_ExprCast &expr) {
-    if (expr.dest->type != IR_Type::DIRECT)
-        return std::nullopt;
+std::optional<IRval> ConstantsFolder::foldCast(IR_ExprCast const &expr) {
     if (expr.arg.getValueClass() != IRval::VAL)
         return std::nullopt;
+    auto dirType = dynamic_cast<IR_TypeDirect const*>(expr.dest.get());
+    if (!dirType)
+        return std::nullopt;
 
-    auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(expr.dest);
     switch (dirType->spec) {
         case IR_TypeDirect::I8:
             return IRval::createVal(IR_TypeDirect::getI8(), expr.arg.castValTo<int8_t>());

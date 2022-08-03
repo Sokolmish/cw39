@@ -185,10 +185,13 @@ std::shared_ptr<IR_Type> IR_Generator::getDirType(AST_DirDeclarator const &decl,
         auto sizeExpr = evalConstantExpr(*decl.arr_size);
         if (!sizeExpr.has_value())
             semanticError(decl.arr_size->loc, "Non constant array size");
-        if (sizeExpr->getType()->type != IR_Type::DIRECT)
+
+        auto dirSizeExpr = sizeExpr->getType()->castType<IR_TypeDirect>();
+        if (!dirSizeExpr)
             semanticError(decl.arr_size->loc, "Non constant array size (not direct value)");
-        if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
+        if (!dirSizeExpr->isInteger())
             semanticError(decl.arr_size->loc, "Non integer array size");
+
         auto size = sizeExpr->castValTo<uint64_t>();
         auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
         return getDirType(decl.getBaseDirectDecl(), arr);
@@ -224,10 +227,13 @@ std::shared_ptr<IR_Type> IR_Generator::getDirAbstrType(AST_DirAbstrDeclarator co
         auto sizeExpr = evalConstantExpr(*decl->arr_size);
         if (!sizeExpr.has_value())
             semanticError(decl->arr_size->loc, "Non constant array size");
-        if (sizeExpr->getType()->type != IR_Type::DIRECT)
+
+        auto dirSizeExpr = sizeExpr->getType()->castType<IR_TypeDirect>();
+        if (!dirSizeExpr)
             semanticError(decl->arr_size->loc, "Non constant array size (not direct value)");
-        if (!dynamic_cast<IR_TypeDirect const &>(*sizeExpr->getType()).isInteger())
+        if (!dirSizeExpr->isInteger())
             semanticError(decl->arr_size->loc, "Non integer array size");
+
         auto size = sizeExpr->castValTo<uint64_t>();
         auto arr = std::make_shared<IR_TypeArray>(std::move(base), size);
         return getDirAbstrType(&decl->getBaseDirectDecl(), arr);

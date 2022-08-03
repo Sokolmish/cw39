@@ -48,10 +48,10 @@ IRval IRval::createZeroinit(std::shared_ptr<IR_Type> type) {
 }
 
 IRval IRval::createDefault(std::shared_ptr<IR_Type> type) {
-    if (type->type == IR_Type::POINTER)
+    if (type->castType<IR_TypePtr>())
         return IRval(IRval::VAL, std::move(type), static_cast<uint64_t>(0));
 
-    if (type->type != IR_Type::DIRECT)
+    if (!type->castType<IR_TypeDirect>())
         throw cw39_error("Cannot create default value for such type");
     auto spec = dynamic_cast<IR_TypeDirect &>(*type).spec;
 

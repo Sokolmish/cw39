@@ -9,14 +9,7 @@ IR_StorageSpecifier::IR_StorageSpecifier() : spec(AUTO) {}
 IR_StorageSpecifier::IR_StorageSpecifier(IR_StorageSpecifier::Specs spec) : spec(spec) {}
 
 
-// IR_Type
-
-IR_Type::IR_Type(IR_Type::Type type) : type(type) {}
-
-
 // IR_TypeDirect
-
-IR_TypeDirect::IR_TypeDirect(DirType spec) : IR_Type(IR_Type::DIRECT), spec(spec) {}
 
 bool IR_TypeDirect::isInteger() const {
     return isInList(spec, BOOL, I8, U8, I32, U32, I64, U64);
@@ -56,10 +49,9 @@ int IR_TypeDirect::getBytesSize() const {
 }
 
 bool IR_TypeDirect::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::DIRECT)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeDirect const &>(rhs);
-    return spec == rtype.spec;
+    if (auto rtype = rhs.castType<IR_TypeDirect>())
+        return spec == rtype->spec;
+    return false;
 }
 
 std::shared_ptr<IR_Type> IR_TypeDirect::copy() const {
@@ -219,17 +211,13 @@ std::shared_ptr<IR_TypeDirect> IR_TypeDirect::getF64() {
 
 // IR_TypeStruct
 
-IR_TypeStruct::IR_TypeStruct(string_id_t ident, std::vector<StructField> fields)
-        : IR_Type(TSTRUCT), structId(ident), fields(std::move(fields)) {}
-
 IR_TypeStruct::StructField::StructField(string_id_t ident, std::shared_ptr<IR_Type> type, int index)
         : fieldName(ident), irType(std::move(type)), index(index) {}
 
 bool IR_TypeStruct::equal(IR_Type const &rhs) const {
-    if (rhs.type != IR_Type::TSTRUCT)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeStruct const &>(rhs);
-    return structId == rtype.structId;
+    if (auto rtype = rhs.castType<IR_TypeStruct>())
+        return structId == rtype->structId;
+    return false;
 }
 
 std::shared_ptr<IR_Type> IR_TypeStruct::copy() const {
@@ -260,15 +248,12 @@ std::string IR_TypeStruct::to_string() const {
 
 // IR_TypePtr
 
-IR_TypePtr::IR_TypePtr(std::shared_ptr<IR_Type> child) :
-        IR_Type(IR_Type::POINTER), child(std::move(child)) {}
-
 bool IR_TypePtr::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::POINTER)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypePtr const &>(rhs);
-    return is_const == rtype.is_const && is_restrict == rtype.is_restrict &&
-           is_volatile == rtype.is_volatile && this->child->equal(*rtype.child);
+    if (auto rtype = rhs.castType<IR_TypePtr>()) {
+        return is_const == rtype->is_const && is_restrict == rtype->is_restrict &&
+            is_volatile == rtype->is_volatile && this->child->equal(*rtype->child);
+    }
+    return false;    
 }
 
 std::shared_ptr<IR_Type> IR_TypePtr::copy() const {
@@ -289,20 +274,14 @@ std::string IR_TypePtr::to_string() const {
 
 // IR_TypeFunc
 
-IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret) :
-        IR_Type(FUNCTION), ret(std::move(ret)), args(), isVariadic(false) {}
-
-IR_TypeFunc::IR_TypeFunc(std::shared_ptr<IR_Type> ret, std::vector<std::shared_ptr<IR_Type>> args, bool variadic) :
-        IR_Type(IR_Type::FUNCTION), ret(std::move(ret)), args(std::move(args)), isVariadic(variadic) {}
-
 bool IR_TypeFunc::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::FUNCTION)
+    auto rtype = rhs.castType<IR_TypeFunc>();
+    if (!rtype)
         return false;
-    auto const &rtype = dynamic_cast<IR_TypeFunc const &>(rhs);
-    if (isVariadic != rtype.isVariadic || !ret->equal(*rtype.ret) || args.size() != rtype.args.size())
+    if (isVariadic != rtype->isVariadic || !ret->equal(*rtype->ret) || args.size() != rtype->args.size())
         return false;
     for (size_t i = 0; i < args.size(); i++) {
-        if (!args[i]->equal(*rtype.args[i]))
+        if (!args[i]->equal(*rtype->args[i]))
             return false;
     }
     return true;
@@ -334,14 +313,10 @@ std::string IR_TypeFunc::to_string() const {
 
 // IR_TypeArray
 
-IR_TypeArray::IR_TypeArray(std::shared_ptr<IR_Type> child, uint64_t size) :
-        IR_Type(IR_Type::ARRAY), child(std::move(child)), size(size) {}
-
-bool IR_TypeArray::equal(const IR_Type &rhs) const {
-    if (rhs.type != IR_Type::ARRAY)
-        return false;
-    auto const &rtype = dynamic_cast<IR_TypeArray const &>(rhs);
-    return size == rtype.size && child->equal(*rtype.child);
+bool IR_TypeArray::equal(IR_Type const &rhs) const {
+    if (auto rtype = rhs.castType<IR_TypeArray>())
+        return size == rtype->size && child->equal(*rtype->child);
+    return false;
 }
 
 std::shared_ptr<IR_Type> IR_TypeArray::copy() const {

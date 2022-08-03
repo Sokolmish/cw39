@@ -178,30 +178,31 @@ IR_ExprCast::IR_ExprCast(IRval sourceVal, std::shared_ptr<IR_Type> cdest)
     if (source->equal(*dest))
         throw cw39_internal_error("Casting equal types");
 
-    if (source->type == IR_Type::FUNCTION || dest->type == IR_Type::FUNCTION) {
+
+    if (source->castType<IR_TypeFunc>() || dest->castType<IR_TypeFunc>()) {
         throw cw39_not_implemented("Function type cannot be cast"); // TODO
     }
-    else if (source->type == IR_Type::ARRAY) {
-        if (dest->type != IR_Type::POINTER)
+    else if (source->castType<IR_TypeArray>()) {
+        if (dest->castType<IR_TypePtr>())
             throw cw39_error("Array type can be cast only to pointer");
         castOp = BITCAST;
     }
-    else if (source->type == IR_Type::POINTER && dest->type == IR_Type::POINTER) {
+    else if (source->castType<IR_TypePtr>() && dest->castType<IR_TypePtr>()) {
         castOp = BITCAST;
     }
-    else if (source->type == IR_Type::POINTER && dest->type == IR_Type::DIRECT) {
+    else if (source->castType<IR_TypePtr>() && dest->castType<IR_TypeDirect>()) {
         auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
         if (!dstDir.isInteger() || dstDir.spec != IR_TypeDirect::U64)
             throw cw39_error("Pointer can be cast only to u64 number");
         castOp = PTRTOI;
     }
-    else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::POINTER) {
+    else if (source->castType<IR_TypeDirect>() && dest->castType<IR_TypePtr>()) {
         auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
         if (!srcDir.isInteger() || srcDir.spec != IR_TypeDirect::U64)
             throw cw39_error("Pointer can be created only from u64 number");
         castOp = ITOPTR;
     }
-    else if (source->type == IR_Type::DIRECT && dest->type == IR_Type::DIRECT) {
+    else if (source->castType<IR_TypeDirect>() && dest->castType<IR_TypeDirect>()) {
         auto const &srcDir = dynamic_cast<IR_TypeDirect const &>(*source);
         auto const &dstDir = dynamic_cast<IR_TypeDirect const &>(*dest);
 

@@ -16,10 +16,8 @@ AlgebraicTransformer::AlgebraicTransformer(IntermediateUnit const &unit, CFGraph
 static bool isConstEqual(IRval const &ir_val, uint64_t num_val) {
     if (!ir_val.isConstant())
         return false;
-    if (ir_val.getType()->type != IR_Type::DIRECT)
-        return false;
-    auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(ir_val.getType());
-    if (!dirType->isInteger())
+    auto dirType = ir_val.getType()->castType<IR_TypeDirect>();
+    if (!dirType || !dirType->isInteger())
         return false;
     else
         return ir_val.castValTo<uint64_t>() == num_val;
@@ -120,26 +118,28 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
 
     // Mul by power of 2
     if (oper->op == IR_ExprOper::MUL) {
-        if (oper->args[0].isConstant() && oper->args[0].getType()->type == IR_Type::DIRECT) {
-            auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper->args[0].getType());
-            if (dirType->isInteger()) {
+        if (oper->args[0].isConstant()) {
+            auto dirType = oper->args[0].getType()->castType<IR_TypeDirect>();
+            if (dirType && dirType->isInteger()) {
                 uint64_t val = oper->args[0].castValTo<uint64_t>();
                 if (std::has_single_bit(val)) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper->op = IR_ExprOper::SHL;
-                    oper->args = std::vector<IRval>{ oper->args[1], IRval::createVal(dirType, log) };
+                    oper->args = std::vector<IRval>{
+                        oper->args[1], IRval::createVal(oper->args[0].getType(), log) };
                     setPassChanged();
                 }
             }
         }
-        if (oper->args[1].isConstant() && oper->args[1].getType()->type == IR_Type::DIRECT) {
-            auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper->args[1].getType());
-            if (dirType->isInteger()) {
+        if (oper->args[1].isConstant()) {
+            auto dirType = oper->args[1].getType()->castType<IR_TypeDirect>();
+            if (dirType && dirType->isInteger()) {
                 uint64_t val = oper->args[1].castValTo<uint64_t>();
                 if (std::has_single_bit(val)) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper->op = IR_ExprOper::SHL;
-                    oper->args = std::vector<IRval>{ oper->args[0], IRval::createVal(dirType, log) };
+                    oper->args = std::vector<IRval>{
+                        oper->args[0], IRval::createVal(oper->args[1].getType(), log) };
                     setPassChanged();
                 }
             }
@@ -149,13 +149,14 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     // Div by power of 2
     if (oper->op == IR_ExprOper::DIV) {
         auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper->args[1].getType());
-        if (dirType->isInteger()) {
-            if (oper->args[1].isConstant() && oper->args[1].getType()->type == IR_Type::DIRECT) {
+        if (dirType && dirType->isInteger()) {
+            if (oper->args[1].isConstant()) {
                 uint64_t val = oper->args[1].castValTo<uint64_t>();
                 if (std::has_single_bit(val)) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     oper->op = IR_ExprOper::SHR;
-                    oper->args = std::vector<IRval>{ oper->args[0], IRval::createVal(dirType, log) };
+                    oper->args = std::vector<IRval>{
+                        oper->args[0], IRval::createVal(std::move(dirType), log) };
                     setPassChanged();
                 }
             }
@@ -165,14 +166,15 @@ void AlgebraicTransformer::processNode(IR_Node *node) {
     // Rem by power of 2
     if (oper->op == IR_ExprOper::REM) {
         auto dirType = std::dynamic_pointer_cast<IR_TypeDirect>(oper->args[1].getType());
-        if (dirType->isUnsigned()) { // Signed REM is a bit more complex
-            if (oper->args[1].isConstant() && oper->args[1].getType()->type == IR_Type::DIRECT) {
+        if (dirType && dirType->isUnsigned()) { // Signed REM is a bit more complex
+            if (oper->args[1].isConstant()) {
                 uint64_t val = oper->args[1].castValTo<uint64_t>();
                 if (std::has_single_bit(val)) {
                     uint64_t log = static_cast<uint64_t>(std::bit_width(val) - 1);
                     uint64_t mask = (1 << log) - 1;
                     oper->op = IR_ExprOper::AND;
-                    oper->args = std::vector<IRval>{ oper->args[0], IRval::createVal(dirType, mask) };
+                    oper->args = std::vector<IRval>{
+                        oper->args[0], IRval::createVal(std::move(dirType), mask) };
                     setPassChanged();
                 }
             }

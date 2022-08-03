@@ -164,10 +164,11 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             semanticError(assignee.loc, "Cannot be assigned");
 
         IRval ptrVal = evalExpr(dynamic_cast<AST_Expr &>(*assignee.child));
-        if (ptrVal.getType()->type != IR_Type::POINTER)
+
+        auto ptrType = ptrVal.getType()->castType<IR_TypePtr>();
+        if (!ptrType)
             semanticError(assignee.loc, "Only pointer type can be dereferenced");
-        auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
-        if (ptrType->child->type == IR_Type::FUNCTION)
+        if (ptrType->child->castType<IR_TypeFunc>())
             semanticError(assignee.loc, "Pointer to function cannot be dereferenced");
 
         IRval valToStore = wrValue;
@@ -181,10 +182,12 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
         auto &assignee = *assigneeAccess;
         if (assignee.op == AST_Postfix::DIR_ACCESS) {
             IRval base = evalExpr(*assignee.base);
-            if (base.getType()->type != IR_Type::TSTRUCT)
+
+            auto structType = base.getType()->castType<IR_TypeStruct>();
+            if (!structType)
                 semanticError(assignee.loc, "Element access cannot be performed on non-struct type");
-            auto &structType = dynamic_cast<IR_TypeStruct const &>(*base.getType());
-            auto field = structType.getField(assignee.getIdent());
+
+            auto field = structType->getField(assignee.getIdent());
             if (field == nullptr)
                 semanticError(assignee.loc, "Structure has no such field");
 
@@ -203,12 +206,15 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
         else if (assignee.op == AST_Postfix::PTR_ACCESS) {
             // TODO: common code for PTR_ACCESS
             IRval object = evalExpr(*assignee.base);
-            if (object.getType()->type != IR_Type::POINTER)
+
+            auto structPtrType = object.getType()->castType<IR_TypePtr>();
+            if (!structPtrType)
                 semanticError(assignee.loc, "Pointer access cannot be performed on non-pointer type");
-            auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
-            if (structPtrType->child->type != IR_Type::TSTRUCT)
+
+            auto structType = structPtrType->child->castType<IR_TypeStruct>();
+            if (!structType)
                 semanticError(assignee.loc, "Element access cannot be performed on non-struct type");
-            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
+
             auto field = structType->getField(assignee.getIdent());
             if (field == nullptr)
                 semanticError(assignee.loc, "Structure has no such field");
@@ -226,7 +232,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
             IRval base = evalExpr(*assignee.base);
             IRval index = evalExpr(assignee.getExpr());
 
-            if (base.getType()->type == IR_Type::ARRAY) {
+            if (base.getType()->castType<IR_TypeArray>()) {
 //                auto arrayType = std::dynamic_pointer_cast<IR_TypeArray>(base.getType());
 //                if (!arrayType->child->equal(*wrValue.getType()))
 //                    semanticError("Cannot assign values of different types");
@@ -235,10 +241,8 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
 //                        IR_ExprOper::INSERT, std::vector<IRval>{ base, index, wrValue })));
                 throw cw39_internal_error("Something went wrong");
             }
-            else if (base.getType()->type == IR_Type::POINTER) {
-                auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(base.getType());
+            else if (auto ptrType = base.getType()->castType<IR_TypePtr>()) {
                 IRval finPtr = getPtrWithOffset(base, index, true);
-
                 IRval valToStore = wrValue;
                 if (!ptrType->child->equal(*valToStore.getType())) {
                     // semanticError(assignee.loc, "Cannot assign values of different types");
@@ -246,7 +250,7 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
                 }
                 emitStore(finPtr, std::move(valToStore), false); // TODO: volatile
             }
-            else { // base.getType()->type
+            else { // base.getType()
                 semanticError(assignee.loc, "Wrong type for indexation");
             }
         }
@@ -262,13 +266,15 @@ void IR_Generator::doAssignment(AST_Expr const &dest, IRval const &wrValue) {
 /** Create node with specified binary operation on numbers */
 IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const &rhs, yy::location loc) {
     // Do pointers arithmetics
-    if (lhs.getType()->type == IR_Type::POINTER || rhs.getType()->type == IR_Type::POINTER) {
+    auto lhsPtrType = lhs.getType()->castType<IR_TypePtr>();
+    auto rhsPtrType = rhs.getType()->castType<IR_TypePtr>();
+    if (lhsPtrType || rhsPtrType) {
         if (!isInList(op, AST_Binop::ADD, AST_Binop::SUB))
             semanticError(loc, "Pointes arithmetics allows only addictions or subtractions");
-        if (lhs.getType()->type == rhs.getType()->type)
+        if (lhsPtrType && rhsPtrType)
             semanticError(loc, "Pointes arithmetics cannot be applied between two pointers");
 
-        if (rhs.getType()->type == IR_Type::POINTER) {
+        if (rhs.getType()->castType<IR_TypePtr>()) {
             if (op == AST_Binop::SUB)
                 semanticError(loc, "Canon subtract pointer from number");
             return doBinOp(op, rhs, lhs, loc);
@@ -284,7 +290,7 @@ IRval IR_Generator::doBinOp(AST_Binop::OpType op, IRval const &lhs, IRval const 
             return getPtrWithOffset(lhs, rhs, false);
     }
 
-    if (lhs.getType()->type != IR_Type::DIRECT)
+    if (!lhs.getType()->castType<IR_TypeDirect>())
         semanticError(loc, "Wrong arithmetic type");
 
     // Cast different types
@@ -408,10 +414,10 @@ IRval IR_Generator::doShortLogicOp(AST_Binop::OpType op, AST_Expr const &left, A
 
     IRval lhs = evalExpr(left);
 
-    if (lhs.getType()->type != IR_Type::DIRECT)
+    auto ltype = lhs.getType()->castType<IR_TypeDirect>();
+    if (!ltype)
         semanticError(loc, "Cannon perform logical operation on non-integer type");
-    auto &ltype = dynamic_cast<IR_TypeDirect const &>(*lhs.getType());
-    if (!ltype.isInteger())
+    if (!ltype->isInteger())
         semanticError(loc, "Cannon perform logical operation on non-integer type");
 
     auto ptrType = std::make_shared<IR_TypePtr>(lhs.getType());
@@ -506,12 +512,15 @@ IRval IR_Generator::doAddrOf(const AST_Expr &expr) {
 //        else
         if (subjPostf->op == AST_Postfix::PTR_ACCESS) {
             IRval object = evalExpr(*subjPostf->base);
-            if (object.getType()->type != IR_Type::POINTER)
+
+            auto structPtrType = object.getType()->castType<IR_TypePtr>();
+            if (!structPtrType)
                 semanticError(subjPostf->base->loc, "Pointer access cannot be performed on non-pointer type");
-            auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
-            if (structPtrType->child->type != IR_Type::TSTRUCT)
+
+            auto structType = structPtrType->child->castType<IR_TypeStruct>();
+            if (!structType)
                 semanticError(subjPostf->base->loc, "Element access cannot be performed on non-struct type");
-            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
+
             auto field = structType->getField(subjPostf->getIdent());
             if (field == nullptr)
                 semanticError(subjPostf->base->loc, "Structure has no such field");
@@ -553,12 +562,14 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
 
     if (dirFuncId == -1) {
         funPtr = evalExpr(*expr.base);
-        if (funPtr->getType()->type != IR_Type::POINTER)
+
+        auto ptrType = funPtr->getType()->castType<IR_TypePtr>();
+        if (!ptrType)
             semanticError(expr.base->loc, "Cannot make call with non-pointer (to functuion) type");
-        auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(funPtr->getType());
-        if (ptrType->child->type != IR_Type::FUNCTION)
-            semanticError(expr.base->loc, "Only pointers to functions can be called");
+
         funType = std::dynamic_pointer_cast<IR_TypeFunc>(ptrType->child);
+        if (!funType)
+            semanticError(expr.base->loc, "Only pointers to functions can be called");
     }
 
     auto &argsList = expr.getArgsList();
@@ -571,7 +582,9 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
         if (argNum < funType->args.size()) {
             auto &argType = funType->args[argNum];
             if (!argVal.getType()->equal(*argType)) {
-                if (argType->type == IR_Type::DIRECT && argVal.getType()->type == IR_Type::DIRECT) {
+                auto argDirType = argType->castType<IR_TypeDirect>();
+                auto argValDirType = argVal.getType()->castType<IR_TypeDirect>();
+                if (argDirType && argValDirType) {
                     auto cmnType = IR_TypeDirect::getCommonDirType(argType, argVal.getType());
                     argVal = emitCast(std::move(argVal), cmnType);
                 }
@@ -581,9 +594,8 @@ IRval IR_Generator::doCall(AST_Postfix const &expr) {
             }
         }
         else if (funType->isVariadic) { // Default promotion
-            if (argVal.getType()->type == IR_Type::DIRECT) {
-                auto &dirType = dynamic_cast<IR_TypeDirect const &>(*argVal.getType());
-                if (dirType.spec == IR_TypeDirect::F32)
+            if (auto dirType = argVal.getType()->castType<IR_TypeDirect>()) {
+                if (dirType->spec == IR_TypeDirect::F32)
                     argVal = emitCast(std::move(argVal), IR_TypeDirect::getF64());
             }
         }
@@ -740,10 +752,12 @@ IRval IR_Generator::evalUnopExpr(AST_Unop const &expr) {
 
         case AST_Unop::DEREF: {
             IRval ptrVal = evalExpr(dynamic_cast<AST_Expr const &>(*expr.child));
-            if (ptrVal.getType()->type != IR_Type::POINTER)
+
+            auto ptrType = ptrVal.getType()->castType<IR_TypePtr>();
+            if (!ptrType)
                 semanticError(expr.loc, "Only pointer type can be dereferenced");
-            auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(ptrVal.getType());
-            if (ptrType->child->type == IR_Type::FUNCTION)
+
+            if (ptrType->child->castType<IR_TypeFunc>())
                 semanticError(expr.loc, "Pointer to function cannot be dereferenced");
             return emitLoad(ptrType->child, ptrVal, false); // TODO: volatile
         }
@@ -780,12 +794,11 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
             IRval array = evalExpr(*expr.base);
             IRval index = evalExpr(expr.getExpr());
 
-            if (array.getType()->type == IR_Type::POINTER) {
-                auto ptrType = std::dynamic_pointer_cast<IR_TypePtr>(array.getType());
+            if (auto ptrType = array.getType()->castType<IR_TypePtr>()) {
                 IRval finPtr = getPtrWithOffset(array, index, true);
                 return emitLoad(ptrType->child, finPtr, false); // TODO: volatile
             }
-            else if (array.getType()->type == IR_Type::ARRAY) {
+            else if (array.getType()->castType<IR_TypeArray>()) {
                 // At generation stage one can't get array value directly
                 // Pointers to first array's element can be eleminated at opt stage
                 throw cw39_internal_error("Something went wrong");
@@ -797,9 +810,11 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
 
         case AST_Postfix::DIR_ACCESS: {
             IRval object = evalExpr(*expr.base);
-            if (object.getType()->type != IR_Type::TSTRUCT)
+
+            auto structType = object.getType()->castType<IR_TypeStruct>();
+            if (!structType)
                 semanticError(expr.base->loc, "Element access cannot be performed on non-struct type");
-            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(object.getType());
+
             auto field = structType->getField(expr.getIdent());
             if (field == nullptr)
                 semanticError(expr.base->loc, "Structure has no such field");
@@ -812,12 +827,15 @@ IRval IR_Generator::evalPostfixExpr(AST_Postfix const &expr) {
 
         case AST_Postfix::PTR_ACCESS: {
             IRval object = evalExpr(*expr.base);
-            if (object.getType()->type != IR_Type::POINTER)
+
+            auto structPtrType = object.getType()->castType<IR_TypePtr>();
+            if (!structPtrType)
                 semanticError(expr.base->loc, "Pointer access cannot be performed on non-pointer type");
-            auto structPtrType = std::dynamic_pointer_cast<IR_TypePtr>(object.getType());
-            if (structPtrType->child->type != IR_Type::TSTRUCT)
+
+            auto structType = structPtrType->child->castType<IR_TypeStruct>();
+            if (!structType)
                 semanticError(expr.base->loc, "Element access cannot be performed on non-struct type");
-            auto structType = std::dynamic_pointer_cast<IR_TypeStruct>(structPtrType->child);
+
             auto field = structType->getField(expr.getIdent());
             if (field == nullptr)
                 semanticError(expr.base->loc, "Structure has no such field");
@@ -866,10 +884,9 @@ IRval IR_Generator::evalPrimaryExpr(AST_Primary const &expr) {
             auto varType = std::dynamic_pointer_cast<IR_TypePtr>(var->getType());
             auto resType = varType->child;
 
-            if (resType->type == IR_Type::ARRAY) {
+            if (auto arrType = resType->castType<IR_TypeArray>()) {
                 // Cast pointer to array -> pointer to its first element
-                auto &arrType = dynamic_cast<IR_TypeArray const &>(*resType);
-                auto ptrType = std::make_shared<IR_TypePtr>(arrType.child);
+                auto ptrType = std::make_shared<IR_TypePtr>(arrType->child);
                 return emitCast(*var, ptrType);
             }
             else {
@@ -942,14 +959,15 @@ IRval IR_Generator::getLiteralIRval(const AST_Literal &lit) {
 
 /** Get aggreagate value of given type from initializer list */
 IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const AST_InitializerList &lst) {
-    if (type->type == IR_Type::ARRAY) {
-        auto &arrType = dynamic_cast<IR_TypeArray const &>(*type);
-        if (arrType.size < lst.children.size())
+    auto arrType = type->castType<IR_TypeArray>();
+    auto structType = type->castType<IR_TypeStruct>();
+
+    if (arrType) {
+        if (arrType->size < lst.children.size())
             semanticError(lst.loc, "Too many values in initializer");
     }
-    else if (type->type == IR_Type::TSTRUCT) {
-        auto &structType = dynamic_cast<IR_TypeStruct const &>(*type);
-        if (structType.fields.size() < lst.children.size())
+    else if (structType) {
+        if (structType->fields.size() < lst.children.size())
             semanticError(lst.loc, "Too many values in initializer");
     }
     else {
@@ -970,16 +988,14 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
         IRval elemVal = std::move(*elemOpt);
 
         if (!val->is_compound) {
-            if (type->type == IR_Type::ARRAY) {
-                auto &arrType = dynamic_cast<IR_TypeArray const &>(*type);
-                if (!elemVal.getType()->equal(*arrType.child)) {
+            if (arrType) {
+                if (!elemVal.getType()->equal(*arrType->child)) {
                     // semanticError(val->getExpr().loc, "Wrong type of initializer element");
-                    elemVal = emitCast(std::move(elemVal), arrType.child);
+                    elemVal = emitCast(std::move(elemVal), arrType->child);
                 }
             }
-            else if (type->type == IR_Type::TSTRUCT) {
-                auto &structType = dynamic_cast<IR_TypeStruct const &>(*type);
-                auto &fieldType = structType.fields.at(elemNum).irType;
+            else if (structType) {
+                auto &fieldType = structType->fields.at(elemNum).irType;
                 if (!elemVal.getType()->equal(*fieldType)) {
                     // semanticError(val->getExpr().loc, "Wrong type of initializer element");
                     elemVal = emitCast(std::move(elemVal), fieldType);
@@ -998,17 +1014,15 @@ IRval IR_Generator::getCompoundVal(std::shared_ptr<IR_Type> const &type, const A
         elemNum++;
     }
 
-    if (type->type == IR_Type::ARRAY) {
-        auto &arrType = dynamic_cast<IR_TypeArray const &>(*type);
-        while (elemNum < arrType.size) {
-            aggrVals.push_back(IRval::createZeroinit(arrType.child));
+    if (arrType) {
+        while (elemNum < arrType->size) {
+            aggrVals.push_back(IRval::createZeroinit(arrType->child));
             elemNum++;
         }
     }
-    else if (type->type == IR_Type::TSTRUCT) {
-        auto &structType = dynamic_cast<IR_TypeStruct const &>(*type);
-        while (elemNum < structType.fields.size()) {
-            aggrVals.push_back(IRval::createZeroinit(structType.fields.at(elemNum).irType));
+    else if (structType) {
+        while (elemNum < structType->fields.size()) {
+            aggrVals.push_back(IRval::createZeroinit(structType->fields.at(elemNum).irType));
             elemNum++;
         }
     }

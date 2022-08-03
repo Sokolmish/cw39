@@ -186,9 +186,8 @@ void IR2LLVM_Impl::createGlobals() {
 }
 
 Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
-    if (ir_type.type == IR_Type::DIRECT) {
-        auto const &dirType = dynamic_cast<IR_TypeDirect const &>(ir_type);
-        switch (dirType.spec) {
+    if (auto dirType = ir_type.castType<IR_TypeDirect>()) {
+        switch (dirType->spec) {
             case IR_TypeDirect::VOID:
                 return builder->getVoidTy();
             case IR_TypeDirect::BOOL:
@@ -209,32 +208,26 @@ Type* IR2LLVM_Impl::getType(const IR_Type &ir_type) {
         }
         throw std::logic_error("Wrong direct type");
     }
-    else if (ir_type.type == IR_Type::POINTER) {
-        auto const &ptrType = dynamic_cast<IR_TypePtr const &>(ir_type);
-
+    else if (auto ptrType = ir_type.castType<IR_TypePtr>()) {
         // Void pointers are not allowed in LLVM, so they replaced with i8*
-        if (ptrType.child->type == IR_Type::DIRECT) {
-            auto childType = std::dynamic_pointer_cast<IR_TypeDirect>(ptrType.child);
+        if (auto childType = ptrType->child->castType<IR_TypeDirect>()) {
             if (childType->spec == IR_TypeDirect::VOID)
                 return PointerType::getUnqual(builder->getInt8Ty());
         }
 
-        return PointerType::getUnqual(getType(*ptrType.child));
+        return PointerType::getUnqual(getType(*ptrType->child));
     }
-    else if (ir_type.type == IR_Type::ARRAY) {
-        auto const &arrType = dynamic_cast<IR_TypeArray const &>(ir_type);
-        return ArrayType::get(getType(*arrType.child), arrType.size);
+    else if (auto arrType = ir_type.castType<IR_TypeArray>()) {
+        return ArrayType::get(getType(*arrType->child), arrType->size);
     }
-    else if (ir_type.type == IR_Type::TSTRUCT) {
-        auto const &structType = dynamic_cast<IR_TypeStruct const &>(ir_type);
-        return structTypes.at(structType.structId);
+    else if (auto structType = ir_type.castType<IR_TypeStruct>()) {
+        return structTypes.at(structType->structId);
     }
-    else if (ir_type.type == IR_Type::FUNCTION) {
-        auto const &funType = dynamic_cast<IR_TypeFunc const &>(ir_type);
+    else if (auto funType = ir_type.castType<IR_TypeFunc>()) {
         std::vector<Type*> args;
-        for (auto const &arg : funType.args)
+        for (auto const &arg : funType->args)
             args.push_back(getType(*arg));
-        return FunctionType::get(getType(*funType.ret), args, funType.isVariadic);
+        return FunctionType::get(getType(*funType->ret), args, funType->isVariadic);
     }
     else {
         throw std::logic_error("Wrong ir type");
@@ -271,9 +264,9 @@ Value* IR2LLVM_Impl::getValue(const IRval &val) {
             for (auto const &elem : val.getAggregateVal())
                 args.push_back(dyn_cast<Constant>(getValue(elem)));
 
-            if (val.getType()->type == IR_Type::TSTRUCT)
+            if (val.getType()->castType<IR_TypeStruct>())
                 return ConstantStruct::get(dyn_cast<StructType>(aggregateType), args);
-            else if (val.getType()->type == IR_Type::ARRAY)
+            else if (val.getType()->castType<IR_TypeArray>())
                 return ConstantArray::get(dyn_cast<ArrayType>(aggregateType), args);
             else
                 throw mat_exception("Wrong aggregate initializer type");
